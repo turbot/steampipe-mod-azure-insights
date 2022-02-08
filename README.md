@@ -1,0 +1,1 @@
+# steampipe-mod-azure-insights
