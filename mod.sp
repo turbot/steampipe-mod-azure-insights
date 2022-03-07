@@ -1,4 +1,4 @@
-mod "aws_insights" {
+mod "azure_insights" {
   # hub metadata
   title         = "Azure Insights"
   description   = "Create dashboards and reports for your Azure resources using Steampipe."
