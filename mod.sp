@@ -5,11 +5,17 @@ mod "azure_insights" {
   color         = "#FF9900"
   documentation = file("./docs/index.md")
   icon          = "/images/mods/turbot/azure-insights.svg"
-  categories    = ["azure", "insights", "public cloud"]
+  categories    = ["azure", "dashboard", "public cloud"]
 
   opengraph {
     title       = "Steampipe Mod for Azure Insights"
     description = "Create dashboards and reports for your Azure resources using Steampipe."
     image       = "/images/mods/turbot/azure-insights-social-graphic.png"
+  }
+
+  requires {
+    plugin "azure" {
+      version = "0.23.2"
+    }
   }
 }
