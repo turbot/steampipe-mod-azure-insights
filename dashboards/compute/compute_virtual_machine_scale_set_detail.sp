@@ -7,7 +7,7 @@ dashboard "azure_compute_virtual_machine_scale_set_scale_set_detail" {
   })
 
   input "id" {
-    title = "Select a Virtual Machine:"
+    title = "Select a Virtual Machine Scale Set:"
     sql   = query.azure_compute_virtual_machine_scale_set_input.sql
     width = 4
   }
@@ -167,15 +167,13 @@ query "azure_compute_virtual_machine_scale_set_status" {
 query "azure_compute_virtual_machine_scale_set_encryption_status" {
   sql = <<-EOQ
     select
-      'Encryption Status' as label,
+      'Host Encryption' as label,
       case
-        when virtual_machine_security_profile -> 'encryptionAtHost' <> 'true'
-      then 'Unencrypted'
-      else 'Encrypted' end as value,
+        when virtual_machine_security_profile -> 'encryptionAtHost' <> 'true' or virtual_machine_security_profile -> 'encryptionAtHost' is null
+      then 'Disabled' else 'Enabled' end as value,
       case
-        when virtual_machine_security_profile -> 'encryptionAtHost' <> 'true'
-      then 'alert'
-      else 'ok' end as type
+        when virtual_machine_security_profile -> 'encryptionAtHost' <> 'true' or virtual_machine_security_profile -> 'encryptionAtHost' is null
+      then 'alert' else 'ok' end as type
     from
       azure_compute_virtual_machine_scale_set
     where
@@ -201,7 +199,7 @@ query "azure_compute_virtual_machine_scale_set_logging_status" {
         and b ->> 'ExtensionType' = 'LinuxDiagnostic')
     )
     select
-      'Logging Status' as label,
+      'Logging' as label,
       case
         when b.vm_scale_set_id is not null
       then 'Enabled'
@@ -339,17 +337,16 @@ query "azure_compute_virtual_machine_scale_set_network_interface" {
   sql = <<-EOQ
     select
       nic ->> 'name' as "Name",
-      nic -> 'properties' -> 'dnsSettings' -> 'dnsServers' as "DNS Servers",
-      (nic -> 'properties' ->> 'enableAcceleratedNetworking')::boolean as "Enable Accelerated Networking",
+      -- (nic -> 'properties' ->> 'enableAcceleratedNetworking')::boolean as "Enable Accelerated Networking",
       (nic -> 'properties' ->> 'enableIPForwarding')::boolean as "Enable IP Forwarding",
       (nic -> 'properties' ->> 'primary')::boolean as "Primary",
-      nic -> 'properties' -> 'networkSecurityGroup' ->> 'id' as "Network Security Group ID",
-      ip -> 'name' as "IP Name",
-      ip -> 'properties' -> 'loadBalancerBackendAddressPools' as "Load Balancer Backend Address Pools",
-      ip -> 'properties' -> 'loadBalancerInboundNatPools' as "Load Balancer Inbound Nat Pools",
+      -- nic -> 'properties' -> 'networkSecurityGroup' ->> 'id' as "Network Security Group ID",
+      ip ->> 'name' as "IP Config Name",
+      -- ip -> 'properties' -> 'loadBalancerBackendAddressPools' as "Load Balancer Backend Address Pools",
+      -- ip -> 'properties' -> 'loadBalancerInboundNatPools' as "Load Balancer Inbound Nat Pools",
       (ip -> 'properties' ->> 'primary')::boolean as "IP Primary",
-      ip -> 'properties' ->> 'privateIPAddressVersion' as "Private IP Address Version",
-      ip -> 'properties' -> 'subnet' ->> 'id' as "IP Subnet ID"
+      ip -> 'properties' ->> 'privateIPAddressVersion' as "Private IP Address Version"
+      -- ip -> 'properties' -> 'subnet' ->> 'id' as "IP Subnet ID"
     from
       azure_compute_virtual_machine_scale_set,
       jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') nic,

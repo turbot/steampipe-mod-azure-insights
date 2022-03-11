@@ -15,7 +15,7 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_scale_set_unencrypted_count.sql
+      sql   = query.azure_compute_virtual_machine_scale_set_host_encryption_count.sql
       width = 2
     }
 
@@ -36,8 +36,8 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Encryption Status"
-      sql   = query.azure_compute_virtual_machine_scale_set_by_encryption_status.sql
+      title = "Host Encryption Status"
+      sql   = query.azure_compute_virtual_machine_scale_set_by_host_encryption_status.sql
       type  = "donut"
       width = 2
 
@@ -52,7 +52,7 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
     }
 
     chart {
-      title = "Attached With Network"
+      title = "Logging Status"
       sql   = query.azure_compute_virtual_machine_scale_set_by_logging_status.sql
       type  = "donut"
       width = 2
@@ -68,7 +68,7 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
     }
 
     chart {
-      title = "Disaster Recovery Status"
+      title = "Log Analytic Agent Status"
       sql   = query.azure_compute_virtual_machine_scale_set_by_log_analytics_agent_installed_status.sql
       type  = "donut"
       width = 2
@@ -128,16 +128,16 @@ query "azure_compute_virtual_machine_scale_set_count" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_scale_set_unencrypted_count" {
+query "azure_compute_virtual_machine_scale_set_host_encryption_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted' as label,
+      'Unencrypted Host' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       azure_compute_virtual_machine_scale_set
     where
-      virtual_machine_security_profile -> 'encryptionAtHost' <> 'true';
+      virtual_machine_security_profile -> 'encryptionAtHost' <> 'true' or virtual_machine_security_profile -> 'encryptionAtHost' is null;
   EOQ
 }
 
@@ -158,7 +158,7 @@ query "azure_compute_virtual_machine_scale_set_logging_disabled" {
     )
     select
       count(*) as value,
-      'Logging disabled' as label,
+      'Logging Disabled' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       azure_compute_virtual_machine_scale_set as a
@@ -196,17 +196,15 @@ query "azure_compute_virtual_machine_scale_set_log_analytics_agent_installed_cou
 
 # Assessment Queries
 
-query "azure_compute_virtual_machine_scale_set_by_encryption_status" {
+query "azure_compute_virtual_machine_scale_set_by_host_encryption_status" {
   sql = <<-EOQ
     select
       encryption,
       count(*)
     from (
       select virtual_machine_security_profile -> 'encryptionAtHost',
-        case when virtual_machine_security_profile -> 'encryptionAtHost' <> 'true' then
-          'unencrypted'
-        else
-          'encrypted'
+        case when virtual_machine_security_profile -> 'encryptionAtHost' <> 'true' or virtual_machine_security_profile -> 'encryptionAtHost' is null then 'unencrypted'
+        else 'encrypted'
         end encryption
       from
         azure_compute_virtual_machine_scale_set) as vmss

@@ -8,20 +8,13 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
   container {
 
-    # Analysis
     card {
       sql   = query.azure_compute_virtual_machine_count.sql
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_unencrypted_count.sql
-      width = 2
-    }
-
-    # Assessments
-    card {
-      sql   = query.azure_compute_virtual_machine_unattached_with_network_count.sql
+      sql   = query.azure_compute_virtual_machine_host_encryption_count.sql
       width = 2
     }
 
@@ -31,14 +24,20 @@ dashboard "azure_compute_virtual_machine_dashboard" {
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_unrestricted_remote_access_count.sql
+      sql   = query.azure_compute_virtual_machine_vulnerability_assessment_disabled_count.sql
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_vulnerability_assessment_solution_disabled_count.sql
+      sql   = query.azure_compute_virtual_machine_unattached_with_network_count.sql
       width = 2
     }
+
+    card {
+      sql   = query.azure_compute_virtual_machine_unrestricted_remote_access_count.sql
+      width = 2
+    }
+
   }
 
   container {
@@ -46,8 +45,8 @@ dashboard "azure_compute_virtual_machine_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Encryption Status"
-      sql   = query.azure_compute_virtual_machine_by_encryption_status.sql
+      title = "Host Encryption Status"
+      sql   = query.azure_compute_virtual_machine_by_host_encryption_status.sql
       type  = "donut"
       width = 2
 
@@ -56,22 +55,6 @@ dashboard "azure_compute_virtual_machine_dashboard" {
           color = "ok"
         }
         point "unencrypted" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title = "Attached With Network"
-      sql   = query.azure_compute_virtual_machine_by_attachment_to_network.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "attached" {
-          color = "ok"
-        }
-        point "unattached" {
           color = "alert"
         }
       }
@@ -94,22 +77,6 @@ dashboard "azure_compute_virtual_machine_dashboard" {
     }
 
     chart {
-      title = "Remote Access"
-      sql   = query.azure_compute_virtual_machine_by_remote_access.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "restricted" {
-          color = "ok"
-        }
-        point "unrestricted" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
       title = "Vulnerability Assessment"
       sql   = query.azure_compute_virtual_machine_by_vulnerability_assessment_solution.sql
       type  = "donut"
@@ -125,6 +92,38 @@ dashboard "azure_compute_virtual_machine_dashboard" {
       }
     }
 
+    chart {
+      title = "Network Attachment Status"
+      sql   = query.azure_compute_virtual_machine_by_attachment_to_network.sql
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "attached" {
+          color = "ok"
+        }
+        point "unattached" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Unrestricted Remote Access"
+      sql   = query.azure_compute_virtual_machine_by_remote_access.sql
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "restricted" {
+          color = "ok"
+        }
+        point "unrestricted" {
+          color = "alert"
+        }
+      }
+    }
+
   }
 
   container {
@@ -135,35 +134,35 @@ dashboard "azure_compute_virtual_machine_dashboard" {
       title = "Virtual Machines by Subscription"
       sql   = query.azure_compute_virtual_machine_by_subscription.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Virtual Machines by Resource Group"
       sql   = query.azure_compute_virtual_machine_by_resource_group.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Virtual Machines by Region"
       sql   = query.azure_compute_virtual_machine_by_region.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Virtual Machines by OS Type"
       sql   = query.azure_compute_virtual_machine_by_os_type.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Virtual Machines by Size"
       sql   = query.azure_compute_virtual_machine_by_size.sql
       type  = "column"
-      width = 3
+      width = 4
     }
   }
 
@@ -196,16 +195,30 @@ query "azure_compute_virtual_machine_count" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_unencrypted_count" {
+query "azure_compute_virtual_machine_host_encryption_count" {
+  sql = <<-EOQ
+  select
+    count(*) as value,
+    'Unencrypted Host' as label,
+    case count(*) when 0 then 'ok' else 'alert' end as type
+  from
+    azure_compute_virtual_machine
+  where
+    security_profile -> 'encryptionAtHost' <> 'true' or security_profile -> 'encryptionAtHost' is null;
+  EOQ
+}
+
+query "azure_compute_virtual_machine_disaster_recovery_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Unencrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as type
+      'Disaster Recovery Disabled' as label,
+      case count(*) when 0 then 'alert' else 'ok' end as type
     from
-      azure_compute_virtual_machine
+      azure_resource_link as l
+      left join azure_compute_virtual_machine as vm on lower(substr(source_id, 0, length(source_id)))= lower(vm.id)
     where
-      security_profile -> 'encryptionAtHost' <> 'true';
+      l.name like 'ASR-Protect-%';
   EOQ
 }
 
@@ -238,20 +251,6 @@ query "azure_compute_virtual_machine_unattached_with_network_count" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_disaster_recovery_disabled_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Disaster Recovery Disabled' as label,
-      case count(*) when 0 then 'alert' else 'ok' end as type
-    from
-      azure_resource_link as l
-      left join azure_compute_virtual_machine as vm on lower(substr(source_id, 0, length(source_id)))= lower(vm.id)
-    where
-      l.name like 'ASR-Protect-%';
-  EOQ
-}
-
 query "azure_compute_virtual_machine_unrestricted_remote_access_count" {
   sql = <<-EOQ
     with network_sg as (
@@ -261,15 +260,29 @@ query "azure_compute_virtual_machine_unrestricted_remote_access_count" {
       from
         azure_network_security_group as nsg,
         jsonb_array_elements(security_rules) as sg,
-        jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' ||
-          (sg -> 'properties' -> 'destinationPortRange') :: jsonb) as dport,
-        jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' ||
-          (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip
+        jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb) as dport,
+        jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Inbound'
         and sg -> 'properties' ->> 'protocol' in ('TCP','*')
-        and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', '<nw>/0', '/0')
+        and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'Any', '<nw>/0', '/0')
+        and (
+          dport in ('22', '3389', '*')
+          or (
+            dport like '%-%'
+            and (
+              (
+                split_part(dport, '-', 1) :: integer <= 3389
+                and split_part(dport, '-', 2) :: integer >= 3389
+              )
+              or (
+                split_part(dport, '-', 1) :: integer <= 22
+                and split_part(dport, '-', 2) :: integer >= 22
+              )
+            )
+          )
+        )
     )
     select
       count(*) as value,
@@ -277,13 +290,13 @@ query "azure_compute_virtual_machine_unrestricted_remote_access_count" {
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       azure_compute_virtual_machine as vm
-      left join network_sg as sg on sg.network_interfaces @> vm.network_interfaces
+      left join network_sg as sg on vm.network_interfaces @> sg.network_interfaces
     where
       sg.sg_name is not null;
   EOQ
 }
 
-query "azure_compute_virtual_machine_vulnerability_assessment_solution_disabled_count" {
+query "azure_compute_virtual_machine_vulnerability_assessment_disabled_count" {
   sql = <<-EOQ
     with defender_enabled_vms as (
       select
@@ -309,7 +322,7 @@ query "azure_compute_virtual_machine_vulnerability_assessment_solution_disabled_
     )
     select
       count(*) as value,
-      'Vulnerability Assessment Solution Disabled' as label,
+      'Vulnerability Assessment Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       azure_compute_virtual_machine as a
@@ -321,17 +334,15 @@ query "azure_compute_virtual_machine_vulnerability_assessment_solution_disabled_
 
 # Assessment Queries
 
-query "azure_compute_virtual_machine_by_encryption_status" {
+query "azure_compute_virtual_machine_by_host_encryption_status" {
   sql = <<-EOQ
     select
       encryption,
       count(*)
     from (
       select security_profile -> 'encryptionAtHost',
-        case when security_profile -> 'encryptionAtHost' <> 'true' then
-          'unencrypted'
-        else
-          'encrypted'
+        case when security_profile -> 'encryptionAtHost' <> 'true' or security_profile -> 'encryptionAtHost' is null then 'unencrypted'
+        else 'encrypted'
         end encryption
       from
         azure_compute_virtual_machine) as vm
@@ -437,7 +448,23 @@ query "azure_compute_virtual_machine_by_remote_access" {
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Inbound'
         and sg -> 'properties' ->> 'protocol' in ('TCP','*')
-        and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', '<nw>/0', '/0')
+        and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
+        and (
+          dport in ('22', '3389', '*')
+          or (
+            dport like '%-%'
+            and (
+              (
+                split_part(dport, '-', 1) :: integer <= 3389
+                and split_part(dport, '-', 2) :: integer >= 3389
+              )
+              or (
+                split_part(dport, '-', 1) :: integer <= 22
+                and split_part(dport, '-', 2) :: integer >= 22
+              )
+            )
+          )
+        )
     )
     select
       status,
@@ -451,7 +478,7 @@ query "azure_compute_virtual_machine_by_remote_access" {
         end status
       from
         azure_compute_virtual_machine as vm
-        left join network_sg as sg on sg.network_interfaces @> vm.network_interfaces) as vm
+        left join network_sg as sg on vm.network_interfaces @> sg.network_interfaces ) as vm
     group by
       status
     order by

@@ -40,7 +40,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_virtual_machine_remote_access
+      query = query.azure_compute_virtual_machine_ingress_access
       args = {
         id = self.input.id.value
       }
@@ -192,9 +192,9 @@ query "azure_compute_virtual_machine_status" {
 query "azure_compute_virtual_machine_encryption_status" {
   sql = <<-EOQ
     select
-      'Encryption Status' as label,
-      case when security_profile -> 'encryptionAtHost' <> 'true' then 'Unencrypted' else 'Encrypted' end as value,
-      case when security_profile -> 'encryptionAtHost' <> 'true' then 'alert' else 'ok' end as type
+      'Host Encryption' as label,
+      case when security_profile -> 'encryptionAtHost' <> 'true' or security_profile -> 'encryptionAtHost' is null then 'Disabled' else 'Enabled' end as value,
+      case when security_profile -> 'encryptionAtHost' <> 'true' or security_profile -> 'encryptionAtHost' is null then 'alert' else 'ok' end as type
     from
       azure_compute_virtual_machine
     where
@@ -216,7 +216,7 @@ query "azure_compute_virtual_machine_disaster_recovery_status" {
         l.name like 'ASR-Protect-%'
     )
     select
-      'Disaster Recovery Status' as label,
+      'Disaster Recovery' as label,
       case when source_id is null then 'Disabled' else 'Enabled' end as value,
       case when source_id is null then 'alert' else 'ok' end as type
     from
@@ -229,7 +229,7 @@ query "azure_compute_virtual_machine_disaster_recovery_status" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_remote_access" {
+query "azure_compute_virtual_machine_ingress_access" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -244,10 +244,42 @@ query "azure_compute_virtual_machine_remote_access" {
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Inbound'
         and sg -> 'properties' ->> 'protocol' in ('TCP','*')
+        and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
+    )
+    select
+      'Unrestricted Ingress' as label,
+      case when sg.sg_name is null then 'Restricted' else 'Unrestricted' end as value,
+      case when sg.sg_name is null then 'ok' else 'alert' end as type
+    from
+      azure_compute_virtual_machine as vm
+      left join network_sg as sg on sg.network_interfaces @> vm.network_interfaces
+    where
+      id = $1;
+
+  EOQ
+
+  param "id" {}
+}
+
+query "azure_compute_virtual_machine_egress_access" {
+  sql = <<-EOQ
+    with network_sg as (
+      select
+        distinct name as sg_name,
+        network_interfaces
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(security_rules) as sg,
+        jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb) as dport,
+        jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip
+      where
+        sg -> 'properties' ->> 'access' = 'Allow'
+        and sg -> 'properties' ->> 'direction' = 'Outbound'
+        and sg -> 'properties' ->> 'protocol' in ('TCP','*')
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', '<nw>/0', '/0')
     )
     select
-      'Remote Access' as label,
+      'Unrestricted Egress' as label,
       case when sg.sg_name is null then 'Restricted' else 'Unrestricted' end as value,
       case when sg.sg_name is null then 'ok' else 'alert' end as type
     from
@@ -286,7 +318,7 @@ query "azure_compute_virtual_machine_vulnerability_assessment_solution" {
         and b ->> 'ProvisioningState' = 'Succeeded'
     )
     select
-      'Vulnerability Assessment Solution' as label,
+      'Vulnerability Assessment' as label,
       case when b.vm_id is not null then 'Enabled' else 'Disabled' end as value,
       case when b.vm_id is not null then 'ok' else 'alert' end as type
     from
