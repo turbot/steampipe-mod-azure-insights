@@ -15,7 +15,7 @@ dashboard "azure_compute_disk_dashboard" {
     }
 
     card {
-      sql   = query.azure_compute_disk_unencrypted_count.sql
+      sql   = query.azure_compute_disk_storage_total.sql
       width = 2
     }
 
@@ -24,27 +24,12 @@ dashboard "azure_compute_disk_dashboard" {
       sql   = query.azure_compute_disk_unattached_count.sql
       width = 2
     }
+
   }
 
   container {
 
     title = "Assessments"
-
-    chart {
-      title = "Encryption Status"
-      sql   = query.azure_compute_disk_by_encryption_status.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "encrypted" {
-          color = "ok"
-        }
-        point "unencrypted" {
-          color = "alert"
-        }
-      }
-    }
 
     chart {
       title = "Attached With Network"
@@ -72,28 +57,42 @@ dashboard "azure_compute_disk_dashboard" {
       title = "Disks by Subscription"
       sql   = query.azure_compute_disk_by_subscription.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Disks by Resource Group"
       sql   = query.azure_compute_disk_by_resource_group.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Disks by Region"
       sql   = query.azure_compute_disk_by_region.sql
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Disks by Encryption Type"
       sql   = query.azure_compute_disk_by_encryption_type.sql
       type  = "column"
-      width = 3
+      width = 4
+    }
+
+    chart {
+      title = "Disks by OS Type"
+      sql   = query.azure_compute_disk_by_os_type.sql
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Disks by SKU"
+      sql   = query.azure_compute_disk_by_sku_tier.sql
+      type  = "column"
+      width = 4
     }
   }
 
@@ -126,19 +125,15 @@ query "azure_compute_disk_count" {
   EOQ
 }
 
-query "azure_compute_disk_unencrypted_count" {
+query "azure_compute_disk_storage_total" {
   sql = <<-EOQ
     select
-      count(*) as value,
-      'Unencrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as type
+      round(cast(sum(disk_size_bytes)/1024/1024 as numeric), 1) as "Total Storage (GB)"
     from
-      azure_compute_disk
-    where
-      encryption_type not in
-        ('EncryptionAtRestWithPlatformKey', 'EncryptionAtRestWithCustomerKey', 'EncryptionAtRestWithPlatformAndCustomerKeys');
+      azure_compute_disk;
   EOQ
 }
+
 
 query "azure_compute_disk_unattached_count" {
   sql = <<-EOQ
@@ -249,6 +244,34 @@ query "azure_compute_disk_by_encryption_type" {
       encryption_type
     order by
       encryption_type;
+  EOQ
+}
+
+query "azure_compute_disk_by_os_type" {
+  sql = <<-EOQ
+    select
+      os_type as "Type",
+      count(os_type) as "Disks"
+    from
+      azure_compute_disk
+    group by
+      os_type
+    order by
+      os_type;
+  EOQ
+}
+
+query "azure_compute_disk_by_sku_tier" {
+  sql = <<-EOQ
+    select
+      sku_tier as "SKU Tier",
+      count(sku_tier) as "Disks"
+    from
+      azure_compute_disk
+    group by
+      sku_tier
+    order by
+      sku_tier;
   EOQ
 }
 
