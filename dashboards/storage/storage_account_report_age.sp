@@ -52,6 +52,10 @@ dashboard "azure_storage_account_age_report" {
       display = "none"
     }
 
+    column "ID" {
+      display = "none"
+    }
+
     column "Name" {
       href = "${dashboard.azure_storage_account_detail.url_path}?input.id={{.ID | @uri}}"
     }
@@ -132,9 +136,9 @@ query "azure_storage_account_age_table" {
       a.creation_time as "Create Time",
       a.kind as "Kind",
       sub.title as "Subscription",
-      a.region as "Region",
-      a.resource_group as "Resource Group",
       a.subscription_id as "Subscription ID",
+      a.resource_group as "Resource Group",
+      a.region as "Region",
       a.id as "ID"
     from
       azure_storage_account as a,

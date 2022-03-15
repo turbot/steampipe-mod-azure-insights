@@ -103,10 +103,10 @@ dashboard "azure_storage_account_dashboard" {
       width = 2
 
       series "count" {
-        point "private" {
+        point "restricted" {
           color = "ok"
         }
-        point "public" {
+        point "unrestricted" {
           color = "alert"
         }
       }
@@ -135,28 +135,28 @@ dashboard "azure_storage_account_dashboard" {
     title = "Analysis"
 
     chart {
-      title = "Accounts by Subscription"
+      title = "Storage Accounts by Subscription"
       sql   = query.azure_storage_account_by_subscription.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "Accounts by Resource Group"
+      title = "Storage Accounts by Resource Group"
       sql   = query.azure_storage_account_by_resource_group.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "Accounts by Region"
+      title = "Storage Accounts by Region"
       sql   = query.azure_storage_account_by_region.sql
       type  = "column"
       width = 3
     }
 
     chart {
-      title = "Accounts by Access Tier"
+      title = "Storage Accounts by Access Tier"
       sql   = query.azure_storage_account_by_access_tier.sql
       type  = "column"
       width = 3
@@ -169,7 +169,7 @@ dashboard "azure_storage_account_dashboard" {
 
 query "azure_storage_account_count" {
   sql = <<-EOQ
-    select count(*) as "Accounts" from azure_storage_account;
+    select count(*) as "Storage Accounts" from azure_storage_account;
   EOQ
 }
 
@@ -208,7 +208,7 @@ query "azure_storage_account_https_traffic_disabled_count" {
     from
       azure_storage_account
     where
-      not enable_https_traffic_only;
+      not enable_https_traffic_only or enable_https_traffic_only is null;
   EOQ
 }
 
@@ -234,7 +234,7 @@ query "azure_storage_account_infrastructure_encryption_disabled_count" {
     from
       azure_storage_account
     where
-      not require_infrastructure_encryption
+      not require_infrastructure_encryption or require_infrastructure_encryption is null
   EOQ
 }
 
@@ -304,8 +304,8 @@ query "azure_storage_account_network_access_status" {
       count(*)
     from (
       select
-        case when network_rule_default_action = 'Deny' then 'private'
-        else 'public'
+        case when network_rule_default_action = 'Deny' then 'restricted'
+        else 'unrestricted'
         end network_rule
       from
         azure_storage_account) as cd
@@ -341,7 +341,7 @@ query "azure_storage_account_by_subscription" {
   sql = <<-EOQ
     select
       a.title as "Subscription",
-      count(v.*) as "Accounts"
+      count(v.*) as "Storage Accounts"
     from
       azure_storage_account as v,
       azure_subscription as a
@@ -358,7 +358,7 @@ query "azure_storage_account_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(resource_group) as "Accounts"
+      count(resource_group) as "Storage Accounts"
     from
       azure_storage_account as a,
       azure_subscription as sub
@@ -375,7 +375,7 @@ query "azure_storage_account_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
-      count(*) as "Accounts"
+      count(*) as "Storage Accounts"
     from
       azure_storage_account
     group by
@@ -389,7 +389,7 @@ query "azure_storage_account_by_access_tier" {
   sql = <<-EOQ
     select
       access_tier as "Access Tier",
-      count(*) as "Accounts"
+      count(*) as "Storage Accounts"
     from
       azure_storage_account
     group by
