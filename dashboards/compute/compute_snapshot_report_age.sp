@@ -129,7 +129,7 @@ query "azure_compute_snapshot_age_table" {
       d.id as "ID",
       now()::date - d.time_created::date as "Age in Days",
       d.time_created as "Create Date",
-      d.disk_state as "Disk State",
+      -- d.disk_state as "Disk State",
       d.region as "Region",
       d.resource_group as "Resource Group",
       d.subscription_id as "Subscription ID"

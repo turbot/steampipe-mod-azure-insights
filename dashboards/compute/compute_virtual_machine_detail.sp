@@ -343,6 +343,7 @@ query "azure_compute_virtual_machine_overview" {
       identity ->> 'type' as "Identity",
       region as "Region",
       resource_group as "Resource Group",
+      subscription_id as "Subscription ID",
       id as "ID"
     from
       azure_compute_virtual_machine

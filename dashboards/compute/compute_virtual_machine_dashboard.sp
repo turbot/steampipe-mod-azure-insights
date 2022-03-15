@@ -19,7 +19,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_disaster_recovery_disabled_count.sql
+      sql   = query.azure_compute_public_virtual_machine_count.sql
       width = 2
     }
 
@@ -61,16 +61,16 @@ dashboard "azure_compute_virtual_machine_dashboard" {
     }
 
     chart {
-      title = "Disaster Recovery Status"
-      sql   = query.azure_compute_virtual_machine_by_disaster_recovery_status.sql
+      title = "Public/Private"
+      sql   = query.azure_compute_virtual_machine_by_public_ip.sql
       type  = "donut"
       width = 2
 
       series "count" {
-        point "enabled" {
+        point "private" {
           color = "ok"
         }
-        point "disabled" {
+        point "public" {
           color = "alert"
         }
       }
@@ -119,6 +119,22 @@ dashboard "azure_compute_virtual_machine_dashboard" {
           color = "ok"
         }
         point "unrestricted" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Disaster Recovery Status"
+      sql   = query.azure_compute_virtual_machine_by_disaster_recovery_status.sql
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
           color = "alert"
         }
       }
@@ -205,6 +221,19 @@ query "azure_compute_virtual_machine_host_encryption_count" {
     azure_compute_virtual_machine
   where
     security_profile -> 'encryptionAtHost' <> 'true' or security_profile -> 'encryptionAtHost' is null;
+  EOQ
+}
+
+query "azure_compute_public_virtual_machine_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Publicly Accessible' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      azure_compute_virtual_machine
+    where
+      public_ips is not null
   EOQ
 }
 
@@ -357,6 +386,27 @@ query "azure_compute_virtual_machine_by_host_encryption_status" {
       encryption
     order by
       encryption;
+  EOQ
+}
+
+query "azure_compute_virtual_machine_by_public_ip" {
+  sql = <<-EOQ
+    with vm_visibility as (
+      select
+        case
+          when public_ips is null then 'private'
+          else 'public'
+        end as visibility
+      from
+        azure_compute_virtual_machine
+    )
+    select
+      visibility,
+      count(*)
+    from
+      vm_visibility
+    group by
+      visibility
   EOQ
 }
 

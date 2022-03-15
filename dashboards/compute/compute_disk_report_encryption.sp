@@ -1,6 +1,6 @@
 dashboard "azure_compute_disk_encryption_report" {
 
-  title  = "Azure Compute Disk Encryption Report"
+  title = "Azure Compute Disk Encryption Report"
 
   tags = merge(local.compute_common_tags, {
     type     = "Report"
@@ -48,7 +48,6 @@ query "azure_compute_disk_encryption_report" {
       d.unique_id as "Unique ID",
       d.id as "ID",
       d.encryption_type as "Encryption Type",
-      d.disk_state as "Disk State",
       d.region as "Region",
       d.resource_group as "Resource Group",
       d.subscription_id as "Subscription ID"
@@ -57,5 +56,29 @@ query "azure_compute_disk_encryption_report" {
       azure_subscription sub
     where
       sub.subscription_id = d.subscription_id;
+  EOQ
+}
+
+query "azure_compute_disk_customer_managed_encryption_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Customer-Managed Encryption' as label
+    from
+      azure_compute_disk
+    where
+      encryption_type = 'EncryptionAtRestWithCustomerKey';
+  EOQ
+}
+
+query "azure_compute_disk_cmk_and_platfrom_managed_encryption_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Platform And Customer-Managed Encryption' as label
+    from
+      azure_compute_disk
+    where
+      encryption_type = 'EncryptionAtRestWithPlatformAndCustomerKeys';
   EOQ
 }

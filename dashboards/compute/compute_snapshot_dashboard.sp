@@ -15,6 +15,11 @@ dashboard "azure_compute_snapshot_dashboard" {
     }
 
     card {
+      sql   = query.azure_compute_snapshot_storage_total.sql
+      width = 2
+    }
+
+    card {
       sql   = query.azure_compute_snapshot_public_network_access_count.sql
       width = 2
     }
@@ -148,6 +153,15 @@ query "azure_compute_snapshot_public_network_access_count" {
   EOQ
 }
 
+query "azure_compute_snapshot_storage_total" {
+  sql = <<-EOQ
+    select
+      sum(disk_size_gb) as "Total Storage (GB)"
+    from
+      azure_compute_snapshot;
+  EOQ
+}
+
 query "azure_compute_snapshot_incremental_disabled_count" {
   sql = <<-EOQ
     select
@@ -161,17 +175,17 @@ query "azure_compute_snapshot_incremental_disabled_count" {
   EOQ
 }
 
+# https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.management.compute.models.encryptionsettingscollection.-ctor?view=azure-dotnet
 query "azure_compute_snapshot_encryption_setting_collection_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Ecryption Setting Collection Disabled' as label,
+      'Encryption Setting Collection Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       azure_compute_snapshot
     where
-      encryption_setting_collection_enabled <> true
-      or encryption_setting_collection_enabled is null;
+      encryption_setting_collection_enabled <> true or encryption_setting_collection_enabled is null;
   EOQ
 }
 

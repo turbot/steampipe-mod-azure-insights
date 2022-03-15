@@ -128,7 +128,7 @@ query "azure_compute_disk_count" {
 query "azure_compute_disk_storage_total" {
   sql = <<-EOQ
     select
-      round(cast(sum(disk_size_bytes)/1024/1024 as numeric), 1) as "Total Storage (GB)"
+      sum(disk_size_gb) as "Total Storage (GB)"
     from
       azure_compute_disk;
   EOQ
@@ -348,29 +348,5 @@ query "azure_compute_disk_platform_managed_encryption_count" {
       azure_compute_disk
     where
       encryption_type = 'EncryptionAtRestWithPlatformKey';
-  EOQ
-}
-
-query "azure_compute_disk_customer_managed_encryption_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Customer-Managed Encryption' as label
-    from
-      azure_compute_disk
-    where
-      encryption_type = 'EncryptionAtRestWithCustomerKey';
-  EOQ
-}
-
-query "azure_compute_disk_cmk_and_platfrom_managed_encryption_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Platform And Customer-Managed Encryption' as label
-    from
-      azure_compute_disk
-    where
-      encryption_type = 'EncryptionAtRestWithPlatformAndCustomerKeys';
   EOQ
 }
