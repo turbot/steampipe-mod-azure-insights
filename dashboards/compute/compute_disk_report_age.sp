@@ -50,6 +50,10 @@ dashboard "azure_compute_disk_age_report" {
     column "ID" {
       display = "none"
     }
+    
+    column "Subscription ID" {
+      display = "none"
+    }
 
     sql = query.azure_compute_disk_age_table.sql
   }
@@ -130,11 +134,15 @@ query "azure_compute_disk_age_table" {
       now()::date - d.time_created::date as "Age in Days",
       d.time_created as "Create Date",
       d.disk_state as "Disk State",
+      d.subscription_id as "Subscription ID",
+      sub.title as "Subscription",
       d.region as "Region",
-      d.resource_group as "Resource Group",
-      d.subscription_id as "Subscription ID"
+      d.resource_group as "Resource Group"
     from
-      azure_compute_disk as d
+      azure_compute_disk as d,
+      azure_subscription as sub
+    where
+      d.subscription_id = sub.subscription_id
     order by
       d.name;
   EOQ

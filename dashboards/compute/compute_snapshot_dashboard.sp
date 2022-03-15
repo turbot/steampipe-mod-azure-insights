@@ -273,12 +273,15 @@ query "azure_compute_snapshot_by_subscription" {
 query "azure_compute_snapshot_by_resource_group" {
   sql = <<-EOQ
     select
-      resource_group as "Resource Group",
-      count(resource_group) as "Snapshots"
+      resource_group || ' [' || sub.title || ']' as "Resource Group",
+      count(resource_group) as "Accounts"
     from
-      azure_compute_snapshot
+      azure_compute_snapshot as s,
+      azure_subscription as sub
+    where
+       s.subscription_id = sub.subscription_id
     group by
-      resource_group
+      resource_group, sub.title
     order by
       resource_group;
   EOQ

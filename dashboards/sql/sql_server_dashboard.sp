@@ -397,12 +397,15 @@ query "azure_sql_server_by_subscription" {
 query "azure_sql_server_by_resource_group" {
   sql = <<-EOQ
     select
-      resource_group as "Resource Group",
-      count(resource_group) as "Servers"
+      resource_group || ' [' || sub.title || ']' as "Resource Group",
+      count(resource_group) as "Accounts"
     from
-      azure_sql_server
+      azure_sql_server as v,
+      azure_subscription as sub
+    where
+       v.subscription_id = sub.subscription_id
     group by
-      resource_group
+      resource_group, sub.title
     order by
       resource_group;
   EOQ

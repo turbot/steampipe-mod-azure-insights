@@ -51,6 +51,10 @@ dashboard "azure_sql_database_age_report" {
       display = "none"
     }
 
+    column "Subscription ID" {
+      display = "none"
+    }
+    
     sql = query.azure_sql_database_age_table.sql
   }
 
@@ -129,13 +133,16 @@ query "azure_sql_database_age_table" {
       now()::date - d.creation_date::date as "Age in Days",
       d.creation_date as "Create Date",
       d.status as "Status",
+      d.subscription_id as "Subscription ID",
+      sub.title as "Subscription",
       d.region as "Region",
-      d.resource_group as "Resource Group",
-      d.subscription_id as "Subscription ID"
+      d.resource_group as "Resource Group"
     from
-      azure_sql_database as d
+      azure_sql_database as d,
+      azure_subscription as sub
     where
-      d.name <> 'master'
+      d.subscription_id = sub.subscription_id
+      and d.name <> 'master'
     order by
       d.name;
   EOQ

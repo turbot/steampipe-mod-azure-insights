@@ -295,14 +295,15 @@ query "azure_sql_database_by_subscription" {
 query "azure_sql_database_by_resource_group" {
   sql = <<-EOQ
     select
-      resource_group as "Resource Group",
-      count(resource_group) as "Databases"
+      resource_group || ' [' || sub.title || ']' as "Resource Group",
+      count(resource_group) as "Accounts"
     from
-      azure_sql_database
+      azure_sql_database as d,
+      azure_subscription as sub
     where
-      name <> 'master'
+       d.subscription_id = sub.subscription_id
     group by
-      resource_group
+      resource_group, sub.title
     order by
       resource_group;
   EOQ

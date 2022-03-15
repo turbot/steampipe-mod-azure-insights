@@ -31,6 +31,10 @@ dashboard "azure_sql_server_encryption_report" {
       display = "none"
     }
 
+    column "Subscription ID" {
+      display = "none"
+    }
+    
     sql = query.azure_sql_server_encryption_report.sql
   }
 
@@ -54,9 +58,10 @@ query "azure_sql_server_encryption_report" {
       e.kind as "Kind",
       e.serverKeyName as "Server Key Name",
       e.serverKeyType as "Server Key Type",
+      s.subscription_id as "Subscription ID",
+      sub.title as "Subscription",
       s.region as "Region",
-      s.resource_group as "Resource Group",
-      s.subscription_id as "Subscription ID"
+      s.resource_group as "Resource Group"
     from
       azure_sql_server as s left join encryption_protector as e on s.id = e.id,
       azure_subscription sub

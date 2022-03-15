@@ -51,6 +51,10 @@ dashboard "azure_compute_snapshot_age_report" {
       display = "none"
     }
 
+    column "Subscription ID" {
+      display = "none"
+    }
+    
     sql = query.azure_compute_snapshot_age_table.sql
   }
 
@@ -124,18 +128,21 @@ query "azure_compute_snapshot_1_year_count" {
 query "azure_compute_snapshot_age_table" {
   sql = <<-EOQ
     select
-      d.name as "Name",
-      d.unique_id as "Unique ID",
-      d.id as "ID",
-      now()::date - d.time_created::date as "Age in Days",
-      d.time_created as "Create Date",
-      -- d.disk_state as "Disk State",
-      d.region as "Region",
-      d.resource_group as "Resource Group",
-      d.subscription_id as "Subscription ID"
+      s.name as "Name",
+      s.unique_id as "Unique ID",
+      s.id as "ID",
+      now()::date - s.time_created::date as "Age in Days",
+      s.time_created as "Create Date",
+      s.subscription_id as "Subscription ID",
+      sub.title as "Subscription",
+      s.region as "Region",
+      s.resource_group as "Resource Group"
     from
-      azure_compute_snapshot as d
+      azure_compute_snapshot as s,
+      azure_subscription as sub
+    where
+      s.subscription_id = sub.subscription_id
     order by
-      d.name;
+      s.name;
   EOQ
 }

@@ -36,6 +36,10 @@ dashboard "azure_compute_disk_encryption_report" {
       display = "none"
     }
 
+    column "Subscription ID" {
+      display = "none"
+    }
+
     sql = query.azure_compute_disk_encryption_report.sql
   }
 
@@ -48,14 +52,17 @@ query "azure_compute_disk_encryption_report" {
       d.unique_id as "Unique ID",
       d.id as "ID",
       d.encryption_type as "Encryption Type",
+      d.subscription_id as "Subscription ID",
+      sub.title as "Subscription",
       d.region as "Region",
-      d.resource_group as "Resource Group",
-      d.subscription_id as "Subscription ID"
+      d.resource_group as "Resource Group"
     from
       azure_compute_disk as d,
       azure_subscription sub
     where
-      sub.subscription_id = d.subscription_id;
+      sub.subscription_id = d.subscription_id
+    order by
+      d.name;
   EOQ
 }
 
