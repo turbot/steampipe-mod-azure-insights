@@ -15,12 +15,22 @@ dashboard "azure_compute_snapshot_dashboard" {
     }
 
     card {
-      sql   = query.azure_compute_snapshot_unencrypted_count.sql
+      sql   = query.azure_compute_snapshot_storage_total.sql
       width = 2
     }
 
     card {
       sql   = query.azure_compute_snapshot_public_network_access_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.azure_compute_snapshot_incremental_disabled_count.sql
+      width = 2
+    }
+
+    card {
+      sql   = query.azure_compute_snapshot_encryption_setting_collection_disabled_count.sql
       width = 2
     }
 
@@ -31,23 +41,7 @@ dashboard "azure_compute_snapshot_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Encryption Status"
-      sql   = query.azure_compute_snapshot_by_encryption_status.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "encrypted" {
-          color = "ok"
-        }
-        point "unencrypted" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title = "Network Access Policy Status"
+      title = "Public/Private Status"
       sql   = query.azure_compute_snapshot_by_network_access_policy_status.sql
       type  = "donut"
       width = 2
@@ -57,6 +51,38 @@ dashboard "azure_compute_snapshot_dashboard" {
           color = "ok"
         }
         point "public" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Incremental Status"
+      sql   = query.azure_compute_snapshot_incremental_status.sql
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Encryption Setting Collection Status"
+      sql   = query.azure_compute_snapshot_encryption_setting_collection_status.sql
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
           color = "alert"
         }
       }
@@ -95,6 +121,13 @@ dashboard "azure_compute_snapshot_dashboard" {
       type  = "column"
       width = 3
     }
+
+    chart {
+      title = "Snapshots by OS Type"
+      sql   = query.azure_compute_snapshot_by_os_type.sql
+      type  = "column"
+      width = 3
+    }
   }
 
 }
@@ -107,25 +140,11 @@ query "azure_compute_snapshot_count" {
   EOQ
 }
 
-query "azure_compute_snapshot_unencrypted_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Unencrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as type
-    from
-      azure_compute_snapshot
-    where
-      encryption_type not in
-        ('EncryptionAtRestWithPlatformKey', 'EncryptionAtRestWithCustomerKey', 'EncryptionAtRestWithPlatformAndCustomerKeys');
-  EOQ
-}
-
 query "azure_compute_snapshot_public_network_access_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public NetWork Access' as label,
+      'Publicly Accessible' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       azure_compute_snapshot
@@ -134,30 +153,43 @@ query "azure_compute_snapshot_public_network_access_count" {
   EOQ
 }
 
-# Assessment Queries
-
-query "azure_compute_snapshot_by_encryption_status" {
+query "azure_compute_snapshot_storage_total" {
   sql = <<-EOQ
     select
-      encryption,
-      count(*)
-    from (
-      select encryption_type,
-        case when encryption_type in
-          ('EncryptionAtRestWithPlatformKey', 'EncryptionAtRestWithCustomerKey', 'EncryptionAtRestWithPlatformAndCustomerKeys')
-        then
-          'encrypted'
-        else
-          'unencrypted'
-        end encryption
-      from
-        azure_compute_snapshot) as cd
-    group by
-      encryption
-    order by
-      encryption;
+      sum(disk_size_gb) as "Total Storage (GB)"
+    from
+      azure_compute_snapshot;
   EOQ
 }
+
+query "azure_compute_snapshot_incremental_disabled_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Incremental Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as type
+    from
+      azure_compute_snapshot
+    where
+      not incremental;
+  EOQ
+}
+
+# https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.management.compute.models.encryptionsettingscollection.-ctor?view=azure-dotnet
+query "azure_compute_snapshot_encryption_setting_collection_disabled_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Encryption Setting Collection Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as type
+    from
+      azure_compute_snapshot
+    where
+      encryption_setting_collection_enabled <> true or encryption_setting_collection_enabled is null;
+  EOQ
+}
+
+# Assessment Queries
 
 query "azure_compute_snapshot_by_network_access_policy_status" {
   sql = <<-EOQ
@@ -179,6 +211,45 @@ query "azure_compute_snapshot_by_network_access_policy_status" {
       status;
   EOQ
 }
+
+query "azure_compute_snapshot_incremental_status" {
+  sql = <<-EOQ
+    select
+      status,
+      count(*)
+    from (
+      select incremental,
+        case
+        when incremental then 'enabled' else 'disabled'
+        end as status
+      from
+        azure_compute_snapshot) as cd
+    group by
+      status
+    order by
+      status;
+  EOQ
+}
+
+query "azure_compute_snapshot_encryption_setting_collection_status" {
+  sql = <<-EOQ
+    select
+      status,
+      count(*)
+    from (
+      select incremental,
+        case
+        when encryption_setting_collection_enabled then 'enabled' else 'disabled'
+        end as status
+      from
+        azure_compute_snapshot) as cd
+    group by
+      status
+    order by
+      status;
+  EOQ
+}
+
 
 # Analysis Queries
 
@@ -202,12 +273,15 @@ query "azure_compute_snapshot_by_subscription" {
 query "azure_compute_snapshot_by_resource_group" {
   sql = <<-EOQ
     select
-      resource_group as "Resource Group",
-      count(resource_group) as "Snapshots"
+      resource_group || ' [' || sub.title || ']' as "Resource Group",
+      count(resource_group) as "Accounts"
     from
-      azure_compute_snapshot
+      azure_compute_snapshot as s,
+      azure_subscription as sub
+    where
+       s.subscription_id = sub.subscription_id
     group by
-      resource_group
+      resource_group, sub.title
     order by
       resource_group;
   EOQ
@@ -230,5 +304,19 @@ query "azure_compute_snapshot_by_encryption_type" {
       encryption_type
     order by
       encryption_type;
+  EOQ
+}
+
+query "azure_compute_snapshot_by_os_type" {
+  sql = <<-EOQ
+    select
+      os_type as "Type",
+      count(os_type) as "Snapshots"
+    from
+      azure_compute_snapshot
+    group by
+      os_type
+    order by
+      os_type;
   EOQ
 }
