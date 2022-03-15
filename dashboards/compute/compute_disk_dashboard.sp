@@ -338,3 +338,39 @@ query "azure_compute_disk_top_10_write_ops_avg" {
       timestamp;
   EOQ
 }
+
+query "azure_compute_disk_platform_managed_encryption_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Platform-Managed Encryption' as label
+    from
+      azure_compute_disk
+    where
+      encryption_type = 'EncryptionAtRestWithPlatformKey';
+  EOQ
+}
+
+query "azure_compute_disk_customer_managed_encryption_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Customer-Managed Encryption' as label
+    from
+      azure_compute_disk
+    where
+      encryption_type = 'EncryptionAtRestWithCustomerKey';
+  EOQ
+}
+
+query "azure_compute_disk_cmk_and_platfrom_managed_encryption_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Platform And Customer-Managed Encryption' as label
+    from
+      azure_compute_disk
+    where
+      encryption_type = 'EncryptionAtRestWithPlatformAndCustomerKeys';
+  EOQ
+}

@@ -210,15 +210,22 @@ query "azure_compute_virtual_machine_host_encryption_count" {
 
 query "azure_compute_virtual_machine_disaster_recovery_disabled_count" {
   sql = <<-EOQ
+    with vm_dr_enabled as (
+      select
+        substr(source_id, 0, length(source_id)) as source_id
+      from
+        azure_resource_link as l
+        left join azure_compute_virtual_machine as vm on lower(substr(source_id, 0, length(source_id)))= lower(vm.id)
+      where
+        l.name like 'ASR-Protect-%'
+    )
     select
       count(*) as value,
       'Disaster Recovery Disabled' as label,
-      case count(*) when 0 then 'alert' else 'ok' end as type
+      case count(*) when 0 then 'ok' else 'alert' end as type
     from
-      azure_resource_link as l
-      left join azure_compute_virtual_machine as vm on lower(substr(source_id, 0, length(source_id)))= lower(vm.id)
-    where
-      l.name like 'ASR-Protect-%';
+      azure_compute_virtual_machine as vm
+      where lower(vm.id) not in (select source_id from azure_resource_link) ;
   EOQ
 }
 
@@ -565,7 +572,15 @@ query "azure_compute_virtual_machine_by_resource_group" {
 
 query "azure_compute_virtual_machine_by_region" {
   sql = <<-EOQ
-    select region as "Region", count(*) as "VMs" from azure_compute_virtual_machine group by region order by region;
+    select
+      region as "Region",
+      count(*) as "VMs"
+    from
+      azure_compute_virtual_machine
+    group by
+      region
+    order by
+      region;
   EOQ
 }
 
@@ -587,7 +602,7 @@ query "azure_compute_virtual_machine_by_size" {
   sql = <<-EOQ
     select
       size as "Size",
-      count(os_type) as "VMs"
+      count(size) as "VMs"
     from
       azure_compute_virtual_machine
     group by
