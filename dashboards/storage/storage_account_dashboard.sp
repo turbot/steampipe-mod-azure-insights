@@ -11,34 +11,34 @@ dashboard "azure_storage_account_dashboard" {
 
     # Analysis
     card {
-      sql   = query.azure_storage_account_count.sql
+      query = query.azure_storage_account_count
       width = 2
     }
 
     # Assessments
 
     card {
-      sql   = query.azure_storage_account_blob_soft_delete_disabled_count.sql
+      query = query.azure_storage_account_blob_soft_delete_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_storage_account_blob_public_access_enabled_count.sql
+      query = query.azure_storage_account_blob_public_access_enabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_storage_account_https_traffic_disabled_count.sql
+      query = query.azure_storage_account_https_traffic_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_storage_account_unrestricted_network_access_count.sql
+      query = query.azure_storage_account_unrestricted_network_access_count
       width = 2
     }
 
     card {
-      sql   = query.azure_storage_account_infrastructure_encryption_disabled_count.sql
+      query = query.azure_storage_account_infrastructure_encryption_disabled_count
       width = 2
     }
 
@@ -50,7 +50,7 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "Blob Soft Delete Status"
-      sql   = query.azure_storage_account_blob_soft_delete_status.sql
+      query = query.azure_storage_account_blob_soft_delete_status
       type  = "donut"
       width = 2
 
@@ -66,7 +66,7 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "Blob Public Access Status"
-      sql   = query.azure_storage_account_blob_public_access_status.sql
+      query = query.azure_storage_account_blob_public_access_status
       type  = "donut"
       width = 2
 
@@ -82,7 +82,7 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "HTTPS Status"
-      sql   = query.azure_storage_account_https_traffic_status.sql
+      query = query.azure_storage_account_https_traffic_status
       type  = "donut"
       width = 2
 
@@ -98,7 +98,7 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "Network Access Status"
-      sql   = query.azure_storage_account_network_access_status.sql
+      query = query.azure_storage_account_network_access_status
       type  = "donut"
       width = 2
 
@@ -114,7 +114,7 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "Infrastructure Encryption Status"
-      sql   = query.azure_storage_account_infrastructure_encryption_status.sql
+      query = query.azure_storage_account_infrastructure_encryption_status
       type  = "donut"
       width = 2
 
@@ -136,28 +136,28 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "Storage Accounts by Subscription"
-      sql   = query.azure_storage_account_by_subscription.sql
+      query = query.azure_storage_account_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Storage Accounts by Resource Group"
-      sql   = query.azure_storage_account_by_resource_group.sql
+      query = query.azure_storage_account_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Storage Accounts by Region"
-      sql   = query.azure_storage_account_by_region.sql
+      query = query.azure_storage_account_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Storage Accounts by Access Tier"
-      sql   = query.azure_storage_account_by_access_tier.sql
+      query = query.azure_storage_account_by_access_tier
       type  = "column"
       width = 3
     }
