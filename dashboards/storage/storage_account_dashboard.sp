@@ -182,7 +182,7 @@ query "azure_storage_account_blob_soft_delete_disabled_count" {
     from
       azure_storage_account
     where
-      not blob_soft_delete_enabled;
+      blob_soft_delete_enabled is not true;
   EOQ
 }
 
@@ -208,7 +208,7 @@ query "azure_storage_account_https_traffic_disabled_count" {
     from
       azure_storage_account
     where
-      not enable_https_traffic_only or enable_https_traffic_only is null;
+      enable_https_traffic_only is not true;
   EOQ
 }
 
@@ -234,7 +234,7 @@ query "azure_storage_account_infrastructure_encryption_disabled_count" {
     from
       azure_storage_account
     where
-      not require_infrastructure_encryption or require_infrastructure_encryption is null
+      require_infrastructure_encryption is not true;
   EOQ
 }
 
