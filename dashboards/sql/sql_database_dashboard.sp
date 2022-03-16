@@ -1,6 +1,7 @@
 dashboard "azure_sql_database_dashboard" {
 
-  title = "Azure SQL Database Dashboard"
+  title         = "Azure SQL Database Dashboard"
+  documentation = file("./dashboards/sql/docs/sql_database_dashboard.md")
 
   tags = merge(local.sql_common_tags, {
     type = "Dashboard"
@@ -218,7 +219,7 @@ query "azure_sql_database_tde_status" {
 
 query "azure_sql_database_vulnerability_assessment_status" {
   sql = <<-EOQ
-   with vulnerability_assessment_enabled as (
+    with vulnerability_assessment_enabled as (
       select
         distinct id
       from
@@ -236,6 +237,8 @@ query "azure_sql_database_vulnerability_assessment_status" {
       from
         azure_sql_database as s
         left join vulnerability_assessment_enabled as va on s.id = va.id
+      where
+        s.name <> 'master'
     )
     select
       vulnerability_assessment_status,
@@ -302,6 +305,7 @@ query "azure_sql_database_by_resource_group" {
       azure_subscription as sub
     where
        d.subscription_id = sub.subscription_id
+       and d.name <> 'master'
     group by
       resource_group, sub.title
     order by

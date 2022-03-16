@@ -1,6 +1,7 @@
 dashboard "azure_compute_snapshot_age_report" {
 
-  title  = "Azure Compute Snapshot Age Report"
+  title         = "Azure Compute Snapshot Age Report"
+  documentation = file("./dashboards/compute/docs/compute_snapshot_report_age.md")
 
   tags = merge(local.compute_common_tags, {
     type     = "Report"

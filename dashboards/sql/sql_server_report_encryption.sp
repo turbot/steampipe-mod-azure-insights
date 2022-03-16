@@ -1,6 +1,7 @@
 dashboard "azure_sql_server_encryption_report" {
 
   title         = "Azure SQL Server Encryption Report"
+  documentation = file("./dashboards/sql/docs/sql_server_report_encryption.md")
 
   tags = merge(local.sql_common_tags, {
     type     = "Report"
@@ -68,5 +69,29 @@ query "azure_sql_server_encryption_report" {
       azure_subscription as sub
     where
       sub.subscription_id = s.subscription_id;
+  EOQ
+}
+
+query "azure_sql_server_default_encrypted_servers_count" {
+  sql = <<-EOQ
+    select
+      count(*) as "Service-Managed Encryption"
+    from
+      azure_sql_server as s,
+      jsonb_array_elements(encryption_protector) as ep
+    where
+      ep ->> 'serverKeyType' = 'ServiceManaged'
+  EOQ
+}
+
+query "azure_sql_server_customer_managed_encryption_count" {
+  sql = <<-EOQ
+   select
+      count(*) as "Customer-Managed Encryption"
+    from
+      azure_sql_server as s,
+      jsonb_array_elements(encryption_protector) as ep
+    where
+      ep ->> 'serverKeyType' <> 'ServiceManaged'
   EOQ
 }

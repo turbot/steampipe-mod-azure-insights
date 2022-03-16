@@ -1,6 +1,7 @@
 dashboard "azure_sql_database_age_report" {
 
-  title  = "Azure SQL Database Age Report"
+  title         = "Azure SQL Database Age Report"
+  documentation = file("./dashboards/sql/docs/sql_databse_report_age.md")
 
   tags = merge(local.sql_common_tags, {
     type     = "Report"

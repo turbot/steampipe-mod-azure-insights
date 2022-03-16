@@ -1,6 +1,7 @@
 dashboard "azure_compute_snapshot_dashboard" {
 
-  title = "Azure Compute Snapshot Dashboard"
+  title         = "Azure Compute Snapshot Dashboard"
+  documentation = file("./dashboards/compute/docs/compute_snapshot_dashboard.md")
 
   tags = merge(local.compute_common_tags, {
     type = "Dashboard"
@@ -98,35 +99,35 @@ dashboard "azure_compute_snapshot_dashboard" {
       title = "Snapshots by Subscription"
       query = query.azure_compute_snapshot_by_subscription
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Snapshots by Resource Group"
       query = query.azure_compute_snapshot_by_resource_group
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Snapshots by Region"
       query = query.azure_compute_snapshot_by_region
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Snapshots by Encryption Type"
       query = query.azure_compute_snapshot_by_encryption_type
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Snapshots by OS Type"
       query = query.azure_compute_snapshot_by_os_type
       type  = "column"
-      width = 3
+      width = 4
     }
   }
 

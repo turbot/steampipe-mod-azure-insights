@@ -1,6 +1,7 @@
 dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
-  title = "Azure Compute Virtual Machine Scale Set Dashboard"
+  title         = "Azure Compute Virtual Machine Scale Set Dashboard"
+  documentation = file("./dashboards/compute/docs/compute_virtual_machine_scale_set_dashboard.md")
 
   tags = merge(local.compute_common_tags, {
     type = "Dashboard"
@@ -137,7 +138,8 @@ query "azure_compute_virtual_machine_scale_set_host_encryption_count" {
     from
       azure_compute_virtual_machine_scale_set
     where
-      virtual_machine_security_profile -> 'encryptionAtHost' is not true;
+      virtual_machine_security_profile -> 'encryptionAtHost' <> 'true'
+      or virtual_machine_security_profile -> 'encryptionAtHost' is null;
   EOQ
 }
 
@@ -203,7 +205,7 @@ query "azure_compute_virtual_machine_scale_set_by_host_encryption_status" {
       count(*)
     from (
       select virtual_machine_security_profile -> 'encryptionAtHost',
-        case when virtual_machine_security_profile -> 'encryptionAtHost' is not true then 'unencrypted'
+        case when virtual_machine_security_profile -> 'encryptionAtHost' <> 'true' or virtual_machine_security_profile -> 'encryptionAtHost' is null then 'unencrypted'
         else 'encrypted'
         end encryption
       from

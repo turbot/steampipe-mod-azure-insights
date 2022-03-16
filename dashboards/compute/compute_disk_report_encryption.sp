@@ -1,6 +1,7 @@
 dashboard "azure_compute_disk_encryption_report" {
 
-  title = "Azure Compute Disk Encryption Report"
+  title         = "Azure Compute Disk Encryption Report"
+  documentation = file("./dashboards/compute/docs/compute_disk_report_encryption.md")
 
   tags = merge(local.compute_common_tags, {
     type     = "Report"

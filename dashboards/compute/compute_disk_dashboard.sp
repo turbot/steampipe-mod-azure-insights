@@ -1,6 +1,7 @@
 dashboard "azure_compute_disk_dashboard" {
 
-  title = "Azure Compute Disk Dashboard"
+  title         = "Azure Compute Disk Dashboard"
+  documentation = file("./dashboards/compute/docs/compute_disk_dashboard.md")
 
   tags = merge(local.compute_common_tags, {
     type = "Dashboard"
