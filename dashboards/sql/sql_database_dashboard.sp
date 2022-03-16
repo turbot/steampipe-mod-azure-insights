@@ -102,7 +102,7 @@ dashboard "azure_sql_database_dashboard" {
       type  = "column"
       width = 4
     }
-    
+
     chart {
       title = "Databases by Age"
       query = query.azure_sql_database_by_creation_month
@@ -340,6 +340,7 @@ query "azure_sql_database_by_creation_month" {
           'YYYY-MM') as creation_month
       from
         azure_sql_database
+      where name <> 'master'
     ),
     months as (
       select
