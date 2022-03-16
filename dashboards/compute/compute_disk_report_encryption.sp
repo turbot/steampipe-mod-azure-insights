@@ -58,7 +58,7 @@ query "azure_compute_disk_encryption_report" {
       d.resource_group as "Resource Group"
     from
       azure_compute_disk as d,
-      azure_subscriptionas as sub
+      azure_subscription as sub
     where
       sub.subscription_id = d.subscription_id
     order by
