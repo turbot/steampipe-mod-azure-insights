@@ -89,28 +89,28 @@ dashboard "azure_key_vault_dashboard" {
       title = "Vaults by Subscription"
       query = query.azure_key_vault_by_subscription
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Vaults by Resource Group"
       query = query.azure_key_vault_by_resource_group
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Vaults by Region"
       query = query.azure_key_vault_by_region
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Vaults by SKU"
       query = query.azure_key_vault_by_sku
       type  = "column"
-      width = 4
+      width = 3
     }
 
   }
