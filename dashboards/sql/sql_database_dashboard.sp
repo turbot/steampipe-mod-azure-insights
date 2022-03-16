@@ -1,6 +1,7 @@
 dashboard "azure_sql_database_dashboard" {
 
-  title = "Azure SQL Database Dashboard"
+  title         = "Azure SQL Database Dashboard"
+  documentation = file("./dashboards/sql/docs/sql_database_dashboard.md")
 
   tags = merge(local.sql_common_tags, {
     type = "Dashboard"
@@ -92,42 +93,43 @@ dashboard "azure_sql_database_dashboard" {
       title = "Databases by Subscription"
       query = query.azure_sql_database_by_subscription
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Databases by Resource Group"
       query = query.azure_sql_database_by_resource_group
       type  = "column"
-      width = 3
+      width = 4
+    }
+    
+    chart {
+      title = "Databases by Age"
+      query = query.azure_sql_database_by_creation_month
+      type  = "column"
+      width = 4
     }
 
     chart {
       title = "Databases by Region"
       query = query.azure_sql_database_by_region
       type  = "column"
-      width = 3
+      width = 4
     }
+
 
     chart {
       title = "Databases by Status"
       query = query.azure_sql_database_by_status
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Databases by Edition"
       query = query.azure_sql_database_by_edition
       type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Databases by Containment State"
-      query = query.azure_sql_database_by_containment_state
-      type  = "column"
-      width = 3
+      width = 4
     }
 
   }
@@ -218,7 +220,7 @@ query "azure_sql_database_tde_status" {
 
 query "azure_sql_database_vulnerability_assessment_status" {
   sql = <<-EOQ
-   with vulnerability_assessment_enabled as (
+    with vulnerability_assessment_enabled as (
       select
         distinct id
       from
@@ -231,11 +233,13 @@ query "azure_sql_database_vulnerability_assessment_status" {
     vulnerability_assessment_status as (
       select
         case
-          when s.name is not null  then 'enabled'
+          when s.name is not null then 'enabled'
           else 'disabled' end as vulnerability_assessment_status
       from
         azure_sql_database as s
         left join vulnerability_assessment_enabled as va on s.id = va.id
+      where
+        s.name <> 'master'
     )
     select
       vulnerability_assessment_status,
@@ -302,6 +306,7 @@ query "azure_sql_database_by_resource_group" {
       azure_subscription as sub
     where
        d.subscription_id = sub.subscription_id
+       and d.name <> 'master'
     group by
       resource_group, sub.title
     order by
@@ -322,6 +327,51 @@ query "azure_sql_database_by_region" {
       region
     order by
       region;
+  EOQ
+}
+
+query "azure_sql_database_by_creation_month" {
+  sql = <<-EOQ
+    with databases as (
+      select
+        title,
+        creation_date,
+        to_char(creation_date,
+          'YYYY-MM') as creation_month
+      from
+        azure_sql_database
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+          (
+            select
+              min(creation_date)
+              from databases)),
+          date_trunc('month',
+            current_date),
+          interval '1 month') as d
+        ),
+    databases_by_month as (
+      select
+        creation_month,
+        count(*)
+      from
+        databases
+      group by
+        creation_month
+    )
+    select
+      months.month,
+      databases_by_month.count
+    from
+      months
+      left join databases_by_month on months.month = databases_by_month.creation_month
+    order by
+      months.month;
   EOQ
 }
 
@@ -357,18 +407,3 @@ query "azure_sql_database_by_edition" {
   EOQ
 }
 
-query "azure_sql_database_by_containment_state" {
-  sql = <<-EOQ
-    select
-      containment_state as "Containment State",
-      count(containment_state) as "Databases"
-    from
-      azure_sql_database
-    where
-      name <> 'master'
-    group by
-      containment_state
-    order by
-      containment_state;
-  EOQ
-}

@@ -1,6 +1,7 @@
 dashboard "azure_compute_disk_age_report" {
 
-  title  = "Azure Compute Disk Age Report"
+  title         = "Azure Compute Disk Age Report"
+  documentation = file("./dashboards/compute/docs/compute_disk_report_age.md")
 
   tags = merge(local.compute_common_tags, {
     type     = "Report"
@@ -130,14 +131,14 @@ query "azure_compute_disk_age_table" {
     select
       d.name as "Name",
       d.unique_id as "Unique ID",
-      d.id as "ID",
       now()::date - d.time_created::date as "Age in Days",
-      d.time_created as "Create Date",
+      d.time_created as "Time Created",
       d.disk_state as "Disk State",
-      d.subscription_id as "Subscription ID",
       sub.title as "Subscription",
+      d.subscription_id as "Subscription ID",
+      d.resource_group as "Resource Group",
       d.region as "Region",
-      d.resource_group as "Resource Group"
+      d.id as "ID"
     from
       azure_compute_disk as d,
       azure_subscription as sub

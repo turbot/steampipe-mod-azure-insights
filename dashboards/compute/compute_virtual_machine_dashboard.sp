@@ -1,6 +1,7 @@
 dashboard "azure_compute_virtual_machine_dashboard" {
 
-  title = "Azure Compute Virtual Machine Dashboard"
+  title         = "Azure Compute Virtual Machine Dashboard"
+  documentation = file("./dashboards/compute/docs/compute_virtual_machine_dashboard.md")
 
   tags = merge(local.compute_common_tags, {
     type = "Dashboard"
@@ -213,14 +214,14 @@ query "azure_compute_virtual_machine_count" {
 
 query "azure_compute_virtual_machine_host_encryption_count" {
   sql = <<-EOQ
-  select
-    count(*) as value,
-    'Unencrypted Host' as label,
-    case count(*) when 0 then 'ok' else 'alert' end as type
-  from
-    azure_compute_virtual_machine
-  where
-    security_profile -> 'encryptionAtHost' <> 'true' or security_profile -> 'encryptionAtHost' is null;
+    select
+      count(*) as value,
+      'Unencrypted Host' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as type
+    from
+      azure_compute_virtual_machine
+    where
+      security_profile -> 'encryptionAtHost' <> 'true' or security_profile -> 'encryptionAtHost' is null;
   EOQ
 }
 
@@ -640,7 +641,7 @@ query "azure_compute_virtual_machine_by_region" {
 query "azure_compute_virtual_machine_by_os_type" {
   sql = <<-EOQ
     select
-      os_type as "Type",
+      os_type as "OS Type",
       count(os_type) as "VMs"
     from
       azure_compute_virtual_machine

@@ -1,6 +1,6 @@
 dashboard "azure_storage_account_dashboard" {
 
-  title = "Azure Storage Account Dashboard"
+  title         = "Azure Storage Account Dashboard"
   documentation = file("./dashboards/storage/docs/storage_account_dashboard.md")
 
   tags = merge(local.storage_common_tags, {

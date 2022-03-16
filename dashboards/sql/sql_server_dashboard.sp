@@ -1,6 +1,7 @@
 dashboard "azure_sql_server_dashboard" {
 
-  title = "Azure SQL Server Dashboard"
+  title         = "Azure SQL Server Dashboard"
+  documentation = file("./dashboards/sql/docs/sql_server_dashboard.md")
 
   tags = merge(local.sql_common_tags, {
     type = "Dashboard"
@@ -129,42 +130,42 @@ dashboard "azure_sql_server_dashboard" {
       title = "Servers by Subscription"
       query = query.azure_sql_server_by_subscription
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Servers by Resource Group"
       query = query.azure_sql_server_by_resource_group
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Servers by Region"
       query = query.azure_sql_server_by_region
       type  = "column"
-      width = 3
+      width = 4
     }
 
      chart {
       title = "Servers by Encryption Type"
       query = query.azure_sql_server_by_encryption_type
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Servers by Kind"
       query = query.azure_sql_server_by_kind
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Servers by State"
       query = query.azure_sql_server_by_state
       type  = "column"
-      width = 3
+      width = 4
     }
 
   }
@@ -241,7 +242,7 @@ query "azure_sql_server_azure_ad_authentication_disabled_count" {
     from
      azure_sql_server
     where
-    server_azure_ad_administrator is null;
+      server_azure_ad_administrator is null;
   EOQ
 }
 
@@ -268,7 +269,7 @@ query "azure_sql_server_public_status" {
 
 query "azure_sql_server_vulnerability_assessment_status" {
   sql = <<-EOQ
-   with vulnerability_assessment_enabled as (
+    with vulnerability_assessment_enabled as (
       select
         distinct id
       from
@@ -280,7 +281,7 @@ query "azure_sql_server_vulnerability_assessment_status" {
     vulnerability_assessment_status as (
       select
         case
-          when s.name is not null  then 'enabled'
+          when va.id is not null then 'enabled'
           else 'disabled' end as vulnerability_assessment_status
       from
         azure_sql_server as s
@@ -298,7 +299,7 @@ query "azure_sql_server_vulnerability_assessment_status" {
 
 query "azure_sql_server_auditing_status" {
   sql = <<-EOQ
-   with auditing_enabled as (
+    with auditing_enabled as (
       select
         distinct id
       from
@@ -310,11 +311,11 @@ query "azure_sql_server_auditing_status" {
     auditing_enabled_status as (
       select
         case
-          when s.name is not null  then 'enabled'
+          when a.id is not null then 'enabled'
           else 'disabled' end as auditing_enabled_status
       from
         azure_sql_server as s
-        left join auditing_enabled as va on s.id = va.id
+        left join auditing_enabled as a on s.id = a.id
     )
     select
       auditing_enabled_status,
@@ -400,10 +401,10 @@ query "azure_sql_server_by_resource_group" {
       resource_group || ' [' || sub.title || ']' as "Resource Group",
       count(resource_group) as "Accounts"
     from
-      azure_sql_server as v,
+      azure_sql_server as s,
       azure_subscription as sub
     where
-       v.subscription_id = sub.subscription_id
+       s.subscription_id = sub.subscription_id
     group by
       resource_group, sub.title
     order by
@@ -436,7 +437,7 @@ query "azure_sql_server_by_encryption_type" {
         jsonb_array_elements(encryption_protector) as ep
     )
     select
-      serverKeyType as "serverKeyType",
+      serverKeyType as "Server Key Type",
       count(serverKeyType) as "Servers"
     from
       encryption_type
@@ -472,29 +473,5 @@ query "azure_sql_server_by_state" {
       state
     order by
       state;
-  EOQ
-}
-
-query "azure_sql_server_default_encrypted_servers_count" {
-  sql = <<-EOQ
-    select
-      count(*) as "Service-Managed Encryption"
-    from
-      azure_sql_server as s,
-      jsonb_array_elements(encryption_protector) as ep
-    where
-      ep ->> 'serverKeyType' = 'ServiceManaged'
-  EOQ
-}
-
-query "azure_sql_server_customer_managed_encryption_count" {
-  sql = <<-EOQ
-   select
-      count(*) as "Customer-Managed Encryption"
-    from
-      azure_sql_server as s,
-      jsonb_array_elements(encryption_protector) as ep
-    where
-      ep ->> 'serverKeyType' <> 'ServiceManaged'
   EOQ
 }
