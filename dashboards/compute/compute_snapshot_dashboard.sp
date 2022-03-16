@@ -20,7 +20,7 @@ dashboard "azure_compute_snapshot_dashboard" {
     }
 
     card {
-      query = query.azure_compute_snapshot_public_network_access_count
+      query = query.azure_compute_snapshot_unrestricted_network_access_count
       width = 2
     }
 
@@ -41,16 +41,16 @@ dashboard "azure_compute_snapshot_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Public/Private Status"
+      title = "Network Access Status"
       query = query.azure_compute_snapshot_by_network_access_policy_status
       type  = "donut"
       width = 2
 
       series "count" {
-        point "private" {
+        point "restricted" {
           color = "ok"
         }
-        point "public" {
+        point "unrestricted" {
           color = "alert"
         }
       }
@@ -140,11 +140,11 @@ query "azure_compute_snapshot_count" {
   EOQ
 }
 
-query "azure_compute_snapshot_public_network_access_count" {
+query "azure_compute_snapshot_unrestricted_network_access_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Publicly Accessible' as label,
+      'Unrestricted Network Access' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       azure_compute_snapshot
@@ -171,7 +171,7 @@ query "azure_compute_snapshot_incremental_disabled_count" {
     from
       azure_compute_snapshot
     where
-      not incremental;
+      incremental is not true;
   EOQ
 }
 
@@ -185,7 +185,7 @@ query "azure_compute_snapshot_encryption_setting_collection_disabled_count" {
     from
       azure_compute_snapshot
     where
-      encryption_setting_collection_enabled <> true or encryption_setting_collection_enabled is null;
+      encryption_setting_collection_enabled is not true;
   EOQ
 }
 
@@ -199,12 +199,12 @@ query "azure_compute_snapshot_by_network_access_policy_status" {
     from (
       select network_access_policy,
         case
-        when network_access_policy = 'AllowPrivate' then 'private'
-        when network_access_policy = 'AllowAll' then 'public'
+        when network_access_policy = 'AllowPrivate' then 'restricted'
+        when network_access_policy = 'AllowAll' then 'unrestricted'
         else 'denied'
         end as status
       from
-        azure_compute_snapshot) as cd
+        azure_compute_snapshot) as cs
     group by
       status
     order by
@@ -223,7 +223,7 @@ query "azure_compute_snapshot_incremental_status" {
         when incremental then 'enabled' else 'disabled'
         end as status
       from
-        azure_compute_snapshot) as cd
+        azure_compute_snapshot) as cs
     group by
       status
     order by
@@ -237,12 +237,12 @@ query "azure_compute_snapshot_encryption_setting_collection_status" {
       status,
       count(*)
     from (
-      select incremental,
+      select
         case
-        when encryption_setting_collection_enabled then 'enabled' else 'disabled'
+          when encryption_setting_collection_enabled then 'enabled' else 'disabled'
         end as status
       from
-        azure_compute_snapshot) as cd
+        azure_compute_snapshot) as cs
     group by
       status
     order by
@@ -250,23 +250,22 @@ query "azure_compute_snapshot_encryption_setting_collection_status" {
   EOQ
 }
 
-
 # Analysis Queries
 
 query "azure_compute_snapshot_by_subscription" {
   sql = <<-EOQ
     select
-      a.title as "Subscription",
-      count(v.*) as "Snapshots"
+      sub.title as "Subscription",
+      count(s.*) as "Snapshots"
     from
-      azure_compute_snapshot as v,
-      azure_subscription as a
+      azure_compute_snapshot as s,
+      azure_subscription as sub
     where
-      a.subscription_id = v.subscription_id
+      sub.subscription_id = s.subscription_id
     group by
-      a.title
+      sub.title
     order by
-      a.title;
+      sub.title;
   EOQ
 }
 
@@ -289,14 +288,22 @@ query "azure_compute_snapshot_by_resource_group" {
 
 query "azure_compute_snapshot_by_region" {
   sql = <<-EOQ
-    select region as "Region", count(*) as "Snapshots" from azure_compute_snapshot group by region order by region;
+    select
+      region as "Region",
+      count(*) as "Snapshots"
+    from
+      azure_compute_snapshot
+    group by
+      region
+    order by
+      region;
   EOQ
 }
 
 query "azure_compute_snapshot_by_encryption_type" {
   sql = <<-EOQ
     select
-      encryption_type as "Type",
+      encryption_type as "Encryption Type",
       count(os_type) as "Snapshots"
     from
       azure_compute_snapshot
@@ -310,7 +317,7 @@ query "azure_compute_snapshot_by_encryption_type" {
 query "azure_compute_snapshot_by_os_type" {
   sql = <<-EOQ
     select
-      os_type as "Type",
+      os_type as "OS Type",
       count(os_type) as "Snapshots"
     from
       azure_compute_snapshot

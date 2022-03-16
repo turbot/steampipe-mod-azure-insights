@@ -58,13 +58,14 @@ query "azure_sql_server_encryption_report" {
       e.kind as "Kind",
       e.serverKeyName as "Server Key Name",
       e.serverKeyType as "Server Key Type",
-      s.subscription_id as "Subscription ID",
       sub.title as "Subscription",
+      s.subscription_id as "Subscription ID",
+      s.resource_group as "Resource Group",
       s.region as "Region",
-      s.resource_group as "Resource Group"
+      s.id as "ID"
     from
       azure_sql_server as s left join encryption_protector as e on s.id = e.id,
-      azure_subscription sub
+      azure_subscription as sub
     where
       sub.subscription_id = s.subscription_id;
   EOQ

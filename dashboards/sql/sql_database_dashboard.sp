@@ -231,7 +231,7 @@ query "azure_sql_database_vulnerability_assessment_status" {
     vulnerability_assessment_status as (
       select
         case
-          when s.name is not null  then 'enabled'
+          when s.name is not null then 'enabled'
           else 'disabled' end as vulnerability_assessment_status
       from
         azure_sql_database as s

@@ -241,7 +241,7 @@ query "azure_sql_server_azure_ad_authentication_disabled_count" {
     from
      azure_sql_server
     where
-    server_azure_ad_administrator is null;
+      server_azure_ad_administrator is null;
   EOQ
 }
 
@@ -268,7 +268,7 @@ query "azure_sql_server_public_status" {
 
 query "azure_sql_server_vulnerability_assessment_status" {
   sql = <<-EOQ
-   with vulnerability_assessment_enabled as (
+    with vulnerability_assessment_enabled as (
       select
         distinct id
       from
@@ -400,10 +400,10 @@ query "azure_sql_server_by_resource_group" {
       resource_group || ' [' || sub.title || ']' as "Resource Group",
       count(resource_group) as "Accounts"
     from
-      azure_sql_server as v,
+      azure_sql_server as s,
       azure_subscription as sub
     where
-       v.subscription_id = sub.subscription_id
+       s.subscription_id = sub.subscription_id
     group by
       resource_group, sub.title
     order by
@@ -436,7 +436,7 @@ query "azure_sql_server_by_encryption_type" {
         jsonb_array_elements(encryption_protector) as ep
     )
     select
-      serverKeyType as "serverKeyType",
+      serverKeyType as "Server Key Type",
       count(serverKeyType) as "Servers"
     from
       encryption_type

@@ -220,7 +220,7 @@ query "azure_compute_virtual_machine_host_encryption_count" {
   from
     azure_compute_virtual_machine
   where
-    security_profile -> 'encryptionAtHost' <> 'true' or security_profile -> 'encryptionAtHost' is null;
+    security_profile -> 'encryptionAtHost' is not true;
   EOQ
 }
 
@@ -377,7 +377,7 @@ query "azure_compute_virtual_machine_by_host_encryption_status" {
       count(*)
     from (
       select security_profile -> 'encryptionAtHost',
-        case when security_profile -> 'encryptionAtHost' <> 'true' or security_profile -> 'encryptionAtHost' is null then 'unencrypted'
+        case when security_profile -> 'encryptionAtHost' is not true then 'unencrypted'
         else 'encrypted'
         end encryption
       from
@@ -640,7 +640,7 @@ query "azure_compute_virtual_machine_by_region" {
 query "azure_compute_virtual_machine_by_os_type" {
   sql = <<-EOQ
     select
-      os_type as "Type",
+      os_type as "OS Type",
       count(os_type) as "VMs"
     from
       azure_compute_virtual_machine

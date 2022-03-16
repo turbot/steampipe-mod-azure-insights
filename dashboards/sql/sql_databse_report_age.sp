@@ -133,10 +133,11 @@ query "azure_sql_database_age_table" {
       now()::date - d.creation_date::date as "Age in Days",
       d.creation_date as "Create Date",
       d.status as "Status",
-      d.subscription_id as "Subscription ID",
       sub.title as "Subscription",
+      d.subscription_id as "Subscription ID",
+      d.resource_group as "Resource Group",
       d.region as "Region",
-      d.resource_group as "Resource Group"
+      d.id as "ID"
     from
       azure_sql_database as d,
       azure_subscription as sub

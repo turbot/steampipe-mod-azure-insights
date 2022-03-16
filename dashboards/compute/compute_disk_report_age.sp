@@ -130,14 +130,14 @@ query "azure_compute_disk_age_table" {
     select
       d.name as "Name",
       d.unique_id as "Unique ID",
-      d.id as "ID",
       now()::date - d.time_created::date as "Age in Days",
-      d.time_created as "Create Date",
+      d.time_created as "Time Created",
       d.disk_state as "Disk State",
-      d.subscription_id as "Subscription ID",
       sub.title as "Subscription",
-      d.region as "Region",
+      d.subscription_id as "Subscription ID",
       d.resource_group as "Resource Group"
+      d.region as "Region",
+      d.id as "ID"
     from
       azure_compute_disk as d,
       azure_subscription as sub
