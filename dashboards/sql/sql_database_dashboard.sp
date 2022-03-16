@@ -93,42 +93,43 @@ dashboard "azure_sql_database_dashboard" {
       title = "Databases by Subscription"
       query = query.azure_sql_database_by_subscription
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Databases by Resource Group"
       query = query.azure_sql_database_by_resource_group
       type  = "column"
-      width = 3
+      width = 4
+    }
+    
+    chart {
+      title = "Databases by Age"
+      query = query.azure_sql_database_by_creation_month
+      type  = "column"
+      width = 4
     }
 
     chart {
       title = "Databases by Region"
       query = query.azure_sql_database_by_region
       type  = "column"
-      width = 3
+      width = 4
     }
+
 
     chart {
       title = "Databases by Status"
       query = query.azure_sql_database_by_status
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Databases by Edition"
       query = query.azure_sql_database_by_edition
       type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Databases by Containment State"
-      query = query.azure_sql_database_by_containment_state
-      type  = "column"
-      width = 3
+      width = 4
     }
 
   }
@@ -329,6 +330,51 @@ query "azure_sql_database_by_region" {
   EOQ
 }
 
+query "azure_sql_database_by_creation_month" {
+  sql = <<-EOQ
+    with databases as (
+      select
+        title,
+        creation_date,
+        to_char(creation_date,
+          'YYYY-MM') as creation_month
+      from
+        azure_sql_database
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+          (
+            select
+              min(creation_date)
+              from databases)),
+          date_trunc('month',
+            current_date),
+          interval '1 month') as d
+        ),
+    databases_by_month as (
+      select
+        creation_month,
+        count(*)
+      from
+        databases
+      group by
+        creation_month
+    )
+    select
+      months.month,
+      databases_by_month.count
+    from
+      months
+      left join databases_by_month on months.month = databases_by_month.creation_month
+    order by
+      months.month;
+  EOQ
+}
+
 query "azure_sql_database_by_status" {
   sql = <<-EOQ
     select
@@ -361,18 +407,3 @@ query "azure_sql_database_by_edition" {
   EOQ
 }
 
-query "azure_sql_database_by_containment_state" {
-  sql = <<-EOQ
-    select
-      containment_state as "Containment State",
-      count(containment_state) as "Databases"
-    from
-      azure_sql_database
-    where
-      name <> 'master'
-    group by
-      containment_state
-    order by
-      containment_state;
-  EOQ
-}

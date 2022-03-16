@@ -58,49 +58,35 @@ dashboard "azure_compute_disk_dashboard" {
       title = "Disks by Subscription"
       query = query.azure_compute_disk_by_subscription
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Disks by Resource Group"
       query = query.azure_compute_disk_by_resource_group
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Disks by Region"
       query = query.azure_compute_disk_by_region
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
-      title = "Disks by Encryption Type"
-      query = query.azure_compute_disk_by_encryption_type
+      title = "Disks by Age"
+      query = query.azure_compute_disk_by_age
       type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Disks by OS Type"
-      query = query.azure_compute_disk_by_os_type
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Disks by SKU"
-      query = query.azure_compute_disk_by_sku_tier
-      type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Storage by Subscription (GB)"
       sql   = query.azure_compute_disk_storage_by_subscription.sql
       type  = "column"
-      width = 4
+      width = 3
 
       series "GB" {
         color = "tan"
@@ -111,7 +97,7 @@ dashboard "azure_compute_disk_dashboard" {
       title = "Storage by Resource Group (GB)"
       sql   = query.azure_compute_disk_storage_by_resource_group.sql
       type  = "column"
-      width = 4
+      width = 3
 
       series "GB" {
         color = "tan"
@@ -122,11 +108,43 @@ dashboard "azure_compute_disk_dashboard" {
       title = "Storage by Region (GB)"
       sql   = query.azure_compute_disk_storage_by_region.sql
       type  = "column"
-      width = 4
+      width = 3
 
       series "GB" {
         color = "tan"
       }
+    }
+
+    chart {
+      title = "Storage by Age (GB)"
+      sql   = query.azure_compute_disk_storage_by_age.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+    chart {
+      title = "Disks by Encryption Type"
+      query = query.azure_compute_disk_by_encryption_type
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Disks by OS Type"
+      query = query.azure_compute_disk_by_os_type
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Disks by SKU Tier"
+      query = query.azure_compute_disk_by_sku_tier
+      type  = "column"
+      width = 3
     }
 
   }
@@ -255,6 +273,51 @@ query "azure_compute_disk_by_region" {
   EOQ
 }
 
+query "azure_compute_disk_by_age" {
+  sql = <<-EOQ
+    with disks as (
+      select
+        title,
+        time_created,
+        to_char(time_created,
+          'YYYY-MM') as creation_month
+      from
+        azure_compute_disk
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+            (
+              select
+                min(time_created)
+                from disks)),
+            date_trunc('month',
+              current_date),
+            interval '1 month') as d
+    ),
+    disks_by_month as (
+      select
+        creation_month,
+        count(*)
+      from
+        disks
+      group by
+        creation_month
+    )
+    select
+      months.month,
+      disks_by_month.count
+    from
+      months
+      left join disks_by_month on months.month = disks_by_month.creation_month
+    order by
+      months.month;
+  EOQ
+}
+
 query "azure_compute_disk_by_encryption_type" {
   sql = <<-EOQ
     select
@@ -342,6 +405,52 @@ query "azure_compute_disk_storage_by_region" {
       region
     order by
       region;
+  EOQ
+}
+
+query "azure_compute_disk_storage_by_age" {
+  sql = <<-EOQ
+    with disks as (
+      select
+        title,
+        disk_size_gb,
+        time_created,
+        to_char(time_created,
+          'YYYY-MM') as creation_month
+      from
+        azure_compute_disk
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+          (
+            select
+              min(time_created)
+              from disks)),
+          date_trunc('month',
+            current_date),
+          interval '1 month') as d
+        ),
+      disks_by_month as (
+        select
+          creation_month,
+          sum(disk_size_gb) as size
+        from
+          disks
+        group by
+          creation_month
+    )
+    select
+      months.month,
+      disks_by_month.size as "GB"
+    from
+      months
+      left join disks_by_month on months.month = disks_by_month.creation_month
+    order by
+      months.month;
   EOQ
 }
 
