@@ -6,9 +6,9 @@ dashboard "azure_key_vault_key_detail" {
     type = "Detail"
   })
 
-  input "id" {
+  input "key_id" {
     title = "Select a key:"
-    sql   = query.azure_key_vault_key_input.sql
+    query = query.azure_key_vault_key_input
     width = 4
   }
 
@@ -18,7 +18,7 @@ dashboard "azure_key_vault_key_detail" {
       width = 2
       query = query.azure_key_vault_key_vault_name
       args = {
-        id = self.input.id.value
+        id = self.input.key_id.value
       }
     }
 
@@ -26,7 +26,7 @@ dashboard "azure_key_vault_key_detail" {
       width = 2
       query = query.azure_key_vault_key_state
       args = {
-        id = self.input.id.value
+        id = self.input.key_id.value
       }
     }
 
@@ -43,7 +43,7 @@ dashboard "azure_key_vault_key_detail" {
         width = 6
         query = query.azure_key_vault_key_overview
         args = {
-          id = self.input.id.value
+          id = self.input.key_id.value
         }
 
       }
@@ -53,7 +53,7 @@ dashboard "azure_key_vault_key_detail" {
         width = 6
         query = query.azure_key_vault_key_tags
         args = {
-          id = self.input.id.value
+          id = self.input.key_id.value
         }
       }
     }
@@ -65,7 +65,7 @@ dashboard "azure_key_vault_key_detail" {
         title = "Key Operations"
         query = query.azure_key_vault_key_key_operations
         args = {
-          id = self.input.id.value
+          id = self.input.key_id.value
         }
       }
     }
@@ -79,7 +79,7 @@ dashboard "azure_key_vault_key_detail" {
       title = "Key Details"
       query = query.azure_key_vault_key_key_details
       args = {
-        id = self.input.id.value
+        id = self.input.key_id.value
       }
     }
 
@@ -120,7 +120,7 @@ query "azure_key_vault_key_vault_name" {
 query "azure_key_vault_key_state" {
   sql = <<-EOQ
     select
-      'Key State' as label,
+      'State' as label,
       case when enabled then 'enabled' else 'disabled' end as value,
       case when enabled then 'ok' else 'alert' end as type
     from
@@ -135,7 +135,7 @@ query "azure_key_vault_key_state" {
 query "azure_key_vault_key_overview" {
   sql = <<-EOQ
     select
-      name as "Name",
+      name as "Key Name",
       created_at as "Created At",
       expires_at as "Expires At",
       title as "Title",

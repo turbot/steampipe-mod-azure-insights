@@ -9,32 +9,22 @@ dashboard "azure_key_vault_dashboard" {
   container {
 
     card {
-      sql   = query.azure_key_vault_count.sql
+      query = query.azure_key_vault_count
       width = 2
     }
 
     card {
-      sql   = query.azure_key_vault_purge_protection_enabled_count.sql
+      query = query.azure_key_vault_purge_protection_enabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_key_vault_soft_delete_enabled_count.sql
+      query = query.azure_key_vault_soft_delete_enabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_key_vault_public_network_access_enabled_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.azure_key_vault_virtual_service_endpoint_configured_count.sql
-      width = 2
-    }
-
-    card {
-      sql   = query.azure_key_vault_private_link_enabled_count.sql
+      query = query.azure_key_vault_public_network_access_enabled_count
       width = 2
     }
   }
@@ -43,8 +33,8 @@ dashboard "azure_key_vault_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Purge Protection State"
-      sql   = query.azure_key_vault_by_purge_protection_status.sql
+      title = "Purge Protection Status"
+      query = query.azure_key_vault_by_purge_protection_status
       type  = "donut"
       width = 2
 
@@ -59,8 +49,8 @@ dashboard "azure_key_vault_dashboard" {
     }
 
     chart {
-      title = "Soft Delete State"
-      sql   = query.azure_key_vault_by_soft_delete_status.sql
+      title = "Soft-Delete Status"
+      query = query.azure_key_vault_by_soft_delete_status
       type  = "donut"
       width = 2
 
@@ -75,8 +65,8 @@ dashboard "azure_key_vault_dashboard" {
     }
 
     chart {
-      title = "Public Network Access State"
-      sql   = query.azure_key_vault_by_public_network_access_status.sql
+      title = "Public Network Access Status"
+      query = query.azure_key_vault_by_public_network_access_status
       type  = "donut"
       width = 2
 
@@ -86,38 +76,6 @@ dashboard "azure_key_vault_dashboard" {
         }
         point "disabled" {
           color = "ok"
-        }
-      }
-    }
-
-    chart {
-      title = "Virtual Service Endpoint"
-      sql   = query.azure_key_vault_by_virtual_service_endpoint_status.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "configured" {
-          color = "ok"
-        }
-        point "not configured" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title = "Private Link"
-      sql   = query.azure_key_vault_by_private_link_status.sql
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
-          color = "alert"
         }
       }
     }
@@ -129,28 +87,28 @@ dashboard "azure_key_vault_dashboard" {
 
     chart {
       title = "Vaults by Subscription"
-      sql   = query.azure_key_vault_by_subscription.sql
+      query = query.azure_key_vault_by_subscription
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Vaults by Resource Group"
-      sql   = query.azure_key_vault_by_resource_group.sql
+      query = query.azure_key_vault_by_resource_group
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Vaults by Region"
-      sql   = query.azure_key_vault_by_region.sql
+      query = query.azure_key_vault_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Vaults by SKU"
-      sql   = query.azure_key_vault_by_sku.sql
+      query = query.azure_key_vault_by_sku
       type  = "column"
       width = 4
     }
@@ -171,12 +129,12 @@ query "azure_key_vault_purge_protection_enabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Purge Protection Enabled' as label,
-      case when count(*) > 0 then 'ok' else 'alert' end as "type"
+      'Purge Protection Disabled' as label,
+      case when count(*) > 0 then 'alert' else 'ok' end as "type"
     from
       azure_key_vault
     where
-      purge_protection_enabled;
+      not purge_protection_enabled;
   EOQ
 }
 
@@ -184,12 +142,12 @@ query "azure_key_vault_soft_delete_enabled_count" {
   sql = <<-EOQ
      select
       count(*) as value,
-      'Soft Delete Enabled' as label,
-      case when count(*) > 0 then 'ok' else 'alert' end as "type"
+      'Soft-Delete Disabled' as label,
+      case when count(*) > 0 then 'alert' else 'ok' end as "type"
     from
       azure_key_vault
     where
-      soft_delete_enabled;
+      not soft_delete_enabled;
   EOQ
 }
 
@@ -197,37 +155,12 @@ query "azure_key_vault_public_network_access_enabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Public Network Access Enabled' as label,
+      'Public Access Enabled' as label,
       case when count(*) > 0 then 'alert' else 'ok' end as "type"
     from
       azure_key_vault
     where
       network_acls is null or network_acls ->> 'defaultAction' != 'Deny';
-  EOQ
-}
-
-query "azure_key_vault_virtual_service_endpoint_configured_count" {
-  sql = <<-EOQ
-    with keyvault_vault_subnet as (
-      select
-        distinct a.name,
-        rule ->> 'id' as id
-      from
-        azure_key_vault as a,
-        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as rule
-      where
-        rule ->> 'id' is not null
-    )
-    select
-      count(*) as value,
-      'Virtual Service Endpoint Configured' as label,
-      case when count(*) > 0 then 'ok' else 'alert' end as "type"
-    from
-      azure_key_vault as a
-      left join keyvault_vault_subnet as s on a.name = s.name
-    where
-      network_acls ->> 'defaultAction' = 'Deny' and
-      s.name is not null;
   EOQ
 }
 
@@ -305,57 +238,6 @@ query "azure_key_vault_by_public_network_access_status" {
   EOQ
 }
 
-query "azure_key_vault_by_virtual_service_endpoint_status" {
-  sql = <<-EOQ
-    with keyvault_vault_subnet as (
-      select
-        distinct a.name,
-        rule ->> 'id' as id
-      from
-        azure_key_vault as a,
-        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as rule
-      where
-        rule ->> 'id' is not null
-    )
-    select
-      status,
-      count(*)
-    from (
-      select network_acls,
-        case when network_acls ->> 'defaultAction' <> 'Deny' or
-          s.name is null then 'not configured'
-        else 'configured'
-        end status
-      from
-        azure_key_vault as a
-        left join keyvault_vault_subnet as s on a.name = s.name) as kv
-    group by
-      status
-    order by
-      status;
-  EOQ
-}
-
-query "azure_key_vault_by_private_link_status" {
-  sql = <<-EOQ
-    select
-      status,
-      count(*)
-    from (
-      select network_acls,
-        case when private_endpoint_connections @>  '[{"PrivateLinkServiceConnectionStateStatus": "Approved"}]'
-        then 'enabled'
-        else 'disabled'
-        end status
-      from
-        azure_key_vault) as kv
-    group by
-      status
-    order by
-      status;
-  EOQ
-}
-
 # Analysis Queries
 
 query "azure_key_vault_by_subscription" {
@@ -378,12 +260,15 @@ query "azure_key_vault_by_subscription" {
 query "azure_key_vault_by_resource_group" {
   sql = <<-EOQ
     select
-      resource_group as "Resource Group",
-      count(resource_group) as "Vaults"
+      resource_group || ' [' || sub.title || ']' as "Resource Group",
+      count(resource_group) as "Accounts"
     from
-      azure_key_vault
+      azure_key_vault as v,
+      azure_subscription as sub
+    where
+       v.subscription_id = sub.subscription_id
     group by
-      resource_group
+      resource_group, sub.title
     order by
       resource_group;
   EOQ

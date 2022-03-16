@@ -9,17 +9,17 @@ dashboard "azure_key_vault_key_dashboard" {
   container {
 
     card {
-      sql   = query.azure_key_vault_key_count.sql
+      query = query.azure_key_vault_key_count
       width = 2
     }
 
     card {
-      sql   = query.azure_key_vault_key_enabled_count.sql
+      query = query.azure_key_vault_key_enabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_key_vault_key_expiration_set_count.sql
+      query = query.azure_key_vault_key_expiration_set_count
       width = 2
     }
 
@@ -29,8 +29,8 @@ dashboard "azure_key_vault_key_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Enabled State"
-      sql   = query.azure_key_vault_key_by_enabled_status.sql
+      title = "Enabled/Disabled Status"
+      query = query.azure_key_vault_key_by_enabled_status
       type  = "donut"
       width = 2
 
@@ -45,8 +45,8 @@ dashboard "azure_key_vault_key_dashboard" {
     }
 
     chart {
-      title = "Expiration State"
-      sql   = query.azure_key_vault_key_by_key_expiration_status.sql
+      title = "Expiration Status"
+      query = query.azure_key_vault_key_by_key_expiration_status
       type  = "donut"
       width = 2
 
@@ -67,37 +67,51 @@ dashboard "azure_key_vault_key_dashboard" {
 
     chart {
       title = "Keys by Subscription"
-      sql   = query.azure_key_vault_key_by_subscription.sql
+      query = query.azure_key_vault_key_by_subscription
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Keys by Resource Group"
-      sql   = query.azure_key_vault_key_by_resource_group.sql
+      query = query.azure_key_vault_key_by_resource_group
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Keys by Region"
-      sql   = query.azure_key_vault_key_by_region.sql
+      query = query.azure_key_vault_key_by_region
       type  = "column"
-      width = 4
+      width = 3
+    }
+
+    chart {
+      title = "Keys by Age"
+      query = query.azure_key_vault_key_by_creation_month
+      type  = "column"
+      width = 3
     }
 
     chart {
       title = "Keys by Type"
-      sql   = query.azure_key_vault_key_by_type.sql
+      query = query.azure_key_vault_key_by_type
       type  = "column"
-      width = 4
+      width = 3
+    }
+
+    chart {
+      title = "Keys by Recovery level"
+      query = query.azure_key_vault_key_by_recovery_level
+      type  = "column"
+      width = 3
     }
 
     chart {
       title = "Keys by Size"
-      sql   = query.azure_key_vault_key_by_size.sql
+      query = query.azure_key_vault_key_by_size
       type  = "column"
-      width = 4
+      width = 3
     }
 
   }
@@ -129,12 +143,12 @@ query "azure_key_vault_key_expiration_set_count" {
   sql = <<-EOQ
      select
       count(*) as value,
-      'Expiration Set' as label,
-      case when count(*) > 0 then 'ok' else 'alert' end as "type"
+      'Expiration Set Disabled' as label,
+      case when count(*) > 0 then 'alert' else 'ok' end as "type"
     from
       azure_key_vault_key
     where
-      expires_at is not null;
+      expires_at is null;
   EOQ
 }
 
@@ -166,8 +180,8 @@ query "azure_key_vault_key_by_key_expiration_status" {
       count(*)
     from (
       select expires_at,
-        case when expires_at is not null then 'set'
-        else 'not set'
+        case when expires_at is not null then 'enabled'
+        else 'disabled'
         end status
       from
         azure_key_vault_key) as kv
@@ -200,12 +214,15 @@ query "azure_key_vault_key_by_subscription" {
 query "azure_key_vault_key_by_resource_group" {
   sql = <<-EOQ
     select
-      resource_group as "Resource Group",
-      count(resource_group) as "Keys"
+      resource_group || ' [' || sub.title || ']' as "Resource Group",
+      count(resource_group) as "Accounts"
     from
-      azure_key_vault_key
+      azure_key_vault_key as k,
+      azure_subscription as sub
+    where
+       k.subscription_id = sub.subscription_id
     group by
-      resource_group
+      resource_group, sub.title
     order by
       resource_group;
   EOQ
@@ -214,6 +231,51 @@ query "azure_key_vault_key_by_resource_group" {
 query "azure_key_vault_key_by_region" {
   sql = <<-EOQ
     select region as "Region", count(*) as "Keys" from azure_key_vault_key group by region order by region;
+  EOQ
+}
+
+query "azure_key_vault_key_by_creation_month" {
+  sql = <<-EOQ
+    with keys as (
+      select
+        title,
+        created_at,
+        to_char(created_at,
+          'YYYY-MM') as creation_month
+      from
+        azure_key_vault_key
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+            (
+              select
+                min(created_at)
+                from keys)),
+            date_trunc('month',
+              current_date),
+            interval '1 month') as d
+    ),
+    keys_by_month as (
+      select
+        creation_month,
+        count(*)
+      from
+        keys
+      group by
+        creation_month
+    )
+    select
+      months.month,
+      keys_by_month.count
+    from
+      months
+      left join keys_by_month on months.month = keys_by_month.creation_month
+    order by
+      months.month;
   EOQ
 }
 
@@ -228,6 +290,20 @@ query "azure_key_vault_key_by_type" {
       key_type
     order by
       key_type;
+  EOQ
+}
+
+query "azure_key_vault_key_by_recovery_level" {
+  sql = <<-EOQ
+    select
+      recovery_level as "Recovery Level",
+      count(recovery_level) as "Keys"
+    from
+      azure_key_vault_key
+    group by
+      recovery_level
+    order by
+      recovery_level;
   EOQ
 }
 
