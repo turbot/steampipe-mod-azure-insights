@@ -1,6 +1,7 @@
 dashboard "azure_compute_snapshot_age_report" {
 
-  title  = "Azure Compute Snapshot Age Report"
+  title         = "Azure Compute Snapshot Age Report"
+  documentation = file("./dashboards/compute/docs/compute_snapshot_report_age.md")
 
   tags = merge(local.compute_common_tags, {
     type     = "Report"
@@ -130,13 +131,13 @@ query "azure_compute_snapshot_age_table" {
     select
       s.name as "Name",
       s.unique_id as "Unique ID",
-      s.id as "ID",
       now()::date - s.time_created::date as "Age in Days",
-      s.time_created as "Create Date",
-      s.subscription_id as "Subscription ID",
+      s.time_created as "Time Created",
       sub.title as "Subscription",
+      s.subscription_id as "Subscription ID",
+      s.resource_group as "Resource Group",
       s.region as "Region",
-      s.resource_group as "Resource Group"
+      s.id as "ID"
     from
       azure_compute_snapshot as s,
       azure_subscription as sub

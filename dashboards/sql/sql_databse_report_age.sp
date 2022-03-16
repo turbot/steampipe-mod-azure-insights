@@ -1,6 +1,7 @@
 dashboard "azure_sql_database_age_report" {
 
-  title  = "Azure SQL Database Age Report"
+  title         = "Azure SQL Database Age Report"
+  documentation = file("./dashboards/sql/docs/sql_databse_report_age.md")
 
   tags = merge(local.sql_common_tags, {
     type     = "Report"
@@ -133,10 +134,11 @@ query "azure_sql_database_age_table" {
       now()::date - d.creation_date::date as "Age in Days",
       d.creation_date as "Create Date",
       d.status as "Status",
-      d.subscription_id as "Subscription ID",
       sub.title as "Subscription",
+      d.subscription_id as "Subscription ID",
+      d.resource_group as "Resource Group",
       d.region as "Region",
-      d.resource_group as "Resource Group"
+      d.id as "ID"
     from
       azure_sql_database as d,
       azure_subscription as sub

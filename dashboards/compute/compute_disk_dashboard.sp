@@ -1,6 +1,7 @@
 dashboard "azure_compute_disk_dashboard" {
 
-  title = "Azure Compute Disk Dashboard"
+  title         = "Azure Compute Disk Dashboard"
+  documentation = file("./dashboards/compute/docs/compute_disk_dashboard.md")
 
   tags = merge(local.compute_common_tags, {
     type = "Dashboard"
@@ -57,43 +58,95 @@ dashboard "azure_compute_disk_dashboard" {
       title = "Disks by Subscription"
       query = query.azure_compute_disk_by_subscription
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Disks by Resource Group"
       query = query.azure_compute_disk_by_resource_group
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Disks by Region"
       query = query.azure_compute_disk_by_region
       type  = "column"
-      width = 4
+      width = 3
+    }
+
+    chart {
+      title = "Disks by Age"
+      query = query.azure_compute_disk_by_age
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Storage by Subscription (GB)"
+      sql   = query.azure_compute_disk_storage_by_subscription.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+    chart {
+      title = "Storage by Resource Group (GB)"
+      sql   = query.azure_compute_disk_storage_by_resource_group.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+    chart {
+      title = "Storage by Region (GB)"
+      sql   = query.azure_compute_disk_storage_by_region.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
+    }
+
+    chart {
+      title = "Storage by Age (GB)"
+      sql   = query.azure_compute_disk_storage_by_age.sql
+      type  = "column"
+      width = 3
+
+      series "GB" {
+        color = "tan"
+      }
     }
 
     chart {
       title = "Disks by Encryption Type"
       query = query.azure_compute_disk_by_encryption_type
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Disks by OS Type"
       query = query.azure_compute_disk_by_os_type
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
-      title = "Disks by SKU"
+      title = "Disks by SKU Tier"
       query = query.azure_compute_disk_by_sku_tier
       type  = "column"
-      width = 4
+      width = 3
     }
+
   }
 
   container {
@@ -149,29 +202,6 @@ query "azure_compute_disk_unattached_count" {
 
 # Assessment Queries
 
-query "azure_compute_disk_by_encryption_status" {
-  sql = <<-EOQ
-    select
-      encryption,
-      count(*)
-    from (
-      select encryption_type,
-        case when encryption_type in
-          ('EncryptionAtRestWithPlatformKey', 'EncryptionAtRestWithCustomerKey', 'EncryptionAtRestWithPlatformAndCustomerKeys')
-        then
-          'encrypted'
-        else
-          'unencrypted'
-        end encryption
-      from
-        azure_compute_disk) as cd
-    group by
-      encryption
-    order by
-      encryption;
-  EOQ
-}
-
 query "azure_compute_disk_by_attachment" {
   sql = <<-EOQ
     select
@@ -198,17 +228,17 @@ query "azure_compute_disk_by_attachment" {
 query "azure_compute_disk_by_subscription" {
   sql = <<-EOQ
     select
-      a.title as "Subscription",
-      count(v.*) as "Disks"
+      sub.title as "Subscription",
+      count(d.*) as "Disks"
     from
-      azure_compute_disk as v,
-      azure_subscription as a
+      azure_compute_disk as d,
+      azure_subscription as sub
     where
-      a.subscription_id = v.subscription_id
+      sub.subscription_id = d.subscription_id
     group by
-      a.title
+      sub.title
     order by
-      a.title;
+      sub.title;
   EOQ
 }
 
@@ -231,14 +261,67 @@ query "azure_compute_disk_by_resource_group" {
 
 query "azure_compute_disk_by_region" {
   sql = <<-EOQ
-    select region as "Region", count(*) as "Disks" from azure_compute_disk group by region order by region;
+    select
+      region as "Region",
+      count(*) as "Disks"
+    from
+      azure_compute_disk
+    group by
+      region
+    order by
+      region;
+  EOQ
+}
+
+query "azure_compute_disk_by_age" {
+  sql = <<-EOQ
+    with disks as (
+      select
+        title,
+        time_created,
+        to_char(time_created,
+          'YYYY-MM') as creation_month
+      from
+        azure_compute_disk
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+            (
+              select
+                min(time_created)
+                from disks)),
+            date_trunc('month',
+              current_date),
+            interval '1 month') as d
+    ),
+    disks_by_month as (
+      select
+        creation_month,
+        count(*)
+      from
+        disks
+      group by
+        creation_month
+    )
+    select
+      months.month,
+      disks_by_month.count
+    from
+      months
+      left join disks_by_month on months.month = disks_by_month.creation_month
+    order by
+      months.month;
   EOQ
 }
 
 query "azure_compute_disk_by_encryption_type" {
   sql = <<-EOQ
     select
-      encryption_type as "Type",
+      encryption_type as "Encryption Type",
       count(os_type) as "Disks"
     from
       azure_compute_disk
@@ -252,7 +335,7 @@ query "azure_compute_disk_by_encryption_type" {
 query "azure_compute_disk_by_os_type" {
   sql = <<-EOQ
     select
-      os_type as "Type",
+      os_type as "OS Type",
       count(os_type) as "Disks"
     from
       azure_compute_disk
@@ -274,6 +357,100 @@ query "azure_compute_disk_by_sku_tier" {
       sku_tier
     order by
       sku_tier;
+  EOQ
+}
+
+query "azure_compute_disk_storage_by_subscription" {
+  sql = <<-EOQ
+    select
+      sub.title as "Subscription",
+      sum(d.disk_size_gb) as "GB"
+    from
+      azure_compute_disk as d,
+      azure_subscription as sub
+    where
+      sub.subscription_id = d.subscription_id
+    group by
+      sub.title
+    order by
+      sub.title;
+  EOQ
+}
+
+query "azure_compute_disk_storage_by_resource_group" {
+  sql = <<-EOQ
+    select
+      resource_group || ' [' || sub.title || ']' as "Resource Group",
+      sum(d.disk_size_gb) as "GB"
+    from
+      azure_compute_disk as d,
+      azure_subscription as sub
+    where
+       d.subscription_id = sub.subscription_id
+    group by
+      resource_group, sub.title
+    order by
+      resource_group;
+  EOQ
+}
+
+query "azure_compute_disk_storage_by_region" {
+  sql = <<-EOQ
+    select
+      region as "Region",
+      sum(disk_size_gb) as "GB"
+    from
+      azure_compute_disk
+    group by
+      region
+    order by
+      region;
+  EOQ
+}
+
+query "azure_compute_disk_storage_by_age" {
+  sql = <<-EOQ
+    with disks as (
+      select
+        title,
+        disk_size_gb,
+        time_created,
+        to_char(time_created,
+          'YYYY-MM') as creation_month
+      from
+        azure_compute_disk
+    ),
+    months as (
+      select
+        to_char(d,
+          'YYYY-MM') as month
+      from
+        generate_series(date_trunc('month',
+          (
+            select
+              min(time_created)
+              from disks)),
+          date_trunc('month',
+            current_date),
+          interval '1 month') as d
+        ),
+      disks_by_month as (
+        select
+          creation_month,
+          sum(disk_size_gb) as size
+        from
+          disks
+        group by
+          creation_month
+    )
+    select
+      months.month,
+      disks_by_month.size as "GB"
+    from
+      months
+      left join disks_by_month on months.month = disks_by_month.creation_month
+    order by
+      months.month;
   EOQ
 }
 
@@ -338,17 +515,5 @@ query "azure_compute_disk_top_10_write_ops_avg" {
       and name in (select name from top_n group by name, resource_group)
     order by
       timestamp desc;
-  EOQ
-}
-
-query "azure_compute_disk_platform_managed_encryption_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Platform-Managed Encryption' as label
-    from
-      azure_compute_disk
-    where
-      encryption_type = 'EncryptionAtRestWithPlatformKey';
   EOQ
 }

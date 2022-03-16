@@ -1,6 +1,7 @@
 dashboard "azure_compute_disk_encryption_report" {
 
-  title = "Azure Compute Disk Encryption Report"
+  title         = "Azure Compute Disk Encryption Report"
+  documentation = file("./dashboards/compute/docs/compute_disk_report_encryption.md")
 
   tags = merge(local.compute_common_tags, {
     type     = "Report"
@@ -58,11 +59,23 @@ query "azure_compute_disk_encryption_report" {
       d.resource_group as "Resource Group"
     from
       azure_compute_disk as d,
-      azure_subscription sub
+      azure_subscription as sub
     where
       sub.subscription_id = d.subscription_id
     order by
       d.name;
+  EOQ
+}
+
+query "azure_compute_disk_platform_managed_encryption_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Platform-Managed Encryption' as label
+    from
+      azure_compute_disk
+    where
+      encryption_type = 'EncryptionAtRestWithPlatformKey';
   EOQ
 }
 

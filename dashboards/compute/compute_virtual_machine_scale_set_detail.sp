@@ -1,6 +1,7 @@
 dashboard "azure_compute_virtual_machine_scale_set_scale_set_detail" {
 
-  title = "Azure Compute Virtual Machine Scale Set Detail"
+  title         = "Azure Compute Virtual Machine Scale Set Detail"
+  documentation = file("./dashboards/compute/docs/compute_virtual_machine_scale_set_detail.md")
 
   tags = merge(local.compute_common_tags, {
     type = "Detail"

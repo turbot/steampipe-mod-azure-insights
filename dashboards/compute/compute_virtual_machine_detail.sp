@@ -1,6 +1,7 @@
 dashboard "azure_compute_virtual_machine_detail" {
 
-  title = "Azure Compute Virtual Machine Detail"
+  title         = "Azure Compute Virtual Machine Detail"
+  documentation = file("./dashboards/compute/docs/compute_virtual_machine_detail.md")
 
   tags = merge(local.compute_common_tags, {
     type = "Detail"
