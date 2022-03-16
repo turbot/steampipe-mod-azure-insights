@@ -1,6 +1,8 @@
 dashboard "azure_key_vault_key_age_report" {
 
   title = "Azure Key Vault Key Age Report"
+  documentation = file("./dashboards/keyvault/docs/key_vault_key_report_age.md")
+
 
   tags = merge(local.kms_common_tags, {
     type     = "Report"
@@ -54,10 +56,6 @@ dashboard "azure_key_vault_key_age_report" {
     column "ID" {
       display = "none"
     }
-
-    # column "Name" {
-    #   href = "${dashboard.azure_key_vault_key_detail.url_path}?input.key_id={{.ID | @uri}}"
-    # }
 
     query = query.azure_key_vault_key_age_table
   }

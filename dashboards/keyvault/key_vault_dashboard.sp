@@ -1,6 +1,7 @@
 dashboard "azure_key_vault_dashboard" {
 
   title = "Azure Key Vault Dashboard"
+  documentation = file("./dashboards/keyvault/docs/key_vault_dashboard.md")
 
   tags = merge(local.kms_common_tags, {
     type = "Dashboard"
