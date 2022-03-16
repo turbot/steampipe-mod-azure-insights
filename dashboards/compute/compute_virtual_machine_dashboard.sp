@@ -19,7 +19,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_disaster_recovery_disabled_count.sql
+      sql   = query.azure_compute_public_virtual_machine_count.sql
       width = 2
     }
 
@@ -61,16 +61,16 @@ dashboard "azure_compute_virtual_machine_dashboard" {
     }
 
     chart {
-      title = "Disaster Recovery Status"
-      sql   = query.azure_compute_virtual_machine_by_disaster_recovery_status.sql
+      title = "Public/Private"
+      sql   = query.azure_compute_virtual_machine_by_public_ip.sql
       type  = "donut"
       width = 2
 
       series "count" {
-        point "enabled" {
+        point "private" {
           color = "ok"
         }
-        point "disabled" {
+        point "public" {
           color = "alert"
         }
       }
@@ -119,6 +119,22 @@ dashboard "azure_compute_virtual_machine_dashboard" {
           color = "ok"
         }
         point "unrestricted" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Disaster Recovery Status"
+      sql   = query.azure_compute_virtual_machine_by_disaster_recovery_status.sql
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
           color = "alert"
         }
       }
@@ -208,17 +224,37 @@ query "azure_compute_virtual_machine_host_encryption_count" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_disaster_recovery_disabled_count" {
+query "azure_compute_public_virtual_machine_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Disaster Recovery Disabled' as label,
-      case count(*) when 0 then 'alert' else 'ok' end as type
+      'Publicly Accessible' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
-      azure_resource_link as l
-      left join azure_compute_virtual_machine as vm on lower(substr(source_id, 0, length(source_id)))= lower(vm.id)
+      azure_compute_virtual_machine
     where
-      l.name like 'ASR-Protect-%';
+      public_ips is not null
+  EOQ
+}
+
+query "azure_compute_virtual_machine_disaster_recovery_disabled_count" {
+  sql = <<-EOQ
+    with vm_dr_enabled as (
+      select
+        substr(source_id, 0, length(source_id)) as source_id
+      from
+        azure_resource_link as l
+        left join azure_compute_virtual_machine as vm on lower(substr(source_id, 0, length(source_id)))= lower(vm.id)
+      where
+        l.name like 'ASR-Protect-%'
+    )
+    select
+      count(*) as value,
+      'Disaster Recovery Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as type
+    from
+      azure_compute_virtual_machine as vm
+      where lower(vm.id) not in (select source_id from azure_resource_link) ;
   EOQ
 }
 
@@ -350,6 +386,27 @@ query "azure_compute_virtual_machine_by_host_encryption_status" {
       encryption
     order by
       encryption;
+  EOQ
+}
+
+query "azure_compute_virtual_machine_by_public_ip" {
+  sql = <<-EOQ
+    with vm_visibility as (
+      select
+        case
+          when public_ips is null then 'private'
+          else 'public'
+        end as visibility
+      from
+        azure_compute_virtual_machine
+    )
+    select
+      visibility,
+      count(*)
+    from
+      vm_visibility
+    group by
+      visibility
   EOQ
 }
 
@@ -552,12 +609,15 @@ query "azure_compute_virtual_machine_by_subscription" {
 query "azure_compute_virtual_machine_by_resource_group" {
   sql = <<-EOQ
     select
-      resource_group as "Resource Group",
-      count(resource_group) as "VMs"
+      resource_group || ' [' || sub.title || ']' as "Resource Group",
+      count(resource_group) as "Accounts"
     from
-      azure_compute_virtual_machine
+      azure_compute_virtual_machine as v,
+      azure_subscription as sub
+    where
+       v.subscription_id = sub.subscription_id
     group by
-      resource_group
+      resource_group, sub.title
     order by
       resource_group;
   EOQ
@@ -565,7 +625,15 @@ query "azure_compute_virtual_machine_by_resource_group" {
 
 query "azure_compute_virtual_machine_by_region" {
   sql = <<-EOQ
-    select region as "Region", count(*) as "VMs" from azure_compute_virtual_machine group by region order by region;
+    select
+      region as "Region",
+      count(*) as "VMs"
+    from
+      azure_compute_virtual_machine
+    group by
+      region
+    order by
+      region;
   EOQ
 }
 
@@ -587,7 +655,7 @@ query "azure_compute_virtual_machine_by_size" {
   sql = <<-EOQ
     select
       size as "Size",
-      count(os_type) as "VMs"
+      count(size) as "VMs"
     from
       azure_compute_virtual_machine
     group by
