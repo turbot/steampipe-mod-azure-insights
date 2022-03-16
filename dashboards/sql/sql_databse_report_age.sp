@@ -10,38 +10,38 @@ dashboard "azure_sql_database_age_report" {
   container {
 
     card {
-      sql   = query.azure_sql_database_count.sql
+      query = query.azure_sql_database_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.azure_sql_database_24_hours_count.sql
+      query = query.azure_sql_database_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.azure_sql_database_30_days_count.sql
+      query = query.azure_sql_database_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.azure_sql_database_30_90_days_count.sql
+      query = query.azure_sql_database_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.azure_sql_database_90_365_days_count.sql
+      query = query.azure_sql_database_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.azure_sql_database_1_year_count.sql
+      query = query.azure_sql_database_1_year_count
     }
 
   }
@@ -54,8 +54,8 @@ dashboard "azure_sql_database_age_report" {
     column "Subscription ID" {
       display = "none"
     }
-    
-    sql = query.azure_sql_database_age_table.sql
+
+    query = query.azure_sql_database_age_table
   }
 
 }

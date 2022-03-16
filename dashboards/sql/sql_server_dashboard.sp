@@ -9,27 +9,27 @@ dashboard "azure_sql_server_dashboard" {
   container {
 
     card {
-      sql   = query.azure_sql_server_count.sql
+      query = query.azure_sql_server_count
       width = 2
     }
 
     card {
-      sql   = query.azure_sql_server_public_count.sql
+      query = query.azure_sql_server_public_count
       width = 2
     }
 
     card {
-      sql   = query.azure_sql_server_auditing_disabled_count.sql
+      query = query.azure_sql_server_auditing_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_sql_server_vulnerability_assessment_disabled_count.sql
+      query = query.azure_sql_server_vulnerability_assessment_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_sql_server_azure_ad_authentication_disabled_count.sql
+      query = query.azure_sql_server_azure_ad_authentication_disabled_count
       width = 2
     }
 
@@ -41,7 +41,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Public/Private Status"
-      sql   = query.azure_sql_server_public_status.sql
+      query = query.azure_sql_server_public_status
       type  = "donut"
       width = 2
 
@@ -57,7 +57,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Auditing Status"
-      sql   = query.azure_sql_server_auditing_status.sql
+      query = query.azure_sql_server_auditing_status
       type  = "donut"
       width = 2
 
@@ -73,7 +73,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Vulnerability Assessment Status"
-      sql   = query.azure_sql_server_vulnerability_assessment_status.sql
+      query = query.azure_sql_server_vulnerability_assessment_status
       type  = "donut"
       width = 2
 
@@ -89,7 +89,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Azure AD Authentication Status"
-      sql   = query.azure_sql_server_ad_authentication_status.sql
+      query = query.azure_sql_server_ad_authentication_status
       type  = "donut"
       width = 2
 
@@ -105,7 +105,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Private Link Status"
-      sql   = query.azure_sql_server_private_link_status.sql
+      query = query.azure_sql_server_private_link_status
       type  = "donut"
       width = 2
 
@@ -127,42 +127,42 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Servers by Subscription"
-      sql   = query.azure_sql_server_by_subscription.sql
+      query = query.azure_sql_server_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Servers by Resource Group"
-      sql   = query.azure_sql_server_by_resource_group.sql
+      query = query.azure_sql_server_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Servers by Region"
-      sql   = query.azure_sql_server_by_region.sql
+      query = query.azure_sql_server_by_region
       type  = "column"
       width = 3
     }
 
      chart {
       title = "Servers by Encryption Type"
-      sql   = query.azure_sql_server_by_encryption_type.sql
+      query = query.azure_sql_server_by_encryption_type
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Servers by Kind"
-      sql   = query.azure_sql_server_by_kind.sql
+      query = query.azure_sql_server_by_kind
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Servers by State"
-      sql   = query.azure_sql_server_by_state.sql
+      query = query.azure_sql_server_by_state
       type  = "column"
       width = 3
     }

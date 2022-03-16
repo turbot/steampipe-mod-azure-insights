@@ -8,7 +8,7 @@ dashboard "azure_compute_virtual_machine_scale_set_scale_set_detail" {
 
   input "id" {
     title = "Select a Virtual Machine Scale Set:"
-    sql   = query.azure_compute_virtual_machine_scale_set_input.sql
+    query = query.azure_compute_virtual_machine_scale_set_input
     width = 4
   }
 

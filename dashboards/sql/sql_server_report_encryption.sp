@@ -10,17 +10,17 @@ dashboard "azure_sql_server_encryption_report" {
   container {
 
     card {
-      sql   = query.azure_sql_server_count.sql
+      query = query.azure_sql_server_count
       width = 2
     }
 
     card {
-      sql   = query.azure_sql_server_default_encrypted_servers_count.sql
+      query = query.azure_sql_server_default_encrypted_servers_count
       width = 2
     }
 
     card {
-      sql   = query.azure_sql_server_customer_managed_encryption_count.sql
+      query = query.azure_sql_server_customer_managed_encryption_count
       width = 2
     }
 
@@ -34,8 +34,8 @@ dashboard "azure_sql_server_encryption_report" {
     column "Subscription ID" {
       display = "none"
     }
-    
-    sql = query.azure_sql_server_encryption_report.sql
+
+    query = query.azure_sql_server_encryption_report
   }
 
 }

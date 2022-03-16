@@ -10,38 +10,38 @@ dashboard "azure_compute_disk_age_report" {
   container {
 
     card {
-      sql   = query.azure_compute_disk_count.sql
+      query = query.azure_compute_disk_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.azure_compute_disk_24_hours_count.sql
+      query = query.azure_compute_disk_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.azure_compute_disk_30_days_count.sql
+      query = query.azure_compute_disk_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.azure_compute_disk_30_90_days_count.sql
+      query = query.azure_compute_disk_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.azure_compute_disk_90_365_days_count.sql
+      query = query.azure_compute_disk_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.azure_compute_disk_1_year_count.sql
+      query = query.azure_compute_disk_1_year_count
     }
 
   }
@@ -50,12 +50,12 @@ dashboard "azure_compute_disk_age_report" {
     column "ID" {
       display = "none"
     }
-    
+
     column "Subscription ID" {
       display = "none"
     }
 
-    sql = query.azure_compute_disk_age_table.sql
+    query = query.azure_compute_disk_age_table
   }
 
 }

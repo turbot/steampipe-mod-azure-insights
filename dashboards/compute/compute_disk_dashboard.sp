@@ -10,18 +10,18 @@ dashboard "azure_compute_disk_dashboard" {
 
     # Analysis
     card {
-      sql   = query.azure_compute_disk_count.sql
+      query = query.azure_compute_disk_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_disk_storage_total.sql
+      query = query.azure_compute_disk_storage_total
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.azure_compute_disk_unattached_count.sql
+      query = query.azure_compute_disk_unattached_count
       width = 2
     }
 
@@ -33,7 +33,7 @@ dashboard "azure_compute_disk_dashboard" {
 
     chart {
       title = "Attached With Network"
-      sql   = query.azure_compute_disk_by_attachment.sql
+      query = query.azure_compute_disk_by_attachment
       type  = "donut"
       width = 2
 
@@ -55,42 +55,42 @@ dashboard "azure_compute_disk_dashboard" {
 
     chart {
       title = "Disks by Subscription"
-      sql   = query.azure_compute_disk_by_subscription.sql
+      query = query.azure_compute_disk_by_subscription
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Disks by Resource Group"
-      sql   = query.azure_compute_disk_by_resource_group.sql
+      query = query.azure_compute_disk_by_resource_group
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Disks by Region"
-      sql   = query.azure_compute_disk_by_region.sql
+      query = query.azure_compute_disk_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Disks by Encryption Type"
-      sql   = query.azure_compute_disk_by_encryption_type.sql
+      query = query.azure_compute_disk_by_encryption_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Disks by OS Type"
-      sql   = query.azure_compute_disk_by_os_type.sql
+      query = query.azure_compute_disk_by_os_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Disks by SKU"
-      sql   = query.azure_compute_disk_by_sku_tier.sql
+      query = query.azure_compute_disk_by_sku_tier
       type  = "column"
       width = 4
     }
@@ -102,14 +102,14 @@ dashboard "azure_compute_disk_dashboard" {
 
     chart {
       title = "Top 10 Average Read IOPS - Last 7 days"
-      sql   = query.azure_compute_disk_top_10_read_ops_avg.sql
+      query = query.azure_compute_disk_top_10_read_ops_avg
       type  = "line"
       width = 6
     }
 
     chart {
       title = "Top 10 Average Write IOPS - Last 7 days"
-      sql   = query.azure_compute_disk_top_10_write_ops_avg.sql
+      query = query.azure_compute_disk_top_10_write_ops_avg
       type  = "column"
       width = 6
     }
@@ -133,7 +133,6 @@ query "azure_compute_disk_storage_total" {
       azure_compute_disk;
   EOQ
 }
-
 
 query "azure_compute_disk_unattached_count" {
   sql = <<-EOQ

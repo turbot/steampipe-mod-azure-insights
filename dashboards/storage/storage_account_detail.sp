@@ -9,7 +9,7 @@ dashboard "azure_storage_account_detail" {
 
   input "id" {
     title = "Select a account:"
-    sql   = query.azure_storage_account_input.sql
+    query = query.azure_storage_account_input
     width = 4
   }
 

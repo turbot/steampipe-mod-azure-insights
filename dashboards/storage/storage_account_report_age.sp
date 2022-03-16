@@ -12,37 +12,37 @@ dashboard "azure_storage_account_age_report" {
 
     card {
       width = 2
-      sql   = query.azure_storage_account_count.sql
+      query = query.azure_storage_account_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.azure_storage_account_24_hours_count.sql
+      query = query.azure_storage_account_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.azure_storage_account_30_days_count.sql
+      query = query.azure_storage_account_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      sql   = query.azure_storage_account_30_90_days_count.sql
+      query = query.azure_storage_account_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.azure_storage_account_90_365_days_count.sql
+      query = query.azure_storage_account_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      sql   = query.azure_storage_account_1_year_count.sql
+      query = query.azure_storage_account_1_year_count
     }
 
   }
@@ -60,7 +60,7 @@ dashboard "azure_storage_account_age_report" {
       href = "${dashboard.azure_storage_account_detail.url_path}?input.id={{.ID | @uri}}"
     }
 
-    sql = query.azure_storage_account_age_table.sql
+    query = query.azure_storage_account_age_table
   }
 
 }

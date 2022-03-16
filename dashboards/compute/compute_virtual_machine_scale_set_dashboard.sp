@@ -10,23 +10,23 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
     # Analysis
     card {
-      sql   = query.azure_compute_virtual_machine_scale_set_count.sql
+      query = query.azure_compute_virtual_machine_scale_set_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_scale_set_host_encryption_count.sql
+      query = query.azure_compute_virtual_machine_scale_set_host_encryption_count
       width = 2
     }
 
     # Assessments
     card {
-      sql   = query.azure_compute_virtual_machine_scale_set_logging_disabled.sql
+      query   = query.azure_compute_virtual_machine_scale_set_logging_disabled
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_scale_set_log_analytics_agent_installed_count.sql
+      query = query.azure_compute_virtual_machine_scale_set_log_analytics_agent_installed_count
       width = 2
     }
   }
@@ -37,7 +37,7 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
     chart {
       title = "Host Encryption Status"
-      sql   = query.azure_compute_virtual_machine_scale_set_by_host_encryption_status.sql
+      query = query.azure_compute_virtual_machine_scale_set_by_host_encryption_status
       type  = "donut"
       width = 2
 
@@ -53,7 +53,7 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
     chart {
       title = "Logging Status"
-      sql   = query.azure_compute_virtual_machine_scale_set_by_logging_status.sql
+      query = query.azure_compute_virtual_machine_scale_set_by_logging_status
       type  = "donut"
       width = 2
 
@@ -69,7 +69,7 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
     chart {
       title = "Log Analytic Agent Status"
-      sql   = query.azure_compute_virtual_machine_scale_set_by_log_analytics_agent_installed_status.sql
+      query = query.azure_compute_virtual_machine_scale_set_by_log_analytics_agent_installed_status
       type  = "donut"
       width = 2
 
@@ -91,28 +91,28 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
     chart {
       title = "Scale Sets by Subscription"
-      sql   = query.azure_compute_virtual_machine_scale_set_by_subscription.sql
+      query = query.azure_compute_virtual_machine_scale_set_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Scale Sets by Resource Group"
-      sql   = query.azure_compute_virtual_machine_scale_set_by_resource_group.sql
+      query = query.azure_compute_virtual_machine_scale_set_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Scale Sets by Region"
-      sql   = query.azure_compute_virtual_machine_scale_set_by_region.sql
+      query = query.azure_compute_virtual_machine_scale_set_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Scale Sets by Tier"
-      sql   = query.azure_compute_virtual_machine_scale_set_by_tier.sql
+      query = query.azure_compute_virtual_machine_scale_set_by_tier
       type  = "column"
       width = 3
     }
