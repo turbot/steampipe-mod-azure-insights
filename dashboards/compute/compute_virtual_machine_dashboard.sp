@@ -9,32 +9,32 @@ dashboard "azure_compute_virtual_machine_dashboard" {
   container {
 
     card {
-      sql   = query.azure_compute_virtual_machine_count.sql
+      query = query.azure_compute_virtual_machine_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_host_encryption_count.sql
+      query = query.azure_compute_virtual_machine_host_encryption_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_public_virtual_machine_count.sql
+      query = query.azure_compute_public_virtual_machine_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_vulnerability_assessment_disabled_count.sql
+      query = query.azure_compute_virtual_machine_vulnerability_assessment_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_unattached_with_network_count.sql
+      query = query.azure_compute_virtual_machine_unattached_with_network_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_virtual_machine_unrestricted_remote_access_count.sql
+      query = query.azure_compute_virtual_machine_unrestricted_remote_access_count
       width = 2
     }
 
@@ -46,7 +46,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Host Encryption Status"
-      sql   = query.azure_compute_virtual_machine_by_host_encryption_status.sql
+      query = query.azure_compute_virtual_machine_by_host_encryption_status
       type  = "donut"
       width = 2
 
@@ -62,7 +62,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Public/Private"
-      sql   = query.azure_compute_virtual_machine_by_public_ip.sql
+      query = query.azure_compute_virtual_machine_by_public_ip
       type  = "donut"
       width = 2
 
@@ -78,7 +78,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Vulnerability Assessment"
-      sql   = query.azure_compute_virtual_machine_by_vulnerability_assessment_solution.sql
+      query = query.azure_compute_virtual_machine_by_vulnerability_assessment_solution
       type  = "donut"
       width = 2
 
@@ -94,7 +94,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Network Attachment Status"
-      sql   = query.azure_compute_virtual_machine_by_attachment_to_network.sql
+      query = query.azure_compute_virtual_machine_by_attachment_to_network
       type  = "donut"
       width = 2
 
@@ -110,7 +110,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Unrestricted Remote Access"
-      sql   = query.azure_compute_virtual_machine_by_remote_access.sql
+      query   = query.azure_compute_virtual_machine_by_remote_access
       type  = "donut"
       width = 2
 
@@ -126,7 +126,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Disaster Recovery Status"
-      sql   = query.azure_compute_virtual_machine_by_disaster_recovery_status.sql
+      query = query.azure_compute_virtual_machine_by_disaster_recovery_status
       type  = "donut"
       width = 2
 
@@ -148,35 +148,35 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Virtual Machines by Subscription"
-      sql   = query.azure_compute_virtual_machine_by_subscription.sql
+      query = query.azure_compute_virtual_machine_by_subscription
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Virtual Machines by Resource Group"
-      sql   = query.azure_compute_virtual_machine_by_resource_group.sql
+      query = query.azure_compute_virtual_machine_by_resource_group
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Virtual Machines by Region"
-      sql   = query.azure_compute_virtual_machine_by_region.sql
+      query = query.azure_compute_virtual_machine_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Virtual Machines by OS Type"
-      sql   = query.azure_compute_virtual_machine_by_os_type.sql
+      query = query.azure_compute_virtual_machine_by_os_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Virtual Machines by Size"
-      sql   = query.azure_compute_virtual_machine_by_size.sql
+      query = query.azure_compute_virtual_machine_by_size
       type  = "column"
       width = 4
     }
@@ -188,14 +188,14 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Top 10 CPU - Last 7 days"
-      sql   = query.azure_compute_virtual_machine_top10_cpu_past_week.sql
+      query = query.azure_compute_virtual_machine_top10_cpu_past_week
       type  = "line"
       width = 6
     }
 
     chart {
       title = "Average Max Daily CPU - Last 30 days"
-      sql   = query.azure_compute_virtual_machine_by_cpu_utilization_category.sql
+      query = query.azure_compute_virtual_machine_by_cpu_utilization_category
       type  = "column"
       width = 6
     }

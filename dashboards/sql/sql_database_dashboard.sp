@@ -9,22 +9,22 @@ dashboard "azure_sql_database_dashboard" {
   container {
 
     card {
-      sql   = query.azure_sql_database_count.sql
+      query = query.azure_sql_database_count
       width = 2
     }
 
     card {
-      sql   = query.azure_sql_database_transparent_data_encryption_disabled_count.sql
+      query = query.azure_sql_database_transparent_data_encryption_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_sql_database_vulnerability_assessment_disabled_count.sql
+      query = query.azure_sql_database_vulnerability_assessment_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_sql_database_geo_redundant_backup_disabled_count.sql
+      query = query.azure_sql_database_geo_redundant_backup_disabled_count
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "azure_sql_database_dashboard" {
 
     chart {
       title = "TDE Status"
-      sql   = query.azure_sql_database_tde_status.sql
+      query = query.azure_sql_database_tde_status
       type  = "donut"
       width = 2
 
@@ -52,7 +52,7 @@ dashboard "azure_sql_database_dashboard" {
 
     chart {
       title = "Vulnerability Assessment Status"
-      sql   = query.azure_sql_database_vulnerability_assessment_status.sql
+      query = query.azure_sql_database_vulnerability_assessment_status
       type  = "donut"
       width = 2
 
@@ -68,7 +68,7 @@ dashboard "azure_sql_database_dashboard" {
 
     chart {
       title = "Geo-Redundant Backup Status"
-      sql   = query.azure_sql_database_geo_redundant_backup_status.sql
+      query = query.azure_sql_database_geo_redundant_backup_status
       type  = "donut"
       width = 2
 
@@ -90,42 +90,42 @@ dashboard "azure_sql_database_dashboard" {
 
     chart {
       title = "Databases by Subscription"
-      sql   = query.azure_sql_database_by_subscription.sql
+      query = query.azure_sql_database_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Databases by Resource Group"
-      sql   = query.azure_sql_database_by_resource_group.sql
+      query = query.azure_sql_database_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Databases by Region"
-      sql   = query.azure_sql_database_by_region.sql
+      query = query.azure_sql_database_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Databases by Status"
-      sql   = query.azure_sql_database_by_status.sql
+      query = query.azure_sql_database_by_status
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Databases by Edition"
-      sql   = query.azure_sql_database_by_edition.sql
+      query = query.azure_sql_database_by_edition
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Databases by Containment State"
-      sql   = query.azure_sql_database_by_containment_state.sql
+      query = query.azure_sql_database_by_containment_state
       type  = "column"
       width = 3
     }

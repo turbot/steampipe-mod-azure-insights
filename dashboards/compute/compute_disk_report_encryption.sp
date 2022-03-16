@@ -10,22 +10,22 @@ dashboard "azure_compute_disk_encryption_report" {
   container {
 
     card {
-      sql   = query.azure_compute_disk_count.sql
+      query = query.azure_compute_disk_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_disk_platform_managed_encryption_count.sql
+      query = query.azure_compute_disk_platform_managed_encryption_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_disk_customer_managed_encryption_count.sql
+      query = query.azure_compute_disk_customer_managed_encryption_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_disk_cmk_and_platfrom_managed_encryption_count.sql
+      query = query.azure_compute_disk_cmk_and_platfrom_managed_encryption_count
       width = 2
     }
 
@@ -40,7 +40,7 @@ dashboard "azure_compute_disk_encryption_report" {
       display = "none"
     }
 
-    sql = query.azure_compute_disk_encryption_report.sql
+    query = query.azure_compute_disk_encryption_report
   }
 
 }

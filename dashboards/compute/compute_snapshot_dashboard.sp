@@ -10,27 +10,27 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     # Analysis
     card {
-      sql   = query.azure_compute_snapshot_count.sql
+      query = query.azure_compute_snapshot_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_snapshot_storage_total.sql
+      query = query.azure_compute_snapshot_storage_total
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_snapshot_public_network_access_count.sql
+      query = query.azure_compute_snapshot_public_network_access_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_snapshot_incremental_disabled_count.sql
+      query = query.azure_compute_snapshot_incremental_disabled_count
       width = 2
     }
 
     card {
-      sql   = query.azure_compute_snapshot_encryption_setting_collection_disabled_count.sql
+      query = query.azure_compute_snapshot_encryption_setting_collection_disabled_count
       width = 2
     }
 
@@ -42,7 +42,7 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     chart {
       title = "Public/Private Status"
-      sql   = query.azure_compute_snapshot_by_network_access_policy_status.sql
+      query = query.azure_compute_snapshot_by_network_access_policy_status
       type  = "donut"
       width = 2
 
@@ -58,7 +58,7 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     chart {
       title = "Incremental Status"
-      sql   = query.azure_compute_snapshot_incremental_status.sql
+      query = query.azure_compute_snapshot_incremental_status
       type  = "donut"
       width = 2
 
@@ -74,7 +74,7 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     chart {
       title = "Encryption Setting Collection Status"
-      sql   = query.azure_compute_snapshot_encryption_setting_collection_status.sql
+      query = query.azure_compute_snapshot_encryption_setting_collection_status
       type  = "donut"
       width = 2
 
@@ -96,35 +96,35 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     chart {
       title = "Snapshots by Subscription"
-      sql   = query.azure_compute_snapshot_by_subscription.sql
+      query = query.azure_compute_snapshot_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Snapshots by Resource Group"
-      sql   = query.azure_compute_snapshot_by_resource_group.sql
+      query = query.azure_compute_snapshot_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Snapshots by Region"
-      sql   = query.azure_compute_snapshot_by_region.sql
+      query = query.azure_compute_snapshot_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Snapshots by Encryption Type"
-      sql   = query.azure_compute_snapshot_by_encryption_type.sql
+      query = query.azure_compute_snapshot_by_encryption_type
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Snapshots by OS Type"
-      sql   = query.azure_compute_snapshot_by_os_type.sql
+      query = query.azure_compute_snapshot_by_os_type
       type  = "column"
       width = 3
     }
