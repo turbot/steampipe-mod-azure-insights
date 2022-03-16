@@ -47,7 +47,18 @@ dashboard "azure_key_vault_key_age_report" {
   }
 
   table {
-    // TODO set link when details page is ready
+    column "Subscription ID" {
+      display = "none"
+    }
+
+    column "ID" {
+      display = "none"
+    }
+
+    column "Name" {
+      href = "${dashboard.azure_key_vault_key_detail.url_path}?input.id={{.ID | @uri}}"
+    }
+
     sql = query.azure_key_vault_key_age_table.sql
   }
 
@@ -116,16 +127,17 @@ query "azure_key_vault_key_1_year_count" {
 query "azure_key_vault_key_age_table" {
   sql = <<-EOQ
     select
-      k.id as "Key ID",
+      k.name as "Name",
+      k.id as "ID",
       now()::date - k.created_at::date as "Age in Days",
       k.created_at as "Creation Date",
-      k.name as "Key Name",
       k.vault_name as "Vault Name",
       k.expires_at as "Key Expiration",
       k.key_size as "Key Size",
       k.key_type as "Key Type",
       a.title as "Subscription",
       k.resource_group as "Resource Group",
+      k.subscription_id as "Subscription ID",
       k.region as "Region"
     from
       azure_key_vault_key as k,
