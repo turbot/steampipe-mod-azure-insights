@@ -156,7 +156,7 @@ dashboard "azure_storage_account_detail" {
     width = 12
 
     table {
-      title = "Blob Servcie Logging"
+      title = "Blob Service Logging"
       query = query.azure_storage_account_blob_logging
       args = {
         id = self.input.storage_account_id.value
