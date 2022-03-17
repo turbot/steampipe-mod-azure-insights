@@ -1,4 +1,4 @@
-dashboard "azure_compute_virtual_machine_scale_set_scale_set_detail" {
+dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
   title         = "Azure Compute Virtual Machine Scale Set Detail"
   documentation = file("./dashboards/compute/docs/compute_virtual_machine_scale_set_detail.md")
@@ -8,7 +8,7 @@ dashboard "azure_compute_virtual_machine_scale_set_scale_set_detail" {
   })
 
   input "id" {
-    title = "Select a Virtual Machine Scale Set:"
+    title = "Select a virtual machine scale set:"
     query = query.azure_compute_virtual_machine_scale_set_input
     width = 4
   }

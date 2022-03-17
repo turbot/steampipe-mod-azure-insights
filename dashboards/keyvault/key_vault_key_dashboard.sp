@@ -216,12 +216,12 @@ query "azure_key_vault_key_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(resource_group) as "Accounts"
+      count(k.*) as "Keys"
     from
       azure_key_vault_key as k,
       azure_subscription as sub
     where
-       k.subscription_id = sub.subscription_id
+      k.subscription_id = sub.subscription_id
     group by
       resource_group, sub.title
     order by

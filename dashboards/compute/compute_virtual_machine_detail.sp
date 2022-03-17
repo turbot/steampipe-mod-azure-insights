@@ -8,7 +8,7 @@ dashboard "azure_compute_virtual_machine_detail" {
   })
 
   input "id" {
-    title = "Select a Virtual Machine:"
+    title = "Select a virtual machine:"
     query = query.azure_compute_virtual_machine_input
     width = 4
   }

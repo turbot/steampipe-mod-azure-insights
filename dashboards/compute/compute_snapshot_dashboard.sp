@@ -274,7 +274,7 @@ query "azure_compute_snapshot_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(resource_group) as "Accounts"
+      count(s.*) as "Snapshots"
     from
       azure_compute_snapshot as s,
       azure_subscription as sub

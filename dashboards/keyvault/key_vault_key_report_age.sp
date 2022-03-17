@@ -126,22 +126,22 @@ query "azure_key_vault_key_age_table" {
   sql = <<-EOQ
     select
       k.name as "Name",
-      k.id as "ID",
       now()::date - k.created_at::date as "Age in Days",
       k.created_at as "Creation Date",
       k.vault_name as "Vault Name",
       k.expires_at as "Key Expiration",
       k.key_size as "Key Size",
       k.key_type as "Key Type",
-      a.title as "Subscription",
-      k.resource_group as "Resource Group",
+      sub.title as "Subscription",
       k.subscription_id as "Subscription ID",
-      k.region as "Region"
+      k.resource_group as "Resource Group",
+      k.region as "Region",
+      k.id as "ID"
     from
       azure_key_vault_key as k,
-      azure_subscription as a
+      azure_subscription as sub
     where
-      k.subscription_id = a.subscription_id
+      k.subscription_id = sub.subscription_id
     order by
       k.id;
   EOQ

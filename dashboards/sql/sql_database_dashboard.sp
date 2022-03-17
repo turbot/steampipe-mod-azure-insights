@@ -300,7 +300,7 @@ query "azure_sql_database_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(resource_group) as "Accounts"
+      count(d.*) as "Databases"
     from
       azure_sql_database as d,
       azure_subscription as sub

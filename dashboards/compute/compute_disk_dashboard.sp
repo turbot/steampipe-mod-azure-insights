@@ -83,6 +83,30 @@ dashboard "azure_compute_disk_dashboard" {
     }
 
     chart {
+      title = "Disks by Encryption Type"
+      query = query.azure_compute_disk_by_encryption_type
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Disks by OS Type"
+      query = query.azure_compute_disk_by_os_type
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Disks by SKU Tier"
+      query = query.azure_compute_disk_by_sku_tier
+      type  = "column"
+      width = 3
+    }
+
+  }
+
+  container {
+    chart {
       title = "Storage by Subscription (GB)"
       sql   = query.azure_compute_disk_storage_by_subscription.sql
       type  = "column"
@@ -125,28 +149,6 @@ dashboard "azure_compute_disk_dashboard" {
         color = "tan"
       }
     }
-
-    chart {
-      title = "Disks by Encryption Type"
-      query = query.azure_compute_disk_by_encryption_type
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Disks by OS Type"
-      query = query.azure_compute_disk_by_os_type
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Disks by SKU Tier"
-      query = query.azure_compute_disk_by_sku_tier
-      type  = "column"
-      width = 3
-    }
-
   }
 
   container {
@@ -168,6 +170,7 @@ dashboard "azure_compute_disk_dashboard" {
     }
 
   }
+  
 }
 
 # Card Queries
@@ -246,12 +249,12 @@ query "azure_compute_disk_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(resource_group) as "Accounts"
+      count(d.*) as "Disks"
     from
       azure_compute_disk as d,
       azure_subscription as sub
     where
-       d.subscription_id = sub.subscription_id
+      d.subscription_id = sub.subscription_id
     group by
       resource_group, sub.title
     order by
