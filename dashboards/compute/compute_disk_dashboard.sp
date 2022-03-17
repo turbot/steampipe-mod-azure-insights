@@ -170,6 +170,7 @@ dashboard "azure_compute_disk_dashboard" {
     }
 
   }
+  
 }
 
 # Card Queries

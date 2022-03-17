@@ -39,9 +39,9 @@ query "azure_subscription_count" {
 query "azure_subscription_table" {
   sql = <<-EOQ
     select
+      display_name as "Display Name",
       subscription_id as "Subscription ID",
       tenant_id as "Tenant ID",
-      display_name as "Display Name",
       state as "State",
       cloud_environment as "Cloud Environment",
       id as "ID"
