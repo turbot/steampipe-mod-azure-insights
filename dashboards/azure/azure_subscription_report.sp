@@ -44,7 +44,6 @@ query "azure_subscription_table" {
       display_name as "Display Name",
       state as "State",
       cloud_environment as "Cloud Environment",
-      managed_by_tenants as "Managed By Tenants",
       id as "ID"
     from
       azure_subscription;

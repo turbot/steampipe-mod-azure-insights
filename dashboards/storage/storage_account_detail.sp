@@ -8,7 +8,7 @@ dashboard "azure_storage_account_detail" {
   })
 
   input "id" {
-    title = "Select a account:"
+    title = "Select a storage account:"
     query = query.azure_storage_account_input
     width = 4
   }

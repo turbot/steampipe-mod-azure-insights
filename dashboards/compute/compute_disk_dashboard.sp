@@ -83,6 +83,30 @@ dashboard "azure_compute_disk_dashboard" {
     }
 
     chart {
+      title = "Disks by Encryption Type"
+      query = query.azure_compute_disk_by_encryption_type
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Disks by OS Type"
+      query = query.azure_compute_disk_by_os_type
+      type  = "column"
+      width = 3
+    }
+
+    chart {
+      title = "Disks by SKU Tier"
+      query = query.azure_compute_disk_by_sku_tier
+      type  = "column"
+      width = 3
+    }
+
+  }
+
+  container {
+    chart {
       title = "Storage by Subscription (GB)"
       sql   = query.azure_compute_disk_storage_by_subscription.sql
       type  = "column"
@@ -125,28 +149,6 @@ dashboard "azure_compute_disk_dashboard" {
         color = "tan"
       }
     }
-
-    chart {
-      title = "Disks by Encryption Type"
-      query = query.azure_compute_disk_by_encryption_type
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Disks by OS Type"
-      query = query.azure_compute_disk_by_os_type
-      type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Disks by SKU Tier"
-      query = query.azure_compute_disk_by_sku_tier
-      type  = "column"
-      width = 3
-    }
-
   }
 
   container {
