@@ -20,6 +20,11 @@ dashboard "azure_iam_user_dashboard" {
     }
 
     card {
+      query = query.azure_iam_external_user_with_owner_roles_count
+      width = 2
+    }
+
+    card {
       query = query.azure_iam_user_with_directory_roles_count
       width = 2
     }
@@ -45,6 +50,22 @@ dashboard "azure_iam_user_dashboard" {
           color = "ok"
         }
         point "deprecated" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "External User With Owner Role"
+      query = query.azure_iam_external_user_with_owner_roles_status
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "not with owner roles" {
+          color = "ok"
+        }
+        point "with owner roles" {
           color = "alert"
         }
       }
@@ -96,6 +117,21 @@ query "azure_iam_guest_user_count" {
       azuread_user
     where
       user_type = 'Guest';
+  EOQ
+}
+
+query "azure_iam_external_user_with_owner_roles_count" {
+  sql = <<-EOQ
+    select
+      count(distinct u.display_name) as value,
+      'Guest User With Owner Role' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+      from
+        azuread_user as u
+        left join azure_role_assignment as a on a.principal_id = u.id
+        left join azure_role_definition as d on d.id = a.role_definition_id
+      where d.role_name = 'Owner'
+        and u.user_principal_name like '%EXT%';
   EOQ
 }
 
@@ -154,6 +190,35 @@ query "azure_iam_deprecated_user_status" {
       deprecated_account_status
     group by
       deprecated_account_status;
+  EOQ
+}
+
+query "azure_iam_external_user_with_owner_roles_status" {
+  sql = <<-EOQ
+    with external_user_with_owner_role as (
+      select
+        distinct u.id,
+        d.role_name,
+        u.account_enabled,
+        u.user_principal_name,
+        d.subscription_id
+      from
+        azuread_user as u
+        left join azure_role_assignment as a on a.principal_id = u.id
+        left join azure_role_definition as d on d.id = a.role_definition_id
+      where
+        d.role_name = 'Owner'
+        and u.user_principal_name like '%EXT%'
+    )
+    select
+      case when u.id in (select  id  from external_user_with_owner_role ) then 'with owner roles' else 'not with owner roles' end as status,
+      count(*)
+    from
+      azuread_user as u
+    where
+      u.user_principal_name like '%EXT%'
+    group by
+      status;
   EOQ
 }
 
