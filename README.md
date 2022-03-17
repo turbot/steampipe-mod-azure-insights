@@ -13,9 +13,8 @@ Dashboards can help answer questions like:
 - Are there any publicly accessible resources?
 - Is encryption enabled and what keys are used for encryption?
 - Is versioning enabled?
-- What are the relationships between closely connected resources like IAM users, groups, and policies?
 
-Dashboards are available for 10+ services, including Compute, Disk Storage, IAM, Database, Virtual Network, and more!
+Dashboards are available for Compute, Key Vault, Storage, and SQL services.
 
 ## Getting started
 
