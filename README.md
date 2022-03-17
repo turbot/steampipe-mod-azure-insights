@@ -2,7 +2,7 @@
 
 An Azure dashboarding tool that can be used to view dashboards and reports across all of your Azure accounts.
 
-<!-- TO DO -->
+![image](https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_dashboard.png)
 
 ## Overview
 
@@ -14,7 +14,7 @@ Dashboards can help answer questions like:
 - Is encryption enabled and what keys are used for encryption?
 - Is versioning enabled?
 
-Dashboards are available for Compute, Key Vault, Storage, and SQL services.
+Dashboards are available for Compute, Key Vault, SQL, and Storage services.
 
 ## Getting started
 

@@ -7,7 +7,7 @@ dashboard "azure_storage_account_detail" {
     type = "Detail"
   })
 
-  input "id" {
+  input "storage_account_id" {
     title = "Select a storage account:"
     query = query.azure_storage_account_input
     width = 4
@@ -19,7 +19,7 @@ dashboard "azure_storage_account_detail" {
       width = 2
       query = query.azure_storage_account_kind
       args = {
-        id = self.input.id.value
+        id = self.input.storage_account_id.value
       }
     }
 
@@ -27,7 +27,7 @@ dashboard "azure_storage_account_detail" {
       width = 2
       query = query.azure_storage_account_access_tier
       args = {
-        id = self.input.id.value
+        id = self.input.storage_account_id.value
       }
     }
 
@@ -35,7 +35,7 @@ dashboard "azure_storage_account_detail" {
       width = 2
       query = query.azure_storage_account_blob_soft_delete
       args = {
-        id = self.input.id.value
+        id = self.input.storage_account_id.value
       }
     }
 
@@ -43,7 +43,7 @@ dashboard "azure_storage_account_detail" {
       width = 2
       query = query.azure_storage_account_blob_public_access
       args = {
-        id = self.input.id.value
+        id = self.input.storage_account_id.value
       }
     }
 
@@ -51,7 +51,7 @@ dashboard "azure_storage_account_detail" {
       width = 2
       query = query.azure_storage_account_https_traffic
       args = {
-        id = self.input.id.value
+        id = self.input.storage_account_id.value
       }
     }
 
@@ -68,7 +68,7 @@ dashboard "azure_storage_account_detail" {
         width = 6
         query = query.azure_storage_account_overview
         args = {
-          id = self.input.id.value
+          id = self.input.storage_account_id.value
         }
 
       }
@@ -78,7 +78,7 @@ dashboard "azure_storage_account_detail" {
         width = 6
         query = query.azure_storage_account_tags
         args = {
-          id = self.input.id.value
+          id = self.input.storage_account_id.value
         }
       }
     }
@@ -90,7 +90,7 @@ dashboard "azure_storage_account_detail" {
         title = "Blob Encryption Service"
         query = query.azure_storage_account_blob_encryption_service
         args = {
-          id = self.input.id.value
+          id = self.input.storage_account_id.value
         }
       }
 
@@ -98,7 +98,7 @@ dashboard "azure_storage_account_detail" {
         title = "File Encryption Service"
         query = query.azure_storage_account_file_encryption_service
         args = {
-          id = self.input.id.value
+          id = self.input.storage_account_id.value
         }
       }
 
@@ -106,7 +106,7 @@ dashboard "azure_storage_account_detail" {
         title = "SKU Details"
         query = query.azure_storage_account_sku
         args = {
-          id = self.input.id.value
+          id = self.input.storage_account_id.value
         }
       }
     }
@@ -120,7 +120,7 @@ dashboard "azure_storage_account_detail" {
       title = "Vitual Network Rules"
       query = query.azure_storage_account_virtual_network_rules
       args = {
-        id = self.input.id.value
+        id = self.input.storage_account_id.value
       }
     }
 
@@ -133,7 +133,7 @@ dashboard "azure_storage_account_detail" {
       title = "Blob Configurations"
       query = query.azure_storage_account_blob_configurations
       args = {
-        id = self.input.id.value
+        id = self.input.storage_account_id.value
       }
     }
 
@@ -146,7 +146,7 @@ dashboard "azure_storage_account_detail" {
       title = "Queue Logging"
       query = query.azure_storage_account_queue_logging
       args = {
-        id = self.input.id.value
+        id = self.input.storage_account_id.value
       }
     }
 
@@ -159,7 +159,7 @@ dashboard "azure_storage_account_detail" {
       title = "Blob Servcie Logging"
       query = query.azure_storage_account_blob_logging
       args = {
-        id = self.input.id.value
+        id = self.input.storage_account_id.value
       }
     }
 

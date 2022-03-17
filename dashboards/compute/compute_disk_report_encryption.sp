@@ -54,10 +54,10 @@ query "azure_compute_disk_encryption_report" {
       d.id as "ID",
       d.encryption_type as "Encryption Type",
       d.encryption_disk_encryption_set_id as "Disk Encryption Set ID",
-      d.subscription_id as "Subscription ID",
       sub.title as "Subscription",
-      d.region as "Region",
-      d.resource_group as "Resource Group"
+      d.subscription_id as "Subscription ID",
+      d.resource_group as "Resource Group",
+      d.region as "Region"
     from
       azure_compute_disk as d,
       azure_subscription as sub

@@ -7,7 +7,7 @@ dashboard "azure_compute_virtual_machine_detail" {
     type = "Detail"
   })
 
-  input "id" {
+  input "vm_id" {
     title = "Select a virtual machine:"
     query = query.azure_compute_virtual_machine_input
     width = 4
@@ -19,7 +19,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       width = 2
       query = query.azure_compute_virtual_machine_status
       args = {
-        id = self.input.id.value
+        id = self.input.vm_id.value
       }
     }
 
@@ -27,7 +27,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       width = 2
       query = query.azure_compute_virtual_machine_encryption_status
       args = {
-        id = self.input.id.value
+        id = self.input.vm_id.value
       }
     }
 
@@ -35,7 +35,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       width = 2
       query = query.azure_compute_virtual_machine_disaster_recovery_status
       args = {
-        id = self.input.id.value
+        id = self.input.vm_id.value
       }
     }
 
@@ -43,7 +43,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       width = 2
       query = query.azure_compute_virtual_machine_ingress_access
       args = {
-        id = self.input.id.value
+        id = self.input.vm_id.value
       }
     }
 
@@ -51,7 +51,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       width = 2
       query = query.azure_compute_virtual_machine_vulnerability_assessment_solution
       args = {
-        id = self.input.id.value
+        id = self.input.vm_id.value
       }
     }
   }
@@ -67,7 +67,7 @@ dashboard "azure_compute_virtual_machine_detail" {
         width = 6
         query = query.azure_compute_virtual_machine_overview
         args = {
-          id = self.input.id.value
+          id = self.input.vm_id.value
         }
 
       }
@@ -77,7 +77,7 @@ dashboard "azure_compute_virtual_machine_detail" {
         width = 6
         query = query.azure_compute_virtual_machine_tags
         args = {
-          id = self.input.id.value
+          id = self.input.vm_id.value
         }
       }
     }
@@ -89,7 +89,7 @@ dashboard "azure_compute_virtual_machine_detail" {
         title = "Storage Profile"
         query = query.azure_compute_virtual_machine_storage_profile
         args = {
-          id = self.input.id.value
+          id = self.input.vm_id.value
         }
       }
 
@@ -97,7 +97,7 @@ dashboard "azure_compute_virtual_machine_detail" {
         title = "Image"
         query = query.azure_compute_virtual_machine_image
         args = {
-          id = self.input.id.value
+          id = self.input.vm_id.value
         }
       }
     }
@@ -111,7 +111,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       title = "Security Groups"
       query = query.azure_compute_virtual_machine_security_groups
       args = {
-        id = self.input.id.value
+        id = self.input.vm_id.value
       }
     }
 
@@ -124,7 +124,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       title = "Network Interfaces"
       query = query.azure_compute_virtual_machine_network_interfaces
       args = {
-        id = self.input.id.value
+        id = self.input.vm_id.value
       }
     }
 
@@ -137,7 +137,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       title = "Guest Configuration"
       query = query.azure_compute_virtual_machine_guest_configuration_assignments
       args = {
-        id = self.input.id.value
+        id = self.input.vm_id.value
       }
     }
 
@@ -150,7 +150,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       title = "Data Disks"
       query = query.azure_compute_virtual_machine_data_disks
       args = {
-        id = self.input.id.value
+        id = self.input.vm_id.value
       }
     }
 

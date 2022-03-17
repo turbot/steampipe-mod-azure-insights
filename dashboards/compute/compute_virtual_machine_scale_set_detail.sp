@@ -7,7 +7,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
     type = "Detail"
   })
 
-  input "id" {
+  input "vm_scale_set_id" {
     title = "Select a virtual machine scale set:"
     query = query.azure_compute_virtual_machine_scale_set_input
     width = 4
@@ -19,7 +19,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
       width = 2
       query = query.azure_compute_virtual_machine_scale_set_status
       args = {
-        id = self.input.id.value
+        id = self.input.vm_scale_set_id.value
       }
     }
 
@@ -27,7 +27,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
       width = 2
       query = query.azure_compute_virtual_machine_scale_set_encryption_status
       args = {
-        id = self.input.id.value
+        id = self.input.vm_scale_set_id.value
       }
     }
 
@@ -35,7 +35,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
       width = 2
       query = query.azure_compute_virtual_machine_scale_set_logging_status
       args = {
-        id = self.input.id.value
+        id = self.input.vm_scale_set_id.value
       }
     }
 
@@ -43,7 +43,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
       width = 2
       query = query.azure_compute_virtual_machine_scale_set_log_analytics_agent
       args = {
-        id = self.input.id.value
+        id = self.input.vm_scale_set_id.value
       }
     }
 
@@ -60,7 +60,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
         width = 6
         query = query.azure_compute_virtual_machine_scale_set_overview
         args = {
-          id = self.input.id.value
+          id = self.input.vm_scale_set_id.value
         }
 
       }
@@ -70,7 +70,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
         width = 6
         query = query.azure_compute_virtual_machine_scale_set_tags
         args = {
-          id = self.input.id.value
+          id = self.input.vm_scale_set_id.value
         }
       }
     }
@@ -82,7 +82,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
         title = "SKU"
         query = query.azure_compute_virtual_machine_scale_set_sku
         args = {
-          id = self.input.id.value
+          id = self.input.vm_scale_set_id.value
         }
       }
 
@@ -90,7 +90,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
         title = "Image Reference"
         query = query.azure_compute_virtual_machine_scale_set_image_reference
         args = {
-          id = self.input.id.value
+          id = self.input.vm_scale_set_id.value
         }
       }
 
@@ -98,7 +98,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
         title = "OS Disks"
         query = query.azure_compute_virtual_machine_scale_set_os_disks
         args = {
-          id = self.input.id.value
+          id = self.input.vm_scale_set_id.value
         }
       }
     }
@@ -112,7 +112,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
       title = "Network Interface"
       query = query.azure_compute_virtual_machine_scale_set_network_interface
       args = {
-        id = self.input.id.value
+        id = self.input.vm_scale_set_id.value
       }
     }
 
@@ -125,7 +125,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
       title = "Data Disks"
       query = query.azure_compute_virtual_machine_scale_set_data_disks
       args = {
-        id = self.input.id.value
+        id = self.input.vm_scale_set_id.value
       }
     }
 

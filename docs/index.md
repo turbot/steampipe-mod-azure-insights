@@ -6,7 +6,7 @@ repository: "https://github.com/turbot/steampipe-mod-azure-insights"
 
 Create dashboards and reports for your Azure resources using Steampipe.
 
-<!-- TO DO -->
+<!-- TODO: Add images -->
 
 ## Overview
 
@@ -18,7 +18,7 @@ Dashboards can help answer questions like:
 - Is encryption enabled and what keys are used for encryption?
 - Is versioning enabled?
 
-Dashboards are available for Compute, Key Vault, Storage, and SQL services.
+Dashboards are available for Compute, Key Vault, SQL, and Storage services.
 
 ## References
 
