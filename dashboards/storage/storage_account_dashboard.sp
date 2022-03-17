@@ -358,12 +358,12 @@ query "azure_storage_account_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(resource_group) as "Storage Accounts"
+      count(a.*) as "Storage Accounts"
     from
       azure_storage_account as a,
       azure_subscription as sub
     where
-       a.subscription_id = sub.subscription_id
+      a.subscription_id = sub.subscription_id
     group by
       resource_group, sub.title
     order by

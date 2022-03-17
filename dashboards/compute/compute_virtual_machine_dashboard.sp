@@ -611,12 +611,12 @@ query "azure_compute_virtual_machine_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(resource_group) as "Accounts"
+      count(v.*) as "VMs"
     from
       azure_compute_virtual_machine as v,
       azure_subscription as sub
     where
-       v.subscription_id = sub.subscription_id
+      v.subscription_id = sub.subscription_id
     group by
       resource_group, sub.title
     order by

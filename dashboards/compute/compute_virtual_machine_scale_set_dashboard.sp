@@ -310,7 +310,7 @@ query "azure_compute_virtual_machine_scale_set_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(resource_group) as "Accounts"
+      count(s.*) as "Scale Sets"
     from
       azure_compute_virtual_machine_scale_set as s,
       azure_subscription as sub

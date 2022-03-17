@@ -381,17 +381,17 @@ query "azure_sql_server_private_link_status" {
 query "azure_sql_server_by_subscription" {
   sql = <<-EOQ
     select
-      a.title as "Subscription",
-      count(v.*) as "Servers"
+      sub.title as "Subscription",
+      count(s.*) as "Servers"
     from
-      azure_sql_server as v,
-      azure_subscription as a
+      azure_sql_server as s,
+      azure_subscription as sub
     where
-      a.subscription_id = v.subscription_id
+      sub.subscription_id = s.subscription_id
     group by
-      a.title
+      sub.title
     order by
-      a.title;
+      sub.title;
   EOQ
 }
 
@@ -399,7 +399,7 @@ query "azure_sql_server_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(resource_group) as "Accounts"
+      count(s.*) as "Servers"
     from
       azure_sql_server as s,
       azure_subscription as sub

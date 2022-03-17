@@ -246,12 +246,12 @@ query "azure_compute_disk_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(resource_group) as "Accounts"
+      count(d.*) as "Disks"
     from
       azure_compute_disk as d,
       azure_subscription as sub
     where
-       d.subscription_id = sub.subscription_id
+      d.subscription_id = sub.subscription_id
     group by
       resource_group, sub.title
     order by
