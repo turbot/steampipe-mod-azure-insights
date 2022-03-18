@@ -14,6 +14,7 @@ mod "azure_insights" {
   }
 
   require {
+    steampipe = "0.13.1"
     plugin "azure" {
       version = "0.23.2"
     }
