@@ -375,9 +375,9 @@ query "azure_compute_virtual_machine_tags" {
 query "azure_compute_virtual_machine_storage_profile" {
   sql = <<-EOQ
     select
+      os_disk_name as "Disk Name",
       os_disk_caching as "Disk Caching",
       os_disk_create_option as "Disk Create Option",
-      os_disk_name as "Disk Name",
       os_disk_vhd_uri as "Virtual Hard Disk URI"
     from
       azure_compute_virtual_machine
@@ -391,12 +391,12 @@ query "azure_compute_virtual_machine_storage_profile" {
 query "azure_compute_virtual_machine_image" {
   sql = <<-EOQ
     select
-      image_exact_version as "Exact Version",
-      image_id as "ID",
-      image_offer as "Offer",
-      image_publisher as "Publisher",
       image_sku as "SKU",
-      image_version as "Version"
+      image_version as "Version",
+      image_exact_version as "Exact Version",
+      image_id as "Image ID",
+      image_offer as "Offer",
+      image_publisher as "Publisher"
     from
       azure_compute_virtual_machine
     where
@@ -410,10 +410,10 @@ query "azure_compute_virtual_machine_security_groups" {
   sql = <<-EOQ
     select
       nsg.name as "Name",
-      nsg.provisioning_state as "State",
+      nsg.provisioning_state as "Provisioning State",
       nsg.region as "Region",
       nsg.resource_group as "Resource Group",
-      nsg.id as "ID"
+      nsg.id as "Security Group ID"
     from
       azure_network_security_group as nsg
       left join azure_compute_virtual_machine as vm on vm.network_interfaces @> nsg.network_interfaces
@@ -457,13 +457,13 @@ query "azure_compute_virtual_machine_network_interfaces" {
         id = $1
     )
     select
-      i.id as "Network Interface ID",
+      i.name as "Name",
       i.provisioning_state as "Provisioning State",
       vi.public_ips as "Public IPs",
       vi.private_ips as "Private IPs",
       (ip_config -> 'properties' ->> 'primary')::boolean as "Primary IP Config",
       ip_config -> 'properties' ->> 'privateIPAddressVersion' as "Private IP Version",
-      ip_config -> 'properties' -> 'subnet' ->> 'id' as "Subnet ID"
+      i.id as "Network Interface ID"
     from
       vm_interface vi
       left join azure_network_interface as i on i.id = vi.network_id
@@ -481,7 +481,7 @@ query "azure_compute_virtual_machine_guest_configuration_assignments" {
       g -> 'guestConfiguration' -> 'configurationSetting' ->> 'allowModuleOverwrite' as "Allow Module Overwrite",
       g -> 'guestConfiguration' -> 'configurationSetting' ->> 'configurationMode' as "Configuration Mode",
       g -> 'guestConfiguration' -> 'configurationSetting' ->> 'configurationModeFrequencyMins' as "Configuration Mode Frequency Mins",
-      (g -> 'guestConfiguration' -> 'configurationSetting' ->> 'rebootIfNeeded')::boolean as "Reboot If Needed",
+      (g -> 'guestConfiguration' -> 'configurationSetting' ->> 'rebootIfNeeded')::boolean as "Reboot if Needed",
       g -> 'guestConfiguration' -> 'configurationSetting' ->> 'refreshFrequencyMins' as "Refresh Frequency Mins",
       g -> 'guestConfiguration' ->> 'version' as "Version"
     from
