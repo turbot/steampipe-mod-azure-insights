@@ -161,17 +161,21 @@ dashboard "azure_compute_virtual_machine_detail" {
 query "azure_compute_virtual_machine_input" {
   sql = <<-EOQ
     select
-      title as label,
-      id as value,
+      v.title as label,
+      v.id as value,
       json_build_object(
-        'resource_group', resource_group,
-        'region', region,
-        'vm_id', vm_id
+        'subscription', s.display_name,
+        'resource_group', v.resource_group,
+        'region', v.region,
+        'vm_id', v.vm_id
       ) as tags
     from
-      azure_compute_virtual_machine
+      azure_compute_virtual_machine as v,
+      azure_subscription as s
+    where
+      v.subscription_id = s.subscription_id
     order by
-      title;
+      v.title;
   EOQ
 }
 

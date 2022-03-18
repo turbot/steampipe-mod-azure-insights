@@ -136,17 +136,21 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 query "azure_compute_virtual_machine_scale_set_input" {
   sql = <<-EOQ
     select
-      title as label,
-      id as value,
+      v.title as label,
+      v.id as value,
       json_build_object(
-        'resource_group', resource_group,
-        'region', region,
-        'unique_id', unique_id
+        'subscription', s.display_name,
+        'resource_group', v.resource_group,
+        'region', v.region,
+        'unique_id', v.unique_id
       ) as tags
     from
-      azure_compute_virtual_machine_scale_set
+      azure_compute_virtual_machine_scale_set as v,
+      azure_subscription as s
+    where
+      v.subscription_id = s.subscription_id
     order by
-      title;
+      v.title;
   EOQ
 }
 

@@ -170,16 +170,20 @@ dashboard "azure_storage_account_detail" {
 query "azure_storage_account_input" {
   sql = <<-EOQ
     select
-      title as label,
-      id as value,
+      sa.title as label,
+      sa.id as value,
       json_build_object(
-        'resource_group', resource_group,
-        'region', region
+        'subscription', s.display_name,
+        'resource_group', sa.resource_group,
+        'region', sa.region
       ) as tags
     from
-      azure_storage_account
+      azure_storage_account as sa,
+      azure_subscription as s
+    where
+      sa.subscription_id = s.subscription_id
     order by
-      title;
+      sa.title;
   EOQ
 }
 
