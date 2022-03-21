@@ -19,73 +19,10 @@ dashboard "azuread_group_dashboard" {
       width = 2
     }
 
-    card {
-      query = query.azuread_group_visibility_public_count
-      width = 2
-    }
-
-    card {
-      query = query.azuread_group_security_disabled_count
-      width = 2
-    }
-
-    card {
-      query = query.azuread_group_mail_disabled_count
-      width = 2
-    }
-
   }
 
   container {
     title = "Assessments"
-
-    chart {
-      title = "Public/Private Visibility Status"
-      query = query.azuread_group_public_visibility_status
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "private" {
-          color = "ok"
-        }
-        point "public" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title = "Security Enabled/Disabled Status"
-      query = query.azuread_group_security_disabled_status
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title = "Mail Enabled/Disabled Status"
-      query = query.azuread_group_mail_disabled_status
-      type  = "donut"
-      width = 2
-
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
-          color = "alert"
-        }
-      }
-    }
 
   }
 
@@ -131,82 +68,7 @@ query "azuread_group_with_no_members_count" {
   EOQ
 }
 
-query "azuread_group_security_disabled_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Security Disabled' as label,
-      case when count(*) = 0 then 'ok' else 'alert' end as type
-    from
-      azuread_group
-    where
-      security_enabled is not true;
-  EOQ
-}
-
-query "azuread_group_visibility_public_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Public Visibility' as label,
-      case when count(*) = 0 then 'ok' else 'alert' end as type
-    from
-      azuread_group
-    where
-      visibility = 'Public';
-  EOQ
-}
-
-query "azuread_group_mail_disabled_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Mail Disabled' as label,
-      case when count(*) = 0 then 'ok' else 'alert' end as type
-    from
-      azuread_group
-    where
-      mail_enabled is not true;
-  EOQ
-}
-
 # Assessment Queries
-
-query "azuread_group_public_visibility_status" {
-  sql = <<-EOQ
-    select
-      case when visibility = 'Public' then 'public' else 'private' end as status,
-      count(*)
-    from
-      azuread_group
-    group by
-      status;
-  EOQ
-}
-
-query "azuread_group_security_disabled_status" {
-  sql = <<-EOQ
-    select
-      case when security_enabled then 'enabled' else 'disabled' end as status,
-      count(*)
-    from
-      azuread_group
-    group by
-      status;
-  EOQ
-}
-
-query "azuread_group_mail_disabled_status" {
-  sql = <<-EOQ
-    select
-      case when mail_enabled then 'enabled' else 'disabled' end as status,
-      count(*)
-    from
-      azuread_group
-    group by
-      status;
-  EOQ
-}
 
 # Analysis Queries
 

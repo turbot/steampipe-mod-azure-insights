@@ -26,12 +26,12 @@ dashboard "azuread_user_dashboard" {
     }
 
     card {
-      query = query.azuread_user_with_directory_roles_count
+      query = query.azuread_deprecated_user_with_owner_role_count
       width = 2
     }
 
     card {
-      query = query.azuread_deprecated_user_count
+      query = query.azuread_user_with_custom_role_count
       width = 2
     }
 
@@ -42,7 +42,7 @@ dashboard "azuread_user_dashboard" {
 
     chart {
       title = "Deprecated Account Status"
-      query = query.azuread_deprecated_user_status
+      query = query.azuread_deprecated_user_with_owner_status
       type  = "donut"
       width = 2
 
@@ -57,8 +57,8 @@ dashboard "azuread_user_dashboard" {
     }
 
     chart {
-      title = "External User With Owner Role"
-      query = query.azuread_external_user_with_owner_roles_status
+      title = "External Guest User With Owner Role"
+      query = query.azuread_external_guest_user_with_owner_role_status
       type  = "donut"
       width = 2
 
@@ -136,21 +136,7 @@ query "azuread_external_guest_user_with_owner_roles_count" {
   EOQ
 }
 
-query "azuread_user_with_directory_roles_count" {
-  sql = <<-EOQ
-    select
-      count(u.display_name) as value,
-      'With Directory Roles' as label
-    from
-      azuread_directory_role as role,
-      jsonb_array_elements_text(member_ids) as m_id,
-      azuread_user as u
-    where
-      u.id = m_id;
-  EOQ
-}
-
-query "azuread_deprecated_user_count" {
+query "azuread_deprecated_user_with_owner_role_count" {
   sql = <<-EOQ
     select
       count(distinct
@@ -161,13 +147,28 @@ query "azuread_deprecated_user_count" {
       azuread_user as u
       left join azure_role_assignment as a on a.principal_id = u.id
       left join azure_role_definition as d on d.id = a.role_definition_id
-      where not u.account_enabled;
+      where d.role_name = 'Owner' and not u.account_enabled;
+  EOQ
+}
+
+query "azuread_user_with_custom_role_count" {
+  sql = <<-EOQ
+    select
+      count(distinct
+      u.display_name) as value,
+      'With Custom Role' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      azuread_user as u
+      left join azure_role_assignment as a on a.principal_id = u.id
+      left join azure_role_definition as d on d.id = a.role_definition_id
+      where d.role_type = 'CustomRole' and  u.account_enabled;
   EOQ
 }
 
 # Assessment Queries
 
-query "azuread_deprecated_user_status" {
+query "azuread_deprecated_user_with_owner_status" {
   sql = <<-EOQ
     with deprecated_account as (
       select
@@ -177,7 +178,7 @@ query "azuread_deprecated_user_status" {
         azuread_user as u
         left join azure_role_assignment as a on a.principal_id = u.id
         left join azure_role_definition as d on d.id = a.role_definition_id
-        where not u.account_enabled
+        where d.role_name = 'Owner' and not u.account_enabled
     ), deprecated_account_status as (
     select
       case when dp.id is not null then 'deprecated' else 'not deprecated' end as deprecated_account_status
@@ -194,9 +195,9 @@ query "azuread_deprecated_user_status" {
   EOQ
 }
 
-query "azuread_external_user_with_owner_roles_status" {
+query "azuread_external_guest_user_with_owner_role_status" {
   sql = <<-EOQ
-    with external_user_with_owner_role as (
+    with external_guest_user_with_owner_role as (
       select
         distinct u.id,
         d.role_name,
@@ -209,10 +210,10 @@ query "azuread_external_user_with_owner_roles_status" {
         left join azure_role_definition as d on d.id = a.role_definition_id
       where
         d.role_name = 'Owner'
-        and u.user_principal_name like '%EXT%'
+        and (u.user_principal_name like '%EXT%' or user_type = 'Guest')
     )
     select
-      case when u.id in (select  id  from external_user_with_owner_role ) then 'with owner roles' else 'not with owner roles' end as status,
+      case when u.id in (select  id  from external_guest_user_with_owner_role ) then 'with owner roles' else 'not with owner roles' end as status,
       count(*)
     from
       azuread_user as u
