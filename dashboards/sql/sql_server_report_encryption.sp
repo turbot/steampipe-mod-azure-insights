@@ -45,7 +45,7 @@ query "azure_sql_server_encryption_report" {
   sql = <<-EOQ
     with encryption_protector as (
       select
-        id ,
+        id,
         ep ->> 'kind' as kind,
         ep ->> 'serverKeyName' as serverKeyName,
         ep ->> 'serverKeyType' as serverKeyType
