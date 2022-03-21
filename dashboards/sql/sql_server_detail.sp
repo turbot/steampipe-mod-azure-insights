@@ -92,7 +92,7 @@ dashboard "azure_sql_server_detail" {
         args = {
           id = self.input.server_id.value
         }
-    }
+      }
 
     }
   }
