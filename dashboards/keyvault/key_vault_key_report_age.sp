@@ -4,7 +4,7 @@ dashboard "azure_key_vault_key_age_report" {
   documentation = file("./dashboards/keyvault/docs/key_vault_key_report_age.md")
 
 
-  tags = merge(local.kms_common_tags, {
+  tags = merge(local.keyvault_common_tags, {
     type     = "Report"
     category = "Age"
   })
