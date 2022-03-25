@@ -1,7 +1,7 @@
 dashboard "azure_virtual_network_detail" {
 
   title         = "Azure Virtual Network Detail"
-  #documentation = file("./dashboards/network/docs/compute_virtual_machine_detail.md")
+  documentation = file("./dashboards/network/docs/virtual_network_detail.md")
 
   tags = merge(local.network_common_tags, {
     type = "Detail"
@@ -14,14 +14,6 @@ dashboard "azure_virtual_network_detail" {
   }
 
   container {
-
-    card {
-      width = 2
-      query = query.azure_virtual_network_provisioning_state
-      args = {
-        id = self.input.vn_id.value
-      }
-    }
 
     card {
       width = 2
@@ -47,7 +39,6 @@ dashboard "azure_virtual_network_detail" {
         id = self.input.vn_id.value
       }
     }
-
 
   }
 
@@ -93,7 +84,6 @@ dashboard "azure_virtual_network_detail" {
 
   }
 
-
   container {
 
     title = "Subnets"
@@ -105,9 +95,14 @@ dashboard "azure_virtual_network_detail" {
       }
     }
 
-
+    table {
+      title = "Subnet Details"
+      query = query.azure_virtual_network_subnet_details
+      args  = {
+        id = self.input.vn_id.value
+      }
+    }
   }
-
 
   container {
 
@@ -188,7 +183,7 @@ dashboard "azure_virtual_network_detail" {
         id = self.input.vn_id.value
       }
     }
-
+    
   }
 
 }
@@ -228,21 +223,6 @@ query "azure_virtual_network_input" {
   EOQ
 }
 
-query "azure_virtual_network_provisioning_state" {
-  sql = <<-EOQ
-    select
-      'Provisioning State' as label,
-      provisioning_state as value
-    from
-      azure_virtual_network
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-
-}
-
 query "azure_virtual_network_subnets_count" {
   sql = <<-EOQ
     select
@@ -278,6 +258,7 @@ query "azure_virtual_network_overview" {
   sql = <<-EOQ
     select
       name as "Name",
+      provisioning_state as "Provisioning State",
       cloud_environment as "Cloud Environment",
       region as "Region",
       resource_group as "Resource Group",
@@ -359,96 +340,116 @@ query "azure_virtual_network_subnet_sankey" {
   param "id" {}
 }
 
+query "azure_virtual_network_subnet_details" {
+  sql = <<-EOQ
+    select
+      s ->> 'id' as "Subnet ID",
+      name as "Name",
+      s -> 'properties' ->> 'addressPrefix' as "addressPrefix",
+      power(2, 32 - masklen((s -> 'properties' ->> 'addressPrefix'):: cidr)) -1 as "Total IPs",
+      s -> 'properties' ->> 'privateEndpointNetworkPolicies' as "Private Endpoint Network Policies",
+      s -> 'properties' ->> 'privateLinkServiceNetworkPolicies' as "Private Link Service Network Policies"
+    from
+      azure_virtual_network,
+      jsonb_array_elements(subnets) as s
+  where
+    id = $1
+  EOQ
+
+  param "id" {}
+}
+
 query "azure_virtual_network_outbound_rule_sankey" {
 
   sql = <<-EOQ
-  with subnets as (
-    select
-      s -> 'name' as "subnet_name",
-      s -> 'properties' ->>  'addressPrefix' as  addressPrefix,
-      s ->> 'id' as "subnet_id",
-      s -> 'properties' -> 'networkSecurityGroup' ->> 'id' as "networkSecurityGroup"
-      from
-      azure_virtual_network,
-      jsonb_array_elements(subnets) as s
-      where id = $1
-  ),network_security_group as (
+    with subnets as (
       select
-        id,
-        default_security_rules,
-        security_rules,
-        s
+        s -> 'name' as "subnet_name",
+        s -> 'properties' ->>  'addressPrefix' as  addressPrefix,
+        s ->> 'id' as "subnet_id",
+        s -> 'properties' -> 'networkSecurityGroup' ->> 'id' as "networkSecurityGroup"
+        from
+        azure_virtual_network,
+        jsonb_array_elements(subnets) as s
+        where id = $1
+    ),network_security_group as (
+        select
+          id,
+          default_security_rules,
+          security_rules,
+          s
+        from
+        azure_network_security_group as sg,
+        jsonb_array_elements(subnets) as s
+    ),
+    network_security_group_rule as (
+      select
+        network_security_group.id as "nsgid",
+        (default_security_rules || security_rules) as all_rules,
+        subnets.subnet_id as "subnet_id",
+        subnets.subnet_name as "subnet_name",
+        subnets.addressPrefix as addressPrefix
       from
-      azure_network_security_group as sg,
-      jsonb_array_elements(subnets) as s
-  ),
-  network_security_group_rule as (
-    select
-      network_security_group.id as "nsgid",
-      (default_security_rules || security_rules) as all_rules,
-      subnets.subnet_id as "subnet_id",
-      subnets.subnet_name as "subnet_name",
-      subnets.addressPrefix as addressPrefix
-    from
-      subnets left join network_security_group on network_security_group.s ->> 'id' = subnets.subnet_id
-  ),
-  data as (
-    select
-      subnet_name::text,
-      subnet_id,
-      nsgid,
-      addressPrefix,
-      case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny' end ||
-      case
-        when r -> 'properties' ->> 'protocol' = '*' then 'All Traffic'
-        when r -> 'properties' ->> 'protocol' = 'UDP' then 'UDP'
-        else concat('Procotol: ',r -> 'properties' ->> 'protocol')
-         end as rule_description
-      from network_security_group_rule,
-    jsonb_array_elements(all_rules) as r
-    where r -> 'properties' ->> 'direction' = 'Outbound'
-  )
+        subnets left join network_security_group on network_security_group.s ->> 'id' = subnets.subnet_id
+    ),
+    data as (
+      select
+        subnet_name::text,
+        subnet_id,
+        nsgid,
+        addressPrefix,
+        case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny ' end ||
+        case
+          when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
+          when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'TCP') then 'All TCP'
+          when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'UDP') then 'All UDP'
+          when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'ICMP') then 'All ICMP'
+          else concat('Procotol: ', r -> 'properties' ->> 'protocol')
+        end as rule_description
+        from network_security_group_rule,
+      jsonb_array_elements(all_rules) as r,
+      jsonb_array_elements_text(r -> 'properties' -> 'sourceAddressPrefixes' || (r -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip
+      where r -> 'properties' ->> 'direction' = 'Outbound'
+    )
+      -- Subnet Nodes
+      select
+        distinct subnet_id  as id,
+        split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""') as title,
+        'subnet' as category,
+        null as from_id,
+        null as to_id,
+        0 as depth
+      from data
 
-    -- Subnet Nodes
-    select
-      distinct subnet_id  as id,
-      split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""') as title,
-      'subnet' as category,
-      null as from_id,
-      null as to_id,
-      0 as depth
-    from data
-
-
-    -- CIDR Nodes
-    union select
-      distinct addressPrefix as id,
-      addressPrefix as title,
-      'cidr_block' as category,
-      subnet_id as from_id,
-      null as to_id,
-      1 as depth
-    from data
+      -- CIDR Nodes
+      union select
+        distinct addressPrefix as id,
+        addressPrefix as title,
+        'cidr_block' as category,
+        subnet_id as from_id,
+        null as to_id,
+        1 as depth
+      from data
 
         -- NSG Nodes
-    union select
-      distinct nsgid as id,
-      split_part(nsgid, '/', 8) || '/' || trim((split_part(nsgid, '/', 9)), '""') as title,
-      'nsgid' as category,
-      addressPrefix as from_id,
-      null as to_id,
-      2 as depth
-    from data
+      union select
+        distinct nsgid as id,
+        split_part(nsgid, '/', 8) || '/' || trim((split_part(nsgid, '/', 9)), '""') as title,
+        'nsgid' as category,
+        addressPrefix as from_id,
+        null as to_id,
+        2 as depth
+      from data
 
-      -- Rule Nodes
-    union select
-      rule_description as id,
-      rule_description as title,
-      'rule' as category,
-      nsgid as from_id,
-      null as to_id,
-       3 as depth
-    from data
+        -- Rule Nodes
+      union select
+        rule_description as id,
+        rule_description as title,
+        'rule' as category,
+        nsgid as from_id,
+        null as to_id,
+        3 as depth
+      from data
   EOQ
 
   param "id" {}
@@ -487,24 +488,25 @@ query "azure_virtual_network_inbound_rule_sankey" {
     from
     subnets  left join network_security_group on network_security_group.s ->> 'id' = subnets.subnet_id
   ), --select * from network_security_group_rule
-  final as (
+  data as (
     select
       subnet_name::text,
-      r,
       subnet_id,
       nsgid,
       addressPrefix,
-      case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny' end ||
+      case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny ' end ||
       case
-        when r -> 'properties' ->> 'protocol' = '*' then ' All Traffic'
-        when r -> 'properties' ->> 'protocol' = 'UDP' then 'UDP'
-        else concat('Procotol: ',r -> 'properties' ->> 'protocol')
-         end as rule_description
+        when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
+        when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'TCP') then 'All TCP'
+        when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'UDP') then 'All UDP'
+        when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'ICMP') then 'All ICMP'
+        else concat('Procotol: ', r -> 'properties' ->> 'protocol')
+      end as rule_description
       from network_security_group_rule,
-    jsonb_array_elements(all_rules) as r
+    jsonb_array_elements(all_rules) as r,
+    jsonb_array_elements_text(r -> 'properties' -> 'sourceAddressPrefixes' || (r -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip
     where r -> 'properties' ->> 'direction' = 'Inbound'
   )
-
     -- Subnet Nodes
     select
       distinct subnet_id  as id,
@@ -513,7 +515,7 @@ query "azure_virtual_network_inbound_rule_sankey" {
       null as from_id,
       null as to_id,
       0 as depth
-    from final
+    from data
 
 
     -- CIDR Nodes
@@ -524,7 +526,7 @@ query "azure_virtual_network_inbound_rule_sankey" {
       subnet_id as from_id,
       null as to_id,
       1 as depth
-    from final
+    from data
 
         -- NSG Nodes
     union select
@@ -534,7 +536,7 @@ query "azure_virtual_network_inbound_rule_sankey" {
       addressPrefix as from_id,
       null as to_id,
       2 as depth
-    from final
+    from data
 
       -- Rule Nodes
     union select
@@ -544,12 +546,7 @@ query "azure_virtual_network_inbound_rule_sankey" {
       nsgid as from_id,
       null as to_id,
        3 as depth
-    from final
-
-
-
-
-
+    from data
   EOQ
 
   param "id" {}
