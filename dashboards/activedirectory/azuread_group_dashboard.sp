@@ -24,14 +24,30 @@ dashboard "azuread_group_dashboard" {
   container {
     title = "Assessments"
 
+    chart {
+      title = "Groups With No Members"
+      query = query.azuread_group_with_no_member_associated
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "associated" {
+          color = "ok"
+        }
+        point "not associated" {
+          color = "alert"
+        }
+      }
+    }
+
   }
 
   container {
     title = "Analysis"
 
     chart {
-      title = "Groups by Subscription"
-      query = query.azuread_group_by_subscription
+      title = "Groups by Tenant"
+      query = query.azuread_group_by_tenant
       type  = "column"
       width = 3
     }
@@ -70,20 +86,32 @@ query "azuread_group_with_no_members_count" {
 
 # Assessment Queries
 
-# Analysis Queries
-
-query "azuread_group_by_subscription" {
+query "azuread_group_with_no_member_associated" {
   sql = <<-EOQ
     select
-      sub.title as "Subscription",
+      case when jsonb_array_length(member_ids) = 0  then 'not associated' else 'associated' end as status,
+      count(*)
+    from
+      azuread_group
+    group by
+      status;
+  EOQ
+}
+
+# Analysis Queries
+
+query "azuread_group_by_tenant" {
+  sql = <<-EOQ
+    select
+      t.title as "Tenant",
       count(g.*)
     from
       azuread_group as g,
-      azure_subscription as sub
+      azure_tenant as t
     where
-      g.tenant_id = sub.tenant_id
+      g.tenant_id = t.tenant_id
     group by
-      sub.title
+      t.title
     order by
       count desc;
   EOQ
