@@ -250,10 +250,10 @@ query "azure_key_vault_access_policies" {
   sql = <<-EOQ
     select
       p ->> 'objectId' as "Object ID",
-      p -> 'permissionsCertificates' as "Permissions Certificates",
-      p -> 'permissionsKeys' as "Permissions Keys",
-      p -> 'permissionsSecrets' as "Permissions Secrets",
-      p -> 'permissionsStorage' as "Permissions Storages",
+      p ->> 'permissionsCertificates' as "Permissions Certificates",
+      p ->> 'permissionsKeys' as "Permissions Keys",
+      p ->> 'permissionsSecrets' as "Permissions Secrets",
+      p ->> 'permissionsStorage' as "Permissions Storages",
       p ->> 'tenantId' as "Tenant ID"
     from
       azure_key_vault,
@@ -282,10 +282,10 @@ query "azure_key_vault_sku" {
 query "azure_key_vault_network_acls" {
   sql = <<-EOQ
     select
-      network_acls -> 'bypass' as "Bypass",
-      network_acls -> 'defaultAction' as "Default Action",
-      network_acls -> 'ipRules' as "IP Rules",
-      network_acls -> 'virtualNetworkRules' as "Virtual Network Rules"
+      network_acls ->> 'bypass' as "Bypass",
+      network_acls ->> 'defaultAction' as "Default Action",
+      network_acls ->> 'ipRules' as "IP Rules",
+      network_acls ->> 'virtualNetworkRules' as "Virtual Network Rules"
     from
       azure_key_vault
     where
