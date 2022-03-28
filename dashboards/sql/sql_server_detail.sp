@@ -96,14 +96,6 @@ dashboard "azure_sql_server_detail" {
       width = 6
 
       table {
-        title = "Administrator Details"
-        query = query.azure_sql_server_administrator
-        args = {
-          id = self.input.server_id.value
-        }
-      }
-
-      table {
         title = "Encryption"
         query = query.azure_sql_server_encryption
         args = {
@@ -111,18 +103,14 @@ dashboard "azure_sql_server_detail" {
         }
       }
 
-    }
-  }
-
-  container {
-    width = 12
-
-    table {
-      title = "Virtual Network Rules"
-      query = query.azure_sql_server_virtual_network_rules
-      args = {
-        id = self.input.server_id.value
+      table {
+        title = "Virtual Network Rules"
+        query = query.azure_sql_server_virtual_network_rules
+        args = {
+          id = self.input.server_id.value
+        }
       }
+
     }
 
   }
@@ -146,6 +134,19 @@ dashboard "azure_sql_server_detail" {
     table {
       title = "Vulnerability Assessment"
       query = query.azure_sql_server_vulnerability_assessment
+      args = {
+        id = self.input.server_id.value
+      }
+    }
+
+  }
+
+  container {
+    width = 12
+
+    table {
+      title = "Private Endpoint Details"
+      query = query.azure_sql_server_private_endpoint_connection
       args = {
         id = self.input.server_id.value
       }
@@ -313,20 +314,6 @@ query "azure_sql_server_tags" {
   param "id" {}
 }
 
-query "azure_sql_server_administrator" {
-  sql = <<-EOQ
-    select
-      administrator_login as "Administrator Login",
-      administrator_login_password as "Administrator Login Password"
-    from
-      azure_sql_server
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
 query "azure_sql_server_encryption" {
   sql = <<-EOQ
     select
@@ -397,6 +384,27 @@ query "azure_sql_server_vulnerability_assessment" {
     from
       azure_sql_server,
       jsonb_array_elements(server_vulnerability_assessment) as a
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+query "azure_sql_server_private_endpoint_connection" {
+  sql = <<-EOQ
+    select
+      c ->> 'PrivateEndpointConnectionName' as "Private Endpoint Connection Name",
+      c ->> 'PrivateEndpointConnectionType' as "Private Endpoint Connection Type",
+      c ->> 'PrivateEndpointId' as "Private Endpoint Id",
+      c ->> 'PrivateLinkServiceConnectionStateActionsRequired' as "Private Link Service Connection State Actions Required",
+      c ->> 'PrivateLinkServiceConnectionStateDescription' as "Private Link Service Connection State Description",
+      c ->> 'PrivateLinkServiceConnectionStateStatus' as "Private Link Service Connection State Status",
+      c ->> 'ProvisioningState' as "Provisioning State",
+      c ->> 'PrivateEndpointConnectionId' as "Private Endpoint Connection ID"
+    from
+      azure_sql_server,
+      jsonb_array_elements(private_endpoint_connections) as c
     where
       id = $1;
   EOQ
