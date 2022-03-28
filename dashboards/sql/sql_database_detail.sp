@@ -34,7 +34,7 @@ dashboard "azure_sql_database_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_database_kind
+      query = query.azure_sql_database_transparent_data_encryption
       args = {
         id = self.input.database_id.value
       }
@@ -42,7 +42,15 @@ dashboard "azure_sql_database_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_database_transparent_data_encryption
+      query = query.azure_sql_database_vulnerability_assessment_enabled
+      args = {
+        id = self.input.database_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.azure_sql_database_geo_redundant_backup_enabled
       args = {
         id = self.input.database_id.value
       }
@@ -171,21 +179,6 @@ query "azure_sql_database_status" {
 
 }
 
-query "azure_sql_database_kind" {
-  sql = <<-EOQ
-    select
-      'Kind' as label,
-      kind as value
-    from
-      azure_sql_database
-    where
-      name <> 'master'
-      and id = $1;
-  EOQ
-
-  param "id" {}
-}
-
 query "azure_sql_database_edition" {
   sql = <<-EOQ
     select
@@ -217,11 +210,61 @@ query "azure_sql_database_transparent_data_encryption" {
   param "id" {}
 }
 
+query "azure_sql_database_vulnerability_assessment_enabled" {
+  sql = <<-EOQ
+    with sql_database_va as (
+      select
+        distinct id
+      from
+        azure_sql_database as d,
+        jsonb_array_elements(vulnerability_assessments) as va
+      where
+        va -> 'properties' -> 'recurringScans' ->> 'isEnabled' = 'true'
+    )
+    select
+      'Vulnerability Assessment' as label,
+      case when v.id is not null then 'Enabled' else 'Disabled' end as value,
+      case when v.id is not null then 'ok' else 'alert' end as type
+    from
+     azure_sql_database as d left join sql_database_va as v on v.id = d.id
+    where
+      d.name <> 'master'
+      and d.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+query "azure_sql_database_geo_redundant_backup_enabled" {
+  sql = <<-EOQ
+    select
+      'Geo-Redundant Backup' as label,
+      case when
+        (retention_policy_property ->> 'monthlyRetention' <> 'PT0S'
+        or retention_policy_property ->> 'weeklyRetention' <> 'PT0S'
+        or retention_policy_property ->> 'yearlyRetention' <> 'PT0S')
+        then 'Enabled' else 'Disabled' end as value,
+      case when
+        (retention_policy_property ->> 'monthlyRetention' <> 'PT0S'
+        or retention_policy_property ->> 'weeklyRetention' <> 'PT0S'
+        or retention_policy_property ->> 'yearlyRetention' <> 'PT0S')
+        then 'ok' else 'alert' end as type
+    from
+      azure_sql_database
+    where
+      name <> 'master'
+      and id = $1;
+  EOQ
+
+  param "id" {}
+}
+
 query "azure_sql_database_overview" {
   sql = <<-EOQ
     select
       name as "Name",
       database_id as "Database ID",
+      kind as "Kind",
       region as "Region",
       resource_group as "Resource Group",
       subscription_id as "Subscription ID",
@@ -292,11 +335,11 @@ query "azure_sql_database_retention" {
 query "azure_sql_database_vulnerability_assessment" {
   sql = <<-EOQ
     select
-      a ->> 'id' as "ID",
       a ->> 'name' as "Name",
       a -> 'recurringScans' ->> 'emailSubscriptionAdmins' as "Email Subscription Admins",
       a -> 'recurringScans' ->> 'isEnabled' as "Is Enabled",
-      a ->> 'type'  as "Type"
+      a ->> 'type'  as "Type",
+      a ->> 'id' as "ID"
     from
       azure_sql_database,
       jsonb_array_elements(vulnerability_assessments) as a
