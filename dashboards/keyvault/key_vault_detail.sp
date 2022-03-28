@@ -17,6 +17,22 @@ dashboard "azure_key_vault_detail" {
 
     card {
       width = 2
+      query = query.azure_key_vault_soft_delete_retention_in_days
+      args = {
+        id = self.input.key_vault_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.azure_key_vault_public_network_access_enabled
+      args = {
+        id = self.input.key_vault_id.value
+      }
+    }
+
+    card {
+      width = 2
       query = query.azure_key_vault_purge_protection_status
       args = {
         id = self.input.key_vault_id.value
@@ -31,21 +47,7 @@ dashboard "azure_key_vault_detail" {
       }
     }
 
-    card {
-      width = 2
-      query = query.azure_key_vault_soft_delete_retention_in_days
-      args = {
-        id = self.input.key_vault_id.value
-      }
-    }
 
-    card {
-      width = 2
-      query = query.azure_key_vault_cloud_environment
-      args = {
-        id = self.input.key_vault_id.value
-      }
-    }
   }
 
   container {
@@ -161,6 +163,22 @@ query "azure_key_vault_purge_protection_status" {
 
 }
 
+query "azure_key_vault_public_network_access_enabled" {
+  sql = <<-EOQ
+    select
+      'Public Access' as label,
+      case when network_acls is null or network_acls ->> 'defaultAction' != 'Deny' then 'Enabled' else 'Disabled' end as value,
+      case when network_acls is null or network_acls ->> 'defaultAction' != 'Deny' then 'alert' else 'ok' end as type
+    from
+      azure_key_vault
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+
+}
+
 query "azure_key_vault_soft_delete_status" {
   sql = <<-EOQ
     select
@@ -190,26 +208,13 @@ query "azure_key_vault_soft_delete_retention_in_days" {
   param "id" {}
 }
 
-query "azure_key_vault_cloud_environment" {
-  sql = <<-EOQ
-    select
-      'Cloud Environment' as label,
-      cloud_environment as value
-    from
-      azure_key_vault
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
 query "azure_key_vault_overview" {
   sql = <<-EOQ
     select
       name as "Name",
       vault_uri as "vault_uri",
       type as "Type",
+      cloud_environment as "Cloud Environment",
       region as "Region",
       resource_group as "Resource Group",
       subscription_id as "Subscription ID",
