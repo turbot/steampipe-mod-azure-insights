@@ -43,7 +43,7 @@ dashboard "azuread_user_detail" {
       width = 6
 
       table {
-        title = "Last 5 Sign In Report"
+        title = "Last 5 Sign-ins"
         query = query.azuread_user_sign_in_report
         args  = {
           id = self.input.user_id.value
@@ -60,30 +60,48 @@ dashboard "azuread_user_detail" {
 
     flow {
       type  = "sankey"
-      title = "Attached Roles"
-      query = query.azuread_user_role_sankey
+      title = "Attached Directory Roles"
+      query = query.azuread_user_directory_role_sankey
+      args  = {
+        id = self.input.user_id.value
+      }
+    }
+
+    flow {
+      type  = "sankey"
+      title = "Attached Subscription Roles"
+      query = query.azuread_user_subscription_role_sankey
       args  = {
         id = self.input.user_id.value
       }
     }
 
     table {
-      title = "Groups"
+      title = "Directory Roles"
       width = 6
-      query = query.azuread_groups_for_user
+      query = query.azuread_directory_roles_for_user
       args  = {
         id = self.input.user_id.value
       }
-
     }
 
     table {
-      title = "Roles"
+      title = "Subscription Roles"
       width = 6
-      query = query.azuread_all_roles_for_user
+      query = query.azuread_subscription_roles_for_user
       args  = {
         id = self.input.user_id.value
       }
+    }
+
+  }
+
+  table {
+    title = "Groups"
+    width = 12
+    query = query.azuread_groups_for_user
+    args  = {
+      id = self.input.user_id.value
     }
 
   }
@@ -141,7 +159,7 @@ query "azuread_user_overview" {
   param "id" {}
 }
 
-query "azuread_user_role_sankey" {
+query "azuread_user_directory_role_sankey" {
   sql = <<-EOQ
 
     with args as (
@@ -177,7 +195,7 @@ query "azuread_user_role_sankey" {
     union select
       (select azuread_user_id from args) as from_id,
       dr.id as id,
-      dr.display_name || '(Diectory Roles)' as title,
+      dr.display_name || ' (Diectory Roles)' as title,
       2 as depth,
       'azuread_directory_roles' as category
     from
@@ -186,7 +204,7 @@ query "azuread_user_role_sankey" {
     where
       trim((m::text), '""') = (select azuread_user_id from args)
 
-  -- Directory Roles inheitrd with groups
+  -- Directory Roles inherited from  groups
     union select
       trim((m::text), '""') as from_id,
       dr.id as id,
@@ -204,10 +222,44 @@ query "azuread_user_role_sankey" {
         jsonb_array_elements(member_ids) as m
       where
         trim((m::text), '""') = (select azuread_user_id from args))
+  EOQ
 
-    -- Azure Assigned Roles
-    union select
+  param "id" {}
+}
+
+query "azuread_user_subscription_role_sankey" {
+  sql = <<-EOQ
+
+    with args as (
+      select $1 as azuread_user_id
+    )
+
+    -- User
+    select
+      null as from_id,
+      id as id,
+      title,
+      0 as depth,
+      'azuread_user' as category
+    from
+      azuread_user
+    where
+      id in (select azuread_user_id from args)
+
+    -- Azure Subscription
+     union select
       (select azuread_user_id from args) as from_id,
+      s.title as title,
+      s.title as id,
+      1 as depth,
+      'azure_subscription' as category
+    from
+      azure_subscription as s left join azuread_user as u  on s.tenant_id = u.tenant_id
+      where u.id = (select azuread_user_id from args)
+
+   -- Azure Assigned Roles
+    union select
+      s.title as from_id,
       d.role_name as title,
       d.role_name as id,
       2 as depth,
@@ -215,8 +267,10 @@ query "azuread_user_role_sankey" {
     from
      azuread_user as u
     left join azure_role_assignment as a on a.principal_id = u.id
-    left join azure_role_definition as d on d.id = a.role_definition_id
-    where u.id = $1
+    left join azure_role_definition as d on d.id = a.role_definition_id,
+    azure_subscription as s
+    where s.tenant_id = u.tenant_id and u.id = $1
+
   EOQ
 
   param "id" {}
@@ -226,51 +280,75 @@ query "azuread_groups_for_user" {
   sql = <<-EOQ
     select
       g.display_name as "Display Name",
-      g.id as "ID"
+      g.id as "ID",
+      g.is_subscribed_by_mail as "Is Subscribed By Mail",
+      g.expiration_date_time as "Expiration Date Time"
     from
       azuread_group as g,
       jsonb_array_elements(member_ids) as m
     where
       trim((m::text), '""') = $1
+    order by
+      g.display_name ;
   EOQ
 
   param "id" {}
 }
 
-query "azuread_all_roles_for_user" {
+query "azuread_directory_roles_for_user" {
+  sql = <<-EOQ
+
+  select
+    role_name as "Role Name",
+    id as "ID"
+  from
+    (
+      select
+        dr.display_name as role_name,
+        dr.id as id
+      from
+        azuread_directory_role as dr,
+        jsonb_array_elements(member_ids) as m
+      where
+        trim((m::text), '""') = '5137b8d3-8040-421e-b3cd-f30ac06b6636'
+
+
+      union select
+        dr.display_name as role_name,
+        dr.id as id
+      from
+        azuread_directory_role as dr,
+        jsonb_array_elements(member_ids) as m
+      where
+        trim((m::text), '""') in (select
+            g.id as id
+          from
+            azuread_group as g,
+            jsonb_array_elements(member_ids) as m
+          where
+            trim((m::text), '""') = '5137b8d3-8040-421e-b3cd-f30ac06b6636')
+      ) data
+  order by
+    role_name
+
+  EOQ
+
+  param "id" {}
+}
+
+query "azuread_subscription_roles_for_user" {
   sql = <<-EOQ
     select
       d.role_name as "Role Name",
+      a.scope as "Scope",
       d.id as "ID"
     from
       azure_role_assignment as a
       left join azure_role_definition as d on d.id = a.role_definition_id
     where
       a.principal_id = $1
-
-    union select
-      dr.display_name as "Role Name",
-      dr.id as "ID"
-    from
-      azuread_directory_role as dr,
-      jsonb_array_elements(member_ids) as m
-    where
-      trim((m::text), '""') = $1
-
-    union select
-      dr.display_name as "Role Name",
-      dr.id as "ID"
-    from
-      azuread_directory_role as dr,
-      jsonb_array_elements(member_ids) as m
-    where
-      trim((m::text), '""') in (select
-          g.id as id
-        from
-          azuread_group as g,
-          jsonb_array_elements(member_ids) as m
-        where
-          trim((m::text), '""') = $1)
+    order by
+      d.role_name;
   EOQ
 
   param "id" {}

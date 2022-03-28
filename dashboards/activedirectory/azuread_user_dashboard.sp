@@ -21,6 +21,11 @@ dashboard "azuread_user_dashboard" {
     }
 
     card {
+      query = query.azuread_user_with_custom_role_count
+      width = 2
+    }
+
+    card {
       query = query.azuread_external_guest_user_with_owner_roles_count
       width = 2
     }
@@ -30,59 +35,38 @@ dashboard "azuread_user_dashboard" {
       width = 2
     }
 
-    card {
-      query = query.azuread_user_with_custom_role_count
-      width = 2
-    }
-
   }
 
   container {
     title = "Assessments"
 
     chart {
-      title = "External Guest User With Owner Role"
+      title = "External Guest Users With Owner Role"
       query = query.azuread_external_guest_user_with_owner_role_status
       type  = "donut"
       width = 4
 
       series "count" {
-        point "not with owner roles" {
+        point "with owner role" {
           color = "ok"
         }
-        point "with owner roles" {
+        point "no owner role" {
           color = "alert"
         }
       }
     }
 
     chart {
-      title = "Deprecated Account With Owner Role"
+      title = "Deprecated Users With Owner Role"
       query = query.azuread_deprecated_user_with_owner_status
       type  = "donut"
       width = 4
 
       series "count" {
-        point "not deprecated" {
+        point "no owner role" {
           color = "ok"
         }
-        point "deprecated" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title = "Custom Role Status"
-      query = query.azuread_user_with_custom_role_status
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "no custom role" {
-          color = "ok"
-        }
-        point "with custom role" {
+        point "with owner role" {
           color = "alert"
         }
       }
@@ -97,14 +81,14 @@ dashboard "azuread_user_dashboard" {
       title = "Users by Tenant"
       query = query.azuread_user_by_tenant
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Users by Type"
       query = query.azuread_user_by_user_type
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
@@ -157,7 +141,7 @@ query "azuread_deprecated_user_with_owner_role_count" {
     select
       count(distinct
       u.display_name) as value,
-      'Deprecated Account With Owner Role' as label,
+      'Deprecated Users With Owner Role' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       azuread_user as u
@@ -172,8 +156,7 @@ query "azuread_user_with_custom_role_count" {
     select
       count(distinct
       u.display_name) as value,
-      'With Custom Role' as label,
-      case when count(*) = 0 then 'ok' else 'alert' end as type
+      'With Custom Role' as label
     from
       azuread_user as u
       left join azure_role_assignment as a on a.principal_id = u.id
@@ -197,7 +180,7 @@ query "azuread_deprecated_user_with_owner_status" {
         where d.role_name = 'Owner' and not u.account_enabled
     ), deprecated_account_status as (
     select
-      case when dp.id is not null then 'deprecated' else 'not deprecated' end as deprecated_account_status
+      case when dp.id is not null then 'with owner role' else 'no owner role' end as deprecated_account_status
     from
       azuread_user as u left join deprecated_account as dp on u.id = dp.id
     )
@@ -229,7 +212,7 @@ query "azuread_external_guest_user_with_owner_role_status" {
         and (u.user_principal_name like '%EXT%' or user_type = 'Guest')
     )
     select
-      case when u.id in (select  id  from external_guest_user_with_owner_role ) then 'with owner roles' else 'not with owner roles' end as status,
+      case when u.id in (select  id  from external_guest_user_with_owner_role ) then 'with owner role' else 'no owner role' end as status,
       count(*)
     from
       azuread_user as u
@@ -237,36 +220,6 @@ query "azuread_external_guest_user_with_owner_role_status" {
       u.user_principal_name like '%EXT%'
     group by
       status;
-  EOQ
-}
-
-query "azuread_user_with_custom_role_status" {
-  sql = <<-EOQ
-    with user_with_custom_role as (
-        select
-        distinct u.id as user_id
-      from
-        azuread_user as u
-        left join azure_role_assignment as a on a.principal_id = u.id
-        left join azure_role_definition as d on d.id = a.role_definition_id
-        where d.role_type = 'CustomRole' and  u.account_enabled
-    ),
-    user_with_custom_role_status as (
-      select
-        case
-          when r.user_id is null then 'no custom role'
-          else 'with custom role' end as user_with_custom_role_status
-      from
-        azuread_user as u
-        left join user_with_custom_role as r on u.id = r.user_id
-    )
-    select
-      user_with_custom_role_status,
-      count(*)
-    from
-      user_with_custom_role_status
-    group by
-      user_with_custom_role_status;
   EOQ
 }
 

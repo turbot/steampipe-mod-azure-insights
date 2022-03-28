@@ -15,6 +15,16 @@ dashboard "azuread_group_dashboard" {
     }
 
     card {
+      query = query.azuread_security_group_count
+      width = 2
+    }
+
+    card {
+      query = query.azuread_microsoft_365_group_count
+      width = 2
+    }
+
+    card {
       query = query.azuread_group_with_no_members_count
       width = 2
     }
@@ -25,8 +35,8 @@ dashboard "azuread_group_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Groups With No Members"
-      query = query.azuread_group_with_no_member_associated
+      title = "Groups Without Members"
+      query = query.azuread_group_with_no_member
       type  = "donut"
       width = 4
 
@@ -49,7 +59,7 @@ dashboard "azuread_group_dashboard" {
       title = "Groups by Tenant"
       query = query.azuread_group_by_tenant
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
@@ -71,11 +81,33 @@ query "azuread_group_count" {
   EOQ
 }
 
+query "azuread_security_group_count" {
+  sql = <<-EOQ
+    select
+      count(*) as "Security Groups"
+    from
+      azuread_group
+    where
+      security_enabled;
+  EOQ
+}
+
+query "azuread_microsoft_365_group_count" {
+  sql = <<-EOQ
+    select
+      count(*) as "Microsoft 365 Groups"
+    from
+      azuread_group
+    where
+      not security_enabled;
+  EOQ
+}
+
 query "azuread_group_with_no_members_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'With No Members' as label,
+      'Without Members' as label,
       case when count(*) = 0 then 'ok' else 'alert' end as type
     from
       azuread_group
@@ -86,10 +118,10 @@ query "azuread_group_with_no_members_count" {
 
 # Assessment Queries
 
-query "azuread_group_with_no_member_associated" {
+query "azuread_group_with_no_member" {
   sql = <<-EOQ
     select
-      case when jsonb_array_length(member_ids) = 0  then 'not associated' else 'associated' end as status,
+      case when jsonb_array_length(member_ids) = 0  then 'no members' else 'with members' end as status,
       count(*)
     from
       azuread_group
@@ -114,6 +146,20 @@ query "azuread_group_by_tenant" {
       t.title
     order by
       count desc;
+  EOQ
+}
+
+query "azuread_group_by_type" {
+  sql = <<-EOQ
+    select
+      case when security_enabled then 'Security' else 'Microsoft 365' end as type,
+      count(*) as "Groups"
+    from
+      azuread_group
+    group by
+      type
+    order by
+      type;
   EOQ
 }
 
