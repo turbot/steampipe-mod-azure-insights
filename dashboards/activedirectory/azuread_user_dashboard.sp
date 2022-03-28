@@ -57,7 +57,7 @@ dashboard "azuread_user_dashboard" {
     }
 
     chart {
-      title = "Deprecated Account With Owner Role Status"
+      title = "Deprecated Account With Owner Role"
       query = query.azuread_deprecated_user_with_owner_status
       type  = "donut"
       width = 4
