@@ -20,7 +20,12 @@ dashboard "azure_network_security_group_dashboard" {
     }
 
     card {
-      query = query.azure_network_security_group_remote_access_count
+      query = query.azure_network_security_group_remote_access_inbound_count
+      width = 2
+    }
+
+    card {
+      query = query.azure_network_security_group_remote_access_outbound_count
       width = 2
     }
 
@@ -31,16 +36,16 @@ dashboard "azure_network_security_group_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Empty Subnets"
+      title = "Network Security Groups With Empty Subnets"
       query = query.azure_network_security_group_empty_subnets_status
       type  = "donut"
-      width = 2
+      width = 3
 
       series "count" {
-        point "attached" {
+        point "non-empty" {
           color = "ok"
         }
-        point "unattached" {
+        point "empty" {
           color = "alert"
         }
       }
@@ -48,17 +53,35 @@ dashboard "azure_network_security_group_dashboard" {
 
 
     chart {
-      title = "Remote Access Status"
-      query = query.azure_network_security_group_remote_access_status
+      title = "With Unrestricted Inbound"
+      query = query.azure_network_security_group_remote_access_inbound
 
       type  = "donut"
-      width = 2
+      width = 3
 
       series "count" {
-        point "disabled" {
+        point "restricted" {
           color = "ok"
         }
-        point "enabled" {
+        point "unrestricted" {
+          color = "alert"
+        }
+      }
+    }
+
+
+    chart {
+      title = "With Unrestricted Outbound"
+      query = query.azure_network_security_group_remote_access_outbound
+
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "restricted" {
+          color = "ok"
+        }
+        point "unrestricted" {
           color = "alert"
         }
       }
@@ -71,31 +94,31 @@ dashboard "azure_network_security_group_dashboard" {
     title = "Analysis"
 
     chart {
-      title = "Network Security Group by Subscription"
+      title = "Network Security Groups by Subscription"
       query = query.azure_network_security_group_by_subscription
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
-      title = "Network Security Group by Resource Group"
+      title = "Network Security Groups by Resource Group"
       query = query.azure_network_security_group_by_resource_group
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
-      title = "Network Security Group by Region"
+      title = "Network Security Groups by Region"
       query = query.azure_network_security_group_by_region
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
-      title = "Network Security Group by Provisioning State"
+      title = "Network Security Groups by Provisioning State"
       query = query.azure_network_security_group_by_provisioning_state
       type  = "column"
-      width = 4
+      width = 3
     }
 
   }
@@ -123,7 +146,7 @@ query "azure_network_security_group_empty_subnets_count" {
   EOQ
 }
 
-query "azure_network_security_group_remote_access_count" {
+query "azure_network_security_group_remote_access_inbound_count" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -157,7 +180,49 @@ query "azure_network_security_group_remote_access_count" {
     )
     select
       count(*) as value,
-      'Unrestricted Remote Access' as label,
+      'With Unrestricted Inbound' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as type
+    from
+      network_sg
+
+  EOQ
+}
+
+query "azure_network_security_group_remote_access_outbound_count" {
+  sql = <<-EOQ
+    with network_sg as (
+      select
+        distinct name sg_name
+      from
+        azure_network_security_group nsg,
+        jsonb_array_elements(security_rules) sg,
+        jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb) dport,
+        jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) sip
+      where
+        sg -> 'properties' ->> 'access' = 'Allow'
+        and sg -> 'properties' ->> 'direction' = 'Outbound'
+        and sg -> 'properties' ->> 'protocol' = 'TCP'
+        and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
+        and (
+          dport in ('22', '3389', '*')
+          or (
+            dport like '%-%'
+            and (
+              (
+                split_part(dport, '-', 1) :: integer <= 3389
+                and split_part(dport, '-', 2) :: integer >= 3389
+              )
+              or (
+                split_part(dport, '-', 1) :: integer <= 22
+                and split_part(dport, '-', 2) :: integer >= 22
+              )
+            )
+          )
+        )
+    )
+    select
+      count(*) as value,
+      'With Unrestricted Outbound' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       network_sg
@@ -174,8 +239,8 @@ query "azure_network_security_group_empty_subnets_status" {
       count(*)
     from (
       select
-        case when subnets is null then 'unattached'
-        else 'attached'
+        case when subnets is null then 'empty'
+        else 'non-empty'
         end status
       from
         azure_network_security_group) as n
@@ -186,9 +251,8 @@ query "azure_network_security_group_empty_subnets_status" {
   EOQ
 }
 
-query "azure_network_security_group_remote_access_status" {
+query "azure_network_security_group_remote_access_inbound" {
   sql = <<-EOQ
-
     with network_sg as (
       select
         distinct name sg_name
@@ -220,7 +284,51 @@ query "azure_network_security_group_remote_access_status" {
         )
     )
     select
-      case when  name in (select sg_name from network_sg ) then 'enabled' else 'disabled' end as status,
+      case when name in (select sg_name from network_sg ) then 'unrestricted' else 'restricted' end as status,
+      count(*)
+  from
+    azure_network_security_group
+    group by
+      status
+    order by
+      status;
+  EOQ
+}
+
+query "azure_network_security_group_remote_access_outbound" {
+  sql = <<-EOQ
+    with network_sg as (
+      select
+        distinct name sg_name
+      from
+        azure_network_security_group nsg,
+        jsonb_array_elements(security_rules) sg,
+        jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb) dport,
+        jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) sip
+      where
+        sg -> 'properties' ->> 'access' = 'Allow'
+        and sg -> 'properties' ->> 'direction' = 'Outbound'
+        and sg -> 'properties' ->> 'protocol' = 'TCP'
+        and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
+        and (
+          dport in ('22', '3389', '*')
+          or (
+            dport like '%-%'
+            and (
+              (
+                split_part(dport, '-', 1) :: integer <= 3389
+                and split_part(dport, '-', 2) :: integer >= 3389
+              )
+              or (
+                split_part(dport, '-', 1) :: integer <= 22
+                and split_part(dport, '-', 2) :: integer >= 22
+              )
+            )
+          )
+        )
+    )
+    select
+      case when name in (select sg_name from network_sg ) then 'unrestricted' else 'restricted' end as status,
       count(*)
   from
     azure_network_security_group

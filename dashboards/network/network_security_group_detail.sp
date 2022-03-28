@@ -309,7 +309,7 @@ query "azure_network_security_group_overview" {
     select
       name as "Name",
       type as "Type",
-      etag as "etag",
+      etag as "ETag",
       region as "Region",
       resource_group as "Resource Group",
       subscription_id as "Subscription ID",
@@ -343,10 +343,10 @@ query "azure_network_security_group_tags" {
 query "azure_network_security_group_network_interfaces" {
   sql = <<-EOQ
     select
-      i ->> 'id' as "Network Interface ID",
       ni.name as "Network Interface Name",
-      ni.enable_ip_forwarding as "Enable Ip Forwarding",
-      ni.mac_address as "MAC Address"
+      ni.enable_ip_forwarding as "Enable IP Forwarding",
+      ni.mac_address as "MAC Address",
+      i ->> 'id' as "Network Interface ID"
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(network_interfaces) as i
@@ -360,13 +360,23 @@ query "azure_network_security_group_network_interfaces" {
 
 query "azure_network_security_group_flow_logs" {
   sql = <<-EOQ
+    with flow_logs as (
+      select
+        l ->> 'id' as id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(flow_logs) as l
+      where
+        nsg.id = $1
+    )
     select
-      l ->> 'id' as "Flow Logs ID"
+      fl.name as "Flow Log Name",
+      fl.network_watcher_name as "Network Watcher Name",
+      fl.enabled as "Enabled",
+      f.id as "Flow Log ID"
     from
-      azure_network_security_group as nsg,
-      jsonb_array_elements(flow_logs) as l
-    where
-      nsg.id = $1;
+      flow_logs as f left join azure_network_watcher_flow_log as fl on fl.id = f.id
+
   EOQ
 
   param "id" {}
