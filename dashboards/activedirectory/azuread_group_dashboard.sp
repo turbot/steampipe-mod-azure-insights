@@ -41,10 +41,10 @@ dashboard "azuread_group_dashboard" {
       width = 4
 
       series "count" {
-        point "associated" {
+        point "with members" {
           color = "ok"
         }
-        point "not associated" {
+        point "no members" {
           color = "alert"
         }
       }
@@ -58,6 +58,13 @@ dashboard "azuread_group_dashboard" {
     chart {
       title = "Groups by Tenant"
       query = query.azuread_group_by_tenant
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Groups by Type"
+      query = query.azuread_group_by_type
       type  = "column"
       width = 4
     }

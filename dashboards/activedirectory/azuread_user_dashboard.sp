@@ -47,10 +47,10 @@ dashboard "azuread_user_dashboard" {
       width = 4
 
       series "count" {
-        point "with owner role" {
+        point "no owner role" {
           color = "ok"
         }
-        point "no owner role" {
+        point "with owner role" {
           color = "alert"
         }
       }
