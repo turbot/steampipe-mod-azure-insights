@@ -392,7 +392,7 @@ query "azure_sql_server_vulnerability_assessment" {
       a ->> 'name' as "Name",
       a -> 'properties' -> 'recurringScans' -> 'isEnabled' as "Is Enabled",
       a -> 'properties' -> 'recurringScans' -> 'emailSubscriptionAdmins' as "Email Subscription Admins",
-      a -> 'type'  as "Type",
+      a ->> 'type'  as "Type",
       a ->> 'id' as "ID"
     from
       azure_sql_server,
