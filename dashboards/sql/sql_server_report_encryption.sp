@@ -32,6 +32,10 @@ dashboard "azure_sql_server_encryption_report" {
       display = "none"
     }
 
+    column "Name" {
+      href = "${dashboard.azure_sql_server_detail.url_path}?input.server_id={{.ID | @uri}}"
+    }
+
     column "Subscription ID" {
       display = "none"
     }

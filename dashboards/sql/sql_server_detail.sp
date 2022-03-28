@@ -33,7 +33,7 @@ dashboard "azure_sql_server_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_server_kind
+      query = query.azure_sql_server_auditing_enabled
       args = {
         id = self.input.server_id.value
       }
@@ -46,6 +46,23 @@ dashboard "azure_sql_server_detail" {
         id = self.input.server_id.value
       }
     }
+
+    card {
+      width = 2
+      query = query.azure_sql_server_ad_authentication_enabled
+      args = {
+        id = self.input.server_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.azure_sql_server_vulnerability_assessment_enabled
+      args = {
+        id = self.input.server_id.value
+      }
+    }
+
 
   }
 
@@ -187,11 +204,32 @@ query "azure_sql_server_version" {
   param "id" {}
 }
 
-query "azure_sql_server_kind" {
+query "azure_sql_server_auditing_enabled" {
+  sql = <<-EOQ
+    with sql_server_audit_enabled as (
+      select
+        distinct id
+      from
+        azure_sql_server as s,
+        jsonb_array_elements(server_audit_policy) as audit
+      where
+        audit -> 'properties' ->> 'state' = 'Enabled'
+    )
+    select
+      'Auditing' as label,
+      case when a.id is not null then 'Enabled' else 'Disabled' end as value,
+      case when a.id is not null then 'ok' else 'alert' end as type
+    from
+     azure_sql_server as s left join sql_server_audit_enabled as a on s.id = a.id;
+  EOQ
+}
+
+query "azure_sql_server_public_network_access" {
   sql = <<-EOQ
     select
-      'Kind' as label,
-      kind as value
+      'Public Access' as label,
+      case when public_network_access = 'Enabled' then 'Enabled' else 'Disabled' end as value,
+      case when public_network_access = 'Enabled' then 'alert' else 'ok' end as type
     from
       azure_sql_server
     where
@@ -201,16 +239,39 @@ query "azure_sql_server_kind" {
   param "id" {}
 }
 
-query "azure_sql_server_public_network_access" {
+query "azure_sql_server_ad_authentication_enabled" {
   sql = <<-EOQ
     select
-      'Public Network Access' as label,
-      case when public_network_access = 'Enabled' then 'Enabled' else 'Disabled' end as value,
-      case when public_network_access = 'Enabled' then 'alert' else 'ok' end as type
+      'Azure AD Authentication' as label,
+      case when server_azure_ad_administrator is not null then 'Enabled' else 'Disabled' end as value,
+      case when server_azure_ad_administrator is not null then 'ok' else 'alert' end as type
     from
       azure_sql_server
     where
       id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+query "azure_sql_server_vulnerability_assessment_enabled" {
+  sql = <<-EOQ
+    with sql_server_va as (
+      select
+        distinct id
+      from
+        azure_sql_server as s,
+        jsonb_array_elements(server_vulnerability_assessment) as va
+      where
+        va -> 'properties' -> 'recurringScans' ->> 'isEnabled' = 'true'
+    )
+    select
+      'Vulnerability Assessment' as label,
+      case when v.id is not null then 'Enabled' else 'Disabled' end as value,
+      case when v.id is not null then 'ok' else 'alert' end as type
+    from
+     azure_sql_server as s left join sql_server_va as v on s.id = v.id
+     where s.id = $1;
   EOQ
 
   param "id" {}
@@ -269,12 +330,12 @@ query "azure_sql_server_administrator" {
 query "azure_sql_server_encryption" {
   sql = <<-EOQ
     select
-      ep ->> 'id' as "ID",
-      ep ->> 'kind' as "Kind",
       ep ->> 'name' as "Name",
+      ep ->> 'kind' as "Kind",
       ep ->> 'serverKeyName' as "Server Key Name",
       ep ->> 'serverKeyType' as "Server Key Type",
-      ep ->> 'type' as "Type"
+      ep ->> 'type' as "Type",
+      ep ->> 'id' as "ID"
     from
       azure_sql_server,
       jsonb_array_elements(encryption_protector) as ep
@@ -288,11 +349,11 @@ query "azure_sql_server_encryption" {
 query "azure_sql_server_virtual_network_rules" {
   sql = <<-EOQ
     select
-      r ->> 'id' as "ID",
       r ->> 'name' as "Name",
       r -> 'properties' ->> 'ignoreMissingVnetServiceEndpoint' as "Ignore Missing Vnet Service Endpoint",
       r ->> 'virtualNetworkSubnetId' as "Virtual Network Subnet ID",
-      r ->> type as "Type"
+      r ->> type as "Type",
+      r ->> 'id' as "ID"
     from
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as r
@@ -306,7 +367,6 @@ query "azure_sql_server_virtual_network_rules" {
 query "azure_sql_server_audit_policy" {
   sql = <<-EOQ
     select
-      p ->> 'id' as "ID",
       p ->> 'name' as "Name",
       p -> 'properties' -> 'auditActionsAndGroups' as "Audit Actions And Groups",
       p ->> 'isAzureMonitorTargetEnabled' as "Is Azure Monitor Target Enabled",
@@ -314,7 +374,8 @@ query "azure_sql_server_audit_policy" {
       p ->> 'state' as "state",
       p ->> 'isStorageSecondaryKeyInUse' as "Is Storage Secondary Key In Use",
       p ->> 'storageAccountSubscriptionId' as "Storage Account Subscription ID",
-      p ->> type as "Type"
+      p ->> type as "Type",
+      p ->> 'id' as "ID"
     from
       azure_sql_server,
       jsonb_array_elements(server_audit_policy) as p
@@ -328,11 +389,11 @@ query "azure_sql_server_audit_policy" {
 query "azure_sql_server_vulnerability_assessment" {
   sql = <<-EOQ
     select
-      a ->> 'id' as "ID",
       a ->> 'name' as "Name",
-      a -> 'properties' -> 'recurringScans' -> 'emailSubscriptionAdmins' as "Email Subscription Admins",
       a -> 'properties' -> 'recurringScans' -> 'isEnabled' as "Is Enabled",
-      a -> 'type'  as "Type"
+      a -> 'properties' -> 'recurringScans' -> 'emailSubscriptionAdmins' as "Email Subscription Admins",
+      a -> 'type'  as "Type",
+      a ->> 'id' as "ID"
     from
       azure_sql_server,
       jsonb_array_elements(server_vulnerability_assessment) as a
