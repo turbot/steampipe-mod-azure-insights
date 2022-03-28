@@ -26,7 +26,7 @@ dashboard "azure_virtual_network_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "DDOS Protection Status"
+      title = "DDOS Protection"
       query = query.azure_virtual_network_ddos_protection_status
       type  = "donut"
       width = 2
@@ -51,28 +51,28 @@ dashboard "azure_virtual_network_dashboard" {
       title = "Virtual Networks by Subscription"
       query = query.azure_virtual_network_by_subscription
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Virtual Networks by Resource Group"
       query = query.azure_virtual_network_by_resource_group
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Virtual Networks by Region"
       query = query.azure_virtual_network_by_region
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Virtual Networks by Provisioning State"
       query = query.azure_virtual_network_by_provisioning_state
       type  = "column"
-      width = 4
+      width = 3
     }
 
   }

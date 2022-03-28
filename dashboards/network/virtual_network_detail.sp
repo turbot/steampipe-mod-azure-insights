@@ -31,7 +31,6 @@ dashboard "azure_virtual_network_detail" {
       }
     }
 
-
     card {
       width = 2
       query = query.azure_virtual_network_ddos_protection
@@ -159,31 +158,21 @@ dashboard "azure_virtual_network_detail" {
 
   }
 
-  container {
 
+  table {
     title = "Peering Connections"
-
-    table {
-      title = "Peering Connections"
-      query = query.azure_virtual_network_peering_connection
-      args = {
-        id = self.input.vn_id.value
-      }
+    query = query.azure_virtual_network_peering_connection
+    args = {
+      id = self.input.vn_id.value
     }
-
   }
 
-  container {
-
-    table {
-      title = "Network Security Groups"
-      query = query.azure_virtual_network_nsg
-      width = 6
-      args = {
-        id = self.input.vn_id.value
-      }
+  table {
+    title = "Network Security Groups"
+    query = query.azure_virtual_network_nsg
+    args = {
+      id = self.input.vn_id.value
     }
-    
   }
 
 }
@@ -226,7 +215,6 @@ query "azure_virtual_network_input" {
 query "azure_virtual_network_subnets_count" {
   sql = <<-EOQ
     select
-      id,
       'Subnets' as label,
       jsonb_array_length(subnets) as value
     from
@@ -241,14 +229,13 @@ query "azure_virtual_network_subnets_count" {
 query "azure_virtual_network_ddos_protection" {
   sql = <<-EOQ
     select
-      count(*) as value,
       'DDOS Protection' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as type
+      case when enable_ddos_protection then 'Enabled' else 'Disabled' end as value,
+      case when enable_ddos_protection then 'ok' else 'alert' end as type
     from
       azure_virtual_network
     where
-      enable_ddos_protection is not true
-      and id = $1;
+      id = $1;
   EOQ
 
   param "id" {}
@@ -343,12 +330,12 @@ query "azure_virtual_network_subnet_sankey" {
 query "azure_virtual_network_subnet_details" {
   sql = <<-EOQ
     select
-      s ->> 'id' as "Subnet ID",
-      name as "Name",
+      s ->> 'name' as "Name",
       s -> 'properties' ->> 'addressPrefix' as "addressPrefix",
       power(2, 32 - masklen((s -> 'properties' ->> 'addressPrefix'):: cidr)) -1 as "Total IPs",
       s -> 'properties' ->> 'privateEndpointNetworkPolicies' as "Private Endpoint Network Policies",
-      s -> 'properties' ->> 'privateLinkServiceNetworkPolicies' as "Private Link Service Network Policies"
+      s -> 'properties' ->> 'privateLinkServiceNetworkPolicies' as "Private Link Service Network Policies",
+      s ->> 'id' as "Subnet ID"
     from
       azure_virtual_network,
       jsonb_array_elements(subnets) as s
@@ -400,10 +387,10 @@ query "azure_virtual_network_outbound_rule_sankey" {
         addressPrefix,
         case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny ' end ||
         case
-          when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
-          when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'TCP') then 'All TCP'
-          when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'UDP') then 'All UDP'
-          when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'ICMP') then 'All ICMP'
+          when (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
+          when (r -> 'properties' ->> 'protocol' = 'TCP') then 'All TCP'
+          when (r -> 'properties' ->> 'protocol' = 'UDP') then 'All UDP'
+          when (r -> 'properties' ->> 'protocol' = 'ICMP') then 'All ICMP'
           else concat('Procotol: ', r -> 'properties' ->> 'protocol')
         end as rule_description
         from network_security_group_rule,
@@ -456,7 +443,6 @@ query "azure_virtual_network_outbound_rule_sankey" {
 }
 
 query "azure_virtual_network_inbound_rule_sankey" {
-
   sql = <<-EOQ
   with subnets as (
     select
@@ -496,10 +482,10 @@ query "azure_virtual_network_inbound_rule_sankey" {
       addressPrefix,
       case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny ' end ||
       case
-        when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
-        when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'TCP') then 'All TCP'
-        when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'UDP') then 'All UDP'
-        when (sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0') ) and (r -> 'properties' ->> 'protocol' = 'ICMP') then 'All ICMP'
+        when (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
+        when (r -> 'properties' ->> 'protocol' = 'TCP') then 'All TCP'
+        when (r -> 'properties' ->> 'protocol' = 'UDP') then 'All UDP'
+        when (r -> 'properties' ->> 'protocol' = 'ICMP') then 'All ICMP'
         else concat('Procotol: ', r -> 'properties' ->> 'protocol')
       end as rule_description
       from network_security_group_rule,
@@ -574,15 +560,24 @@ query "azure_virtual_network_num_ips" {
 
 query "azure_virtual_network_route_tables" {
   sql = <<-EOQ
+    with route_table as (
+      select
+        distinct (s -> 'properties' -> 'routeTable' ->> 'id')  as id
+      from
+        azure_virtual_network,
+        jsonb_array_elements(subnets) as s
+      where
+        id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/steampipe/providers/Microsoft.Network/virtualNetworks/steampipe-vnet'
+      order by
+        s -> 'properties' -> 'routeTable' ->> 'id'
+    )
     select
-      distinct (s -> 'properties' -> 'routeTable' ->> 'id')  as "Route Table ID"
+      rt.name as "Route Table Name",
+      rt.provisioning_state as "Provisioning State",
+      r.id as "Route Table ID"
     from
-      azure_virtual_network,
-      jsonb_array_elements(subnets) as s
-    where
-      id = $1
-    order by
-      s -> 'properties' -> 'routeTable' ->> 'id';
+      route_table as r left join azure_route_table as rt on rt.id = r.id
+
   EOQ
 
   param "id" {}
@@ -606,9 +601,10 @@ query "azure_virtual_network_routes" {
     from
       route_tables as t left join azure_route_table as rt on t.id = rt.id
   ) select
-      r -> 'id' as  "Route ID",
-      r -> 'properties' -> 'addressPrefix' as  "Address Prefix",
-      r -> 'properties' -> 'nextHopType' as  "Next Hop Type"
+      r ->> 'name' as "Name",
+      r -> 'properties' ->> 'addressPrefix' as  "Address Prefix",
+      r -> 'properties' ->> 'nextHopType' as  "Next Hop Type",
+      r ->> 'id' as  "Route ID"
     from
       data,
       jsonb_array_elements(routes) as r;
@@ -619,14 +615,22 @@ query "azure_virtual_network_routes" {
 
 query "azure_virtual_network_nsg" {
   sql = <<-EOQ
+    with all_nsg as (
+      select
+        distinct (s -> 'properties' -> 'networkSecurityGroup' ->> 'id') as nsg_id
+      from
+        azure_virtual_network,
+        jsonb_array_elements(subnets) as s
+      where
+      (s -> 'properties' -> 'networkSecurityGroup' -> 'id') is not null
+      and  id = $1
+    )
     select
-      distinct (s -> 'properties' -> 'networkSecurityGroup' ->> 'id')  as  "Network Security Groups"
+      nsg.name as "Network Security Group Name",
+      nsg_id as "Network Security Group ID",
+      provisioning_state as "Provisioning State"
     from
-      azure_virtual_network,
-      jsonb_array_elements(subnets) as s
-    where
-    (s -> 'properties' -> 'networkSecurityGroup' -> 'id') is not null
-     and  id = $1
+      all_nsg as n left join azure_network_security_group as nsg on nsg.id = n.nsg_id
   EOQ
 
   param "id" {}
@@ -635,15 +639,15 @@ query "azure_virtual_network_nsg" {
 query "azure_virtual_network_peering_connection" {
   sql = <<-EOQ
     select
-      np -> 'id' as "ID",
-      name as "Name",
+      np ->> 'name' as "Name",
       np -> 'properties' -> 'allowForwardedTraffic' as "Allow Forwarded Traffic",
       np -> 'properties' -> 'allowGatewayTransit' as "Allow Gateway Transit",
       np -> 'properties' -> 'allowVirtualNetworkAccess' as "Allow Virtual Network Access",
       np -> 'properties' -> 'peeringState' as "Peering State",
       np -> 'properties' -> 'remoteAddressSpace'  -> 'addressPrefixes' as "Address Prefixes",
       np -> 'properties' -> 'remoteVirtualNetwork' ->> 'id' as "Remote Virtual Network ID",
-      np -> 'properties' -> 'useRemoteGateways'   as "Use Remote Gateways"
+      np -> 'properties' -> 'useRemoteGateways'   as "Use Remote Gateways",
+      np -> 'id' as "ID"
     from
       azure_virtual_network,
       jsonb_array_elements(network_peerings) as np
