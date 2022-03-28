@@ -87,7 +87,6 @@ dashboard "azure_sql_database_detail" {
         }
       }
 
-
     }
   }
 
@@ -274,12 +273,12 @@ query "azure_sql_database_configurations" {
 query "azure_sql_database_retention" {
   sql = <<-EOQ
     select
-      retention_policy_name  as "Retention Policy Name",
+      retention_policy_name as "Retention Policy Name",
       retention_policy_property ->> 'monthlyRetention' as "Monthly Retention",
       retention_policy_property ->> 'weekOfYear' as "Week Of Year",
       retention_policy_property ->> 'weeklyRetention' as "Weekly Retention",
-      retention_policy_property ->> 'Yearly Retention' as "yearlyRetention",
-      retention_policy_id as "TRetention Policy IDype"
+      retention_policy_property ->> 'Yearly Retention' as "Yearly Retention",
+      retention_policy_id as "Retention Policy ID"
     from
       azure_sql_database
     where
@@ -295,9 +294,9 @@ query "azure_sql_database_vulnerability_assessment" {
     select
       a ->> 'id' as "ID",
       a ->> 'name' as "Name",
-      a -> 'recurringScans' -> 'emailSubscriptionAdmins' as "Email Subscription Admins",
+      a -> 'recurringScans' ->> 'emailSubscriptionAdmins' as "Email Subscription Admins",
       a -> 'recurringScans' ->> 'isEnabled' as "Is Enabled",
-      a -> 'type'  as "Type"
+      a ->> 'type'  as "Type"
     from
       azure_sql_database,
       jsonb_array_elements(vulnerability_assessments) as a
