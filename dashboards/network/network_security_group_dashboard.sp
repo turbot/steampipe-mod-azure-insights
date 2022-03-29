@@ -15,17 +15,17 @@ dashboard "azure_network_security_group_dashboard" {
     }
 
     card {
-      query = query.azure_network_security_group_empty_subnets_count
+      query = query.azure_network_security_group_unassociated_count
       width = 2
     }
 
     card {
-      query = query.azure_network_security_group_remote_access_inbound_count
+      query = query.azure_network_security_group_unrestricted_inbound_count
       width = 2
     }
 
     card {
-      query = query.azure_network_security_group_remote_access_outbound_count
+      query = query.azure_network_security_group_unrestricted_outbound_count
       width = 2
     }
 
@@ -36,16 +36,16 @@ dashboard "azure_network_security_group_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Network Security Groups With Empty Subnets"
-      query = query.azure_network_security_group_empty_subnets_status
+      title = "Association Status"
+      query = query.azure_network_security_group_unused_status
       type  = "donut"
       width = 3
 
       series "count" {
-        point "non-empty" {
+        point "associated" {
           color = "ok"
         }
-        point "empty" {
+        point "unassociated" {
           color = "alert"
         }
       }
@@ -53,8 +53,8 @@ dashboard "azure_network_security_group_dashboard" {
 
 
     chart {
-      title = "With Unrestricted Inbound"
-      query = query.azure_network_security_group_remote_access_inbound
+      title = "With Unrestricted Inbound (Excludes ICMP)"
+      query = query.azure_network_security_group_unrestricted_inbound
 
       type  = "donut"
       width = 3
@@ -71,8 +71,8 @@ dashboard "azure_network_security_group_dashboard" {
 
 
     chart {
-      title = "With Unrestricted Outbound"
-      query = query.azure_network_security_group_remote_access_outbound
+      title = "With Unrestricted Outbound (Excludes ICMP)"
+      query = query.azure_network_security_group_unrestricted_outbound
 
       type  = "donut"
       width = 3
@@ -133,20 +133,20 @@ query "azure_network_security_group_count" {
   EOQ
 }
 
-query "azure_network_security_group_empty_subnets_count" {
+query "azure_network_security_group_unassociated_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'Empty Subnets' as label,
+      'Unassociated' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       azure_network_security_group
     where
-      subnets is null;
+      subnets is null and network_interfaces is null;
   EOQ
 }
 
-query "azure_network_security_group_remote_access_inbound_count" {
+query "azure_network_security_group_unrestricted_inbound_count" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -188,7 +188,7 @@ query "azure_network_security_group_remote_access_inbound_count" {
   EOQ
 }
 
-query "azure_network_security_group_remote_access_outbound_count" {
+query "azure_network_security_group_unrestricted_outbound_count" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -232,15 +232,15 @@ query "azure_network_security_group_remote_access_outbound_count" {
 
 # Assessment Queries
 
-query "azure_network_security_group_empty_subnets_status" {
+query "azure_network_security_group_unused_status" {
   sql = <<-EOQ
     select
       status,
       count(*)
     from (
       select
-        case when subnets is null then 'empty'
-        else 'non-empty'
+        case when (subnets is null and network_interfaces is null) then 'unassociated'
+        else 'associated'
         end status
       from
         azure_network_security_group) as n
@@ -251,7 +251,7 @@ query "azure_network_security_group_empty_subnets_status" {
   EOQ
 }
 
-query "azure_network_security_group_remote_access_inbound" {
+query "azure_network_security_group_unrestricted_inbound" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -264,7 +264,7 @@ query "azure_network_security_group_remote_access_inbound" {
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Inbound'
-        and sg -> 'properties' ->> 'protocol' = 'TCP'
+        and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
           dport in ('22', '3389', '*')
@@ -295,7 +295,7 @@ query "azure_network_security_group_remote_access_inbound" {
   EOQ
 }
 
-query "azure_network_security_group_remote_access_outbound" {
+query "azure_network_security_group_unrestricted_outbound" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -308,7 +308,7 @@ query "azure_network_security_group_remote_access_outbound" {
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Outbound'
-        and sg -> 'properties' ->> 'protocol' = 'TCP'
+        and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
           dport in ('22', '3389', '*')
@@ -402,5 +402,3 @@ query "azure_network_security_group_by_provisioning_state" {
       provisioning_state;
   EOQ
 }
-
-
