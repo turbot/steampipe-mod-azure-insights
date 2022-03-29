@@ -69,7 +69,7 @@ dashboard "azuread_group_detail" {
     column "Display Name" {
       // cyclic dependency prevents use of url_path, hardcode for now
       //href = "${dashboard.azuread_user_detail.url_path}?input.user_id={{.ID | @uri}}"
-      href = "/azure_insights.dashboard.azuread_user_detail?input.group_id={{.ID | @uri}}"
+      href = "/azure_insights.dashboard.azuread_user_detail?input.user_id={{.ID | @uri}}"
     }
     query = query.azuread_group_members_attached
     args  = {
@@ -84,7 +84,7 @@ dashboard "azuread_group_detail" {
     column "Display Name" {
       // cyclic dependency prevents use of url_path, hardcode for now
       //href = "${dashboard.azuread_user_detail.url_path}?input.user_id={{.ID | @uri}}"
-      href = "/azure_insights.dashboard.azuread_user_detail?input.group_id={{.ID | @uri}}"
+      href = "/azure_insights.dashboard.azuread_user_detail?input.user_id={{.ID | @uri}}"
     }
     query = query.azuread_group_owners
     args  = {
