@@ -130,22 +130,7 @@ dashboard "azure_virtual_network_detail" {
 
   container {
 
-    title = "Outbound Security Rules"
-
-    flow {
-      base = flow.nsg_flow
-      width = 12
-      query = query.azure_virtual_network_outbound_rule_sankey
-      args = {
-        id = self.input.vn_id.value
-      }
-    }
-
-  }
-
-  container {
-
-    title = "Inbound Security Rules"
+    title = "Network Security Group Inbound Analysis"
 
     flow {
       width = 12
@@ -158,6 +143,20 @@ dashboard "azure_virtual_network_detail" {
 
   }
 
+  container {
+
+    title = "Network Security Group Outbound Analysis"
+
+    flow {
+      base = flow.nsg_flow
+      width = 12
+      query = query.azure_virtual_network_outbound_rule_sankey
+      args = {
+        id = self.input.vn_id.value
+      }
+    }
+
+  }
 
   table {
     title = "Peering Connections"

@@ -1,6 +1,6 @@
 dashboard "azure_virtual_network_dashboard" {
 
-  title         = "Azure Virtual Machine Dashboard"
+  title         = "Azure Virtual Network Dashboard"
   documentation = file("./dashboards/network/docs/virtual_network_dashboard.md")
 
   tags = merge(local.network_common_tags, {
