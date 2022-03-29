@@ -200,7 +200,7 @@ query "azuread_user_directory_role_sankey" {
     union select
       (select azuread_user_id from args) as from_id,
       dr.id as id,
-      dr.display_name || ' (Directory Roles)' as title,
+      dr.display_name as title,
       2 as depth,
       'azuread_directory_roles' as category
     from
@@ -213,7 +213,7 @@ query "azuread_user_directory_role_sankey" {
     union select
       trim((m::text), '""') as from_id,
       dr.id as id,
-      dr.display_name || ' (Directory Roles)' as title,
+      dr.display_name  as title,
       2 as depth,
       'azuread_directory_roles' as category
     from
