@@ -99,6 +99,11 @@ dashboard "azuread_user_detail" {
   table {
     title = "Groups"
     width = 12
+
+    column "Display Name" {
+      href = "${dashboard.azuread_group_detail.url_path}?input.group_id={{.ID | @uri}}"
+    }
+
     query = query.azuread_groups_for_user
     args  = {
       id = self.input.user_id.value
@@ -195,7 +200,7 @@ query "azuread_user_directory_role_sankey" {
     union select
       (select azuread_user_id from args) as from_id,
       dr.id as id,
-      dr.display_name || ' (Diectory Roles)' as title,
+      dr.display_name || ' (Directory Roles)' as title,
       2 as depth,
       'azuread_directory_roles' as category
     from
@@ -208,7 +213,7 @@ query "azuread_user_directory_role_sankey" {
     union select
       trim((m::text), '""') as from_id,
       dr.id as id,
-      dr.display_name || '(Diectory Roles)' as title,
+      dr.display_name || '(Directory Roles)' as title,
       2 as depth,
       'azuread_directory_roles' as category
     from
