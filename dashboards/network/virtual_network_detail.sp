@@ -130,7 +130,7 @@ dashboard "azure_virtual_network_detail" {
 
   container {
 
-    title = "Outbound Rules"
+    title = "Outbound Security Rules"
 
     flow {
       base = flow.nsg_flow
@@ -145,7 +145,7 @@ dashboard "azure_virtual_network_detail" {
 
   container {
 
-    title = "Inbound Rules"
+    title = "Inbound Security Rules"
 
     flow {
       width = 12
@@ -385,6 +385,7 @@ query "azure_virtual_network_outbound_rule_sankey" {
         subnet_id,
         nsgid,
         addressPrefix,
+        r -> 'properties' -> 'priority' as rule_priority,
         case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny ' end ||
         case
           when (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
@@ -431,7 +432,7 @@ query "azure_virtual_network_outbound_rule_sankey" {
         -- Rule Nodes
       union select
         rule_description as id,
-        rule_description as title,
+        concat(rule_priority, ': ', rule_description) as title,
         'rule' as category,
         nsgid as from_id,
         null as to_id,
@@ -480,6 +481,7 @@ query "azure_virtual_network_inbound_rule_sankey" {
       subnet_id,
       nsgid,
       addressPrefix,
+      r -> 'properties' -> 'priority' as rule_priority,
       case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny ' end ||
       case
         when (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
@@ -493,46 +495,47 @@ query "azure_virtual_network_inbound_rule_sankey" {
     jsonb_array_elements_text(r -> 'properties' -> 'sourceAddressPrefixes' || (r -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip
     where r -> 'properties' ->> 'direction' = 'Inbound'
   )
-    -- Subnet Nodes
+
+    -- Rule Nodes
     select
-      distinct subnet_id  as id,
-     split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""')  as title,
-      'subnet' as category,
+      rule_description as id,
+      concat(rule_priority, ': ', rule_description) as title,
+      'rule' as category,
       null as from_id,
       null as to_id,
       0 as depth
     from data
 
-
-    -- CIDR Nodes
-    union select
-      distinct addressPrefix as id,
-      addressPrefix as title,
-      'cidr_block' as category,
-      subnet_id as from_id,
-      null as to_id,
-      1 as depth
-    from data
-
-        -- NSG Nodes
+    -- NSG Nodes
     union select
       distinct nsgid as id,
       split_part(nsgid, '/', 8) || '/' || trim((split_part(nsgid, '/', 9)), '""') as title,
       'nsgid' as category,
-      addressPrefix as from_id,
+      rule_description as from_id,
+      null as to_id,
+      1 as depth
+    from data
+
+      -- CIDR Nodes
+    union select
+      distinct addressPrefix as id,
+      addressPrefix as title,
+      'cidr_block' as category,
+      nsgid as from_id,
       null as to_id,
       2 as depth
     from data
 
-      -- Rule Nodes
+    -- Subnet Nodes
     union select
-      rule_description as id,
-      rule_description as title,
-      'rule' as category,
-      nsgid as from_id,
+      distinct subnet_id  as id,
+     split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""')  as title,
+      'subnet' as category,
+      addressPrefix as from_id,
       null as to_id,
-       3 as depth
+      3 as depth
     from data
+
   EOQ
 
   param "id" {}
