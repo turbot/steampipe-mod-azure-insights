@@ -330,7 +330,7 @@ query "azuread_directory_roles_for_user" {
             azuread_group as g,
             jsonb_array_elements(member_ids) as m
           where
-            trim((m::text), '""') = $1
+            trim((m::text), '""') = $1)
     ) data
   order by
     role_name;
