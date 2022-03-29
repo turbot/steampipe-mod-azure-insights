@@ -213,7 +213,7 @@ query "azuread_user_directory_role_sankey" {
     union select
       trim((m::text), '""') as from_id,
       dr.id as id,
-      dr.display_name || '(Directory Roles)' as title,
+      dr.display_name || ' (Directory Roles)' as title,
       2 as depth,
       'azuread_directory_roles' as category
     from
@@ -274,7 +274,7 @@ query "azuread_user_subscription_role_sankey" {
     left join azure_role_assignment as a on a.principal_id = u.id
     left join azure_role_definition as d on d.id = a.role_definition_id,
     azure_subscription as s
-    where s.tenant_id = u.tenant_id and u.id = (select azuread_user_id from args)
+    where s.tenant_id = u.tenant_id and u.id = $1
 
   EOQ
 
