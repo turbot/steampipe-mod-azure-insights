@@ -274,7 +274,7 @@ query "azuread_user_subscription_role_sankey" {
     left join azure_role_assignment as a on a.principal_id = u.id
     left join azure_role_definition as d on d.id = a.role_definition_id,
     azure_subscription as s
-    where s.tenant_id = u.tenant_id and u.id = $1
+    where s.tenant_id = u.tenant_id and u.id = (select azuread_user_id from args)
 
   EOQ
 
@@ -315,8 +315,7 @@ query "azuread_directory_roles_for_user" {
         azuread_directory_role as dr,
         jsonb_array_elements(member_ids) as m
       where
-        trim((m::text), '""') = '5137b8d3-8040-421e-b3cd-f30ac06b6636'
-
+        trim((m::text), '""') = $1
 
       union select
         dr.display_name as role_name,
@@ -331,10 +330,10 @@ query "azuread_directory_roles_for_user" {
             azuread_group as g,
             jsonb_array_elements(member_ids) as m
           where
-            trim((m::text), '""') = '5137b8d3-8040-421e-b3cd-f30ac06b6636')
-      ) data
+            trim((m::text), '""') = $1
+    ) data
   order by
-    role_name
+    role_name;
 
   EOQ
 
@@ -372,7 +371,7 @@ query "azuread_user_sign_in_report" {
       user_id = $1
     order by
       created_date_time desc
-    limit 5
+    limit 5;
   EOQ
 
   param "id" {}

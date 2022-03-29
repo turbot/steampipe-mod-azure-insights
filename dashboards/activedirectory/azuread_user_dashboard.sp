@@ -26,7 +26,7 @@ dashboard "azuread_user_dashboard" {
     }
 
     card {
-      query = query.azuread_external_guest_user_with_owner_roles_count
+      query = query.azuread_external_guest_user_with_owner_role_count
       width = 2
     }
 
@@ -121,7 +121,7 @@ query "azuread_external_guest_user_count" {
   EOQ
 }
 
-query "azuread_external_guest_user_with_owner_roles_count" {
+query "azuread_external_guest_user_with_owner_role_count" {
   sql = <<-EOQ
     select
       count(distinct u.display_name) as value,
@@ -183,6 +183,8 @@ query "azuread_deprecated_user_with_owner_status" {
       case when dp.id is not null then 'with owner role' else 'no owner role' end as deprecated_account_status
     from
       azuread_user as u left join deprecated_account as dp on u.id = dp.id
+    where
+      not u.account_enabled
     )
     select
       deprecated_account_status,

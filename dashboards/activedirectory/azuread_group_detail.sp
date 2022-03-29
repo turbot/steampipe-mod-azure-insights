@@ -91,7 +91,7 @@ dashboard "azuread_group_detail" {
       id = self.input.group_id.value
     }
 
-}
+  }
 
 }
 
@@ -111,41 +111,6 @@ query "azuread_group_input" {
     order by
       g.title;
   EOQ
-}
-
-query "azuread_group_overview" {
-  sql = <<-EOQ
-    select
-      display_name as "Display Name",
-      created_date_time as "Created Date Time",
-      expiration_date_time as "Expiration Date Time",
-      is_assignable_to_role as "Is Assignable To Role",
-      is_subscribed_by_mail as "Is Subscribed By Mail",
-      visibility as "Visibility",
-      tenant_id as "Tenant ID",
-      id as "ID"
-    from
-      azuread_group
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-query "azuread_group_directory_roles" {
-  sql = <<-EOQ
-    select
-      dr.display_name as "Display Name",
-      dr.id as "ID"
-    from
-      azuread_directory_role as dr,
-      jsonb_array_elements(member_ids) as m
-    where
-      trim((m::text), '""') = $1;
-  EOQ
-
-  param "id" {}
 }
 
 query "azuread_group_type" {
@@ -177,6 +142,43 @@ query "azuread_group_members_attached_count" {
   param "id" {}
 }
 
+query "azuread_group_overview" {
+  sql = <<-EOQ
+    select
+      display_name as "Display Name",
+      created_date_time as "Created Date Time",
+      expiration_date_time as "Expiration Date Time",
+      is_assignable_to_role as "Is Assignable To Role",
+      is_subscribed_by_mail as "Is Subscribed By Mail",
+      visibility as "Visibility",
+      tenant_id as "Tenant ID",
+      id as "ID"
+    from
+      azuread_group
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+query "azuread_group_directory_roles" {
+  sql = <<-EOQ
+    select
+      dr.display_name as "Display Name",
+      dr.id as "ID"
+    from
+      azuread_directory_role as dr,
+      jsonb_array_elements(member_ids) as m
+    where
+      trim((m::text), '""') = $1
+    order by
+      dr.display_name;
+  EOQ
+
+  param "id" {}
+}
+
 query "azuread_group_members_attached" {
   sql = <<-EOQ
     select
@@ -188,7 +190,9 @@ query "azuread_group_members_attached" {
       azuread_group as g,
       jsonb_array_elements(member_ids) as m left join azuread_user as u on u.id = ( trim((m::text), '""'))
     where
-      g.id = $1;
+      g.id = $1
+    order by
+      u.display_name;
   EOQ
 
   param "id" {}
@@ -205,7 +209,9 @@ query "azuread_group_owners" {
       azuread_group as g,
       jsonb_array_elements(owner_ids) as m left join azuread_user as u on u.id = ( trim((m::text), '""'))
     where
-      g.id = 'ee649be1-ccf4-462d-8e9f-3c7faf0d4d02';
+      g.id = $1
+    order by
+      u.display_name;
   EOQ
 
   param "id" {}
