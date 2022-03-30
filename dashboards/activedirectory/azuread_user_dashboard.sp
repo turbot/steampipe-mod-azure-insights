@@ -229,12 +229,19 @@ query "azuread_external_guest_user_with_owner_role_status" {
 
 query "azuread_user_by_tenant" {
   sql = <<-EOQ
+    with tenants as (
+      select
+        distinct tenant_id,
+        title
+      from
+        azure_tenant
+    )
     select
       t.title as "Tenant",
       count(u.*)
     from
       azuread_user as u,
-      azure_tenant as t
+      tenants as t
     where
       u.tenant_id = t.tenant_id
     group by

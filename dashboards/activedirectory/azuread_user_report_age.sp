@@ -57,10 +57,6 @@ dashboard "azuread_user_age_report" {
       display = "none"
     }
 
-    column "Display Name" {
-      href = "${dashboard.azuread_user_detail.url_path}?input.user_id={{.ID | @uri}}"
-    }
-
     query = query.azuread_user_age_table
   }
 
@@ -128,6 +124,13 @@ query "azuread_user_1_year_count" {
 
 query "azuread_user_age_table" {
   sql = <<-EOQ
+    with tenants as (
+      select
+        distinct tenant_id,
+        title
+      from
+        azure_tenant
+    )
     select
       u.display_name as "Display Name",
       u.given_name as "Given Name",
@@ -139,7 +142,7 @@ query "azuread_user_age_table" {
       u.id as "ID"
     from
       azuread_user as u,
-      azure_tenant as t
+      tenants as t
     where
       u.tenant_id = t.tenant_id
     order by

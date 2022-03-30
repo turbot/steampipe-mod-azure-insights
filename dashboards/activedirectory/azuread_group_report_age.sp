@@ -57,10 +57,6 @@ dashboard "azuread_group_age_report" {
       display = "none"
     }
 
-    column "Display Name" {
-      href = "${dashboard.azuread_group_detail.url_path}?input.group_id={{.ID | @uri}}"
-    }
-
     query = query.azuread_group_age_table
   }
 
@@ -128,6 +124,13 @@ query "azuread_group_1_year_count" {
 
 query "azuread_group_age_table" {
   sql = <<-EOQ
+    with tenants as (
+        select
+          distinct tenant_id,
+          title
+        from
+          azure_tenant
+      )
     select
       g.display_name as "Display Name",
       now()::date - g.created_date_time::date as "Age in Days",
@@ -139,7 +142,7 @@ query "azuread_group_age_table" {
       g.id as "ID"
     from
       azuread_group as g,
-      azure_tenant as t
+      tenants as t
     where
       g.tenant_id = t.tenant_id
     order by

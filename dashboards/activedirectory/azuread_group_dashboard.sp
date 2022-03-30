@@ -141,12 +141,19 @@ query "azuread_group_with_no_member" {
 
 query "azuread_group_by_tenant" {
   sql = <<-EOQ
+    with tenants as (
+      select
+        distinct tenant_id,
+        title
+      from
+        azure_tenant
+    )
     select
       t.title as "Tenant",
       count(g.*)
     from
       azuread_group as g,
-      azure_tenant as t
+      tenants as t
     where
       g.tenant_id = t.tenant_id
     group by
