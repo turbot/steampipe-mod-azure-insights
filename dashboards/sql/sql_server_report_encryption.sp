@@ -32,6 +32,10 @@ dashboard "azure_sql_server_encryption_report" {
       display = "none"
     }
 
+    column "Name" {
+      href = "${dashboard.azure_sql_server_detail.url_path}?input.server_id={{.ID | @uri}}"
+    }
+
     column "Subscription ID" {
       display = "none"
     }
@@ -45,7 +49,7 @@ query "azure_sql_server_encryption_report" {
   sql = <<-EOQ
     with encryption_protector as (
       select
-        id ,
+        id,
         ep ->> 'kind' as kind,
         ep ->> 'serverKeyName' as serverKeyName,
         ep ->> 'serverKeyType' as serverKeyType
