@@ -249,7 +249,7 @@ query "azure_key_vault_tags" {
 query "azure_key_vault_access_policies" {
   sql = <<-EOQ
     select
-      p ->> 'objectId' as "Object ID",
+      p ->> 'objectId' as "User Object ID",
       p ->> 'permissionsCertificates' as "Certificate Permissions",
       p ->> 'permissionsKeys' as "Key Permissions",
       p ->> 'permissionsSecrets' as "Secret Permissions",
