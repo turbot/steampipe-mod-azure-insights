@@ -56,6 +56,10 @@ dashboard "azure_sql_database_age_report" {
       display = "none"
     }
 
+    column "Name" {
+      href = "${dashboard.azure_sql_database_detail.url_path}?input.database_id={{.'Database ID' | @uri}}"
+    }
+
     query = query.azure_sql_database_age_table
   }
 
