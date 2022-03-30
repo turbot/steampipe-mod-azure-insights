@@ -253,12 +253,12 @@ query "azuread_user_subscription_role_sankey" {
           and a.scope like '/providers/Microsoft.Management/managementGroups%'
     ),
      resource_group_scope as (
-        select
-          distinct scope as scope
-        from
-          azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
-          where u.id = (select azuread_user_id from args)
-          and a.scope like '%/resourceGroups/%'
+      select
+        distinct scope as scope
+      from
+        azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
+        where u.id = (select azuread_user_id from args)
+        and a.scope like '%/resourceGroups/%'
     )
 
     -- User
@@ -324,15 +324,14 @@ query "azuread_user_subscription_role_sankey" {
       d.role_name as title,
       d.role_name as id,
       3 as depth,
-      'azure_role_assignment' as category
+      'azure_subscription' as category
     from
      azuread_user as u
-    left join azure_role_assignment as a on a.principal_id = u.id
-    left join azure_role_definition as d on d.id = a.role_definition_id,
-    azure_subscription as s
+      left join azure_role_assignment as a on a.principal_id = u.id
+      left join azure_role_definition as d on d.id = a.role_definition_id,
+      azure_subscription as s
     where s.subscription_id = a.subscription_id and u.id = $1
-    and a.scope ~ '\/subscriptions\/[a-zA-Z0-9-]*'
-
+      and (a.scope like '/subscriptions/%' and a.scope not like '%/resourceGroups/%')
 
     -- Azure Assigned Roles on management
     union select
@@ -340,16 +339,16 @@ query "azuread_user_subscription_role_sankey" {
       d.role_name as title,
       d.role_name as id,
       3 as depth,
-      'azure_role_assignment' as category
+      'azure_management_group' as category
     from
-    azuread_user as u
-    left join azure_role_assignment as a on a.principal_id = u.id
-    left join azure_role_definition as d on d.id = a.role_definition_id,
-    azure_subscription as s,
-    resource_group_scope  as sc
-    where s.tenant_id = u.tenant_id and u.id = $1
-    and a.scope like '%/resourceGroups/%'
-
+      azuread_user as u
+      left join azure_role_assignment as a on a.principal_id = u.id
+      left join azure_role_definition as d on d.id = a.role_definition_id,
+      azure_subscription as s,
+      resource_group_scope as sc
+    where
+      s.tenant_id = u.tenant_id and u.id = $1
+      and a.scope like '%/resourceGroups/%'
 
      -- Azure Assigned Roles on resourceGroups
     union select
@@ -359,14 +358,14 @@ query "azuread_user_subscription_role_sankey" {
       3 as depth,
       'azure_role_assignment' as category
     from
-    azuread_user as u
-    left join azure_role_assignment as a on a.principal_id = u.id
-    left join azure_role_definition as d on d.id = a.role_definition_id,
-    azure_subscription as s,
-    management_scope  as sc
-    where s.tenant_id = u.tenant_id and u.id = $1
-    and a.scope like '/providers/Microsoft.Management/managementGroups%'
-
+      azuread_user as u
+      left join azure_role_assignment as a on a.principal_id = u.id
+      left join azure_role_definition as d on d.id = a.role_definition_id,
+      azure_subscription as s,
+      management_scope  as sc
+    where
+      s.tenant_id = u.tenant_id and u.id = $1
+      and a.scope like '/providers/Microsoft.Management/managementGroups%'
 
     -- Azure Assigned Roles on root
     union select
@@ -374,7 +373,7 @@ query "azuread_user_subscription_role_sankey" {
       d.role_name as title,
       d.role_name as id,
       3 as depth,
-      'azure_role_assignment' as category
+      'root' as category
     from
       azuread_user as u left join azure_role_assignment as a on a.principal_id = u.id
       left join azure_role_definition as d on d.id = a.role_definition_id
