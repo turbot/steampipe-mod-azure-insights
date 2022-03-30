@@ -34,6 +34,14 @@ dashboard "azure_sql_database_detail" {
 
     card {
       width = 2
+      query = query.azure_sql_database_zone_redundant
+      args = {
+        id = self.input.database_id.value
+      }
+    }
+
+    card {
+      width = 2
       query = query.azure_sql_database_transparent_data_encryption
       args = {
         id = self.input.database_id.value
@@ -88,40 +96,22 @@ dashboard "azure_sql_database_detail" {
       width = 6
 
       table {
-        title = "Configurations"
-        query = query.azure_sql_database_configurations
+        title = "Retention Policy"
+        query = query.azure_sql_database_retention
+        args = {
+          id = self.input.database_id.value
+        }
+      }
+
+      table {
+        title = "Vulnerability Assessment"
+        query = query.azure_sql_database_vulnerability_assessment
         args = {
           id = self.input.database_id.value
         }
       }
 
     }
-  }
-
-  container {
-    width = 12
-
-    table {
-      title = "Retention Configurations"
-      query = query.azure_sql_database_retention
-      args = {
-        id = self.input.database_id.value
-      }
-    }
-
-  }
-
-    container {
-    width = 12
-
-    table {
-      title = "Vulnerability Assessment"
-      query = query.azure_sql_database_vulnerability_assessment
-      args = {
-        id = self.input.database_id.value
-      }
-    }
-
   }
 
 }
@@ -152,6 +142,23 @@ query "azure_sql_database_server" {
     select
       'Server Name' as label,
       server_name as value
+    from
+      azure_sql_database
+    where
+      name <> 'master'
+      and id = $1;
+  EOQ
+
+  param "id" {}
+
+}
+
+# https://techcommunity.microsoft.com/t5/azure-sql-blog/zone-redundancy-for-azure-sql-database-serverless-and-general/ba-p/1807410#:~:text=The%20zone%20redundant%20configuration%20can,reconfigure%20the%20database%20or%20pool.
+query "azure_sql_database_zone_redundant" {
+  sql = <<-EOQ
+    select
+      'Zone Redundancy' as label,
+      case when zone_redundant then 'Enabled' else 'Disabled' end as value
     from
       azure_sql_database
     where
@@ -199,7 +206,7 @@ query "azure_sql_database_transparent_data_encryption" {
     select
       'TDE' as label,
       case when transparent_data_encryption ->> 'status' = 'Enabled' then 'Enabled' else 'Disabled' end as value,
-      case when transparent_data_encryption ->> 'status' = 'Enabled'then 'ok' else 'alert' end as type
+      case when transparent_data_encryption ->> 'status' = 'Enabled' then 'ok' else 'alert' end as type
     from
       azure_sql_database
     where
@@ -293,22 +300,6 @@ query "azure_sql_database_tags" {
     order by
       tag.key;
     EOQ
-
-  param "id" {}
-}
-
-query "azure_sql_database_configurations" {
-  sql = <<-EOQ
-    select
-      read_scale as "Read Scale",
-      max_size_bytes as "Max Size Bytes",
-      containment_state as "Containment State"
-    from
-      azure_sql_database
-    where
-      name <> 'master'
-      and id = $1;
-  EOQ
 
   param "id" {}
 }

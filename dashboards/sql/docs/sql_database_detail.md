@@ -1,4 +1,4 @@
-This dashboard answers the following questions for each virtual machine:
+This dashboard answers the following questions for each sql database:
 
 - How is the database configured?
 - What tags are applied?
