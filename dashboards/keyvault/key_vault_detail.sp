@@ -88,8 +88,8 @@ dashboard "azure_key_vault_detail" {
       }
 
       table {
-        title = "Access Details"
-        query = query.azure_key_vault_access
+        title = "Vault Usages"
+        query = query.azure_key_vault_usage
         args = {
           id = self.input.key_vault_id.value
         }
@@ -116,7 +116,7 @@ dashboard "azure_key_vault_detail" {
     width = 12
 
     table {
-      title = "Network ACLs"
+      title = "Network Access Details"
       query = query.azure_key_vault_network_acls
       args = {
         id = self.input.key_vault_id.value
@@ -295,7 +295,7 @@ query "azure_key_vault_network_acls" {
   param "id" {}
 }
 
-query "azure_key_vault_access" {
+query "azure_key_vault_usage" {
   sql = <<-EOQ
     select
       enabled_for_deployment as "Enabled For Deployment",
