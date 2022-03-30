@@ -250,10 +250,10 @@ query "azure_key_vault_access_policies" {
   sql = <<-EOQ
     select
       p ->> 'objectId' as "Object ID",
-      p ->> 'permissionsCertificates' as "Permissions Certificates",
-      p ->> 'permissionsKeys' as "Permissions Keys",
-      p ->> 'permissionsSecrets' as "Permissions Secrets",
-      p ->> 'permissionsStorage' as "Permissions Storages",
+      p ->> 'permissionsCertificates' as "Certificate Permissions",
+      p ->> 'permissionsKeys' as "Key Permissions",
+      p ->> 'permissionsSecrets' as "Secret Permissions",
+      p ->> 'permissionsStorage' as "Storage Permissions",
       p ->> 'tenantId' as "Tenant ID"
     from
       azure_key_vault,
