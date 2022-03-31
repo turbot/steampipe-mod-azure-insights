@@ -212,7 +212,7 @@ query "azure_key_vault_overview" {
   sql = <<-EOQ
     select
       name as "Name",
-      vault_uri as "vault_uri",
+      vault_uri as "Vault URI",
       type as "Type",
       cloud_environment as "Cloud Environment",
       region as "Region",
