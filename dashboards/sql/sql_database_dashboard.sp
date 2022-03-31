@@ -204,7 +204,7 @@ query "azure_sql_database_tde_status" {
       count(*)
     from (
       select
-        case when  transparent_data_encryption ->> 'status' <> 'Enabled' then 'disabled'
+        case when transparent_data_encryption ->> 'status' <> 'Enabled' then 'disabled'
         else 'enabled'
         end tde_status
       from
@@ -233,7 +233,7 @@ query "azure_sql_database_vulnerability_assessment_status" {
     vulnerability_assessment_status as (
       select
         case
-          when s.name is not null then 'enabled'
+          when va.id is not null then 'enabled'
           else 'disabled' end as vulnerability_assessment_status
       from
         azure_sql_database as s
