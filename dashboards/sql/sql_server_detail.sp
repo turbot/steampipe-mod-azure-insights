@@ -396,7 +396,7 @@ query "azure_sql_server_private_endpoint_connection" {
     select
       c ->> 'PrivateEndpointConnectionName' as "Private Endpoint Connection Name",
       c ->> 'PrivateEndpointConnectionType' as "Private Endpoint Connection Type",
-      c ->> 'PrivateEndpointId' as "Private Endpoint Id",
+      c ->> 'PrivateEndpointId' as "Private Endpoint ID",
       c ->> 'PrivateLinkServiceConnectionStateActionsRequired' as "Private Link Service Connection State Actions Required",
       c ->> 'PrivateLinkServiceConnectionStateDescription' as "Private Link Service Connection State Description",
       c ->> 'PrivateLinkServiceConnectionStateStatus' as "Private Link Service Connection State Status",
