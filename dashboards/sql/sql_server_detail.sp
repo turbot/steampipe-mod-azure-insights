@@ -337,7 +337,7 @@ query "azure_sql_server_virtual_network_rules" {
   sql = <<-EOQ
     select
       r ->> 'name' as "Name",
-      r -> 'properties' ->> 'ignoreMissingVnetServiceEndpoint' as "Ignore Missing Vnet Service Endpoint",
+      r -> 'properties' ->> 'ignoreMissingVnetServiceEndpoint' as "Ignore Missing VNet Service Endpoint",
       r ->> 'virtualNetworkSubnetId' as "Virtual Network Subnet ID",
       r ->> type as "Type",
       r ->> 'id' as "ID"
@@ -358,7 +358,7 @@ query "azure_sql_server_audit_policy" {
       p -> 'properties' -> 'auditActionsAndGroups' as "Audit Actions And Groups",
       p ->> 'isAzureMonitorTargetEnabled' as "Is Azure Monitor Target Enabled",
       p ->> 'retentionDays' as "Retention Days",
-      p ->> 'state' as "state",
+      p ->> 'state' as "State",
       p ->> 'isStorageSecondaryKeyInUse' as "Is Storage Secondary Key In Use",
       p ->> 'storageAccountSubscriptionId' as "Storage Account Subscription ID",
       p ->> type as "Type",
@@ -396,7 +396,7 @@ query "azure_sql_server_private_endpoint_connection" {
     select
       c ->> 'PrivateEndpointConnectionName' as "Private Endpoint Connection Name",
       c ->> 'PrivateEndpointConnectionType' as "Private Endpoint Connection Type",
-      c ->> 'PrivateEndpointId' as "Private Endpoint Id",
+      c ->> 'PrivateEndpointId' as "Private Endpoint ID",
       c ->> 'PrivateLinkServiceConnectionStateActionsRequired' as "Private Link Service Connection State Actions Required",
       c ->> 'PrivateLinkServiceConnectionStateDescription' as "Private Link Service Connection State Description",
       c ->> 'PrivateLinkServiceConnectionStateStatus' as "Private Link Service Connection State Status",
