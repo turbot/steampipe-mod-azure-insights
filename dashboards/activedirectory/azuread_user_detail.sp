@@ -69,7 +69,7 @@ dashboard "azuread_user_detail" {
 
     flow {
       type  = "sankey"
-      title = "Attached Subscription Roles"
+      title = "Attached Subscription Roles (With managemnet group)"
       query = query.azuread_user_subscription_role_sankey_one
       args  = {
         id = self.input.user_id.value
@@ -78,14 +78,12 @@ dashboard "azuread_user_detail" {
 
     flow {
       type  = "sankey"
-      title = "Attached Subscription Roles"
+      title = "Attached Subscription Roles (Recommended)"
       query = query.azuread_user_subscription_role_sankey_two
       args  = {
         id = self.input.user_id.value
       }
     }
-
-
 
     table {
       title = "Directory Roles"
@@ -500,7 +498,7 @@ query "azuread_user_subscription_role_sankey_two" {
       azuread_user
     where
       id in (select azuread_user_id from args)
-      
+
     -- Azure Managament groups
     union select
       (select azuread_user_id from args) as from_id,
