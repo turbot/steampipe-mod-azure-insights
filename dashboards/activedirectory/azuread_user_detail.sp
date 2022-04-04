@@ -70,11 +70,22 @@ dashboard "azuread_user_detail" {
     flow {
       type  = "sankey"
       title = "Attached Subscription Roles"
-      query = query.azuread_user_subscription_role_sankey
+      query = query.azuread_user_subscription_role_sankey_one
       args  = {
         id = self.input.user_id.value
       }
     }
+
+    flow {
+      type  = "sankey"
+      title = "Attached Subscription Roles"
+      query = query.azuread_user_subscription_role_sankey_two
+      args  = {
+        id = self.input.user_id.value
+      }
+    }
+
+
 
     table {
       title = "Directory Roles"
@@ -176,7 +187,24 @@ query "azuread_user_directory_role_sankey" {
 
     with args as (
       select $1 as azuread_user_id
-    )
+    ), groups as (
+        select
+          g.id as id
+        from
+          azuread_group as g,
+          jsonb_array_elements(member_ids) as m
+        where
+          trim((m::text), '""') = (select azuread_user_id from args)
+        ) ,
+        groups_with_role as (
+          select
+            trim((m::text), '""') as group_id
+          from
+            azuread_directory_role,
+            jsonb_array_elements(member_ids) as m
+          where
+            trim((m::text), '""') in (select id from groups)
+      )
 
     -- User
     select
@@ -193,15 +221,12 @@ query "azuread_user_directory_role_sankey" {
   -- Groups
     union select
       (select azuread_user_id from args) as from_id,
-      g.id as id,
+      group_id as id,
       g.display_name as title,
       1 as depth,
       'azuread_group' as category
     from
-      azuread_group as g,
-      jsonb_array_elements(member_ids) as m
-    where
-      trim((m::text), '""') = (select azuread_user_id from args)
+      groups_with_role as gr left join azuread_group as g on g.id = gr.group_id
 
     -- Directory Roles
     union select
@@ -216,7 +241,7 @@ query "azuread_user_directory_role_sankey" {
     where
       trim((m::text), '""') = (select azuread_user_id from args)
 
-  -- Directory Roles inherited from groups
+    -- Directory Roles inherited from groups
     union select
       trim((m::text), '""') as from_id,
       dr.id as id,
@@ -239,10 +264,213 @@ query "azuread_user_directory_role_sankey" {
   param "id" {}
 }
 
-query "azuread_user_subscription_role_sankey" {
+query "azuread_user_subscription_role_sankey_one" {
   sql = <<-EOQ
-
     with args as (
+      select $1 as azuread_user_id
+    ), user_scope as (
+        select
+          distinct a.scope as id,
+          a.id as role_assign
+        from
+          azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
+          where u.id = $1
+    ), managment_role_assign_id as (
+      select
+          distinct user_scope.role_assign as role_assign_id,
+          mg.display_name as managment_group_name,
+          mg.id as managment_group_id
+
+        from
+          azuread_user as u,
+          azure_subscription as sub,
+          azure_management_group as mg,
+          user_scope
+        where
+          sub.tenant_id = u.tenant_id and u.id = $1
+          and (user_scope.id = mg.id )
+      ),
+      resource_group_scope as (
+          select
+            distinct scope as id
+          from
+            azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
+            where u.id = $1
+            and a.scope like '%/resourceGroups/%'
+      ),
+      root_management as (
+        select
+          distinct id,
+          name,
+          display_name as displayName,
+          children
+        from
+          azure_management_group as mg
+        where
+          parent is null
+        ),
+        second_level_managemnet as(
+          select
+            distinct (c ->> 'id')  as id,
+            r.id as parent_id,
+            r.displayName as parent_name,
+            c ->> 'displayName' as displayName,
+            c ->> 'type' as type
+          from
+            azure_management_group as mg,
+            jsonb_array_elements(children) as c,
+            root_management as r
+          where
+            mg.id = r.id
+        ),
+      third_level_managemnet as (
+        select
+          distinct  (c ->> 'id' ) as id,
+            r.id as parent_id,
+            r.displayName as parent_name,
+          c ->> 'displayName' as displayName,
+          c ->> 'type' as type
+        from
+          azure_management_group as mg,
+          jsonb_array_elements(children) as c,
+          second_level_managemnet as r
+      where
+        mg.id = r.id
+      ), fourth_level_managemnet as (
+          select
+            distinct  (c ->> 'id' ) as id,
+            r.id as parent_id,
+            r.displayName as parent_name,
+            c ->> 'displayName' as displayName,
+            c ->> 'type' as type
+          from
+            azure_management_group mg,
+          jsonb_array_elements(children) as c,
+            third_level_managemnet as r
+        where
+          mg.id = r.id
+      ),
+       fifth_level_managemnet as (
+          select
+            distinct  (c ->> 'id' ) as id,
+                        r.id as parent_id,
+              r.displayName as parent_name,
+            c ->> 'displayName' as displayName,
+            c ->> 'type' as type
+          from
+            azure_management_group mg,
+          jsonb_array_elements(children) as c,
+            fourth_level_managemnet as r
+        where
+          mg.id = r.id
+      ), sixth_level_managemnet as(
+          select
+            distinct (c ->> 'id' ) as id,
+            r.id as parent_id,
+            r.displayName as parent_name,
+            c ->> 'displayName' as displayName,
+            c ->> 'type' as type
+          from
+              azure_management_group mg,
+          jsonb_array_elements(children) as c,
+            fifth_level_managemnet as r
+        where
+          mg.id = r.id
+      )
+
+    -- User
+    select
+      null as from_id,
+      id as id,
+      title,
+      0 as depth,
+      'azuread_user' as category
+    from
+      azuread_user
+    where
+      id in (select azuread_user_id from args)
+
+    -- Azure root Managament groups
+    union select
+      (select azuread_user_id from args) as from_id,
+      displayName as title,
+      displayName as id,
+      1 as depth,
+      'azure_management_group' as category
+    from
+      root_management
+
+    -- Azure  Managament groups 2nd level
+    union select
+      parent_name as from_id,
+      displayName as title,
+      displayName as id,
+      2 as depth,
+      'azure_management_group' as category
+    from
+      second_level_managemnet
+
+       -- Azure  Managament groups 3rd level
+    union select
+      parent_name as from_id,
+      displayName as title,
+      displayName as id,
+      3 as depth,
+      'azure_management_group' as category
+    from
+      third_level_managemnet
+
+      -- Azure  Managament groups 4 level
+    union select
+      parent_name as from_id,
+      displayName as title,
+      displayName as id,
+      4 as depth,
+      'azure_management_group' as category
+    from
+      fourth_level_managemnet
+
+    -- Azure  Managament groups 5 level
+    union select
+      parent_name as from_id,
+      displayName as title,
+      displayName as id,
+      5 as depth,
+      'azure_management_group' as category
+    from
+      fifth_level_managemnet
+
+
+  -- Azure  Managament groups 6 level
+    union select
+      parent_name as from_id,
+      displayName as title,
+      displayName as id,
+      5 as depth,
+      'azure_management_group' as category
+    from
+      sixth_level_managemnet
+
+        -- Azure Assigned Roles on management
+    union select
+      distinct m.managment_group_name as from_id,
+      d.role_name as id,
+      d.role_name as title,
+      6 as depth,
+    'role' as category
+      from
+      managment_role_assign_id as m
+      left join azure_role_assignment as a on m.role_assign_id = a.id
+      left join azure_role_definition as d on d.id = a.role_definition_id
+
+  EOQ
+
+  param "id" {}
+}
+
+query "azuread_user_subscription_role_sankey_two" {
+  sql = <<-EOQ
+   with args as (
       select $1 as azuread_user_id
     ), management_scope as (
         select
@@ -272,7 +500,7 @@ query "azuread_user_subscription_role_sankey" {
       azuread_user
     where
       id in (select azuread_user_id from args)
-
+      
     -- Azure Managament groups
     union select
       (select azuread_user_id from args) as from_id,
