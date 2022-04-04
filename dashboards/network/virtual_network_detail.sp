@@ -130,7 +130,7 @@ dashboard "azure_virtual_network_detail" {
 
   container {
 
-    title = "Network Security Group Inbound Analysis"
+    title = "Subnet Inbound Analysis"
 
     flow {
       width = 12
@@ -145,7 +145,7 @@ dashboard "azure_virtual_network_detail" {
 
   container {
 
-    title = "Network Security Group Outbound Analysis"
+    title = "Subnet Outbound Analysis"
 
     flow {
       base = flow.nsg_flow
@@ -446,14 +446,15 @@ query "azure_virtual_network_inbound_rule_sankey" {
   sql = <<-EOQ
   with subnets as (
     select
-      s -> 'name' as "subnet_name",
+      s ->> 'name' as "subnet_name",
       s -> 'properties' ->>  'addressPrefix' as  addressPrefix,
       s ->> 'id' as "subnet_id",
-      s -> 'properties' -> 'networkSecurityGroup' ->> 'id' as "networkSecurityGroup"
+      s -> 'properties' -> 'networkSecurityGroup' ->> 'id' as "networkSecurityGroup",
+      name as vnet_name
       from
       azure_virtual_network,
       jsonb_array_elements(subnets) as s
-      where id = $1
+      where id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/steampipe/providers/Microsoft.Network/virtualNetworks/steampipe-vnet'
   ),network_security_group as (
       select
         id,
@@ -466,19 +467,21 @@ query "azure_virtual_network_inbound_rule_sankey" {
   ),
   network_security_group_rule as (
     select
-      network_security_group.id as "nsgid",
+      network_security_group.id as nsgid,
       (default_security_rules || security_rules) as all_rules,
       subnets.subnet_id as "subnet_id",
       subnets.subnet_name as "subnet_name",
-      subnets.addressPrefix as addressPrefix
+      subnets.addressPrefix as addressPrefix,
+      subnets.vnet_name as vnet_name
     from
-    subnets  left join network_security_group on network_security_group.s ->> 'id' = subnets.subnet_id
-  ), --select * from network_security_group_rule
+    subnets left join network_security_group on network_security_group.s ->> 'id' = subnets.subnet_id
+  ),
   data as (
     select
-      subnet_name::text,
+      subnet_name,
       subnet_id,
       nsgid,
+      vnet_name,
       addressPrefix,
       r -> 'properties' -> 'priority' as rule_priority,
       case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny ' end ||
@@ -505,6 +508,16 @@ query "azure_virtual_network_inbound_rule_sankey" {
       0 as depth
     from data
 
+   -- Rule Nodes
+    union select
+      vnet_name as id,
+      vnet_name as title,
+      'virtual_network' as category,
+      null as from_id,
+      null as to_id,
+      0 as depth
+    from data
+
     -- NSG Nodes
     union select
       distinct nsgid as id,
@@ -525,6 +538,16 @@ query "azure_virtual_network_inbound_rule_sankey" {
       2 as depth
     from data
 
+       -- CIDR Nodes
+    union select
+      distinct addressPrefix as id,
+      addressPrefix as title,
+      'cidr_block' as category,
+      vnet_name as from_id,
+      null as to_id,
+      2 as depth
+    from network_security_group_rule where nsgid is null
+
     -- Subnet Nodes
     union select
       distinct subnet_id  as id,
@@ -534,6 +557,16 @@ query "azure_virtual_network_inbound_rule_sankey" {
       null as to_id,
       3 as depth
     from data
+
+    -- Subnet Nodes
+    union select
+      distinct subnet_id  as id,
+      split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""')  as title,
+      'empty subnet' as category,
+      addressPrefix as from_id,
+      null as to_id,
+      3 as depth
+    from network_security_group_rule where nsgid is null
 
   EOQ
 
