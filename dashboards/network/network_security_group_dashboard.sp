@@ -222,7 +222,7 @@ query "azure_network_security_group_unrestricted_outbound_count" {
     )
     select
       count(*) as value,
-      'With Unrestricted Outbound (Excludes ICMP)' as label,
+      'Unrestricted Outbound (Excludes ICMP)' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       network_sg
