@@ -84,9 +84,8 @@ dashboard "azure_virtual_network_detail" {
 
   container {
 
-    title = "Subnets"
-
     table {
+      title = "Subnets"
       query = query.azure_virtual_network_subnet_details
       args  = {
         id = self.input.vn_id.value
