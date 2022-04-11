@@ -485,7 +485,7 @@ query "azure_network_security_group_inbound_rule_sankey" {
       -- NICs
       select
         ni.title as title,
-        'Network Interface' as category,
+        'azure_network_interface' as category,
         ni.id as id,
         nsg.id as nsg_id
       from
@@ -498,7 +498,7 @@ query "azure_network_security_group_inbound_rule_sankey" {
       -- Subnets
       union select
         s.title as title,
-        'Subnet' as category,
+        'azure_subnet' as category,
         s.id as id,
         nsg.id as nsg_id
       from
@@ -615,7 +615,7 @@ query "azure_network_security_group_outbound_rule_sankey" {
       -- NICs
       select
         ni.title as title,
-        'Network Interface' as category,
+        'azure_network_interface' as category,
         ni.id as id,
         nsg.id as nsg_id
       from
@@ -628,7 +628,7 @@ query "azure_network_security_group_outbound_rule_sankey" {
       -- Subnets
       union select
         s.title as title,
-        'Subnet' as category,
+        'azure_subnet' as category,
         s.id as id,
         nsg.id as nsg_id
       from
@@ -715,7 +715,7 @@ query "azure_network_security_group_outbound_rule_sankey" {
       union
       select
           distinct id as id,
-          title || ' (' || category || ') ' as title,
+          title || '(' || category || ') ' as title,
           0 as depth,
           category,
           trim((split_part(nsg_id, '/', 9)), '""') as from_id,
