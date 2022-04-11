@@ -41,6 +41,14 @@ dashboard "azure_network_security_group_detail" {
 
     card {
       width = 2
+      query = query.azure_network_security_group_attached_subnets_count
+      args  = {
+        id = self.input.nsg_id.value
+      }
+    }
+
+    card {
+      width = 2
       query = query.azure_network_security_group_unrestricted_inbound_remote_access
       args = {
         id = self.input.nsg_id.value
@@ -87,6 +95,14 @@ dashboard "azure_network_security_group_detail" {
       width = 6
 
       table {
+        title = "Associated to"
+        query = query.azure_network_security_group_assoc
+        args  = {
+          id = self.input.nsg_id.value
+        }
+      }
+
+      table {
         title = "Flow Logs"
         query = query.azure_network_security_group_flow_logs
         args = {
@@ -94,13 +110,6 @@ dashboard "azure_network_security_group_detail" {
         }
       }
 
-      # table {
-      #   title = "Image"
-      #   query = query.azure_compute_virtual_machine_image
-      #   args = {
-      #     id = self.input.nsg_id.value
-      #   }
-      # }
     }
 
   }
@@ -108,6 +117,16 @@ dashboard "azure_network_security_group_detail" {
   container {
 
     width = 6
+
+    flow {
+      base = flow.network_security_group_rules_sankey
+      title = "Inbound Analysis"
+      query = query.azure_network_security_group_inbound_rule_sankey
+      args  = {
+        id = self.input.nsg_id.value
+      }
+    }
+
 
     table {
       title = "Inbound Rules"
@@ -123,6 +142,15 @@ dashboard "azure_network_security_group_detail" {
 
     width = 6
 
+    flow {
+      base = flow.network_security_group_rules_sankey
+      title = "Outbound Analysis"
+      query = query.azure_network_security_group_outbound_rule_sankey
+      args  = {
+        id = self.input.nsg_id.value
+      }
+    }
+
     table {
       title = "Outbound Rules"
       query = query.azure_network_security_group_outbound_rules
@@ -133,18 +161,17 @@ dashboard "azure_network_security_group_detail" {
 
   }
 
+}
 
-  container {
-    width = 12
+flow "network_security_group_rules_sankey" {
+  type  = "sankey"
 
-    table {
-      title = "Network Interfaces"
-      query = query.azure_network_security_group_network_interfaces
-      args = {
-        id = self.input.nsg_id.value
-      }
-    }
+  category "alert" {
+    color = "alert"
+  }
 
+  category "ok" {
+    color = "ok"
   }
 
 }
@@ -204,11 +231,27 @@ query "azure_network_security_group_outbound_rules_count" {
 query "azure_network_security_group_attached_enis_count" {
   sql = <<-EOQ
     select
-      'Attached Netwrok Interfaces' as label,
+      'Attached Network Interfaces' as label,
       count(*) as value
     from
       azure_network_security_group,
       jsonb_array_elements(network_interfaces ) as nic
+    where
+      id = $1
+  EOQ
+
+  param "id" {}
+}
+
+
+query "azure_network_security_group_attached_subnets_count" {
+  sql = <<-EOQ
+    select
+      'Attached Subnets' as label,
+      count(*) as value
+    from
+      azure_network_security_group,
+      jsonb_array_elements(subnets) as s
     where
       id = $1
   EOQ
@@ -229,7 +272,7 @@ query "azure_network_security_group_unrestricted_inbound_remote_access" {
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Inbound'
-        and sg -> 'properties' ->> 'protocol' = 'TCP'
+        and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
           dport in ('22', '3389', '*')
@@ -247,10 +290,10 @@ query "azure_network_security_group_unrestricted_inbound_remote_access" {
             )
           )
         )
-        and nsg.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbot_rg/providers/Microsoft.Network/networkSecurityGroups/tetetq-nsg'
+        and nsg.id = $1
     )
     select
-      'Unrestricted Inbound' as label,
+      'Unrestricted Inbound (Excludes ICMP)' as label,
       count(*) as value,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
@@ -273,7 +316,7 @@ query "azure_network_security_group_unrestricted_outbound_remote_access" {
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Outbound'
-        and sg -> 'properties' ->> 'protocol' = 'TCP'
+        and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
           dport in ('22', '3389', '*')
@@ -291,10 +334,10 @@ query "azure_network_security_group_unrestricted_outbound_remote_access" {
             )
           )
         )
-        and nsg.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbot_rg/providers/Microsoft.Network/networkSecurityGroups/tetetq-nsg'
+        and nsg.id = $1
     )
     select
-      'Unrestricted Outbound' as label,
+      'Unrestricted Outbound (Excludes ICMP)' as label,
       count(*) as value,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
@@ -340,20 +383,32 @@ query "azure_network_security_group_tags" {
   param "id" {}
 }
 
-query "azure_network_security_group_network_interfaces" {
+query "azure_network_security_group_assoc" {
   sql = <<-EOQ
+    -- NICs
     select
-      ni.name as "Network Interface Name",
-      ni.enable_ip_forwarding as "Enable IP Forwarding",
-      ni.mac_address as "MAC Address",
-      i ->> 'id' as "Network Interface ID"
-    from
-      azure_network_security_group as nsg,
-      jsonb_array_elements(network_interfaces) as i
-      left join azure_network_interface as ni on ni.id = i ->> 'id'
-    where
-      nsg.id = $1;
-  EOQ
+      ni.title as "Title",
+      'Network Interface' as "Type",
+      ni.id as "ID"
+     from
+       azure_network_security_group as nsg,
+       jsonb_array_elements(nsg.network_interfaces) as nic
+       left join azure_network_interface as ni on ni.id = nic ->> 'id'
+     where
+      nsg.id = $1
+
+      -- Subnets
+    union select
+      s.title as "Title",
+      'Subnet' as "Type",
+      S.id as "ID"
+     from
+       azure_network_security_group as nsg,
+       jsonb_array_elements(nsg.subnets) as subnets
+       left join azure_subnet as s on s.id = subnets ->> 'id'
+     where
+      nsg.id = $1
+    EOQ
 
   param "id" {}
 }
@@ -422,3 +477,273 @@ query "azure_network_security_group_outbound_rules" {
   param "id" {}
 }
 
+query "azure_network_security_group_inbound_rule_sankey" {
+  sql = <<-EOQ
+
+    with associations as (
+
+      -- NICs
+      select
+        ni.title as title,
+        'Network Interface' as category,
+        ni.id as id,
+        nsg.id as nsg_id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(nsg.network_interfaces) as nic
+        left join azure_network_interface as ni on ni.id = nic ->> 'id'
+      where
+        nsg.id = $1
+
+      -- Subnets
+      union select
+        s.title as title,
+        'Subnet' as category,
+        s.id as id,
+        nsg.id as nsg_id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(nsg.subnets) as subnets
+        left join azure_subnet as s on s.id = subnets ->> 'id'
+      where
+        nsg.id = $1
+      ),
+      rules as (
+        select
+          sip as cidr_block,
+          id,
+          case
+            when (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
+            when (r -> 'properties' ->> 'protocol' = 'icmp') then 'All ICMP'
+            when sport is not null
+            and dport is not null
+            and sport = dport then concat(sport, '/', r -> 'properties' ->> 'protocol')
+            else concat(
+              sport,
+              '-',
+              dport,
+              '/',
+              r -> 'properties' ->> 'protocol'
+            )
+          end as port_proto,
+          type,
+          case
+            when sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
+                and (r -> 'properties' ->> 'protocol') <> 'icmp'
+                and (
+                  sport = '*'
+                  or (sport:: integer = 0 and dport:: integer = 65535)
+                ) then 'alert'
+            else 'ok'
+          end as category
+        from
+          azure_network_security_group,
+          jsonb_array_elements(default_security_rules || security_rules) as r,
+          jsonb_array_elements_text(r -> 'properties' -> 'sourceAddressPrefixes' || (r -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip,
+          jsonb_array_elements_text(r -> 'properties' -> 'destinationPortRanges' || (r -> 'properties' -> 'destinationPortRange') :: jsonb) dport,
+          jsonb_array_elements_text(r -> 'properties' -> 'sourcePortRanges' || (r -> 'properties' -> 'sourcePortRange') :: jsonb) sport
+        where
+          r -> 'properties' ->> 'direction' = 'Inbound'
+          and id = $1
+          )
+
+      -- Nodes  ---------
+
+      select
+        distinct concat('src_',cidr_block) as id,
+        cidr_block as title,
+        0 as depth,
+        'source' as category,
+        null as from_id,
+        null as to_id
+      from
+        rules
+
+      union
+      select
+        distinct port_proto as id,
+        port_proto as title,
+        1 as depth,
+        'port_proto' as category,
+        null as from_id,
+        null as to_id
+      from
+        rules
+
+
+      union
+      select
+          distinct id as id,
+          title || '(' || category || ')' as title,
+          3 as depth,
+          category,
+          trim((split_part(nsg_id, '/', 9)), '""') as from_id,
+          null as to_id
+        from
+          associations
+
+      -- Edges  ---------
+      union select
+        null as id,
+        null as title,
+        null as depth,
+        category,
+        concat('src_', cidr_block) as from_id,
+        port_proto as to_id
+      from
+        rules
+
+      union select
+        null as id,
+        null as title,
+        null as depth,
+        category,
+        port_proto as from_id,
+        trim((split_part(id, '/', 9)), '""') as to_id
+      from
+        rules
+  EOQ
+
+  param "id" {}
+}
+
+query "azure_network_security_group_outbound_rule_sankey" {
+  sql = <<-EOQ
+
+    with associations as (
+
+      -- NICs
+      select
+        ni.title as title,
+        'Network Interface' as category,
+        ni.id as id,
+        nsg.id as nsg_id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(nsg.network_interfaces) as nic
+        left join azure_network_interface as ni on ni.id = nic ->> 'id'
+      where
+        nsg.id = $1
+
+      -- Subnets
+      union select
+        s.title as title,
+        'Subnet' as category,
+        s.id as id,
+        nsg.id as nsg_id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(nsg.subnets) as subnets
+        left join azure_subnet as s on s.id = subnets ->> 'id'
+      where
+        nsg.id = $1
+      ),
+      rules as (
+        select
+          sip as cidr_block,
+          id,
+          case
+            when (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
+            when (r -> 'properties' ->> 'protocol' = 'icmp') then 'All ICMP'
+            when sport is not null
+            and dport is not null
+            and sport = dport then concat(sport, '/', r -> 'properties' ->> 'protocol')
+            else concat(
+              sport,
+              '-',
+              dport,
+              '/',
+              r -> 'properties' ->> 'protocol'
+            )
+          end as port_proto,
+          type,
+          case
+            when sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
+                and (r -> 'properties' ->> 'protocol') <> 'icmp'
+                and (
+                  sport = '*'
+                  or  (sport:: integer = 0 and dport:: integer = 65535)
+                ) then 'alert'
+            else 'ok'
+          end as category
+        from
+          azure_network_security_group,
+          jsonb_array_elements(default_security_rules || security_rules) as r,
+          jsonb_array_elements_text(r -> 'properties' -> 'sourceAddressPrefixes' || (r -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip,
+          jsonb_array_elements_text(r -> 'properties' -> 'destinationPortRanges' || (r -> 'properties' -> 'destinationPortRange') :: jsonb) dport,
+          jsonb_array_elements_text(r -> 'properties' -> 'sourcePortRanges' || (r -> 'properties' -> 'sourcePortRange') :: jsonb) sport
+        where
+          r -> 'properties' ->> 'direction' = 'Outbound'
+          and id = $1
+          )
+
+        -- Nodes  ---------
+
+      select
+        distinct concat('src_',cidr_block) as id,
+        cidr_block as title,
+        3 as depth,
+        'source' as category,
+        null as from_id,
+        null as to_id
+      from
+        rules
+
+      union
+      select
+        distinct port_proto as id,
+        port_proto as title,
+        2 as depth,
+        'port_proto' as category,
+        null as from_id,
+        null as to_id
+      from
+        rules
+
+      union
+      select
+        distinct trim((split_part(nsg.id, '/', 9)), '""')  as id,
+        trim((split_part(nsg.id, '/', 9)), '""') as title,
+        1 as depth,
+        'network_security_group' as category,
+        null as from_id,
+        null as to_id
+      from
+        azure_network_security_group as nsg
+        inner join rules as r on nsg.id = r.id
+
+      union
+      select
+          distinct id as id,
+          title || ' (' || category || ') ' as title,
+          0 as depth,
+          category,
+          trim((split_part(nsg_id, '/', 9)), '""') as from_id,
+          null as to_id
+        from
+          associations
+
+      -- Edges  ---------
+      union select
+        null as id,
+        null as title,
+        null as depth,
+        category,
+        concat('src_',cidr_block) as from_id,
+        port_proto as to_id
+      from
+        rules
+
+      union select
+        null as id,
+        null as title,
+        null as depth,
+        category,
+        port_proto as from_id,
+        trim((split_part(id, '/', 9)), '""') as to_id
+      from
+        rules
+  EOQ
+
+  param "id" {}
+}

@@ -159,7 +159,7 @@ query "azure_network_security_group_unrestricted_inbound_count" {
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Inbound'
-        and sg -> 'properties' ->> 'protocol' = 'TCP'
+        and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
           dport in ('22', '3389', '*')
@@ -180,7 +180,7 @@ query "azure_network_security_group_unrestricted_inbound_count" {
     )
     select
       count(*) as value,
-      'With Unrestricted Inbound' as label,
+      'Unrestricted Inbound (Excludes ICMP)' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       network_sg
@@ -201,7 +201,7 @@ query "azure_network_security_group_unrestricted_outbound_count" {
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Outbound'
-        and sg -> 'properties' ->> 'protocol' = 'TCP'
+        and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
           dport in ('22', '3389', '*')
@@ -222,7 +222,7 @@ query "azure_network_security_group_unrestricted_outbound_count" {
     )
     select
       count(*) as value,
-      'With Unrestricted Outbound' as label,
+      'With Unrestricted Outbound (Excludes ICMP)' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       network_sg

@@ -7,4 +7,3 @@ This dashboard answers the following questions for each virtual network:
 - How the route tables are configured?
 - What are the peering connections associated?
 - How are network security groups are configured?
-
