@@ -485,7 +485,7 @@ query "azure_network_security_group_inbound_rule_sankey" {
       -- NICs
       select
         ni.title as title,
-        'azure_network_interface' as category,
+        'nsg' as category,
         ni.id as id,
         nsg.id as nsg_id
       from
@@ -498,7 +498,7 @@ query "azure_network_security_group_inbound_rule_sankey" {
       -- Subnets
       union select
         s.title as title,
-        'azure_subnet' as category,
+        'subnet' as category,
         s.id as id,
         nsg.id as nsg_id
       from
@@ -570,17 +570,16 @@ query "azure_network_security_group_inbound_rule_sankey" {
       from
         rules
 
-
       union
       select
-          distinct id as id,
-          title || '(' || category || ')' as title,
-          3 as depth,
-          category,
-          trim((split_part(nsg_id, '/', 9)), '""') as from_id,
-          null as to_id
-        from
-          associations
+        distinct id as id,
+        category || '/' || title as title,
+        3 as depth,
+        category,
+        trim((split_part(nsg_id, '/', 9)), '""') as from_id,
+        null as to_id
+      from
+        associations
 
       -- Edges  ---------
       union select
@@ -615,7 +614,7 @@ query "azure_network_security_group_outbound_rule_sankey" {
       -- NICs
       select
         ni.title as title,
-        'azure_network_interface' as category,
+        'nsg' as category,
         ni.id as id,
         nsg.id as nsg_id
       from
@@ -628,7 +627,7 @@ query "azure_network_security_group_outbound_rule_sankey" {
       -- Subnets
       union select
         s.title as title,
-        'azure_subnet' as category,
+        'subnet' as category,
         s.id as id,
         nsg.id as nsg_id
       from
@@ -715,7 +714,7 @@ query "azure_network_security_group_outbound_rule_sankey" {
       union
       select
           distinct id as id,
-          title || '(' || category || ') ' as title,
+          category || '/' || title as title,
           0 as depth,
           category,
           trim((split_part(nsg_id, '/', 9)), '""') as from_id,

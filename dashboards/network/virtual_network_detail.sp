@@ -366,7 +366,7 @@ query "azure_virtual_network_inbound_rule_sankey" {
 
     -- Rule Nodes
     union select
-      concat('nsg/' || trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name) as id,
+      concat(trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name) as id,
       concat(rule_priority, ': ', rule_description) as title,
       'rule' as category,
       null as from_id,
@@ -375,8 +375,8 @@ query "azure_virtual_network_inbound_rule_sankey" {
 
     -- NSG Nodes
     union select
-      distinct concat ('nsg/' || trim((split_part(nsgid, '/', 9)), '""')) as id,
-      concat ('nsg/' || trim((split_part(nsgid, '/', 9)), '""')) as title,
+      distinct concat ( trim((split_part(nsgid, '/', 9)), '""')) as id,
+      concat (trim((split_part(nsgid, '/', 9)), '""')) as title,
       'nsg' as category,
       null as from_id,
       null as to_id
@@ -397,7 +397,7 @@ query "azure_virtual_network_inbound_rule_sankey" {
       null as title,
       rule_action as category,
       cidr_block as from_id,
-      concat('nsg/' || trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name)  as to_id
+      concat(trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name)  as to_id
     from data
 
     -- rule -> NSG edge
@@ -405,8 +405,8 @@ query "azure_virtual_network_inbound_rule_sankey" {
       null as id,
       null as title,
       rule_action as category,
-      concat('nsg/' || trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name) as from_id,
-      concat ('nsg/' || trim((split_part(nsgid, '/', 9)), '""'))  as to_id
+      concat( trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name) as from_id,
+      concat ( trim((split_part(nsgid, '/', 9)), '""'))  as to_id
     from data
 
     -- nsg -> subnet edge
@@ -414,7 +414,7 @@ query "azure_virtual_network_inbound_rule_sankey" {
       null as id,
       null as title,
       'attached' as category,
-      concat ( 'nsg/' || trim((split_part(nsgid, '/', 9)), '""')) as from_id,
+      concat ( trim((split_part(nsgid, '/', 9)), '""')) as from_id,
       split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""') as to_id
     from data
 
@@ -511,8 +511,8 @@ query "azure_virtual_network_outbound_rule_sankey" {
 
     -- ACL Nodes
     union select
-      distinct concat ('nsg/' || trim((split_part(nsgid, '/', 9)), '""')) as id,
-      concat ('nsg/' || trim((split_part(nsgid, '/', 9)), '""')) as title,
+      distinct trim((split_part(nsgid, '/', 9)), '""') as id,
+      concat (trim((split_part(nsgid, '/', 9)), '""')) as title,
       'nsg' as category,
       null as from_id,
       null as to_id,
@@ -521,7 +521,7 @@ query "azure_virtual_network_outbound_rule_sankey" {
 
     -- Rule Nodes
     union select
-      concat('nsg/' || trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name)  as id,
+      concat( trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name)  as id,
       concat(rule_priority, ': ', rule_description) as title,
       'rule' as category,
       null as from_id,
@@ -544,7 +544,7 @@ query "azure_virtual_network_outbound_rule_sankey" {
       null as id,
       null as title,
       'attached' as category,
-      concat ('nsg/' || trim((split_part(nsgid, '/', 9)), '""')) as from_id,
+      concat (trim((split_part(nsgid, '/', 9)), '""')) as from_id,
       split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""') as to_id,
       null as depth
     from data
@@ -554,8 +554,8 @@ query "azure_virtual_network_outbound_rule_sankey" {
       null as id,
       null as title,
       rule_action as category,
-      concat('nsg/' || trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name)  as from_id,
-      concat ('nsg/' || trim((split_part(nsgid, '/', 9)), '""')) as to_id,
+      concat(trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name)  as from_id,
+      concat ( trim((split_part(nsgid, '/', 9)), '""')) as to_id,
       null as depth
     from data
 
@@ -565,7 +565,7 @@ query "azure_virtual_network_outbound_rule_sankey" {
       null as title,
       rule_action as category,
       cidr_block as from_id,
-      concat('nsg/' || trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name)  as to_id,
+      concat(trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name)  as to_id,
       null as depth
     from data
   EOQ
