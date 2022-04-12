@@ -335,7 +335,7 @@ query "azuread_user_subscription_role_sankey" {
           management_group_children as m on
           m.children_id = s.parent_id
     ),
-    -- this is to handle case where we dont have any suscription level permissions
+    -- this is to handle case where we have any management level permissions
       only_management_scope as (
         select
           distinct scope as scope,
@@ -344,24 +344,24 @@ query "azuread_user_subscription_role_sankey" {
           azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
           where
            (a.scope like '/providers/Microsoft.Management/managementGroups%' or a.scope = '/')
-          and u.id = $1 and a.scope not in (
-            select subscription_parent as id from subscription_parent
-            union select parent_id as id from management_parent_one
-            union select parent_id as id from management_parent_two
-          )
+            and u.id = $1 and a.scope not in (
+              select subscription_parent as id from subscription_parent
+              union select parent_id as id from management_parent_one
+              union select parent_id as id from management_parent_two
+            )
         ),
-      only_management_scope_parent_one as (
-        select
-          m.parent_id second_parent,
-          m.id as parent_id,
-          m.children_id as children_id,
-          m.children_name as children_name,
-          m.name as name,
-          m.tenant_id as tenant_id
-        from
-          only_management_scope as s left join
-          management_group_children as m on
-          m.children_id = s.scope
+        only_management_scope_parent_one as (
+          select
+            m.parent_id second_parent,
+            m.id as parent_id,
+            m.children_id as children_id,
+            m.children_name as children_name,
+            m.name as name,
+            m.tenant_id as tenant_id
+          from
+            only_management_scope as s left join
+            management_group_children as m on
+            m.children_id = s.scope
       ),
         only_management_scope_parent_two as (
         select
@@ -428,12 +428,12 @@ query "azuread_user_subscription_role_sankey" {
       where
         u.id = $1
 
-    -- Azure management parent level two
+    -- Azure management parent level two (from subscription)
      union select
       (select azuread_user_id from args) as from_id,
       s.parent_id as id,
       s.parent_name as title,
-      'management_group' as category
+      'subscriptions_parent' as category
     from
       management_parent_two as s left join azuread_user as u on s.tenant_id = u.tenant_id
       where
@@ -444,18 +444,18 @@ query "azuread_user_subscription_role_sankey" {
       r.scope as from_id,
       mg.children_id as id,
       mg.children_name as title,
-      'subscriptions_parent' as category
+      'management_group' as category
     from
       only_management_scope_parent_four as mg left join azuread_user as u on mg.tenant_id = u.tenant_id, root_scope as r
       where
         u.id = $1
 
-  -- Azure management parent level one
+  -- Azure management parent level one (from subscription)
      union select
       case when mg.parent_id is not null then mg.parent_id else (select azuread_user_id from args) end as from_id,
       s.parent_id as id,
       s.name as title,
-      'management_parent_two' as category
+      'subscriptions_parent' as category
     from
       management_parent_one as s left join azuread_user as u on s.tenant_id = u.tenant_id, management_parent_two as mg
       where
@@ -466,13 +466,13 @@ query "azuread_user_subscription_role_sankey" {
       case when mg.parent_id is not null then mg.parent_id else r.scope end  as from_id,
       s.parent_id as id,
       s.name as title,
-      'only_management_scope_parent_three' as category
+      'management_group' as category
     from
       only_management_scope_parent_three as s left join azuread_user as u on s.tenant_id = u.tenant_id, only_management_scope_parent_four as mg, root_scope as r
       where
         u.id = $1
 
- -- Azure subscription parent
+ -- Azure subscription parent (from subscription)
      union select
       mg.parent_id as from_id,
       s.subscription_parent as id,
@@ -488,7 +488,7 @@ query "azuread_user_subscription_role_sankey" {
       case when mg.parent_id is not null then mg.parent_id else r.scope end as from_id,
       s.parent_id as id,
       s.name as title,
-      'subscriptions_parent' as category
+      'management_group' as category
     from
       only_management_scope_parent_two as s left join azuread_user as u on s.tenant_id = u.tenant_id, only_management_scope_parent_three as mg,
       root_scope as r
@@ -500,7 +500,7 @@ query "azuread_user_subscription_role_sankey" {
       distinct mg.subscription_parent as from_id,
       s.id as id,
       s.display_name as title,
-      'subscriptions' as category
+      'subscription' as category
     from
       azure_subscription as s left join azuread_user as u on s.tenant_id = u.tenant_id left join subscription_parent as mg
       on mg.subscription_id = s.id
@@ -513,7 +513,7 @@ query "azuread_user_subscription_role_sankey" {
       mg.parent_id as from_id,
       s.parent_id  as id,
       s.name as title,
-      'subscriptions_parent' as category
+      'management_group' as category
     from
       only_management_scope_parent_one as s left join azuread_user as u on s.tenant_id = u.tenant_id, only_management_scope_parent_two as mg
       where
@@ -524,7 +524,7 @@ query "azuread_user_subscription_role_sankey" {
       concat ('/subscriptions/' || r.subscription_id) as from_id,
       r.scope as id,
       split_part(r.scope, '/', 4) || '/' || trim((split_part(r.scope, '/', 5)), '""') as title,
-      'resource_groups' as category
+      'resource_group' as category
     from
       resource_group_scope as r left join azure_subscription as s on s.subscription_id =
       (split_part(r.scope, '/', 3) )
@@ -534,7 +534,7 @@ query "azuread_user_subscription_role_sankey" {
       s.parent_id as from_id,
       s.children_id  as id,
       s.children_name as title,
-      'subscriptions_parent' as category
+      'management_group' as category
     from
       only_management_scope_parent_one as s left join azuread_user as u on s.tenant_id = u.tenant_id
       where
