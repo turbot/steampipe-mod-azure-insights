@@ -69,17 +69,8 @@ dashboard "azuread_user_detail" {
 
     flow {
       type  = "sankey"
-      title = "Attached Subscription Roles (With managemnet group)"
-      query = query.azuread_user_subscription_role_sankey_one
-      args  = {
-        id = self.input.user_id.value
-      }
-    }
-
-    flow {
-      type  = "sankey"
-      title = "Attached Subscription Roles (Recommended)"
-      query = query.azuread_user_subscription_role_sankey_two
+      title = "Attached Subscription Roles"
+      query = query.azuread_user_subscription_role_sankey
       args  = {
         id = self.input.user_id.value
       }
@@ -102,7 +93,6 @@ dashboard "azuread_user_detail" {
         id = self.input.user_id.value
       }
     }
-
   }
 
   table {
@@ -262,350 +252,307 @@ query "azuread_user_directory_role_sankey" {
   param "id" {}
 }
 
-query "azuread_user_subscription_role_sankey_one" {
+query "azuread_user_subscription_role_sankey" {
   sql = <<-EOQ
     with args as (
       select $1 as azuread_user_id
-    ), user_scope as (
-        select
-          distinct a.scope as id,
-          a.id as role_assign
-        from
-          azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
-          where u.id = $1
-    ), managment_role_assign_id as (
+    ),root_scope as (
       select
-          distinct user_scope.role_assign as role_assign_id,
-          mg.display_name as managment_group_name,
-          mg.id as managment_group_id
-
-        from
-          azuread_user as u,
-          azure_subscription as sub,
-          azure_management_group as mg,
-          user_scope
-        where
-          sub.tenant_id = u.tenant_id and u.id = $1
-          and (user_scope.id = mg.id )
-      ),
-      resource_group_scope as (
-          select
-            distinct scope as id
-          from
-            azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
-            where u.id = $1
-            and a.scope like '%/resourceGroups/%'
-      ),
-      root_management as (
-        select
-          distinct id,
-          name,
-          display_name as displayName,
-          children
-        from
-          azure_management_group as mg
-        where
-          parent is null
-        ),
-        second_level_managemnet as(
-          select
-            distinct (c ->> 'id')  as id,
-            r.id as parent_id,
-            r.displayName as parent_name,
-            c ->> 'displayName' as displayName,
-            c ->> 'type' as type
-          from
-            azure_management_group as mg,
-            jsonb_array_elements(children) as c,
-            root_management as r
-          where
-            mg.id = r.id
-        ),
-      third_level_managemnet as (
-        select
-          distinct  (c ->> 'id' ) as id,
-            r.id as parent_id,
-            r.displayName as parent_name,
-          c ->> 'displayName' as displayName,
-          c ->> 'type' as type
-        from
-          azure_management_group as mg,
-          jsonb_array_elements(children) as c,
-          second_level_managemnet as r
-      where
-        mg.id = r.id
-      ), fourth_level_managemnet as (
-          select
-            distinct  (c ->> 'id' ) as id,
-            r.id as parent_id,
-            r.displayName as parent_name,
-            c ->> 'displayName' as displayName,
-            c ->> 'type' as type
-          from
-            azure_management_group mg,
-          jsonb_array_elements(children) as c,
-            third_level_managemnet as r
-        where
-          mg.id = r.id
-      ),
-       fifth_level_managemnet as (
-          select
-            distinct  (c ->> 'id' ) as id,
-                        r.id as parent_id,
-              r.displayName as parent_name,
-            c ->> 'displayName' as displayName,
-            c ->> 'type' as type
-          from
-            azure_management_group mg,
-          jsonb_array_elements(children) as c,
-            fourth_level_managemnet as r
-        where
-          mg.id = r.id
-      ), sixth_level_managemnet as(
-          select
-            distinct (c ->> 'id' ) as id,
-            r.id as parent_id,
-            r.displayName as parent_name,
-            c ->> 'displayName' as displayName,
-            c ->> 'type' as type
-          from
-              azure_management_group mg,
-          jsonb_array_elements(children) as c,
-            fifth_level_managemnet as r
-        where
-          mg.id = r.id
-      )
-
-    -- User
-    select
-      null as from_id,
-      id as id,
-      title,
-      0 as depth,
-      'azuread_user' as category
-    from
-      azuread_user
-    where
-      id in (select azuread_user_id from args)
-
-    -- Azure root Managament groups
-    union select
-      (select azuread_user_id from args) as from_id,
-      displayName as title,
-      displayName as id,
-      1 as depth,
-      'azure_management_group' as category
-    from
-      root_management
-
-    -- Azure  Managament groups 2nd level
-    union select
-      parent_name as from_id,
-      displayName as title,
-      displayName as id,
-      2 as depth,
-      'azure_management_group' as category
-    from
-      second_level_managemnet
-
-       -- Azure  Managament groups 3rd level
-    union select
-      parent_name as from_id,
-      displayName as title,
-      displayName as id,
-      3 as depth,
-      'azure_management_group' as category
-    from
-      third_level_managemnet
-
-      -- Azure  Managament groups 4 level
-    union select
-      parent_name as from_id,
-      displayName as title,
-      displayName as id,
-      4 as depth,
-      'azure_management_group' as category
-    from
-      fourth_level_managemnet
-
-    -- Azure  Managament groups 5 level
-    union select
-      parent_name as from_id,
-      displayName as title,
-      displayName as id,
-      5 as depth,
-      'azure_management_group' as category
-    from
-      fifth_level_managemnet
-
-
-  -- Azure  Managament groups 6 level
-    union select
-      parent_name as from_id,
-      displayName as title,
-      displayName as id,
-      5 as depth,
-      'azure_management_group' as category
-    from
-      sixth_level_managemnet
-
-        -- Azure Assigned Roles on management
-    union select
-      distinct m.managment_group_name as from_id,
-      d.role_name as id,
-      d.role_name as title,
-      6 as depth,
-    'role' as category
+        distinct scope as scope,
+        a.subscription_id as subscription_id,
+        a.role_definition_id as role_definition_id,
+        u.tenant_id as  tenant_id
       from
-      managment_role_assign_id as m
-      left join azure_role_assignment as a on m.role_assign_id = a.id
-      left join azure_role_definition as d on d.id = a.role_definition_id
-
-  EOQ
-
-  param "id" {}
-}
-
-query "azuread_user_subscription_role_sankey_two" {
-  sql = <<-EOQ
-   with args as (
-      select $1 as azuread_user_id
-    ), management_scope as (
-        select
-          distinct scope as scope
-        from
-          azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
-          where u.id = (select azuread_user_id from args)
-          and a.scope like '/providers/Microsoft.Management/managementGroups%'
+        azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
+        where u.id = $1
+        and a.scope = '/'
     ),
      resource_group_scope as (
       select
-        distinct scope as scope
+        distinct scope as scope,
+        a.subscription_id as subscription_id,
+        a.role_definition_id as role_definition_id
       from
         azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
-        where u.id = (select azuread_user_id from args)
+        where u.id = $1
         and a.scope like '%/resourceGroups/%'
-    )
+    ),
+     subscription_scope as (
+      select
+        distinct scope as subscription_id,
+        u.tenant_id as tenant_id
+      from
+        azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
+        where u.id = $1
+        and (a.scope like '/subscriptions/%' and a.scope not like '%/resourceGroups/%')
+    ),management_group_children as (
+        select
+          id as id,
+          name as name,
+          c ->> 'id' as children_id,
+          c ->> 'displayName' as children_name,
+          parent ->> 'id' as parent_id,
+          parent ->> 'name' as parent_name,
+          tenant_id
+        from
+          azure_management_group,
+          jsonb_array_elements (children) as c
+      ),
+      subscription_parent as (
+        select
+          distinct s.subscription_id as subscription_id,
+          m.parent_id second_parent,
+          m.name as name,
+          m.id as subscription_parent,
+          m.children_name as children_name,
+          m.tenant_id as tenant_id
+        from
+          subscription_scope as s left join
+          management_group_children as m on
+          m.children_id = s.subscription_id
+      ) ,
+      management_parent_one as (
+        select
+          distinct s.second_parent as id,
+          m.parent_id second_parent,
+          m.id as parent_id,
+          m.name as name,
+          m.tenant_id as tenant_id
+        from
+          subscription_parent as s left join
+          management_group_children as m on
+          m.children_id = s.subscription_parent
+      ),
+      management_parent_two as (
+        select
+          distinct s.second_parent as id,
+          m.parent_id second_parent,
+          m.id as parent_id,
+          m.name as parent_name,
+          m.tenant_id as tenant_id
+        from
+          management_parent_one as s left join
+          management_group_children as m on
+          m.children_id = s.parent_id
+    ),
+    -- this is to handle case where we dont have any suscription level permissions
+      only_management_scope as (
+        select
+          distinct scope as scope,
+          u.title
+        from
+          azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
+          where
+           (a.scope like '/providers/Microsoft.Management/managementGroups%' or a.scope = '/')
+          and u.id = $1 and a.scope not in (
+            select subscription_parent as id from subscription_parent
+            union select parent_id as id from management_parent_one
+            union select parent_id as id from management_parent_two
+          )
+        ),
+      only_management_scope_parent_one as (
+        select
+          m.parent_id second_parent,
+          m.id as parent_id,
+          m.children_id as children_id,
+          m.children_name as children_name,
+          m.name as name,
+          m.tenant_id as tenant_id
+        from
+          only_management_scope as s left join
+          management_group_children as m on
+          m.children_id = s.scope
+      ),
+        only_management_scope_parent_two as (
+        select
+          distinct s.second_parent as id,
+          m.parent_id second_parent,
+          m.children_id as children_id,
+          m.children_name as children_name,
+          m.id as parent_id,
+          m.name as name,
+          m.tenant_id as tenant_id
+        from
+          only_management_scope_parent_one as s left join
+          management_group_children as m on
+          m.children_id = s.parent_id
+      ),
+       only_management_scope_parent_three as (
+        select
+          distinct s.second_parent as id,
+          m.parent_id second_parent,
+          m.children_id as children_id,
+          m.children_name as children_name,
+          m.id as parent_id,
+          m.name as name,
+          m.tenant_id as tenant_id
+        from
+          only_management_scope_parent_two as s left join
+          management_group_children as m on
+          m.children_id = s.parent_id
+      ),
+        only_management_scope_parent_four as (
+        select
+          distinct s.second_parent as id,
+          m.parent_id as second_parent,
+          m.children_id as children_id,
+          m.children_name as children_name,
+          m.id as parent_id,
+          m.name as name,
+          m.tenant_id as tenant_id
+        from
+          only_management_scope_parent_three as s left join
+          management_group_children as m on
+          m.children_id = s.parent_id
+      )
 
-    -- User
+   -- User
     select
       null as from_id,
       id as id,
       title,
-      0 as depth,
       'azuread_user' as category
     from
       azuread_user
     where
       id in (select azuread_user_id from args)
 
-    -- Azure Managament groups
-    union select
-      (select azuread_user_id from args) as from_id,
-      split_part(s.scope, '/', 4) || '/' || trim((split_part(s.scope, '/', 5)), '""') as title,
-      split_part(s.scope, '/', 4) || '/' || trim((split_part(s.scope, '/', 5)), '""') as id,
-      1 as depth,
-      'azure_management_group' as category
-    from
-      management_scope as s
-
-    -- Root
-    union select
-      (select azuread_user_id from args) as from_id,
-      a.scope || ' (Root)'as title,
-      a.scope || ' (Root)' as id,
-      1 as depth,
-      'root' as category
-    from
-      azure_role_assignment as a left join azuread_user as u on a.principal_id = u.id
-      where u.id = (select azuread_user_id from args)
-      and a.scope = '/'
-
-    -- Azure Subscription
+      -- Azure root
      union select
       (select azuread_user_id from args) as from_id,
-      s.title as title,
-      s.title as id,
-      1 as depth,
-      'azure_subscription' as category
+      s.scope as id,
+      'Root' as title,
+      'root' as category
     from
-      azure_subscription as s left join azuread_user as u  on s.tenant_id = u.tenant_id
+      root_scope as s left join azuread_user as u on s.tenant_id = u.tenant_id
       where
-        u.id = (select azuread_user_id from args)
+        u.id = $1
 
-    -- Azure Resourcegroups
+    -- Azure management parent level two
+     union select
+      (select azuread_user_id from args) as from_id,
+      s.parent_id as id,
+      s.parent_name as title,
+      'management_group' as category
+    from
+      management_parent_two as s left join azuread_user as u on s.tenant_id = u.tenant_id
+      where
+        u.id = $1
+
+-- Azure direct managemnet groups level four
+      union select
+      r.scope as from_id,
+      mg.children_id as id,
+      mg.children_name as title,
+      'subscriptions_parent' as category
+    from
+      only_management_scope_parent_four as mg left join azuread_user as u on mg.tenant_id = u.tenant_id, root_scope as r
+      where
+        u.id = $1
+
+  -- Azure management parent level one
+     union select
+      case when mg.parent_id is not null then mg.parent_id else (select azuread_user_id from args) end as from_id,
+      s.parent_id as id,
+      s.name as title,
+      'management_parent_two' as category
+    from
+      management_parent_one as s left join azuread_user as u on s.tenant_id = u.tenant_id, management_parent_two as mg
+      where
+        u.id = $1
+
+-- Azure direct managemnet groups level three
+      union select
+      case when mg.parent_id is not null then mg.parent_id else r.scope end  as from_id,
+      s.parent_id as id,
+      s.name as title,
+      'only_management_scope_parent_three' as category
+    from
+      only_management_scope_parent_three as s left join azuread_user as u on s.tenant_id = u.tenant_id, only_management_scope_parent_four as mg, root_scope as r
+      where
+        u.id = $1
+
+ -- Azure subscription parent
+     union select
+      mg.parent_id as from_id,
+      s.subscription_parent as id,
+      s.name as title,
+      'subscriptions_parent' as category
+    from
+      subscription_parent as s left join azuread_user as u on s.tenant_id = u.tenant_id, management_parent_one as mg
+      where
+        u.id = $1
+
+-- Azure direct managemnet groups level three
+       union select
+      case when mg.parent_id is not null then mg.parent_id else r.scope end as from_id,
+      s.parent_id as id,
+      s.name as title,
+      'subscriptions_parent' as category
+    from
+      only_management_scope_parent_two as s left join azuread_user as u on s.tenant_id = u.tenant_id, only_management_scope_parent_three as mg,
+      root_scope as r
+      where
+        u.id = $1
+
+-- Azure Subscription
+     union select
+      distinct mg.subscription_parent as from_id,
+      s.id as id,
+      s.display_name as title,
+      'subscriptions' as category
+    from
+      azure_subscription as s left join azuread_user as u on s.tenant_id = u.tenant_id left join subscription_parent as mg
+      on mg.subscription_id = s.id
+      where
+        s.id in (select subscription_id from subscription_scope)
+        and u.id = $1
+
+-- Azure direct managemnet groups level two
+       union select
+      mg.parent_id as from_id,
+      s.parent_id  as id,
+      s.name as title,
+      'subscriptions_parent' as category
+    from
+      only_management_scope_parent_one as s left join azuread_user as u on s.tenant_id = u.tenant_id, only_management_scope_parent_two as mg
+      where
+        u.id = $1
+
+   -- Azure Resourcegroups
     union select
-      (s.title)::text as from_id,
+      concat ('/subscriptions/' || r.subscription_id) as from_id,
+      r.scope as id,
       split_part(r.scope, '/', 4) || '/' || trim((split_part(r.scope, '/', 5)), '""') as title,
-      split_part(r.scope, '/', 4) || '/' || trim((split_part(r.scope, '/', 5)), '""') as id,
-      2 as depth,
-      'resource_group_scope' as category
+      'resource_groups' as category
     from
       resource_group_scope as r left join azure_subscription as s on s.subscription_id =
       (split_part(r.scope, '/', 3) )
 
-   -- Azure Assigned Roles on subscription
-    union select
-      s.title as from_id,
-      d.role_name as title,
-      d.role_name as id,
-      3 as depth,
-      'azure_subscription' as category
+-- Azure direct managemnet groups level one
+      union select
+      s.parent_id as from_id,
+      s.children_id  as id,
+      s.children_name as title,
+      'subscriptions_parent' as category
     from
-     azuread_user as u
+      only_management_scope_parent_one as s left join azuread_user as u on s.tenant_id = u.tenant_id
+      where
+        u.id = $1
+
+   -- Azure Assigned Roles
+      union select
+      distinct a.scope as from_id,
+      d.role_name as id,
+      d.role_name as title,
+      'role' as category
+    from
+      azuread_user as u
       left join azure_role_assignment as a on a.principal_id = u.id
       left join azure_role_definition as d on d.id = a.role_definition_id,
       azure_subscription as s
-    where s.subscription_id = a.subscription_id and u.id = $1
-      and (a.scope like '/subscriptions/%' and a.scope not like '%/resourceGroups/%')
-
-    -- Azure Assigned Roles on management
-    union select
-      split_part(sc.scope, '/', 4) || '/' || trim((split_part(sc.scope, '/', 5)), '""')  as from_id,
-      d.role_name as title,
-      d.role_name as id,
-      3 as depth,
-      'azure_management_group' as category
-    from
-      azuread_user as u
-      left join azure_role_assignment as a on a.principal_id = u.id
-      left join azure_role_definition as d on d.id = a.role_definition_id,
-      azure_subscription as s,
-      resource_group_scope as sc
     where
       s.tenant_id = u.tenant_id and u.id = $1
-      and a.scope like '%/resourceGroups/%'
-
-     -- Azure Assigned Roles on resourceGroups
-    union select
-      split_part(sc.scope, '/', 4) || '/' || trim((split_part(sc.scope, '/', 5)), '""') as from_id,
-      d.role_name as title,
-      d.role_name as id,
-      3 as depth,
-      'azure_role_assignment' as category
-    from
-      azuread_user as u
-      left join azure_role_assignment as a on a.principal_id = u.id
-      left join azure_role_definition as d on d.id = a.role_definition_id,
-      azure_subscription as s,
-      management_scope  as sc
-    where
-      s.tenant_id = u.tenant_id and u.id = $1
-      and a.scope like '/providers/Microsoft.Management/managementGroups%'
-
-    -- Azure Assigned Roles on root
-    union select
-      a.scope || ' (Root)' as from_id,
-      d.role_name as title,
-      d.role_name as id,
-      3 as depth,
-      'root' as category
-    from
-      azuread_user as u left join azure_role_assignment as a on a.principal_id = u.id
-      left join azure_role_definition as d on d.id = a.role_definition_id
-      where u.id = (select azuread_user_id from args)
-      and a.scope = '/'
-
   EOQ
 
   param "id" {}
@@ -683,6 +630,35 @@ query "azuread_subscription_roles_for_user" {
         left join azure_role_definition as d on d.id = a.role_definition_id
       where
         a.principal_id = $1
+      order by
+        d.role_name
+    )
+    select
+      role_name as "Role Name",
+      scope as "Scope",
+      assignmnet_id as "Role Assignmnet ID"
+    from
+      subscription_roles
+
+  EOQ
+
+  param "id" {}
+}
+
+query "azuread_subscription_roles_for_user_without_mg" {
+  sql = <<-EOQ
+    with subscription_roles as (
+      select
+        distinct a.scope as scope,
+        a.id as assignmnet_id,
+         d.role_name as role_name
+
+      from
+        azure_role_assignment as a
+        left join azure_role_definition as d on d.id = a.role_definition_id
+      where
+        a.scope like  '/subscriptions/%'
+        and a.principal_id = $1
       order by
         d.role_name
     )
