@@ -105,20 +105,20 @@ dashboard "azure_virtual_network_detail" {
     }
 
     flow {
-      title = "NSG Associated Subnet Inbound Analysis"
+      title = "NSG Associated Subnet Ingress Analysis"
       width = 6
       base = flow.nsg_flow
-      query = query.azure_virtual_network_inbound_rule_sankey
+      query = query.azure_virtual_network_ingress_rule_sankey
       args = {
         id = self.input.vn_id.value
       }
     }
 
     flow {
-      title = "NSG Associated Subnet Outbound Analysis"
+      title = "NSG Associated Subnet Egress Analysis"
       base = flow.nsg_flow
       width = 6
-      query = query.azure_virtual_network_outbound_rule_sankey
+      query = query.azure_virtual_network_egress_rule_sankey
       args = {
         id = self.input.vn_id.value
       }
@@ -279,7 +279,7 @@ query "azure_virtual_network_subnet_details" {
   param "id" {}
 }
 
-query "azure_virtual_network_inbound_rule_sankey" {
+query "azure_virtual_network_ingress_rule_sankey" {
   sql = <<-EOQ
   with subnets as (
     select
@@ -423,7 +423,7 @@ query "azure_virtual_network_inbound_rule_sankey" {
   param "id" {}
 }
 
-query "azure_virtual_network_outbound_rule_sankey" {
+query "azure_virtual_network_egress_rule_sankey" {
 
   sql = <<-EOQ
     with subnets as (

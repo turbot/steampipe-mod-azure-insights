@@ -17,7 +17,7 @@ dashboard "azure_network_security_group_detail" {
 
     card {
       width = 2
-      query = query.azure_network_security_group_inbound_rules_count
+      query = query.azure_network_security_group_ingress_rules_count
       args  = {
         id = self.input.nsg_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_network_security_group_detail" {
 
     card {
       width = 2
-      query = query.azure_network_security_group_outbound_rules_count
+      query = query.azure_network_security_group_egress_rules_count
       args  = {
         id = self.input.nsg_id.value
       }
@@ -49,7 +49,7 @@ dashboard "azure_network_security_group_detail" {
 
     card {
       width = 2
-      query = query.azure_network_security_group_unrestricted_inbound_remote_access
+      query = query.azure_network_security_group_unrestricted_ingress_remote_access
       args = {
         id = self.input.nsg_id.value
       }
@@ -57,7 +57,7 @@ dashboard "azure_network_security_group_detail" {
 
     card {
       width = 2
-      query = query.azure_network_security_group_unrestricted_outbound_remote_access
+      query = query.azure_network_security_group_unrestricted_egress_remote_access
       args = {
         id = self.input.nsg_id.value
       }
@@ -120,8 +120,8 @@ dashboard "azure_network_security_group_detail" {
 
     flow {
       base = flow.network_security_group_rules_sankey
-      title = "Inbound Analysis"
-      query = query.azure_network_security_group_inbound_rule_sankey
+      title = "Ingress Analysis"
+      query = query.azure_network_security_group_ingress_rule_sankey
       args  = {
         id = self.input.nsg_id.value
       }
@@ -129,8 +129,8 @@ dashboard "azure_network_security_group_detail" {
 
 
     table {
-      title = "Inbound Rules"
-      query = query.azure_network_security_group_inbound_rules
+      title = "Ingress Rules"
+      query = query.azure_network_security_group_ingress_rules
       args  = {
         id = self.input.nsg_id.value
       }
@@ -144,16 +144,16 @@ dashboard "azure_network_security_group_detail" {
 
     flow {
       base = flow.network_security_group_rules_sankey
-      title = "Outbound Analysis"
-      query = query.azure_network_security_group_outbound_rule_sankey
+      title = "Egress Analysis"
+      query = query.azure_network_security_group_egress_rule_sankey
       args  = {
         id = self.input.nsg_id.value
       }
     }
 
     table {
-      title = "Outbound Rules"
-      query = query.azure_network_security_group_outbound_rules
+      title = "Egress Rules"
+      query = query.azure_network_security_group_egress_rules
       args = {
         id = self.input.nsg_id.value
       }
@@ -196,10 +196,10 @@ query "azure_network_security_group_input" {
   EOQ
 }
 
-query "azure_network_security_group_inbound_rules_count" {
+query "azure_network_security_group_ingress_rules_count" {
   sql = <<-EOQ
     select
-      'Inbound Rules' as label,
+      'Ingress Rules' as label,
       count(*) as value
     from
       azure_network_security_group,
@@ -212,10 +212,10 @@ query "azure_network_security_group_inbound_rules_count" {
   param "id" {}
 }
 
-query "azure_network_security_group_outbound_rules_count" {
+query "azure_network_security_group_egress_rules_count" {
   sql = <<-EOQ
     select
-      'Outbound Rules' as label,
+      'Egress Rules' as label,
       count(*) as value
     from
       azure_network_security_group,
@@ -259,7 +259,7 @@ query "azure_network_security_group_attached_subnets_count" {
   param "id" {}
 }
 
-query "azure_network_security_group_unrestricted_inbound_remote_access" {
+query "azure_network_security_group_unrestricted_ingress_remote_access" {
   sql = <<-EOQ
     with unrestricted_inbound as (
       select
@@ -275,25 +275,19 @@ query "azure_network_security_group_unrestricted_inbound_remote_access" {
         and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
-          dport in ('22', '3389', '*')
+          dport = '*'
           or (
             dport like '%-%'
             and (
-              (
-                split_part(dport, '-', 1) :: integer <= 3389
-                and split_part(dport, '-', 2) :: integer >= 3389
-              )
-              or (
-                split_part(dport, '-', 1) :: integer <= 22
-                and split_part(dport, '-', 2) :: integer >= 22
-              )
+              split_part(dport, '-', 1) :: integer = 0
+              and split_part(dport, '-', 2) :: integer = 65535
             )
           )
         )
         and nsg.id = $1
     )
     select
-      'Unrestricted Inbound (Excludes ICMP)' as label,
+      'Unrestricted Ingress (Excludes ICMP)' as label,
       count(*) as value,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
@@ -303,9 +297,9 @@ query "azure_network_security_group_unrestricted_inbound_remote_access" {
   param "id" {}
 }
 
-query "azure_network_security_group_unrestricted_outbound_remote_access" {
+query "azure_network_security_group_unrestricted_egress_remote_access" {
   sql = <<-EOQ
-    with unrestricted_inbound as (
+    with unrestricted_outbound as (
       select
         name sg_name
       from
@@ -319,29 +313,23 @@ query "azure_network_security_group_unrestricted_outbound_remote_access" {
         and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
-          dport in ('22', '3389', '*')
+          dport = '*'
           or (
             dport like '%-%'
             and (
-              (
-                split_part(dport, '-', 1) :: integer <= 3389
-                and split_part(dport, '-', 2) :: integer >= 3389
-              )
-              or (
-                split_part(dport, '-', 1) :: integer <= 22
-                and split_part(dport, '-', 2) :: integer >= 22
-              )
+              split_part(dport, '-', 1) :: integer = 0
+              and split_part(dport, '-', 2) :: integer = 65535
             )
           )
         )
         and nsg.id = $1
     )
     select
-      'Unrestricted Outbound (Excludes ICMP)' as label,
+      'Unrestricted Egress (Excludes ICMP)' as label,
       count(*) as value,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
-      unrestricted_inbound
+      unrestricted_outbound
   EOQ
 
   param "id" {}
@@ -437,7 +425,7 @@ query "azure_network_security_group_flow_logs" {
   param "id" {}
 }
 
-query "azure_network_security_group_inbound_rules" {
+query "azure_network_security_group_ingress_rules" {
   sql = <<-EOQ
     select
         sg -> 'properties' ->> 'access' as "Access",
@@ -457,7 +445,7 @@ query "azure_network_security_group_inbound_rules" {
   param "id" {}
 }
 
-query "azure_network_security_group_outbound_rules" {
+query "azure_network_security_group_egress_rules" {
   sql = <<-EOQ
     select
       sg -> 'properties' ->> 'access' as "Access",
@@ -477,7 +465,7 @@ query "azure_network_security_group_outbound_rules" {
   param "id" {}
 }
 
-query "azure_network_security_group_inbound_rule_sankey" {
+query "azure_network_security_group_ingress_rule_sankey" {
   sql = <<-EOQ
 
     with associations as (
@@ -606,7 +594,7 @@ query "azure_network_security_group_inbound_rule_sankey" {
   param "id" {}
 }
 
-query "azure_network_security_group_outbound_rule_sankey" {
+query "azure_network_security_group_egress_rule_sankey" {
   sql = <<-EOQ
 
     with associations as (

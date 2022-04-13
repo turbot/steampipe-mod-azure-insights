@@ -20,12 +20,12 @@ dashboard "azure_network_security_group_dashboard" {
     }
 
     card {
-      query = query.azure_network_security_group_unrestricted_inbound_count
+      query = query.azure_network_security_group_unrestricted_ingress_count
       width = 2
     }
 
     card {
-      query = query.azure_network_security_group_unrestricted_outbound_count
+      query = query.azure_network_security_group_unrestricted_egress_count
       width = 2
     }
 
@@ -53,8 +53,8 @@ dashboard "azure_network_security_group_dashboard" {
 
 
     chart {
-      title = "With Unrestricted Inbound (Excludes ICMP)"
-      query = query.azure_network_security_group_unrestricted_inbound
+      title = "With Unrestricted Ingress (Excludes ICMP)"
+      query = query.azure_network_security_group_unrestricted_ingress
 
       type  = "donut"
       width = 3
@@ -71,8 +71,8 @@ dashboard "azure_network_security_group_dashboard" {
 
 
     chart {
-      title = "With Unrestricted Outbound (Excludes ICMP)"
-      query = query.azure_network_security_group_unrestricted_outbound
+      title = "With Unrestricted Egress (Excludes ICMP)"
+      query = query.azure_network_security_group_unrestricted_egress
 
       type  = "donut"
       width = 3
@@ -146,7 +146,7 @@ query "azure_network_security_group_unassociated_count" {
   EOQ
 }
 
-query "azure_network_security_group_unrestricted_inbound_count" {
+query "azure_network_security_group_unrestricted_ingress_count" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -162,25 +162,19 @@ query "azure_network_security_group_unrestricted_inbound_count" {
         and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
-          dport in ('22', '3389', '*')
+          dport = '*'
           or (
             dport like '%-%'
             and (
-              (
-                split_part(dport, '-', 1) :: integer <= 3389
-                and split_part(dport, '-', 2) :: integer >= 3389
-              )
-              or (
-                split_part(dport, '-', 1) :: integer <= 22
-                and split_part(dport, '-', 2) :: integer >= 22
-              )
+              split_part(dport, '-', 1) :: integer = 0
+              and split_part(dport, '-', 2) :: integer = 65535
             )
           )
         )
     )
     select
       count(*) as value,
-      'Unrestricted Inbound (Excludes ICMP)' as label,
+      'Unrestricted Ingress (Excludes ICMP)' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       network_sg
@@ -188,7 +182,7 @@ query "azure_network_security_group_unrestricted_inbound_count" {
   EOQ
 }
 
-query "azure_network_security_group_unrestricted_outbound_count" {
+query "azure_network_security_group_unrestricted_egress_count" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -204,25 +198,19 @@ query "azure_network_security_group_unrestricted_outbound_count" {
         and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
-          dport in ('22', '3389', '*')
+          dport = '*'
           or (
             dport like '%-%'
             and (
-              (
-                split_part(dport, '-', 1) :: integer <= 3389
-                and split_part(dport, '-', 2) :: integer >= 3389
-              )
-              or (
-                split_part(dport, '-', 1) :: integer <= 22
-                and split_part(dport, '-', 2) :: integer >= 22
-              )
+              split_part(dport, '-', 1) :: integer = 0
+              and split_part(dport, '-', 2) :: integer = 65535
             )
           )
         )
     )
     select
       count(*) as value,
-      'Unrestricted Outbound (Excludes ICMP)' as label,
+      'Unrestricted Egress (Excludes ICMP)' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       network_sg
@@ -251,7 +239,7 @@ query "azure_network_security_group_unused_status" {
   EOQ
 }
 
-query "azure_network_security_group_unrestricted_inbound" {
+query "azure_network_security_group_unrestricted_ingress" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -267,18 +255,12 @@ query "azure_network_security_group_unrestricted_inbound" {
         and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
-          dport in ('22', '3389', '*')
+          dport = '*'
           or (
             dport like '%-%'
             and (
-              (
-                split_part(dport, '-', 1) :: integer <= 3389
-                and split_part(dport, '-', 2) :: integer >= 3389
-              )
-              or (
-                split_part(dport, '-', 1) :: integer <= 22
-                and split_part(dport, '-', 2) :: integer >= 22
-              )
+              split_part(dport, '-', 1) :: integer = 0
+              and split_part(dport, '-', 2) :: integer = 65535
             )
           )
         )
@@ -295,7 +277,7 @@ query "azure_network_security_group_unrestricted_inbound" {
   EOQ
 }
 
-query "azure_network_security_group_unrestricted_outbound" {
+query "azure_network_security_group_unrestricted_egress" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -311,18 +293,12 @@ query "azure_network_security_group_unrestricted_outbound" {
         and sg -> 'properties' ->> 'protocol' <> 'ICMP'
         and sip in ('*', '0.0.0.0', '0.0.0.0/0', 'Internet', 'any', '<nw>/0', '/0')
         and (
-          dport in ('22', '3389', '*')
+          dport = '*'
           or (
             dport like '%-%'
             and (
-              (
-                split_part(dport, '-', 1) :: integer <= 3389
-                and split_part(dport, '-', 2) :: integer >= 3389
-              )
-              or (
-                split_part(dport, '-', 1) :: integer <= 22
-                and split_part(dport, '-', 2) :: integer >= 22
-              )
+              split_part(dport, '-', 1) :: integer = 0
+              and split_part(dport, '-', 2) :: integer = 65535
             )
           )
         )
