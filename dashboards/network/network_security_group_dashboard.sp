@@ -20,6 +20,11 @@ dashboard "azure_network_security_group_dashboard" {
     }
 
     card {
+      query = query.azure_network_security_group_flow_logs_disabled_count
+      width = 2
+    }
+
+    card {
       query = query.azure_network_security_group_unrestricted_ingress_count
       width = 2
     }
@@ -51,6 +56,21 @@ dashboard "azure_network_security_group_dashboard" {
       }
     }
 
+    chart {
+      title = "NSG Flow Logs"
+      query = query.azure_network_security_group_flow_logs_status
+      type  = "donut"
+      width = 3
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
+          color = "alert"
+        }
+      }
+    }
 
     chart {
       title = "With Unrestricted Ingress (Excludes ICMP)"
@@ -146,6 +166,19 @@ query "azure_network_security_group_unassociated_count" {
   EOQ
 }
 
+query "azure_network_security_group_flow_logs_disabled_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'Flow Logs Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as type
+    from
+      azure_network_security_group
+    where
+      flow_logs is null;
+  EOQ
+}
+
 query "azure_network_security_group_unrestricted_ingress_count" {
   sql = <<-EOQ
     with network_sg as (
@@ -229,6 +262,25 @@ query "azure_network_security_group_unused_status" {
       select
         case when (subnets is null and network_interfaces is null) then 'unassociated'
         else 'associated'
+        end status
+      from
+        azure_network_security_group) as n
+    group by
+      status
+    order by
+      status;
+  EOQ
+}
+
+query "azure_network_security_group_flow_logs_status" {
+  sql = <<-EOQ
+    select
+      status,
+      count(*)
+    from (
+      select
+        case when (flow_logs is null) then 'disabled'
+        else 'enabled'
         end status
       from
         azure_network_security_group) as n
