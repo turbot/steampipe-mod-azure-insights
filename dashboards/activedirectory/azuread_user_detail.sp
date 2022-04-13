@@ -60,7 +60,7 @@ dashboard "azuread_user_detail" {
 
     flow {
       type  = "sankey"
-      title = "Attached Directory Roles"
+      title = "Azure Active Directory Role Assignments"
       query = query.azuread_user_directory_role_sankey
       args  = {
         id = self.input.user_id.value
@@ -69,7 +69,7 @@ dashboard "azuread_user_detail" {
 
     flow {
       type  = "sankey"
-      title = "Attached Subscription Roles"
+      title = "Azure Role Assignments"
       query = query.azuread_user_subscription_role_sankey
       args  = {
         id = self.input.user_id.value
@@ -77,7 +77,7 @@ dashboard "azuread_user_detail" {
     }
 
     table {
-      title = "Directory Roles"
+      title = "Azure Active Directory Role Assignments"
       width = 6
       query = query.azuread_directory_roles_for_user
       args  = {
@@ -86,7 +86,7 @@ dashboard "azuread_user_detail" {
     }
 
     table {
-      title = "Subscription Roles"
+      title = "Azure Role Assignments"
       width = 6
       query = query.azuread_subscription_roles_for_user
       args  = {
