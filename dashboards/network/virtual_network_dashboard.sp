@@ -26,7 +26,7 @@ dashboard "azure_virtual_network_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "DDOS Protection"
+      title = "DDoS Protection"
       query = query.azure_virtual_network_ddos_protection_status
       type  = "donut"
       width = 2
@@ -91,7 +91,7 @@ query "azure_virtual_network_ddos_protection_enabled" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'DDOS Protection Disabled' as label,
+      'DDoS Protection Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
       azure_virtual_network
@@ -127,7 +127,7 @@ query "azure_virtual_network_by_subscription" {
   sql = <<-EOQ
     select
       sub.title as "Subscription",
-      count(n.*) as "Virtusl Networks"
+      count(n.*) as "Virtual Networks"
     from
       azure_virtual_network as n,
       azure_subscription as sub
@@ -144,7 +144,7 @@ query "azure_virtual_network_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
-      count(n.*) as "VMs"
+      count(n.*) as "Virtual Networks"
     from
       azure_virtual_network as n,
       azure_subscription as sub

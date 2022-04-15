@@ -583,36 +583,35 @@ query "azuread_directory_roles_for_user" {
   select
     role_name as "Role Name",
     id as "Role ID"
-  from
-    (
-      select
-        dr.display_name as role_name,
-        dr.id as id
-      from
-        azuread_directory_role as dr,
-        jsonb_array_elements(member_ids) as m
-      where
-        trim((m::text), '""') = $1
+    from
+      (
+        select
+          dr.display_name as role_name,
+          dr.id as id
+        from
+          azuread_directory_role as dr,
+          jsonb_array_elements(member_ids) as m
+        where
+          trim((m::text), '""') = $1
 
-      union select
-        dr.display_name as role_name,
-        dr.id as id
-      from
-        azuread_directory_role as dr,
-        jsonb_array_elements(member_ids) as m
-      where
-        trim((m::text), '""') in (select
-            g.id as id
-          from
-            azuread_group as g,
-            jsonb_array_elements(member_ids) as m
-          where
-            trim((m::text), '""') = $1)
-    ) data
-  order by
-    role_name;
-
-  EOQ
+        union select
+          dr.display_name as role_name,
+          dr.id as id
+        from
+          azuread_directory_role as dr,
+          jsonb_array_elements(member_ids) as m
+        where
+          trim((m::text), '""') in (select
+              g.id as id
+            from
+              azuread_group as g,
+              jsonb_array_elements(member_ids) as m
+            where
+              trim((m::text), '""') = $1)
+      ) data
+    order by
+      role_name;
+    EOQ
 
   param "id" {}
 }
@@ -638,8 +637,7 @@ query "azuread_subscription_roles_for_user" {
       scope as "Scope",
       assignmnet_id as "Role Assignmnet ID"
     from
-      subscription_roles
-
+      subscription_roles;
   EOQ
 
   param "id" {}
@@ -667,7 +665,7 @@ query "azuread_subscription_roles_for_user_without_mg" {
       scope as "Scope",
       assignmnet_id as "Role Assignmnet ID"
     from
-      subscription_roles
+      subscription_roles;
 
   EOQ
 

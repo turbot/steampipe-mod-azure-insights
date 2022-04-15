@@ -419,6 +419,8 @@ query "azure_network_security_group_flow_logs" {
       f.id as "Flow Log ID"
     from
       flow_logs as f left join azure_network_watcher_flow_log as fl on fl.id = f.id
+    order by
+      fl.name;
 
   EOQ
 
