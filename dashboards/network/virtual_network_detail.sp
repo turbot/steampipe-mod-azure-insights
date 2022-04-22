@@ -212,7 +212,7 @@ query "azure_virtual_network_subnets_count" {
 query "azure_virtual_network_ddos_protection" {
   sql = <<-EOQ
     select
-      'DDOS Protection' as label,
+      'DDoS Protection' as label,
       case when enable_ddos_protection then 'Enabled' else 'Disabled' end as value,
       case when enable_ddos_protection then 'ok' else 'alert' end as type
     from
@@ -264,7 +264,7 @@ query "azure_virtual_network_subnet_details" {
   sql = <<-EOQ
     select
       s ->> 'name' as "Name",
-      s -> 'properties' ->> 'addressPrefix' as "addressPrefix",
+      s -> 'properties' ->> 'addressPrefix' as "Address Prefix",
       power(2, 32 - masklen((s -> 'properties' ->> 'addressPrefix'):: cidr)) -1 as "Total IPs",
       s -> 'properties' ->> 'privateEndpointNetworkPolicies' as "Private Endpoint Network Policies",
       s -> 'properties' ->> 'privateLinkServiceNetworkPolicies' as "Private Link Service Network Policies",
@@ -602,13 +602,13 @@ query "azure_virtual_network_route_tables" {
         azure_virtual_network,
         jsonb_array_elements(subnets) as s
       where
-        id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/steampipe/providers/Microsoft.Network/virtualNetworks/steampipe-vnet'
+        id = $1
         and (s -> 'properties' -> 'routeTable' ->> 'id') is not null
       order by
         s -> 'properties' -> 'routeTable' ->> 'id'
     )
     select
-      rt.name as "Route Table Name",
+      rt.name as "Name",
       rt.provisioning_state as "Provisioning State",
       r.id as "Route Table ID"
     from
@@ -663,12 +663,11 @@ query "azure_virtual_network_nsg" {
       and id = $1
     )
     select
+      nsg.name as "Name",
       n.subnet_name as "Subnet Name",
-      nsg.name as "Network Security Group Name",
       provisioning_state as "Provisioning State",
       nsg_id as "Network Security Group ID",
       n.subnet_id as "Subnet ID"
-
     from
       all_nsg as n left join azure_network_security_group as nsg on nsg.id = n.nsg_id
   EOQ

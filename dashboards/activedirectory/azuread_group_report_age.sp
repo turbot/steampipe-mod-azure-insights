@@ -57,6 +57,10 @@ dashboard "azuread_group_age_report" {
       display = "none"
     }
 
+    column "Display Name" {
+      href = "${dashboard.azuread_group_detail.url_path}?input.group_id={{.ID | @uri}}"
+    }
+
     query = query.azuread_group_age_table
   }
 
@@ -134,9 +138,9 @@ query "azuread_group_age_table" {
     select
       g.display_name as "Display Name",
       now()::date - g.created_date_time::date as "Age in Days",
-      g.created_date_time as "Created Date Time",
-      g.expiration_date_time as "Expiration Date Time",
-      g.renewed_date_time as "Renewed Date Time",
+      g.created_date_time as "Create Time",
+      g.expiration_date_time as "Expiration Time",
+      g.renewed_date_time as "Last Renewed Time",
       t.title as "Tenant",
       g.tenant_id as "Tenant ID",
       g.id as "ID"

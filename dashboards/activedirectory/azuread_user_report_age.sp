@@ -57,6 +57,10 @@ dashboard "azuread_user_age_report" {
       display = "none"
     }
 
+    column "Display Name" {
+      href = "${dashboard.azuread_user_detail.url_path}?input.user_id={{.ID | @uri}}"
+    }
+
     query = query.azuread_user_age_table
   }
 
@@ -135,7 +139,7 @@ query "azuread_user_age_table" {
       u.display_name as "Display Name",
       u.given_name as "Given Name",
       now()::date - u.created_date_time::date as "Age in Days",
-      u.created_date_time as "Created Date Time",
+      u.created_date_time as "Create Time",
       u.user_type as "User Type",
       t.title as "Tenant",
       u.tenant_id as "Tenant ID",

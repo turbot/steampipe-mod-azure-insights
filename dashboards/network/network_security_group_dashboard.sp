@@ -57,7 +57,7 @@ dashboard "azure_network_security_group_dashboard" {
     }
 
     chart {
-      title = "NSG Flow Logs"
+      title = "Network Security Group Flow Logs"
       query = query.azure_network_security_group_flow_logs_status
       type  = "donut"
       width = 3
