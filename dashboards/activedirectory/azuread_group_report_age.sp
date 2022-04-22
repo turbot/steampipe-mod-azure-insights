@@ -54,6 +54,10 @@ dashboard "azuread_group_age_report" {
     }
 
     column "ID" {
+      display = "none"
+    }
+
+    column "Display Name" {
       href = "${dashboard.azuread_group_detail.url_path}?input.group_id={{.ID | @uri}}"
     }
 
@@ -132,20 +136,20 @@ query "azuread_group_age_table" {
           azure_tenant
       )
     select
-      g.id as "ID",
       g.display_name as "Display Name",
       now()::date - g.created_date_time::date as "Age in Days",
       g.created_date_time as "Create Time",
       g.expiration_date_time as "Expiration Time",
       g.renewed_date_time as "Last Renewed Time",
       t.title as "Tenant",
-      g.tenant_id as "Tenant ID"
+      g.tenant_id as "Tenant ID",
+      g.id as "ID"
     from
       azuread_group as g,
       tenants as t
     where
       g.tenant_id = t.tenant_id
     order by
-      g.id;
+      g.display_name;
   EOQ
 }

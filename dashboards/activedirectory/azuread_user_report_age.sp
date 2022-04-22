@@ -54,6 +54,10 @@ dashboard "azuread_user_age_report" {
     }
 
     column "ID" {
+      display = "none"
+    }
+
+    column "Display Name" {
       href = "${dashboard.azuread_user_detail.url_path}?input.user_id={{.ID | @uri}}"
     }
 
@@ -132,20 +136,20 @@ query "azuread_user_age_table" {
         azure_tenant
     )
     select
-      u.id as "ID",
       u.display_name as "Display Name",
       u.given_name as "Given Name",
       now()::date - u.created_date_time::date as "Age in Days",
       u.created_date_time as "Create Time",
       u.user_type as "User Type",
       t.title as "Tenant",
-      u.tenant_id as "Tenant ID"
+      u.tenant_id as "Tenant ID",
+      u.id as "ID"
     from
       azuread_user as u,
       tenants as t
     where
       u.tenant_id = t.tenant_id
     order by
-      u.id;
+      u.display_name;
   EOQ
 }
