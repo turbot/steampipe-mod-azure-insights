@@ -263,7 +263,7 @@ query "azure_virtual_network_tags" {
 query "azure_virtual_network_subnet_details" {
   sql = <<-EOQ
     select
-      s ->> 'name' as "Subnet Name",
+      s ->> 'name' as "Name",
       s -> 'properties' ->> 'addressPrefix' as "Address Prefix",
       power(2, 32 - masklen((s -> 'properties' ->> 'addressPrefix'):: cidr)) -1 as "Total IPs",
       s -> 'properties' ->> 'privateEndpointNetworkPolicies' as "Private Endpoint Network Policies",
@@ -608,7 +608,7 @@ query "azure_virtual_network_route_tables" {
         s -> 'properties' -> 'routeTable' ->> 'id'
     )
     select
-      rt.name as "Route Table Name",
+      rt.name as "Name",
       rt.provisioning_state as "Provisioning State",
       r.id as "Route Table ID"
     from
@@ -663,7 +663,7 @@ query "azure_virtual_network_nsg" {
       and id = $1
     )
     select
-      nsg.name as "Network Security Group Name",
+      nsg.name as "Name",
       n.subnet_name as "Subnet Name",
       provisioning_state as "Provisioning State",
       nsg_id as "Network Security Group ID",
