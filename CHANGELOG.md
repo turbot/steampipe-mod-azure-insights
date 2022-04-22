@@ -4,7 +4,7 @@ _What's new?_
 
 - New dashboards added:
   - [Active Directory Group Detail Dashboard](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.azuread_group_detail) ([#27](https://github.com/turbot/steampipe-mod-azure-insights/pull/27))
-  - [Active Directory user Detail Dashboard](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.azuread_user_detail) ([#27](https://github.com/turbot/steampipe-mod-azure-insights/pull/27))
+  - [Active Directory User Detail Dashboard](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.azuread_user_detail) ([#27](https://github.com/turbot/steampipe-mod-azure-insights/pull/27))
   - [Network Security Group Dashboard](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.azure_network_security_group_dashboard) ([#22](https://github.com/turbot/steampipe-mod-azure-insights/pull/22))
   - [Network Security Group Detail Dashboard](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.azure_network_security_group_detail) ([#22](https://github.com/turbot/steampipe-mod-azure-insights/pull/22))
   - [Virtual Network Dashboard](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.azure_virtual_network_dashboard) ([#22](https://github.com/turbot/steampipe-mod-azure-insights/pull/22))
