@@ -413,7 +413,7 @@ query "azure_network_security_group_flow_logs" {
         nsg.id = $1
     )
     select
-      fl.name as "Flow Log Name",
+      fl.name as "Name",
       fl.network_watcher_name as "Network Watcher Name",
       fl.enabled as "Enabled",
       f.id as "Flow Log ID"
