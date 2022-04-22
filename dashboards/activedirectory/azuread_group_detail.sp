@@ -153,8 +153,8 @@ query "azuread_group_overview" {
   sql = <<-EOQ
     select
       display_name as "Display Name",
-      created_date_time as "Created Date Time",
-      expiration_date_time as "Expiration Date Time",
+      created_date_time as "Create Time",
+      expiration_date_time as "Expiration Time",
       is_assignable_to_role as "Is Assignable To Role",
       is_subscribed_by_mail as "Is Subscribed By Mail",
       visibility as "Visibility",

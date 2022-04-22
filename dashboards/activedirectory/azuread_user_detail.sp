@@ -148,7 +148,7 @@ query "azuread_user_overview" {
       display_name as "Display Name",
       given_name as "Given Name",
       user_principal_name as "User Principal Name",
-      created_date_time as "Created Date Time",
+      created_date_time as "Create Time",
       title as "Title",
       tenant_id as "Tenant ID",
       id as "ID"
@@ -249,7 +249,7 @@ query "azuread_groups_for_user" {
       g.display_name as "Display Name",
       g.id as "ID",
       g.is_subscribed_by_mail as "Is Subscribed By Mail",
-      g.expiration_date_time as "Expiration Date Time"
+      g.expiration_date_time as "Expiration Time"
     from
       azuread_group as g,
       jsonb_array_elements(member_ids) as m
@@ -332,7 +332,7 @@ query "azuread_user_sign_in_report" {
   sql = <<-EOQ
     select
       id as "ID",
-      created_date_time as "Created Date Time",
+      created_date_time as "Create Time",
       app_display_name as "App Display Name",
       client_app_used as "Client App Used"
     from
