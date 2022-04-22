@@ -328,35 +328,6 @@ query "azuread_subscription_roles_for_user" {
   param "id" {}
 }
 
-query "azuread_subscription_roles_for_user_without_mg" {
-  sql = <<-EOQ
-    with subscription_roles as (
-      select
-        distinct a.scope as scope,
-        a.id as assignmnet_id,
-         d.role_name as role_name
-
-      from
-        azure_role_assignment as a
-        left join azure_role_definition as d on d.id = a.role_definition_id
-      where
-        a.scope like  '/subscriptions/%'
-        and a.principal_id = $1
-      order by
-        d.role_name
-    )
-    select
-      role_name as "Role Name",
-      scope as "Scope",
-      assignmnet_id as "Role Assignmnet ID"
-    from
-      subscription_roles;
-
-  EOQ
-
-  param "id" {}
-}
-
 query "azuread_user_sign_in_report" {
   sql = <<-EOQ
     select
