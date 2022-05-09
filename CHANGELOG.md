@@ -1,5 +1,7 @@
 ## v0.4 [2022-05-10]
 
+_Enhancements_
+
 - Updated docs/index.md and README to the latest format. ([#17](https://github.com/turbot/steampipe-mod-azure-tags/pull/17))
 
 ## v0.3 [2022-04-22]
