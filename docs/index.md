@@ -38,13 +38,20 @@ Dashboards are available for Compute, Key Vault, SQL, and Storage services.
 
 ### Installation
 
-1) Install the Azure plugin:
+Download and install Steampipe (https://steampipe.io/downloads). Or use Brew:
 
-```shell
+```sh
+brew tap turbot/tap
+brew install steampipe
+```
+
+Install the Azure plugin with [Steampipe](https://steampipe.io):
+
+```sh
 steampipe plugin install azure
 ```
 
-2) Clone this repo:
+Clone:
 
 ```sh
 git clone https://github.com/turbot/steampipe-mod-azure-insights.git
@@ -55,19 +62,29 @@ cd steampipe-mod-azure-insights
 
 Start your dashboard server to get started:
 
-```shell
+```sh
 steampipe dashboard
 ```
 
-By default, the dashboard interface will then be launched in a new browser window at https://localhost:9194.
-
-From here, you can view all of your dashboards and reports.
+By default, the dashboard interface will then be launched in a new browser window at https://localhost:9194. From here, you can view dashboards and reports.
 
 ### Credentials
 
 This mod uses the credentials configured in the [Steampipe Azure plugin](https://hub.steampipe.io/plugins/turbot/azure).
 
-## Get involved
+### Configuration
 
-* Contribute: [GitHub Repo](https://github.com/turbot/steampipe-mod-azure-insights)
-* Community: [Slack Channel](https://steampipe.io/community/join)
+No extra configuration is required.
+
+## Contributing
+
+If you have an idea for additional dashboards or just want to help maintain and extend this mod ([or others](https://github.com/topics/steampipe-mod)) we would love you to join the community and start contributing.
+
+- **[Join our Slack community →](https://steampipe.io/community/join)** and hang out with other Mod developers.
+
+Please see the [contribution guidelines](https://github.com/turbot/steampipe/blob/main/CONTRIBUTING.md) and our [code of conduct](https://github.com/turbot/steampipe/blob/main/CODE_OF_CONDUCT.md). All contributions are subject to the [Apache 2.0 open source license](https://github.com/turbot/steampipe-mod-azure-insights/blob/main/LICENSE).
+
+Want to help but not sure where to start? Pick up one of the `help wanted` issues:
+
+- [Steampipe](https://github.com/turbot/steampipe/labels/help%20wanted)
+- [Azure Insights Mod](https://github.com/turbot/steampipe-mod-azure-insights/labels/help%20wanted)
