@@ -1,4 +1,4 @@
-# Azure Insights
+# Azure Insights Mod for Steampipe
 
 An Azure dashboarding tool that can be used to view dashboards and reports across all of your Azure accounts.
 
