@@ -27,6 +27,31 @@ dashboard "azuread_user_detail" {
 
   container {
 
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.azuread_user_node,
+        node.azuread_user_from_group_node,
+        node.azuread_user_from_directory_role_node
+      ]
+
+      edges = [
+        edge.azuread_user_from_group_edge,
+        edge.azuread_user_from_directory_role_edge
+      ]
+
+      args = {
+        id = self.input.user_id.value
+      }
+    }
+  }
+
+
+  container {
+
     table {
       title = "Overview"
       type  = "line"
@@ -345,4 +370,134 @@ query "azuread_user_sign_in_report" {
   EOQ
 
   param "id" {}
+}
+
+node "azuread_user_node" {
+category = category.azuread_user
+
+sql = <<-EOQ
+     select
+      id as id,
+      title as title,
+       jsonb_build_object(
+      'Tenant ID', tenant_id
+      ) as properties
+    from
+      azuread_user
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azuread_user_from_group_node" {
+category=category.azuread_group
+
+sql = <<-EOQ
+    with group_details as(
+        select
+        id as id,
+        title as title,
+        tenant_id as tenant_id,
+        jsonb_array_elements_text(member_ids) as m_id
+      from
+        azuread_group
+    )
+     select
+      ag.id as id,
+      ag.title as title,
+       jsonb_build_object(
+      'Tenant ID', ag.tenant_id
+      ) as properties
+    from
+      group_details as ag
+      left join azuread_user as au on au.id=ag.m_id
+    where
+     au.id = $1
+  EOQ
+
+  param "id" {}
+}
+
+edge "azuread_user_from_group_edge" {
+  title = "Azuread Group"
+
+  sql = <<-EOQ
+   with group_details as(
+        select
+        id as id,
+        title as title,
+        jsonb_array_elements_text(member_ids) as m_id
+      from
+        azuread_group
+    )
+     select
+      au.id as from_id,
+      ag.id as to_id,
+      ag.title as title
+    from
+      group_details as ag
+      left join azuread_user as au on au.id=ag.m_id
+    where
+     au.id = $1
+  EOQ
+
+  param "id" {}
+}
+
+node "azuread_user_from_directory_role_node" {
+category=category.azuread_directory_role
+
+sql = <<-EOQ
+    with assigned_role as(
+        select
+        id as id,
+        title as title,
+        tenant_id as tenant_id,
+        jsonb_array_elements_text(member_ids) as m_id
+      from
+        azuread_directory_role
+    )
+     select
+      ar.id as id,
+      ar.title as title,
+       jsonb_build_object(
+      'Tenant ID', ar.tenant_id
+      ) as properties
+    from
+      assigned_role as ar
+      left join azuread_user as au on au.id = ar.m_id
+    where
+     au.id = $1
+  EOQ
+
+  param "id" {}
+}
+
+edge "azuread_user_from_directory_role_edge" {
+title = "Azuread Directory Role"
+
+sql = <<-EOQ
+    with assigned_role as(
+        select
+        id as id,
+        title as title,
+        tenant_id as tenant_id,
+        jsonb_array_elements_text(member_ids) as m_id
+      from
+        azuread_directory_role
+    )
+     select
+      au.id as from_id,
+      ar.id as to_id,
+      ar.title as title
+    from
+      assigned_role as ar
+      left join azuread_user as au on au.id = ar.m_id
+    where
+     au.id = $1
+  EOQ
+
+   param "id" {}
 }
