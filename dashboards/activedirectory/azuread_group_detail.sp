@@ -1,6 +1,6 @@
 dashboard "azuread_group_detail" {
 
-  title = "Azure Active Directory Group Detail"
+  title         = "Azure Active Directory Group Detail"
   documentation = file("./dashboards/activedirectory/docs/azuread_group_detail.md")
 
   tags = merge(local.activedirectory_common_tags, {
@@ -18,7 +18,7 @@ dashboard "azuread_group_detail" {
     card {
       width = 2
       query = query.azuread_group_type
-      args  = {
+      args = {
         id = self.input.group_id.value
       }
     }
@@ -26,7 +26,7 @@ dashboard "azuread_group_detail" {
     card {
       width = 2
       query = query.azuread_group_members_attached_count
-      args  = {
+      args = {
         id = self.input.group_id.value
       }
     }
@@ -51,7 +51,7 @@ dashboard "azuread_group_detail" {
         edge.azuread_group_from_user_edge,
         edge.azuread_group_from_directory_role_edge,
         edge.azuread_group_from_assigned_role_edge
-    
+
       ]
 
       args = {
@@ -69,7 +69,7 @@ dashboard "azuread_group_detail" {
         type  = "line"
         width = 6
         query = query.azuread_group_overview
-        args  = {
+        args = {
           id = self.input.group_id.value
         }
 
@@ -79,7 +79,7 @@ dashboard "azuread_group_detail" {
         title = "Directory Roles"
         width = 6
         query = query.azuread_group_directory_roles
-        args  = {
+        args = {
           id = self.input.group_id.value
         }
 
@@ -98,7 +98,7 @@ dashboard "azuread_group_detail" {
       href = "/azure_insights.dashboard.azuread_user_detail?input.user_id={{.ID | @uri}}"
     }
     query = query.azuread_group_members_attached
-    args  = {
+    args = {
       id = self.input.group_id.value
     }
 
@@ -113,7 +113,7 @@ dashboard "azuread_group_detail" {
       href = "/azure_insights.dashboard.azuread_user_detail?input.user_id={{.ID | @uri}}"
     }
     query = query.azuread_group_owners
-    args  = {
+    args = {
       id = self.input.group_id.value
     }
 
