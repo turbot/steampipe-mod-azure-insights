@@ -51,7 +51,6 @@ dashboard "azuread_user_detail" {
     }
   }
 
-
   container {
 
     table {
@@ -414,7 +413,7 @@ node "azuread_user_from_group_node" {
       ) as properties
     from
       group_details as ag
-      left join azuread_user as au on au.id=ag.m_id
+      left join azuread_user as au on au.id = ag.m_id
     where
      au.id = $1
   EOQ

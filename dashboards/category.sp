@@ -2,7 +2,7 @@ category "azuread_user" {
   icon = local.azuread_user_icon
   fold {
     title     = "Azuread User"
-    threshold = 3
+    threshold = 5
   }
 }
 
