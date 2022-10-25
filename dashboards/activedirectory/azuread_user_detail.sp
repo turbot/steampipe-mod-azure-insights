@@ -1,7 +1,7 @@
 dashboard "azuread_user_detail" {
 
-  title          = "Azure Active Directory User Detail"
-   documentation = file("./dashboards/activedirectory/docs/azuread_user_detail.md")
+  title         = "Azure Active Directory User Detail"
+  documentation = file("./dashboards/activedirectory/docs/azuread_user_detail.md")
 
   tags = merge(local.activedirectory_common_tags, {
     type = "Detail"
@@ -35,12 +35,14 @@ dashboard "azuread_user_detail" {
       nodes = [
         node.azuread_user_node,
         node.azuread_user_from_group_node,
-        node.azuread_user_from_directory_role_node
+        node.azuread_user_from_directory_role_node,
+        node.azuread_user_from_assigned_role_node
       ]
 
       edges = [
         edge.azuread_user_from_group_edge,
-        edge.azuread_user_from_directory_role_edge
+        edge.azuread_user_from_directory_role_edge,
+        edge.azuread_user_from_assigned_role_edge
       ]
 
       args = {
@@ -70,7 +72,7 @@ dashboard "azuread_user_detail" {
       table {
         title = "Last 5 Sign-ins"
         query = query.azuread_user_sign_in_report
-        args  = {
+        args = {
           id = self.input.user_id.value
         }
       }
@@ -87,7 +89,7 @@ dashboard "azuread_user_detail" {
       type  = "sankey"
       title = "Azure Active Directory Role Assignments"
       query = query.azuread_user_directory_role_sankey
-      args  = {
+      args = {
         id = self.input.user_id.value
       }
     }
@@ -96,7 +98,7 @@ dashboard "azuread_user_detail" {
       title = "Azure Active Directory Role Assignments"
       width = 6
       query = query.azuread_directory_roles_for_user
-      args  = {
+      args = {
         id = self.input.user_id.value
       }
     }
@@ -105,7 +107,7 @@ dashboard "azuread_user_detail" {
       title = "Azure Role Assignments"
       width = 6
       query = query.azuread_subscription_roles_for_user
-      args  = {
+      args = {
         id = self.input.user_id.value
       }
     }
@@ -120,7 +122,7 @@ dashboard "azuread_user_detail" {
     }
 
     query = query.azuread_groups_for_user
-    args  = {
+    args = {
       id = self.input.user_id.value
     }
 
@@ -373,9 +375,9 @@ query "azuread_user_sign_in_report" {
 }
 
 node "azuread_user_node" {
-category = category.azuread_user
+  category = category.azuread_user
 
-sql = <<-EOQ
+  sql = <<-EOQ
      select
       id as id,
       title as title,
@@ -392,9 +394,9 @@ sql = <<-EOQ
 }
 
 node "azuread_user_from_group_node" {
-category=category.azuread_group
+  category = category.azuread_group
 
-sql = <<-EOQ
+  sql = <<-EOQ
     with group_details as(
         select
         id as id,
@@ -421,7 +423,7 @@ sql = <<-EOQ
 }
 
 edge "azuread_user_from_group_edge" {
-  title = "Azuread Group"
+  title = "group"
 
   sql = <<-EOQ
    with group_details as(
@@ -434,8 +436,7 @@ edge "azuread_user_from_group_edge" {
     )
      select
       au.id as from_id,
-      ag.id as to_id,
-      ag.title as title
+      ag.id as to_id
     from
       group_details as ag
       left join azuread_user as au on au.id=ag.m_id
@@ -446,10 +447,49 @@ edge "azuread_user_from_group_edge" {
   param "id" {}
 }
 
-node "azuread_user_from_directory_role_node" {
-category=category.azuread_directory_role
+node "azuread_user_from_assigned_role_node" {
+  category = category.azuread_role_assignment
 
-sql = <<-EOQ
+  sql = <<-EOQ
+    select
+      d.id as id,
+      d.role_name as title,
+      jsonb_build_object(
+        'Tenant ID', u.tenant_id
+        ) as properties
+    from
+      azuread_user as u
+      left join azure_role_assignment as a on a.principal_id = u.id
+      left join azure_role_definition as d on d.id = a.role_definition_id
+    where
+      u.id = $1
+  EOQ
+
+  param "id" {}
+}
+
+edge "azuread_user_from_assigned_role_edge" {
+  title = "assigned role"
+
+  sql = <<-EOQ
+    select
+      u.id as from_id,
+      d.id as to_id
+    from
+      azuread_user as u
+      left join azure_role_assignment as a on a.principal_id = u.id
+      left join azure_role_definition as d on d.id = a.role_definition_id
+    where 
+      u.id = $1
+  EOQ
+
+  param "id" {}
+}
+
+node "azuread_user_from_directory_role_node" {
+  category = category.azuread_directory_role
+
+  sql = <<-EOQ
     with assigned_role as(
         select
         id as id,
@@ -462,7 +502,7 @@ sql = <<-EOQ
      select
       ar.id as id,
       ar.title as title,
-       jsonb_build_object(
+      jsonb_build_object(
       'Tenant ID', ar.tenant_id
       ) as properties
     from
@@ -476,9 +516,9 @@ sql = <<-EOQ
 }
 
 edge "azuread_user_from_directory_role_edge" {
-title = "Azuread Directory Role"
+  title = "directory role"
 
-sql = <<-EOQ
+  sql = <<-EOQ
     with assigned_role as(
         select
         id as id,
@@ -490,8 +530,7 @@ sql = <<-EOQ
     )
      select
       au.id as from_id,
-      ar.id as to_id,
-      ar.title as title
+      ar.id as to_id
     from
       assigned_role as ar
       left join azuread_user as au on au.id = ar.m_id
@@ -499,5 +538,5 @@ sql = <<-EOQ
      au.id = $1
   EOQ
 
-   param "id" {}
+  param "id" {}
 }
