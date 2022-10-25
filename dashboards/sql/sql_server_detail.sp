@@ -67,6 +67,30 @@ dashboard "azure_sql_server_detail" {
   }
 
   container {
+    graph {
+      title = "Relationships"
+      type  = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.azure_sql_server_node,
+        node.azure_sql_server_to_firewall_rule_node,
+        node.azure_sql_server_to_audit_policy_node
+        #node.azure_sql_server_to_subnet
+      ]
+
+      edges = [
+        edge.azure_sql_server_to_firewall_rule_edge,
+        edge.azure_sql_server_to_audit_policy_edge
+      ]
+
+      args = {
+        id = self.input.server_id.value
+      }
+    }
+  }
+
+  container {
 
     container {
       width = 6
@@ -221,7 +245,7 @@ query "azure_sql_server_auditing_enabled" {
       case when a.id is not null then 'Enabled' else 'Disabled' end as value,
       case when a.id is not null then 'ok' else 'alert' end as type
     from
-     azure_sql_server as s left join sql_server_audit_enabled as a on s.id = a.id;
+      azure_sql_server as s left join sql_server_audit_enabled as a on s.id = a.id;
   EOQ
 }
 
@@ -271,8 +295,131 @@ query "azure_sql_server_vulnerability_assessment_enabled" {
       case when v.id is not null then 'Enabled' else 'Disabled' end as value,
       case when v.id is not null then 'ok' else 'alert' end as type
     from
-     azure_sql_server as s left join sql_server_va as v on s.id = v.id
-     where s.id = $1;
+      azure_sql_server as s left join sql_server_va as v on s.id = v.id
+      where s.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_server_node" {
+  sql = <<-EOQ
+    select
+      id as id,
+      title as title,
+      jsonb_build_object(
+        'ID', id,
+        'Region', region,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id,
+        'Fully Qualified Domain Name', fully_qualified_domain_name
+      ) as properties
+    from
+      azure_sql_server
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_server_to_firewall_rule_node"{
+  sql = <<-EOQ
+    select
+      rule -> 'id' as id,
+      rule -> 'name' as title,
+      json_build_object(
+        'Name', rule -> 'name',
+        'Start IP Address', rule -> 'properties' -> 'startIpAddress',
+        'End IP Address', rule -> 'properties' -> 'endIpAddress',
+        'Type', rule -> 'type'
+      ) as properties
+    from
+      azure_sql_server,
+      jsonb_array_elements(firewall_rules) as rule
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_sql_server_to_firewall_rule_edge" {
+  title = "firewall rule"
+  sql = <<-EOQ
+    select
+      id as from_id,
+      rule -> 'id' as to_id
+    from
+      azure_sql_server,
+      jsonb_array_elements(firewall_rules) as rule
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_server_to_audit_policy_node" {
+  sql = <<-EOQ
+    select
+      sap -> 'id' as id,
+      sap -> 'name' as title,
+      json_build_object(
+        'Name', sap -> 'name',
+        'Retention Days', sap -> 'properties' -> 'retentionDays',
+        'State', sap -> 'properties' -> 'state',
+        'Azure Monitor Target Enabled', sap -> 'properties' -> 'isAzureMonitorTargetEnabled',
+        'Storage Secondary Key In Use', sap -> 'properties' -> 'isStorageSecondaryKeyInUse',
+        'Type', sap -> 'type'
+      ) as properties
+    from
+      azure_sql_server,
+      jsonb_array_elements(server_audit_policy) as sap
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_sql_server_to_audit_policy_edge"  {
+  title = "attached"
+  sql = <<-EOQ
+    select
+      id as from_id,
+      sap -> 'id' as to_id
+    from
+      azure_sql_server,
+      jsonb_array_elements(server_audit_policy) as sap
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_server_to_subnet"{
+  sql = <<-EOQ
+    select
+      id as id,
+      title as title,
+      json_build_object(
+        'Name', name,
+        'Type', sap -> 'type'
+      ) as properties
+    from
+      azure_subnet
+    where
+      id in (
+        select
+          vnr -> 'properties' -> 'virtualNetworkSubnetId' as id
+        from
+          azure_sql_server,
+          jsonb_array_elements(virtual_network_rules) as vnr
+        where
+          id = $1
+      )
   EOQ
 
   param "id" {}
