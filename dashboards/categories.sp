@@ -37,3 +37,19 @@ category "azure_image" {
     threshold = 3
   }
 }
+
+category "azure_security_profile" {
+  icon = local.azure_security_profile_icon
+  fold {
+    title     = "Security Profile"
+    threshold = 3
+  }
+}
+
+category "azure_network_security_group" {
+  icon = local.azure_network_security_group_icon
+  fold {
+    title     = "NSG"
+    threshold = 3
+  }
+}

@@ -65,17 +65,21 @@ dashboard "azure_compute_virtual_machine_detail" {
 
       nodes = [
         node.azure_compute_virtual_machine_node,
-        node.azure_compute_virtual_machine_from_managed_disk_node,
-        node.azure_compute_virtual_machine_from_network_interface_node,
-        node.azure_compute_virtual_machine_from_public_ip_node,
-        node.azure_compute_virtual_machine_from_image_node
+        node.azure_compute_virtual_machine_to_managed_disk_node,
+        node.azure_compute_virtual_machine_to_network_interface_node,
+        node.azure_compute_virtual_machine_to_public_ip_node,
+        node.azure_compute_virtual_machine_to_image_node,
+        node.azure_compute_virtual_machine_to_security_profile_node,
+        node.azure_compute_virtual_machine_network_interface_to_network_security_group_node
       ]
 
       edges = [
-        edge.azure_compute_virtual_machine_from_managed_disk_edge,
-        edge.azure_compute_virtual_machine_from_network_interface_edge,
-        edge.azure_compute_virtual_machine_from_public_ip_edge,
-        edge.azure_compute_virtual_machine_from_image_edge
+        edge.azure_compute_virtual_machine_to_managed_disk_edge,
+        edge.azure_compute_virtual_machine_to_network_interface_edge,
+        edge.azure_compute_virtual_machine_to_public_ip_edge,
+        edge.azure_compute_virtual_machine_to_image_edge,
+        edge.azure_compute_virtual_machine_to_security_profile_edge,
+        edge.azure_compute_virtual_machine_network_interface_to_network_security_group_edge
       ]
 
       args = {
@@ -389,7 +393,7 @@ node "azure_compute_virtual_machine_node" {
   param "id" {}
 }
 
-node "azure_compute_virtual_machine_from_managed_disk_node" {
+node "azure_compute_virtual_machine_to_managed_disk_node" {
   category = category.azure_managed_disk
 
   sql = <<-EOQ
@@ -420,7 +424,7 @@ node "azure_compute_virtual_machine_from_managed_disk_node" {
   param "id" {}
 }
 
-edge "azure_compute_virtual_machine_from_managed_disk_edge" {
+edge "azure_compute_virtual_machine_to_managed_disk_edge" {
   title = "manages"
 
   sql = <<-EOQ
@@ -444,7 +448,7 @@ edge "azure_compute_virtual_machine_from_managed_disk_edge" {
   param "id" {}
 }
 
-node "azure_compute_virtual_machine_from_network_interface_node" {
+node "azure_compute_virtual_machine_to_network_interface_node" {
   category = category.azure_network_interface
 
   sql = <<-EOQ
@@ -476,7 +480,7 @@ node "azure_compute_virtual_machine_from_network_interface_node" {
   param "id" {}
 }
 
-edge "azure_compute_virtual_machine_from_network_interface_edge" {
+edge "azure_compute_virtual_machine_to_network_interface_edge" {
   title = "network interface"
 
   sql = <<-EOQ
@@ -488,8 +492,8 @@ edge "azure_compute_virtual_machine_from_network_interface_edge" {
         azure_compute_virtual_machine
     )
     select
-      n.id as from_id,
-      vn.id as to_id
+      n.id as to_id,
+      vn.id as from_id
     from
       network_interface_id as vn
       left join azure_network_interface as n on vn.n_id = n.id
@@ -500,7 +504,7 @@ edge "azure_compute_virtual_machine_from_network_interface_edge" {
   param "id" {}
 }
 
-node "azure_compute_virtual_machine_from_public_ip_node" {
+node "azure_compute_virtual_machine_to_public_ip_node" {
   category = category.azure_public_ip
 
   sql = <<-EOQ
@@ -532,7 +536,7 @@ node "azure_compute_virtual_machine_from_public_ip_node" {
   param "id" {}
 }
 
-edge "azure_compute_virtual_machine_from_public_ip_edge" {
+edge "azure_compute_virtual_machine_to_public_ip_edge" {
   title = "ip"
 
   sql = <<-EOQ
@@ -544,8 +548,8 @@ edge "azure_compute_virtual_machine_from_public_ip_edge" {
         azure_compute_virtual_machine
     )
     select
-      p.id as from_id,
-      a.id as to_id
+      a.id as to_id,
+      p.id as from_id
     from
       ip_address as p
       left join azure_public_ip as a on (p.ip)::inet = a.ip_address
@@ -556,7 +560,7 @@ edge "azure_compute_virtual_machine_from_public_ip_edge" {
   param "id" {}
 }
 
-node "azure_compute_virtual_machine_from_image_node" {
+node "azure_compute_virtual_machine_to_image_node" {
   category = category.azure_image
 
   sql = <<-EOQ
@@ -581,7 +585,7 @@ node "azure_compute_virtual_machine_from_image_node" {
   param "id" {}
 }
 
-edge "azure_compute_virtual_machine_from_image_edge" {
+edge "azure_compute_virtual_machine_to_image_edge" {
   title = "uses"
 
   sql = <<-EOQ
@@ -593,6 +597,106 @@ edge "azure_compute_virtual_machine_from_image_edge" {
       left join azure_compute_virtual_machine as v on i.id = v.image_id
     where
       v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_compute_virtual_machine_to_security_profile_node" {
+  category = category.azure_security_profile
+
+  sql = <<-EOQ
+    select
+      v.id,
+      s.id as id,
+      s.title as title,
+      jsonb_build_object(
+        'Name', s.display_name,
+        'ID', s.id,
+        'Subscription ID', s.subscription_id,
+        'State', s.state
+      ) as properties
+    from
+      azure_subscription as s
+      left join azure_compute_virtual_machine as v on s.subscription_id = v.subscription_id
+    where
+      v.security_profile -> 'encryptionAtHost' = 'true'
+      and v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_compute_virtual_machine_to_security_profile_edge" {
+  title = "security profile"
+
+  sql = <<-EOQ
+    select
+      v.id as from_id,
+      s.id as to_id
+    from
+      azure_subscription as s
+      left join azure_compute_virtual_machine as v on s.subscription_id = v.subscription_id
+    where
+      v.security_profile -> 'encryptionAtHost' = 'true'
+      and v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_compute_virtual_machine_network_interface_to_network_security_group_node" {
+  category = category.azure_network_security_group
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id as vm_id,
+        jsonb_array_elements(network_interfaces)->>'id' as n_id
+      from
+        azure_compute_virtual_machine
+    )
+    select
+      s.id as id,
+      s.title as title,
+      jsonb_build_object(
+        'Name', s.name,
+        'ID', s.id,
+        'Subscription ID', s.subscription_id,
+        'Resource Group', s.resource_group,
+        'Region', s.region
+      ) as properties
+    from
+      network_interface_id as vn
+      left join azure_network_interface as n on vn.n_id = n.id
+      left join azure_network_security_group as s on n.network_security_group_id = s.id
+    where
+      vn.vm_id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_compute_virtual_machine_network_interface_to_network_security_group_edge" {
+  title = "NSG"
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as n_id
+      from
+        azure_compute_virtual_machine
+    )
+    select
+      s.id as to_id,
+      n.id as from_id
+    from
+      network_interface_id as vn
+      left join azure_network_interface as n on vn.n_id = n.id
+      left join azure_network_security_group as s on n.network_security_group_id = s.id
+    where
+      vn.id = $1;
   EOQ
 
   param "id" {}
