@@ -75,13 +75,20 @@ dashboard "azure_sql_server_detail" {
       nodes = [
         node.azure_sql_server_node,
         node.azure_sql_server_to_firewall_rule_node,
-        node.azure_sql_server_to_audit_policy_node
-        #node.azure_sql_server_to_subnet
+        node.azure_sql_server_to_audit_policy_node,
+        node.azure_sql_server_from_subnet_node,
+        node.azure_sql_server_subnet_from_virtual_network_node,
+        node.azure_sql_server_to_key_vault_node,
+        node.azure_sql_server_keyvault_to_key_vault_key_node
       ]
 
       edges = [
         edge.azure_sql_server_to_firewall_rule_edge,
-        edge.azure_sql_server_to_audit_policy_edge
+        edge.azure_sql_server_to_audit_policy_edge,
+        edge.azure_sql_server_from_subnet_node,
+        edge.azure_sql_server_subnet_from_virtual_network_edge,
+        edge.azure_sql_server_to_key_vault_edge,
+        edge.azure_sql_server_keyvault_to_key_vault_key_edge
       ]
 
       args = {
@@ -303,6 +310,8 @@ query "azure_sql_server_vulnerability_assessment_enabled" {
 }
 
 node "azure_sql_server_node" {
+  category = category.azure_sql_server
+
   sql = <<-EOQ
     select
       id as id,
@@ -399,27 +408,253 @@ edge "azure_sql_server_to_audit_policy_edge"  {
   param "id" {}
 }
 
-node "azure_sql_server_to_subnet"{
+node "azure_sql_server_from_subnet_node" {
+  category = category.azure_subnet
+
   sql = <<-EOQ
     select
       id as id,
       title as title,
       json_build_object(
         'Name', name,
-        'Type', sap -> 'type'
+        'Type', type,
+        'Address_prefix', address_prefix,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
       ) as properties
     from
       azure_subnet
     where
       id in (
         select
-          vnr -> 'properties' -> 'virtualNetworkSubnetId' as id
+          vnr -> 'properties' ->> 'virtualNetworkSubnetId'
         from
           azure_sql_server,
           jsonb_array_elements(virtual_network_rules) as vnr
         where
           id = $1
-      )
+      );
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_sql_server_from_subnet_node" {
+  title = "subnet"
+  sql = <<-EOQ
+    select
+      vnr -> 'properties' ->> 'virtualNetworkSubnetId' as from_id,
+      id as to_id
+    from
+      azure_sql_server,
+      jsonb_array_elements(virtual_network_rules) as vnr
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_server_subnet_from_virtual_network_node" {
+  category = category.azure_virtual_network
+
+  sql = <<-EOQ
+    select
+      id as id,
+      title as title,
+      json_build_object(
+        'Name', name,
+        'Type', type,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
+      ) as properties
+    from
+      azure_virtual_network,
+      jsonb_array_elements(subnets) as sub
+    where
+      sub ->> 'id' in (
+        select
+          vnr -> 'properties' ->> 'virtualNetworkSubnetId'
+        from
+          azure_sql_server,
+          jsonb_array_elements(virtual_network_rules) as vnr
+        where
+          id = $1
+      );
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_sql_server_subnet_from_virtual_network_edge" {
+  title = "vpc"
+  sql = <<-EOQ
+    select
+      id as from_id,
+      sub ->> 'id' as to_id
+    from
+      azure_virtual_network,
+      jsonb_array_elements(subnets) as sub
+    where
+      sub ->> 'id' in (
+        select
+          vnr -> 'properties' ->> 'virtualNetworkSubnetId'
+        from
+          azure_sql_server,
+          jsonb_array_elements(virtual_network_rules) as vnr
+        where
+          id = $1
+      );
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_server_to_key_vault_node" {
+  category = category.azure_key_vault
+
+  sql = <<-EOQ
+    select
+      id as id,
+      name as title,
+      json_build_object(
+        'Name', name,
+        'Type', type,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
+      ) as properties
+    from
+      azure_key_vault
+    where
+      name in (
+        select
+          split_part(ep ->> 'serverKeyName','_',1) as key_vault_name
+        from
+          azure_sql_server,
+          jsonb_array_elements(encryption_protector) as ep
+        where
+          id = $1 
+          and ep ->> 'kind' = 'azurekeyvault'
+      );
+    
+  EOQ
+  param "id" {}
+}
+
+edge "azure_sql_server_to_key_vault_edge" {
+  title = "encrypted"
+  sql = <<-EOQ
+    with key_vault as (
+      select
+        id as to_id,
+        name as key_vault_name
+      from
+        azure_key_vault
+      where
+        name in (
+          select
+            split_part(ep ->> 'serverKeyName','_',1) as key_vault_name
+          from
+            azure_sql_server,
+            jsonb_array_elements(encryption_protector) as ep
+          where
+            id = $1
+            and ep ->> 'kind' = 'azurekeyvault'
+        )
+    )
+    select
+      id as from_id,
+      kv.to_id as to_id
+    from
+      azure_sql_server,
+      key_vault as kv
+    where
+      id = $1
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_server_keyvault_to_key_vault_key_node" {
+  category = category.azure_key_vault_key
+
+  sql = <<-EOQ
+    with all_keys as (
+      select
+        name as key_vault_key_name,
+        vault_name as key_vault_name,
+        id,
+        type,
+        resource_group,
+        subscription_id,
+        curve_name,
+        enabled,
+        expires_at,
+        key_type
+      from 
+        azure_key_vault_key
+    ),
+    attached_keys as (
+      select
+        split_part(ep ->> 'serverKeyName','_',1) as key_vault_name,
+        split_part(ep ->> 'serverKeyName','_',2) as key_vault_key_name
+      from
+        azure_sql_server,
+        jsonb_array_elements(encryption_protector) as ep
+      where
+        id = $1
+        and ep ->> 'kind' = 'azurekeyvault'
+    )
+    select
+      b.id as id,
+      b.key_vault_key_name as title,
+      json_build_object(
+        'Name', b.key_vault_key_name,
+        'Type', b.type,
+        'Resource Group', b.resource_group,
+        'Subscription ID', b.subscription_id,
+        'Curve Name', b.curve_name,
+        'Enabled', b.enabled,
+        'Expires At', b.expires_at,
+        'Key Type', b.key_type
+      ) as properties
+    from
+      attached_keys as a
+      left join all_keys as b on a.key_vault_key_name = b.key_vault_key_name;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_sql_server_keyvault_to_key_vault_key_edge" {
+  title = "key"
+  sql = <<-EOQ
+    with all_keys as (
+      select
+        id,
+        name as key_vault_key_name,
+        vault_name as key_vault_name,
+        concat('/subscriptions/',subscription_id,'/resourceGroups/',resource_group,'/providers/Microsoft.KeyVault/vaults/',vault_name) as key_vault_id
+      from 
+        azure_key_vault_key
+    ),
+    attached_keys as (
+      select
+        split_part(ep ->> 'serverKeyName','_',1) as key_vault_name,
+        split_part(ep ->> 'serverKeyName','_',2) as key_vault_key_name
+      from
+        azure_sql_server,
+        jsonb_array_elements(encryption_protector) as ep
+      where
+        id = $1
+        and ep ->> 'kind' = 'azurekeyvault'
+    )
+    select
+      b.id as to_id,
+      b.key_vault_id as from_id
+    from
+      attached_keys as a
+      left join all_keys as b on a.key_vault_key_name = b.key_vault_key_name;
   EOQ
 
   param "id" {}
