@@ -32,7 +32,7 @@ category "azure_sql_database" {
   icon = local.azure_sql_database_icon
   fold {
     title     = "SQL Databases"
-    threshold = 2
+    threshold = 3
   }
 }
 
