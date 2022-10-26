@@ -43,14 +43,16 @@ dashboard "azuread_group_detail" {
       nodes = [
         node.azuread_group_node,
         node.azuread_group_from_user_node,
-        node.azuread_group_from_directory_role_node,
-        node.azuread_group_from_assigned_role_node
+        node.azuread_group_from_group_node
+        // node.azuread_group_from_directory_role_node,
+        // node.azuread_group_from_assigned_role_node
       ]
 
       edges = [
         edge.azuread_group_from_user_edge,
-        edge.azuread_group_from_directory_role_edge,
-        edge.azuread_group_from_assigned_role_edge
+        edge.azuread_group_from_group_edge
+        // edge.azuread_group_from_directory_role_edge,
+        // edge.azuread_group_from_assigned_role_edge
 
       ]
 
@@ -254,10 +256,10 @@ node "azuread_group_node" {
   category = category.azuread_group
 
   sql = <<-EOQ
-     select
+    select
       id as id,
       title as title,
-       jsonb_build_object(
+      jsonb_build_object(
       'Tenant ID', tenant_id
       ) as properties
     from
@@ -273,7 +275,7 @@ node "azuread_group_from_user_node" {
   category = category.azuread_user
 
   sql = <<-EOQ
-     with group_details as(
+    with group_details as(
         select
         id as id,
         title as title,
@@ -282,17 +284,70 @@ node "azuread_group_from_user_node" {
       from
         azuread_group
     )
-     select
+    select
       au.id as id,
-      au.title as title,
-       jsonb_build_object(
+      au.display_name as title,
+      jsonb_build_object(
       'Tenant ID', au.tenant_id
       ) as properties
     from
       group_details as ag
       left join azuread_user as au on ag.m_id = au.id
     where
-     ag.id = $1
+      ag.id = $1
+  EOQ
+
+  param "id" {}
+}
+
+node "azuread_group_from_group_node" {
+  category = category.azuread_group
+
+  sql = <<-EOQ
+    with group_details as(
+      select
+        id as id,
+        title as title,
+        tenant_id as tenant_id,
+        jsonb_array_elements_text(member_ids) as m_id
+      from
+        azuread_group
+    )
+    select
+      au.id as id,
+      au.display_name as title,
+      jsonb_build_object(
+      'Tenant ID', au.tenant_id
+      ) as properties
+    from
+      group_details as ag
+      left join azuread_group as au on ag.m_id = au.id
+    where
+      ag.id = $1
+  EOQ
+
+  param "id" {}
+}
+
+edge "azuread_group_from_group_edge" {
+  title = "member"
+
+  sql = <<-EOQ
+  with group_details as(
+        select
+        id as id,
+        jsonb_array_elements_text(member_ids) as m_id
+      from
+        azuread_group
+    )
+    select
+      ag.id as from_id,
+      au.id as to_id
+    from
+      group_details as ag
+      left join azuread_group as au on ag.m_id = au.id
+    where
+      ag.id = $1
   EOQ
 
   param "id" {}
@@ -302,147 +357,147 @@ edge "azuread_group_from_user_edge" {
   title = "member"
 
   sql = <<-EOQ
-   with group_details as(
+  with group_details as(
         select
         id as id,
         jsonb_array_elements_text(member_ids) as m_id
       from
         azuread_group
     )
-     select
+    select
       ag.id as from_id,
       au.id as to_id
     from
       group_details as ag
       left join azuread_user as au on ag.m_id = au.id
     where
-     ag.id = $1
-  EOQ
-
-  param "id" {}
-}
-
-node "azuread_group_from_directory_role_node" {
-  category = category.azuread_directory_role
-
-  sql = <<-EOQ
-     with assigned_role as (
-        select
-        id as id,
-        title as title,
-        tenant_id as tenant_id,
-        jsonb_array_elements_text(member_ids) as m_id
-      from
-        azuread_directory_role
-    ),
-    groups as (
-       select
-        id as id,
-        title as title,
-        jsonb_array_elements_text(member_ids) as m_id
-      from
-        azuread_group
-    )
-     select
-      ar.id as id,
-      ar.title as title,
-      jsonb_build_object(
-      'Tenant ID', ar.tenant_id
-      ) as properties
-    from
-      assigned_role as ar
-      left join groups as ag on ag.m_id = ar.m_id
-    where
-     ag.id = $1
-  EOQ
-
-  param "id" {}
-}
-
-edge "azuread_group_from_directory_role_edge" {
-  title = "directory role"
-
-  sql = <<-EOQ
-     with assigned_role as (
-        select
-        id as id,
-        title as title,
-        tenant_id as tenant_id,
-        jsonb_array_elements_text(member_ids) as m_id
-      from
-        azuread_directory_role
-    ),
-    groups as (
-       select
-        id as id,
-        title as title,
-        jsonb_array_elements_text(member_ids) as m_id
-      from
-        azuread_group
-    )
-     select
-      ag.id as from_id,
-      ar.id as to_id
-    from
-      assigned_role as ar
-      left join groups as ag on ag.m_id = ar.m_id
-    where
-     ag.id = $1
-  EOQ
-
-  param "id" {}
-}
-
-node "azuread_group_from_assigned_role_node" {
-  category = category.azuread_role_assignment
-
-  sql = <<-EOQ
- with group_details as(
-        select
-        id as id,
-        tenant_id as tenant_id,
-        jsonb_array_elements_text(member_ids) as m_id
-      from
-        azuread_group
-    )
-    select
-      d.id as id,
-      d.role_name as title,
-      jsonb_build_object(
-        'Tenant ID', ag.tenant_id
-        ) as properties
-    from
-      group_details as ag
-      left join azure_role_assignment as a on a.principal_id = ag.m_id
-      left join azure_role_definition as d on d.id = a.role_definition_id
-    where
       ag.id = $1
   EOQ
 
   param "id" {}
 }
 
-edge "azuread_group_from_assigned_role_edge" {
-  title = "assigned role"
+// node "azuread_group_from_directory_role_node" {
+//   category = category.azuread_directory_role
 
-  sql = <<-EOQ
-with group_details as(
-        select
-        id as id,
-        jsonb_array_elements_text(member_ids) as m_id
-      from
-        azuread_group
-    )
-    select
-      ag.id as from_id,
-      d.id as to_id
-    from
-       group_details as ag
-      left join azure_role_assignment as a on a.principal_id = ag.m_id
-      left join azure_role_definition as d on d.id = a.role_definition_id
-    where 
-      ag.id = $1
-  EOQ
+//   sql = <<-EOQ
+//     with assigned_role as (
+//       select
+//         id as id,
+//         title as title,
+//         tenant_id as tenant_id,
+//         jsonb_array_elements_text(member_ids) as m_id
+//       from
+//         azuread_directory_role
+//     ),
+//     groups as (
+//       select
+//         id as id,
+//         title as title,
+//         jsonb_array_elements_text(member_ids) as m_id
+//       from
+//         azuread_group
+//       where
+//         id = $1
+//     )
+//     select
+//       ar.id as id,
+//       ar.title as title,
+//       jsonb_build_object(
+//       'Tenant ID', ar.tenant_id
+//       ) as properties
+//     from
+//       assigned_role as ar
+//       left join groups as ag on ag.m_id = ar.m_id
+//   EOQ
 
-  param "id" {}
-}
+//   param "id" {}
+// }
+
+// edge "azuread_group_from_directory_role_edge" {
+//   title = "directory role"
+
+//   sql = <<-EOQ
+//     with assigned_role as (
+//         select
+//         id as id,
+//         title as title,
+//         tenant_id as tenant_id,
+//         jsonb_array_elements_text(member_ids) as m_id
+//       from
+//         azuread_directory_role
+//     ),
+//     groups as (
+//       select
+//         id as id,
+//         title as title,
+//         jsonb_array_elements_text(member_ids) as m_id
+//       from
+//         azuread_group
+//     )
+//     select
+//       ag.id as from_id,
+//       ar.id as to_id
+//     from
+//       assigned_role as ar
+//       left join groups as ag on ag.m_id = ar.m_id
+//     where
+//       ag.id = $1
+//   EOQ
+
+//   param "id" {}
+// }
+
+// node "azuread_group_from_assigned_role_node" {
+//   category = category.azuread_role_assignment
+
+//   sql = <<-EOQ
+// with group_details as(
+//     select
+//         id as id,
+//         tenant_id as tenant_id,
+//         jsonb_array_elements_text(member_ids) as m_id
+//       from
+//         azuread_group
+//     )
+//     select
+//       d.id as id,
+//       d.role_name as title,
+//       jsonb_build_object(
+//         'Tenant ID', ag.tenant_id
+//         ) as properties
+//     from
+//       group_details as ag
+//       left join azure_role_assignment as a on a.principal_id = ag.m_id
+//       left join azure_role_definition as d on d.id = a.role_definition_id
+//     where
+//       ag.id = $1
+//   EOQ
+
+//   param "id" {}
+// }
+
+// edge "azuread_group_from_assigned_role_edge" {
+//   title = "assigned role"
+
+//   sql = <<-EOQ
+// with group_details as(
+//         select
+//         id as id,
+//         jsonb_array_elements_text(member_ids) as m_id
+//       from
+//         azuread_group
+//     )
+//     select
+//       ag.id as from_id,
+//       d.id as to_id
+//     from
+//       group_details as ag
+//       left join azure_role_assignment as a on a.principal_id = ag.m_id
+//       left join azure_role_definition as d on d.id = a.role_definition_id
+//     where 
+//       ag.id = $1
+//   EOQ
+
+//   param "id" {}
+// }
