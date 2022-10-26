@@ -79,16 +79,18 @@ dashboard "azure_sql_server_detail" {
         node.azure_sql_server_from_subnet_node,
         node.azure_sql_server_subnet_from_virtual_network_node,
         node.azure_sql_server_to_key_vault_node,
-        node.azure_sql_server_keyvault_to_key_vault_key_node
+        node.azure_sql_server_keyvault_to_key_vault_key_node,
+        node.azure_sql_server_to_sql_database_node
       ]
 
       edges = [
         edge.azure_sql_server_to_firewall_rule_edge,
         edge.azure_sql_server_to_audit_policy_edge,
-        edge.azure_sql_server_from_subnet_node,
+        edge.azure_sql_server_from_subnet_edge,
         edge.azure_sql_server_subnet_from_virtual_network_edge,
         edge.azure_sql_server_to_key_vault_edge,
-        edge.azure_sql_server_keyvault_to_key_vault_key_edge
+        edge.azure_sql_server_keyvault_to_key_vault_key_edge,
+        edge.azure_sql_server_to_sql_database_edge
       ]
 
       args = {
@@ -333,6 +335,7 @@ node "azure_sql_server_node" {
 }
 
 node "azure_sql_server_to_firewall_rule_node"{
+  category = category.azure_sql_server_firewall
   sql = <<-EOQ
     select
       rule -> 'id' as id,
@@ -393,7 +396,7 @@ node "azure_sql_server_to_audit_policy_node" {
 }
 
 edge "azure_sql_server_to_audit_policy_edge"  {
-  title = "attached"
+  title = "audit policy"
   sql = <<-EOQ
     select
       id as from_id,
@@ -439,7 +442,7 @@ node "azure_sql_server_from_subnet_node" {
   param "id" {}
 }
 
-edge "azure_sql_server_from_subnet_node" {
+edge "azure_sql_server_from_subnet_edge" {
   title = "subnet"
   sql = <<-EOQ
     select
@@ -542,7 +545,7 @@ node "azure_sql_server_to_key_vault_node" {
 }
 
 edge "azure_sql_server_to_key_vault_edge" {
-  title = "encrypted"
+  title = "encrypted with"
   sql = <<-EOQ
     with key_vault as (
       select
@@ -655,6 +658,42 @@ edge "azure_sql_server_keyvault_to_key_vault_key_edge" {
     from
       attached_keys as a
       left join all_keys as b on a.key_vault_key_name = b.key_vault_key_name;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_server_to_sql_database_node" {
+  category = category.azure_sql_database
+  sql = <<-EOQ
+    select
+      id as id,
+      name as title,
+      json_build_object(
+        'Name', name,
+        'Type', type,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
+      ) as properties
+    from
+      azure_sql_database
+    where
+      server_name = split_part($1, '/', 9);
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_sql_server_to_sql_database_edge" {
+  title = "database"
+  sql = <<-EOQ
+    select
+      $1 as from_id,
+      id as to_id
+    from
+      azure_sql_database
+    where
+      server_name = split_part($1, '/', 9);
   EOQ
 
   param "id" {}
