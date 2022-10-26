@@ -394,7 +394,7 @@ node "azure_compute_virtual_machine_node" {
 }
 
 node "azure_compute_virtual_machine_to_managed_disk_node" {
-  category = category.azure_managed_disk
+  category = category.azure_compute_disk
 
   sql = <<-EOQ
     with vm_disk_id as (
