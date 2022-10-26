@@ -21,7 +21,16 @@ category "azure_key_vault_key" {
   fold {
     title     = "Keys"
     # icon      = local.azure_key_vault_key_icon
-    threshold = 1
+    threshold = 3
+  }
+}
+
+category "azure_key_vault_secret" {
+  # icon = local.azure_key_vault_key_icon
+  fold {
+    title     = "Secrets"
+    # icon      = local.azure_key_vault_key_icon
+    threshold = 3
   }
 }
 

@@ -60,12 +60,14 @@ dashboard "azure_key_vault_detail" {
       nodes = [
         node.azure_key_vault_node,
         node.azure_key_vault_to_network_acl_node,
-        node.azure_key_vault_to_key_node
+        node.azure_key_vault_to_key_node,
+        node.azure_key_vault_to_secret_node
       ]
 
       edges = [
         edge.azure_key_vault_to_network_acl_edge,
-        edge.azure_key_vault_to_key_edge
+        edge.azure_key_vault_to_key_edge,
+        edge.azure_key_vault_to_secret_edge
       ]
 
       args = {
@@ -432,6 +434,49 @@ edge "azure_key_vault_to_key_edge" {
       azure_key_vault_key as k
     where
       v.name = k.vault_name
+    and
+      v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_key_vault_to_secret_node" {
+  category = category.azure_key_vault_secret
+
+  sql = <<-EOQ
+    select
+      s.name as name,
+      s.id as id,
+      jsonb_build_object(
+        'Secret Name', s.name,
+        'Secret Id', s.id,
+        'Created At', s.created_at,
+        'Expires At', s.expires_at,
+        'Vault Name', s.vault_name
+      ) as properties
+    from
+      azure_key_vault_secret as s
+      left join azure_key_vault as v on v.name = s.vault_name
+    where
+      v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_key_vault_to_secret_edge" {
+title = "Secret"
+
+  sql = <<-EOQ
+    select
+      v.id as from_id,
+      s.id as to_id
+    from
+      azure_key_vault as v,
+      azure_key_vault_secret as s
+    where
+      v.name = s.vault_name
     and
       v.id = $1;
   EOQ
