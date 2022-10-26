@@ -91,3 +91,17 @@ category "azure_storage_queue" {
     threshold = 3
   }
 }
+
+category "azure_route_table" {
+  fold {
+    title     = "Route Table"
+    threshold = 3
+  }
+}
+
+category "azure_network_security_group" {
+  fold {
+    title     = "Network Security Group"
+    threshold = 3
+  }
+}
