@@ -749,6 +749,7 @@ node "azure_virtual_network_node" {
       jsonb_build_object(
         'Name', name,
         'Etag', etag,
+        'Type', type,
         'Region', region,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
@@ -771,6 +772,7 @@ node "azure_virtual_network_to_subnet_node" {
       sub.title as title,
       jsonb_build_object(
         'Name', sub.name,
+        'Type', sub.type,
         'Resource Group', sub.resource_group,
         'Subscription ID', sub.subscription_id
       ) as properties
@@ -819,13 +821,14 @@ node "azure_virtual_network_subnet_to_route_table_node" {
         azure_virtual_network as v,
         jsonb_array_elements(v.subnets) as s
       where
-        v.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.Network/virtualNetworks/test-grapg-vn'
+        v.id = $1
     )
     select
       r.id as id,
       r.title as title,
       jsonb_build_object(
         'Name', r.name,
+        'Type', r.type,
         'Resource Group', r.resource_group,
         'Subscription ID', r.subscription_id
       ) as properties
@@ -850,7 +853,7 @@ edge "azure_virtual_network_subnet_to_route_table_edge" {
         azure_virtual_network as v,
         jsonb_array_elements(v.subnets) as s
       where
-        v.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.Network/virtualNetworks/test-grapg-vn'
+        v.id = $1
     )
     select
       sub ->> 'id' as from_id,
@@ -945,7 +948,7 @@ node "azure_virtual_network_subnet_to_network_peering_node" {
         azure_virtual_network as v,
         jsonb_array_elements(network_peerings) as p
       where
-        v.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.Network/virtualNetworks/test-grapg-vn'
+        v.id = $1
     )
     select
       v.id as id,
@@ -954,6 +957,7 @@ node "azure_virtual_network_subnet_to_network_peering_node" {
         'Name', v.name,
         'Etag', v.etag,
         'Region', v.region,
+        'Type', v.type,
         'Resource Group', v.resource_group,
         'Subscription ID', v.subscription_id
       ) as properties
@@ -977,7 +981,7 @@ edge "azure_virtual_network_subnet_to_network_peering_edge" {
         azure_virtual_network as v,
         jsonb_array_elements(network_peerings) as p
       where
-        v.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.Network/virtualNetworks/test-grapg-vn'
+        v.id = $1
     )
     select
       $1 as from_id,

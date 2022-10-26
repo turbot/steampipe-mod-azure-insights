@@ -490,6 +490,7 @@ node "azure_storage_account_node" {
       jsonb_build_object(
         'Name', name,
         'ID', id,
+        'Type', type,
         'Region', region,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
@@ -513,6 +514,7 @@ node "azure_storage_account_from_log_profile_node" {
       jsonb_build_object(
         'Name', name,
         'ID', id,
+        'Type', type,
         'Region', region,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
@@ -558,6 +560,7 @@ node "azure_storage_account_from_compute_snapshot_node" {
         'Name', name,
         'Source URI', source_uri,
         'SKU Name',  sku_name,
+        'Type', type,
         'Region', region,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
@@ -604,6 +607,7 @@ node "azure_storage_account_from_compute_disk_node" {
         'Disk Size GB', disk_size_gb,
         'Creation Data Source URI', creation_data_source_uri,
         'Disk State',  disk_state,
+        'Type', type,
         'Region', region,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
@@ -647,6 +651,7 @@ node "azure_storage_account_from_diagnostic_setting_node" {
       title as title,
       jsonb_build_object(
         'Name', name,
+        'Type', type,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
       ) as properties
@@ -698,6 +703,7 @@ node "azure_storage_account_to_subnet_node" {
       jsonb_build_object(
         'Name', name,
         'ID', id,
+        'Type', type,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
       ) as properties
@@ -759,6 +765,7 @@ node "azure_storage_account_subnet_to_vpc_node" {
       jsonb_build_object(
         'Name', name,
         'ID', id,
+        'Type', type,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
       ) as properties
@@ -811,6 +818,7 @@ node "azure_storage_account_to_storage_table_node" {
       jsonb_build_object(
         'Name', t.name,
         'ID', t.id,
+        'Type', t.type,
         'Region', t.region,
         'Resource Group', t.resource_group,
         'Subscription ID', t.subscription_id
@@ -858,6 +866,7 @@ node "azure_storage_account_to_storage_queue_node" {
         'Name', q.name,
         'ID', q.id,
         'Region', q.region,
+        'Type', q.type,
         'Resource Group', q.resource_group,
         'Subscription ID', q.subscription_id
       ) as properties
@@ -903,6 +912,7 @@ node "azure_storage_account_to_storage_container_node" {
       jsonb_build_object(
         'Name', c.name,
         'ID', c.id,
+        'Type', c.type,
         'Resource Group', c.resource_group,
         'Subscription ID', c.subscription_id
       ) as properties
@@ -949,6 +959,7 @@ node "azure_storage_account_container_to_storage_blob_node" {
       jsonb_build_object(
         'Name', c.name,
         'ID', c.id,
+        'Type', c.type,
         'Resource Group', c.resource_group,
         'Subscription ID', c.subscription_id
       ) as properties
@@ -997,6 +1008,7 @@ node "azure_storage_account_to_key_vault_node" {
       jsonb_build_object(
         'Name', k.name,
         'ID', k.id,
+        'Type', k.type,
         'Resource Group', k.resource_group,
         'Subscription ID', k.subscription_id
       ) as properties
