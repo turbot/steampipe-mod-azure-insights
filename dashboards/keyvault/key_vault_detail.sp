@@ -405,7 +405,7 @@ node "azure_key_vault_to_key_node" {
       k.id as id,
       jsonb_build_object(
         'Key Name', k.name,
-        'Key Id', k.id,
+        'Id',  k.id,
         'Key Type', k.key_type,
         'Key Size', k.key_size,
         'Created At', k.created_at,
@@ -466,7 +466,7 @@ node "azure_key_vault_to_secret_node" {
 }
 
 edge "azure_key_vault_to_secret_edge" {
-title = "Secret"
+  title = "secret"
 
   sql = <<-EOQ
     select
