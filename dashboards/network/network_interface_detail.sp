@@ -1,6 +1,6 @@
 dashboard "azure_network_interface_detail" {
 
-  title = "Azure Network Interface Detail"
+  title         = "Azure Network Interface Detail"
   documentation = file("./dashboards/network/docs/network_interface_detail.md")
 
   tags = merge(local.network_common_tags, {
@@ -95,6 +95,15 @@ dashboard "azure_network_interface_detail" {
         title = "Tags"
         width = 6
         query = query.azure_network_interface_tags
+        args = {
+          id = self.input.nic_id.value
+        }
+      }
+
+      table {
+        title = "Private IP Addresses"
+        width = 8
+        query = query.azure_network_private_ip
         args = {
           id = self.input.nic_id.value
         }
@@ -244,7 +253,7 @@ edge "azure_network_interface_from_compute_virtual_machine_edge" {
 
 edge "azure_network_interface_to_network_security_group_edge" {
   title = "network security group"
-  sql = <<-EOQ
+  sql   = <<-EOQ
     with network_security_group_id as (
   select
       network_security_group_id as sid,
@@ -264,6 +273,7 @@ edge "azure_network_interface_to_network_security_group_edge" {
 
   param "id" {}
 }
+
 node "azure_network_interface_from_public_ip_address_node" {
   category = category.azure_public_ip
 
@@ -416,13 +426,30 @@ query "azure_network_interface_accelerated_networking_enabled" {
 query "azure_network_interface_overview" {
   sql = <<-EOQ
     select
-      ip -> 'properties' ->> 'privateIPAddress' as "Private IP Address",
       title as "Title",
       resource_group as "Resource Group",
       region as "Region",
       mac_address as "MAC Address",
       subscription_id as "Subscription ID",
       id as "ID"
+    from
+      azure_network_interface
+      cross join jsonb_array_elements(ip_configurations) as ip
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+query "azure_network_private_ip" {
+  sql = <<-EOQ
+    select
+      ip ->> 'name' as "Name",
+      ip -> 'properties' ->> 'privateIPAddress' as "IP Address",
+      ip -> 'properties' ->> 'privateIPAddressVersion' as "Version",
+      ip -> 'properties' ->> 'privateIPAllocationMethod' as "Allocation Method",
+      ip -> 'properties' ->> 'primary' as "Primary"
     from
       azure_network_interface
       cross join jsonb_array_elements(ip_configurations) as ip
