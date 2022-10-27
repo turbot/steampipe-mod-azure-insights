@@ -747,6 +747,7 @@ node "azure_virtual_network_node" {
       id as id,
       title as title,
       jsonb_build_object(
+        'ID',  id,
         'Name', name,
         'Etag', etag,
         'Type', type,
@@ -771,6 +772,7 @@ node "azure_virtual_network_to_subnet_node" {
       sub.id as id,
       sub.title as title,
       jsonb_build_object(
+        'ID', sub.id,
         'Name', sub.name,
         'Type', sub.type,
         'Resource Group', sub.resource_group,
@@ -827,6 +829,7 @@ node "azure_virtual_network_subnet_to_route_table_node" {
       r.id as id,
       r.title as title,
       jsonb_build_object(
+        'ID', r.id,
         'Name', r.name,
         'Type', r.type,
         'Resource Group', r.resource_group,
@@ -890,6 +893,7 @@ node "azure_virtual_network_subnet_to_network_security_group_node" {
       nsg.id as id,
       nsg.title as title,
       jsonb_build_object(
+        'ID', nsg.id,
         'Name', nsg.name,
         'Type', nsg.type,
         'Resource Group', nsg.resource_group,
@@ -907,7 +911,7 @@ node "azure_virtual_network_subnet_to_network_security_group_node" {
 }
 
 edge "azure_virtual_network_subnet_to_network_security_group_edge" {
-  title = "route table"
+  title = "nsg"
 
   sql = <<-EOQ
     with subnet_list as (
@@ -954,6 +958,7 @@ node "azure_virtual_network_subnet_to_network_peering_node" {
       v.id as id,
       v.title as title,
       jsonb_build_object(
+        'ID', id,
         'Name', v.name,
         'Etag', v.etag,
         'Region', v.region,

@@ -633,7 +633,7 @@ node "azure_compute_virtual_machine_network_interface_to_network_security_group_
 }
 
 edge "azure_compute_virtual_machine_network_interface_to_network_security_group_edge" {
-  title = "NSG"
+  title = "nsg"
 
   sql = <<-EOQ
     with network_interface_id as (
