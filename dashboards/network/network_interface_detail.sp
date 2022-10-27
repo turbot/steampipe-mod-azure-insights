@@ -316,7 +316,7 @@ edge "azure_network_interface_from_public_ip_address_edge" {
       network_interface_public_ip as n
       left join azure_public_ip as p on p.id = n.pid
     where
-      p.id = $1;
+      n.id = $1;
   EOQ
 
   param "id" {}
