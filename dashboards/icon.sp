@@ -8,7 +8,9 @@ locals {
   azure_network_interface_icon       = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/network_interface.svg"))
   azure_network_security_group_icon  = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/network_security_group.svg"))
   azure_public_ip_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/public_ip.svg"))
-  azure_security_profile_icon        = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/security_profile.svg"))
+  azure_security_profile_icon         = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/security_profile.svg"))
+  azure_sql_database_icon            = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sql_database.svg"))
+  azure_sql_server_icon              = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sql_server.svg"))
   azure_storage_account_icon         = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/storage_account.svg"))
   azure_virtual_network_icon         = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/virtual_network.svg"))
 }
