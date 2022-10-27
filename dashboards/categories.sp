@@ -65,6 +65,7 @@ category "azure_virtual_network" {
     threshold = 3
   }
 }
+
 category "azure_image" {
   icon = local.azure_image_icon
   fold {
@@ -139,6 +140,52 @@ category "azure_network_security_group" {
   fold {
     title     = "Network Security Groups"
     icon = local.azure_network_security_group_icon
+    threshold = 3
+  }
+}
+
+category "azure_sql_server" {
+  icon = local.azure_sql_server_icon
+  fold {
+    title     = "SQL Servers"
+    icon      = local.azure_sql_server_icon
+    threshold = 3
+  }
+}
+
+category "azure_sql_server_firewall" {
+  fold {
+    title     = "SQL Server Firewalls"
+    threshold = 3
+  }
+}
+
+category "azure_sql_server_audit_policy" {
+  fold {
+    title     = "SQL Server Audit Policies"
+    threshold = 3
+  }
+}
+
+category "azure_sql_server_private_endpoint_connection" {
+  fold {
+    title     = "SQL Server Private Endpoint Connection"
+    threshold = 3
+  }
+}
+
+category "azure_sql_database" {
+  icon = local.azure_sql_database_icon
+  fold {
+    title     = "SQL Databases"
+    icon      = local.azure_sql_database_icon
+    threshold = 3
+  }
+}
+
+category "azure_key_vault_key" {
+  fold {
+    title     = "Keys"
     threshold = 3
   }
 }
