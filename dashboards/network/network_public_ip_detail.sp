@@ -50,12 +50,14 @@ dashboard "azure_network_public_ip_detail" {
       nodes = [
         node.azure_network_public_ip_node,
         node.azure_network_public_ip_from_network_interface_node,
-        node.azure_network_public_ip_from_compute_virtual_machine_node
+        node.azure_network_public_ip_network_interface_from_compute_virtual_machine_node,
+        node.azure_network_public_ip_from_api_management_node
       ]
 
       edges = [
         edge.azure_network_public_ip_from_network_interface_edge,
-        edge.azure_network_public_ip_from_compute_virtual_machine_edge
+        edge.azure_network_public_ip_network_interface_from_compute_virtual_machine_edge,
+        edge.azure_network_public_ip_from_api_management_edge
       ]
 
       args = {
@@ -88,46 +90,30 @@ dashboard "azure_network_public_ip_detail" {
           id = self.input.nip_id.value
         }
       }
-
     }
 
-    // container {
+    container {
 
-    //   width = 6
+      width = 6
 
-    //   table {
-    //     title = "Association"
-    //     query = query.azure_network_public_ip_association_details
-    //     args = {
-    //       arn = self.input.nip_id.value
-    //     }
+      table {
+        title = "Association"
+        query = query.azure_network_public_ip_association_details
+        args = {
+          id = self.input.nip_id.value
+        }
+      }
 
-    //     column "Instance ID" {
-    //       display = "none"
-    //     }
-
-    //     column "Instance ID" {
-    //       href = "${dashboard.aws_ec2_instance_detail.url_path}?input.instance_arn={{.'Instance ARN' | @uri}}"
-    //     }
-
-    //     column "Network Interface ID" {
-    //       href = "/aws_insights.dashboard.aws_ec2_network_interface_detail?input.network_interface_id={{.'Network Interface ID' | @uri}}"
-    //     }
-    //   }
-
-    //   table {
-    //     title = "Other IP Addresses"
-    //     query = query.aws_vpc_eip_other_ip
-    //     args = {
-    //       arn = self.input.eip_arn.value
-    //     }
-    //   }
-    // }
-
+      // table {
+      //   title = "Other IP Addresses"
+      //   query = query.aws_vpc_eip_other_ip
+      //   args = {
+      //     arn = self.input.eip_arn.value
+      //   }
+      // }
+    }
   }
 }
-
-
 
 query "azure_network_public_ip_input" {
   sql = <<-EOQ
@@ -233,11 +219,11 @@ edge "azure_network_public_ip_from_network_interface_edge" {
   param "id" {}
 }
 
-node "azure_network_public_ip_from_compute_virtual_machine_node" {
+node "azure_network_public_ip_network_interface_from_compute_virtual_machine_node" {
   category = category.azure_compute_virtual_machine
 
   sql = <<-EOQ
-    with vm_public_ip as (
+    with vm_network_interface as (
       select
         id,
         title,
@@ -245,10 +231,16 @@ node "azure_network_public_ip_from_compute_virtual_machine_node" {
         subscription_id,
         resource_group,
         region,
-        jsonb_array_elements_text(public_ips) as ip
+        jsonb_array_elements(network_interfaces)->>'id' as n_id
       from
         azure_compute_virtual_machine
-    )
+    ),  ni_public_ip as (
+          select
+            id,
+            jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+          from
+            azure_network_interface
+        )
     select
       v.id as id,
       v.title as title,
@@ -260,8 +252,9 @@ node "azure_network_public_ip_from_compute_virtual_machine_node" {
         'Region', v.region
       ) as properties
     from
-      vm_public_ip as v
-      left join azure_public_ip as p on (v.ip)::inet = p.ip_address
+      vm_network_interface as v
+      left join ni_public_ip as n on v.n_id = n.id
+      left join azure_public_ip as p on n.pid = p.id
     where
       p.id = $1;
   EOQ
@@ -269,23 +262,101 @@ node "azure_network_public_ip_from_compute_virtual_machine_node" {
   param "id" {}
 }
 
-edge "azure_network_public_ip_from_compute_virtual_machine_edge" {
-  title = "public ip"
+edge "azure_network_public_ip_network_interface_from_compute_virtual_machine_edge" {
+  title = "virtual machine"
 
   sql = <<-EOQ
-    with vm_public_ip as (
+    with vm_network_interface as (
       select
         id,
-        jsonb_array_elements_text(public_ips) as ip
+        title,
+        provisioning_state,
+        subscription_id,
+        resource_group,
+        region,
+        jsonb_array_elements(network_interfaces)->>'id' as nid
       from
         azure_compute_virtual_machine
+    ),
+    ni_public_ip as (
+      select
+        id,
+        jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+      from
+        azure_network_interface
     )
     select
       v.id as from_id,
+      n.id as to_id
+    from
+      vm_network_interface as v
+      left join ni_public_ip as n on v.nid = n.id
+      left join azure_public_ip as p on n.pid = p.id
+    where
+      p.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_network_public_ip_from_api_management_node" {
+  category = category.azure_api_management
+
+  sql = <<-EOQ
+    with public_ip_api_management as (
+      select
+        id,
+        title,
+        provisioning_state,
+        subscription_id,
+        resource_group,
+        region,
+        jsonb_array_elements_text(public_ip_addresses) as pid
+      from
+        azure_api_management
+    )
+    select
+      a.id as id,
+      a.title as title,
+      jsonb_build_object(
+        'Title', a.title,
+        'Provisioning State', a.provisioning_state,
+        'Subscription ID', a.subscription_id,
+        'Resource Group', a.resource_group,
+        'Region', a.region
+      ) as properties
+    from
+      public_ip_api_management as a
+      left join azure_public_ip as p on (a.pid)::inet = p.ip_address
+    where
+      p.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_network_public_ip_from_api_management_edge" {
+  title = "api management"
+
+  sql = <<-EOQ
+   with public_ip_api_management as (
+      select
+        id,
+        title,
+        provisioning_state,
+        subscription_id,
+        resource_group,
+        region,
+        jsonb_array_elements_text(public_ip_addresses) as pid
+      from
+        azure_api_management
+    )
+    select
+      a.id as from_id,
       p.id as to_id
     from
-      vm_public_ip as v
-      left join azure_public_ip as p on (v.ip)::inet = p.ip_address
+      public_ip_api_management as a
+      left join azure_public_ip as p on (a.pid)::inet = p.ip_address
     where
       p.id = $1;
   EOQ
@@ -310,7 +381,7 @@ query "azure_network_public_ip_address" {
 query "azure_network_public_ip_sku_name" {
   sql = <<-EOQ
     select
-      'Sku Name' as label,
+      'SKU Name' as label,
       sku_name as value
     from
       azure_public_ip
@@ -370,3 +441,53 @@ query "azure_network_public_ip_tags" {
   param "id" {}
 }
 
+query "azure_network_public_ip_association_details" {
+  sql = <<-EOQ
+     -- Network Interface
+    with network_interface_public_ip as (
+      select
+        id,
+        title,
+        type,
+        jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+      from
+        azure_network_interface
+    ),  public_ip_api_management as (
+      select
+        id,
+        title,
+        type,
+        jsonb_array_elements_text(public_ip_addresses) as pid
+      from
+        azure_api_management
+    )
+
+    select
+      n.title as "Title",
+      n.type as  "Type",
+      n.id as "ID",
+      null as link
+    from
+      network_interface_public_ip as n
+      left join azure_public_ip as p on n.pid = p.id
+    where
+      p.id = $1
+
+
+    -- API Management
+    union all
+
+    select
+      a.title as "Title",
+      a.type as  "Type",
+      a.id as "ID",
+      null as link
+    from
+      public_ip_api_management as a
+      left join azure_public_ip as p on (a.pid)::inet = p.ip_address
+    where
+      p.id = $1
+  EOQ
+
+  param "id" {}
+}

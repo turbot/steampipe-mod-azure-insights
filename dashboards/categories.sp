@@ -53,3 +53,10 @@ category "azure_network_security_group" {
     threshold = 3
   }
 }
+
+category "azure_api_management" {
+  fold {
+    title     = "API Managements"
+    threshold = 3
+  }
+}
