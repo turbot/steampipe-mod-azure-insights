@@ -1,7 +1,7 @@
 dashboard "azure_network_public_ip_detail" {
 
   title         = "Azure Network Public IP Detail"
-  // documentation = file("./dashboards/vpc/docs/vpc_eip_detail.md")
+  documentation = file("./dashboards/network/docs/network_public_ip_detail.md")
 
   tags = merge(local.network_common_tags, {
     type = "Detail"
