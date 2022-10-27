@@ -105,11 +105,9 @@ query "azure_network_public_ip_input" {
       p.title as label,
       p.id as value,
       json_build_object(
-        'Name', p.name,
-        'ID', p.id,
-        'Subscription ID', p.subscription_id,
-        'Resource Group', p.resource_group,
-        'Region', p.region
+        'subscription', s.display_name,
+        'resource_group', p.resource_group,
+        'region', p.region
       ) as tags
     from
       azure_public_ip as p,
