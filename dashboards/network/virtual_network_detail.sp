@@ -43,6 +43,34 @@ dashboard "azure_virtual_network_detail" {
 
   container {
 
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.azure_virtual_network_node,
+        node.azure_virtual_network_to_subnet_node,
+        node.azure_virtual_network_subnet_to_route_table_node,
+        node.azure_virtual_network_subnet_to_network_security_group_node,
+        node.azure_virtual_network_subnet_to_network_peering_node
+      ]
+
+      edges = [
+        edge.azure_virtual_network_to_subnet_edge,
+        edge.azure_virtual_network_subnet_to_route_table_edge,
+        edge.azure_virtual_network_subnet_to_network_security_group_edge,
+        edge.azure_virtual_network_subnet_to_network_peering_edge
+      ]
+
+      args = {
+        id = self.input.vn_id.value
+      }
+    }
+  }
+
+  container {
+
     container {
       width = 6
 
@@ -92,7 +120,6 @@ dashboard "azure_virtual_network_detail" {
       }
     }
   }
-
 
   container {
 
@@ -707,6 +734,251 @@ query "azure_virtual_network_address_prefixes" {
       jsonb_array_elements(address_prefixes) as p
     where
       id = $1
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_virtual_network_node" {
+  category = category.azure_virtual_network
+
+  sql = <<-EOQ
+    select
+      id as id,
+      title as title,
+      jsonb_build_object(
+        'ID',  id,
+        'Name', name,
+        'Etag', etag,
+        'Type', type,
+        'Region', region,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
+      ) as properties
+    from
+      azure_virtual_network
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_virtual_network_to_subnet_node" {
+  category = category.azure_subnet
+
+  sql = <<-EOQ
+    select
+      sub.id as id,
+      sub.title as title,
+      jsonb_build_object(
+        'ID', sub.id,
+        'Name', sub.name,
+        'Type', sub.type,
+        'Resource Group', sub.resource_group,
+        'Subscription ID', sub.subscription_id
+      ) as properties
+    from
+      azure_virtual_network as v,
+      jsonb_array_elements(subnets) as s
+      left join azure_subnet as sub on lower(sub.id) = lower(s ->> 'id')
+    where
+      v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_virtual_network_to_subnet_edge" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      v.id as from_id,
+      sub.id as to_id
+    from
+      azure_virtual_network as v,
+      jsonb_array_elements(subnets) as s
+      left join azure_subnet as sub on lower(sub.id) = lower(s ->> 'id')
+    where
+      v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_virtual_network_subnet_to_route_table_node" {
+  category = category.azure_route_table
+
+  sql = <<-EOQ
+    with subnet_list as (
+      select
+        s ->> 'id' as subnet_id
+      from
+        azure_virtual_network as v,
+        jsonb_array_elements(v.subnets) as s
+      where
+        v.id = $1
+    )
+    select
+      r.id as id,
+      r.title as title,
+      jsonb_build_object(
+        'ID', r.id,
+        'Name', r.name,
+        'Type', r.type,
+        'Resource Group', r.resource_group,
+        'Subscription ID', r.subscription_id
+      ) as properties
+    from
+      azure_route_table as r,
+      jsonb_array_elements(r.subnets) as sub
+    where
+      sub ->> 'id' in (select subnet_id from subnet_list)
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_virtual_network_subnet_to_route_table_edge" {
+  title = "route table"
+
+  sql = <<-EOQ
+    with subnet_list as (
+      select
+        s ->> 'id' as subnet_id
+      from
+        azure_virtual_network as v,
+        jsonb_array_elements(v.subnets) as s
+      where
+        v.id = $1
+    )
+    select
+      sub ->> 'id' as from_id,
+      r.id as to_id
+    from
+      azure_route_table as r,
+      jsonb_array_elements(r.subnets) as sub
+    where
+      sub ->> 'id' in (select subnet_id from subnet_list)
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_virtual_network_subnet_to_network_security_group_node" {
+  category = category.azure_network_security_group
+
+  sql = <<-EOQ
+    with subnet_list as (
+      select
+        s ->> 'id' as subnet_id
+      from
+        azure_virtual_network as v,
+        jsonb_array_elements(v.subnets) as s
+      where
+        v.id = $1
+    )
+    select
+      nsg.id as id,
+      nsg.title as title,
+      jsonb_build_object(
+        'ID', nsg.id,
+        'Name', nsg.name,
+        'Type', nsg.type,
+        'Resource Group', nsg.resource_group,
+        'Subscription ID', nsg.subscription_id
+      ) as properties
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(nsg.subnets) as sub
+    where
+      sub ->> 'id' in (select subnet_id from subnet_list)
+  EOQ
+
+  param "id" {}
+
+}
+
+edge "azure_virtual_network_subnet_to_network_security_group_edge" {
+  title = "nsg"
+
+  sql = <<-EOQ
+    with subnet_list as (
+      select
+        s ->> 'id' as subnet_id
+      from
+        azure_virtual_network as v,
+        jsonb_array_elements(v.subnets) as s
+      where
+        v.id = $1
+    )
+    select
+      sub ->> 'id' as from_id,
+      nsg.id as to_id
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(nsg.subnets) as sub
+    where
+      sub ->> 'id' in (select subnet_id from subnet_list)
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_virtual_network_subnet_to_network_peering_node" {
+  category = category.azure_virtual_network
+
+  sql = <<-EOQ
+    with peering_vn as (
+      select
+        p -> 'properties' -> 'remoteVirtualNetwork' ->> 'id' as peering_vn
+      from
+        azure_virtual_network as v,
+        jsonb_array_elements(network_peerings) as p
+      where
+        v.id = $1
+    )
+    select
+      v.id as id,
+      v.title as title,
+      jsonb_build_object(
+        'ID', id,
+        'Name', v.name,
+        'Etag', v.etag,
+        'Region', v.region,
+        'Type', v.type,
+        'Resource Group', v.resource_group,
+        'Subscription ID', v.subscription_id
+      ) as properties
+    from
+      azure_virtual_network as v
+      right join peering_vn as p on p.peering_vn = v.id
+  EOQ
+
+  param "id" {}
+
+}
+
+edge "azure_virtual_network_subnet_to_network_peering_edge" {
+  title = "network peering"
+
+  sql = <<-EOQ
+    with peering_vn as (
+      select
+        p -> 'properties' -> 'remoteVirtualNetwork' ->> 'id' as peering_vn
+      from
+        azure_virtual_network as v,
+        jsonb_array_elements(network_peerings) as p
+      where
+        v.id = $1
+    )
+    select
+      $1 as from_id,
+      p.peering_vn as to_id
+    from
+      azure_virtual_network as v
+      right join peering_vn as p on p.peering_vn = v.id
   EOQ
 
   param "id" {}

@@ -1,5 +1,6 @@
 This dashboard answers the following questions for each public IP:
 
-- How is the network public IP configured?
+- How is the public IP configured?
 - What tags are applied?
-- Which virtual machines, network interfaces and API managements is it attached to?
+- Which resource is it associated to?
+- What relationships does the public IP have with other resources?
