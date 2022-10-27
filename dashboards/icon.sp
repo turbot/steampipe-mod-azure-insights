@@ -1,5 +1,5 @@
 locals {
-  azure_app_service_web_app_icon         = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/app_service_web_app.svg"))
+  azure_app_service_web_app_icon     = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/app_service_web_app.svg"))
   azure_application_gateway_icon     = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/application_gateway.svg"))
   azure_compute_disk_icon            = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/compute_disk.svg"))
   azure_compute_snapshot_icon        = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/compute_snapshot.svg"))
@@ -13,6 +13,7 @@ locals {
   azure_public_ip_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/public_ip.svg"))
   azure_route_table_icon             = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/route_table.svg"))
   azure_security_profile_icon        = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/security_profile.svg"))
+  azure_sql_database_icon            = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sql_database.svg"))
   azure_sql_server_icon              = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/sql_server.svg"))
   azure_storage_account_icon         = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/storage_account.svg"))
   azure_storage_container_icon       = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/storage_container.svg"))
