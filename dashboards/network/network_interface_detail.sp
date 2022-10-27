@@ -113,11 +113,9 @@ query "azure_network_interface_id_input" {
       title as label,
       id as value,
       json_build_object(
-        'Name', name,
-        'ID', id,
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Region', region
+        'subscription', subscription_id,
+        'resource_group', resource_group,
+        'region', region
       ) as tags
     from
       azure_network_interface
@@ -301,7 +299,7 @@ node "azure_network_interface_from_public_ip_address_node" {
 }
 
 edge "azure_network_interface_from_public_ip_address_edge" {
-  title = "network interface"
+  title = "public ip"
 
   sql = <<-EOQ
     with network_interface_public_ip as (
@@ -316,7 +314,7 @@ edge "azure_network_interface_from_public_ip_address_edge" {
       n.id as to_id
     from
       network_interface_public_ip as n
-      left join azure_public_ip as p on n.pid = p.id
+      left join azure_public_ip as p on p.id = n.pid
     where
       p.id = $1;
   EOQ
