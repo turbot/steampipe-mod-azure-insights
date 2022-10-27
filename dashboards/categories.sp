@@ -1,4 +1,5 @@
 category "azure_storage_account" {
+  href = "/azure_insights.dashboard.azure_storage_account_detail?input.storage_account_id={{.properties.'ID' | @uri}}"
   icon = local.azure_storage_account_icon
   fold {
     title     = "Storage Accounts"
@@ -8,6 +9,7 @@ category "azure_storage_account" {
 }
 
 category "azure_compute_virtual_machine" {
+  href = "/azure_insights.dashboard.azure_compute_virtual_machine_detail?input.vm_id={{.properties.'ID' | @uri}}"
   icon = local.azure_compute_virtual_machine_icon
   fold {
     title     = "Compute Virtual Machines"
@@ -42,6 +44,7 @@ category "azure_network_interface" {
 }
 
 category "azure_subnet" {
+  href = "/azure_insights.dashboard.azure_network_subnet_detail?input.subnet_id={{.properties.'ID' | @uri}}"
   fold {
     title     = "Subnets"
     threshold = 3
@@ -58,6 +61,7 @@ category "azure_public_ip" {
 }
 
 category "azure_virtual_network" {
+  href = "/azure_insights.dashboard.azure_virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
   icon = local.azure_virtual_network_icon
   fold {
     title     = "Virtual Networks"
@@ -65,6 +69,7 @@ category "azure_virtual_network" {
     threshold = 3
   }
 }
+
 category "azure_image" {
   icon = local.azure_image_icon
   fold {
@@ -82,8 +87,10 @@ category "azure_storage_table" {
 }
 
 category "azure_storage_container" {
+  icon = local.azure_storage_container_icon
   fold {
     title     = "Storage Containers"
+    icon = local.azure_storage_container_icon
     threshold = 3
   }
 }
@@ -103,6 +110,7 @@ category "azure_diagnostic_setting" {
 }
 
 category "azure_key_vault" {
+  href = "/azure_insights.dashboard.azure_key_vault_detail?input.key_vault_id={{.properties.'ID' | @uri}}"
   icon = local.azure_key_vault_icon
   fold {
     title     = "Key Vaults"
@@ -121,24 +129,73 @@ category "azure_compute_disk" {
 }
 
 category "azure_storage_queue" {
+  icon = local.azure_storage_queue_icon
   fold {
     title     = "Storage Queues"
+    icon = local.azure_storage_queue_icon
     threshold = 3
   }
 }
 
 category "azure_route_table" {
+  icon = local.azure_route_table_icon
   fold {
     title     = "Route Tables"
+    icon = local.azure_route_table_icon
     threshold = 3
   }
 }
 
 category "azure_network_security_group" {
+  href = "/azure_insights.dashboard.azure_network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
   icon = local.azure_network_security_group_icon
   fold {
     title     = "Network Security Groups"
     icon = local.azure_network_security_group_icon
+    threshold = 3
+  }
+}
+
+category "azure_app_service_web_app" {
+  icon = local.azure_app_service_web_app_icon
+  fold {
+    title     = "Web Apps"
+    icon      = local.azure_app_service_web_app_icon
+    threshold = 3
+  }
+}
+
+category "azure_sql_server" {
+  href = "/azure_insights.dashboard.azure_sql_server_detail?input.server_id={{.properties.'ID' | @uri}}"
+  icon = local.azure_sql_server_icon
+  fold {
+    title     = "SQL Servers"
+    icon = local.azure_sql_server_icon
+    threshold = 3
+  }
+}
+
+category "azure_cosmosdb_account" {
+  icon = local.azure_cosmosdb_account_icon
+  fold {
+    title     = "Cosmos DB Accounts"
+    icon = local.azure_cosmosdb_account_icon
+    threshold = 3
+  }
+}
+
+category "azure_api_management" {
+  fold {
+    title     = "API Managements"
+    threshold = 3
+  }
+}
+
+category "azure_application_gateway" {
+  icon = local.azure_application_gateway_icon
+  fold {
+    title     = "Application Gateways"
+    icon = local.azure_application_gateway_icon
     threshold = 3
   }
 }
