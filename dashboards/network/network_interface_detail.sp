@@ -102,7 +102,6 @@ dashboard "azure_network_interface_detail" {
 
       table {
         title = "Private IP Addresses"
-        width = 8
         query = query.azure_network_private_ip
         args = {
           id = self.input.nic_id.value
