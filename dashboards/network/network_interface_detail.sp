@@ -156,12 +156,12 @@ node "azure_network_interface_to_network_security_group_node" {
   category = category.azure_network_security_group
 
   sql = <<-EOQ
-  with network_security_group_id as (
-    select
-      network_security_group_id as sid,
-      id as nid
-    from
-      azure_network_interface 
+    with network_security_group_id as (
+      select
+        network_security_group_id as sid,
+        id as nid
+      from
+        azure_network_interface 
     )
     select
       nsg.id as id,
@@ -223,7 +223,7 @@ edge "azure_network_interface_from_compute_virtual_machine_edge" {
   title = "attached to"
 
   sql = <<-EOQ
-  with vm_network_interface_id as (
+    with vm_network_interface_id as (
       select
         id,
         name,
@@ -248,12 +248,12 @@ edge "azure_network_interface_to_network_security_group_edge" {
   title = "network security group"
   sql   = <<-EOQ
     with network_security_group_id as (
-  select
-      network_security_group_id as sid,
-      id as nid
-    from
-      azure_network_interface
-  )
+      select
+        network_security_group_id as sid,
+        id as nid
+      from
+        azure_network_interface
+    )
     select
       nsg.id as to_id,
       nic.nid as from_id
@@ -381,20 +381,8 @@ query "azure_network_interface_accelerated_networking_enabled" {
   sql = <<-EOQ
     select
       'Accelerated Networking' as label,
-      case
-        when enable_accelerated_networking
-        then
-          'Enabled'
-        else
-          'Disabled'
-      end as value,
-      case
-        when enable_accelerated_networking
-        then
-          'ok'
-        else
-          'alert'
-      end as type
+      case when enable_accelerated_networking then 'Enabled' else 'Disabled' end as value,
+      case when enable_accelerated_networking then 'Ok' else 'Alert' end as type
     from
       azure_network_interface
     where
