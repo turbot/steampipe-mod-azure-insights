@@ -108,13 +108,9 @@ dashboard "azure_network_interface_detail" {
           id = self.input.nic_id.value
         }
       }
-
     }
-
   }
 }
-
-
 
 query "azure_network_interface_id_input" {
   sql = <<-EOQ
@@ -161,12 +157,12 @@ node "azure_network_interface_to_network_security_group_node" {
 
   sql = <<-EOQ
   with network_security_group_id as (
-  select
+    select
       network_security_group_id as sid,
       id as nid
     from
       azure_network_interface 
-  )
+    )
     select
       nsg.id as id,
       nsg.title as title,
@@ -191,7 +187,7 @@ node "azure_network_interface_from_compute_virtual_machine_node" {
   category = category.azure_compute_virtual_machine
 
   sql = <<-EOQ
-  with vm_network_interface_id as (
+    with vm_network_interface_id as (
       select
         id,
         name,
@@ -218,7 +214,6 @@ node "azure_network_interface_from_compute_virtual_machine_node" {
       left join azure_network_interface as n on v.n_id = n.id
     where
       n.id = $1;
-
   EOQ
 
   param "id" {}
@@ -244,8 +239,6 @@ edge "azure_network_interface_from_compute_virtual_machine_edge" {
       left join azure_network_interface as n on v.n_id = n.id
     where
       n.id = $1;
-
-
   EOQ
 
   param "id" {}
@@ -373,20 +366,8 @@ query "azure_network_interface_ip_forwarding_enabled" {
   sql = <<-EOQ
     select
       'IP Forwarding' as label,
-      case
-        when enable_ip_forwarding
-        then
-          'Enabled'
-        else
-          'Disabled'
-      end as value,
-      case
-        when enable_ip_forwarding
-        then
-          'ok'
-        else
-          'alert'
-      end as type
+      case when enable_ip_forwarding then 'Enabled' else 'Disabled' end as value,
+      case when enable_ip_forwarding then 'Ok' else 'Alert' end as type
     from
       azure_network_interface
     where
