@@ -239,7 +239,7 @@ query "azure_storage_account_kind" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      id = $1;
   EOQ
 
   param "id" {}
@@ -253,7 +253,7 @@ query "azure_storage_account_access_tier" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      id = $1;
   EOQ
 
   param "id" {}
@@ -268,7 +268,7 @@ query "azure_storage_account_blob_soft_delete" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      id = $1;
   EOQ
 
   param "id" {}
@@ -283,7 +283,7 @@ query "azure_storage_account_blob_public_access" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      id = $1;
   EOQ
 
   param "id" {}
@@ -298,7 +298,7 @@ query "azure_storage_account_https_traffic" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      id = $1;
   EOQ
 
   param "id" {}
@@ -313,7 +313,7 @@ query "azure_storage_account_unrestricted_network_access" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      id = $1;
   EOQ
 
   param "id" {}
@@ -328,7 +328,7 @@ query "azure_storage_account_infrastructure_encryption" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      id = $1;
   EOQ
 
   param "id" {}
@@ -347,7 +347,7 @@ query "azure_storage_account_overview" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+      id = $1
   EOQ
 
   param "id" {}
@@ -362,7 +362,7 @@ query "azure_storage_account_tags" {
       azure_storage_account,
       jsonb_each_text(tags) as tag
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+      id = $1
     order by
       tag.key;
     EOQ
@@ -378,7 +378,7 @@ query "azure_storage_account_blob_encryption_service" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+      id = $1
     EOQ
 
   param "id" {}
@@ -392,7 +392,7 @@ query "azure_storage_account_file_encryption_service" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+      id = $1
     EOQ
 
   param "id" {}
@@ -406,7 +406,7 @@ query "azure_storage_account_sku" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+      id = $1
     EOQ
 
   param "id" {}
@@ -422,7 +422,7 @@ query "azure_storage_account_virtual_network_rules" {
       azure_storage_account,
       jsonb_array_elements(virtual_network_rules) as vnr
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+      id = $1
     EOQ
 
   param "id" {}
@@ -441,7 +441,7 @@ query "azure_storage_account_blob_configurations" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+      id = $1
     EOQ
 
   param "id" {}
@@ -459,7 +459,7 @@ query "azure_storage_account_queue_logging" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+      id = $1
     EOQ
 
   param "id" {}
@@ -476,7 +476,7 @@ query "azure_storage_account_blob_logging" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+      id = $1
     EOQ
 
   param "id" {}
@@ -500,7 +500,7 @@ node "azure_storage_account_node" {
     from
       azure_storage_account
     where
-      id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      id = $1;
   EOQ
 
   param "id" {}
@@ -524,7 +524,7 @@ node "azure_storage_account_from_log_profile_node" {
     from
       azure_log_profile
     where
-      storage_account_id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      storage_account_id = $1;
   EOQ
 
   param "id" {}
@@ -540,7 +540,7 @@ edge "azure_storage_account_from_log_profile_edge" {
     from
       azure_log_profile
     where
-      storage_account_id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      storage_account_id = $1;
   EOQ
 
   param "id" {}
@@ -565,7 +565,7 @@ node "azure_storage_account_from_compute_snapshot_node" {
     from
       azure_compute_snapshot
     where
-      storage_account_id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      storage_account_id = $1;
   EOQ
 
   param "id" {}
@@ -581,7 +581,7 @@ edge "azure_storage_account_from_compute_snapshot_edge" {
     from
       azure_compute_snapshot
     where
-      storage_account_id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      storage_account_id = $1;
   EOQ
 
   param "id" {}
@@ -607,7 +607,7 @@ node "azure_storage_account_from_compute_disk_node" {
     from
       azure_compute_disk
     where
-      creation_data_storage_account_id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      creation_data_storage_account_id = $1;
   EOQ
 
   param "id" {}
@@ -623,7 +623,7 @@ edge "azure_storage_account_from_compute_disk_edge" {
     from
       azure_compute_disk
     where
-      creation_data_storage_account_id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      creation_data_storage_account_id = $1;
   EOQ
 
   param "id" {}
@@ -646,7 +646,7 @@ node "azure_storage_account_from_diagnostic_setting_node" {
     from
       azure_diagnostic_setting
     where
-      storage_account_id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      storage_account_id = $1;
   EOQ
 
   param "id" {}
@@ -662,7 +662,7 @@ edge "azure_storage_account_from_diagnostic_setting_edge" {
     from
       azure_diagnostic_setting
     where
-      storage_account_id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      storage_account_id = $1;
   EOQ
 
   param "id" {}
@@ -679,7 +679,7 @@ node "azure_storage_account_to_subnet_node" {
         azure_storage_account,
         jsonb_array_elements(virtual_network_rules) as r
       where
-        id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+        id = $1
     )
     select
       lower(id) as id,
@@ -711,7 +711,7 @@ edge "azure_storage_account_to_subnet_edge" {
         azure_storage_account,
         jsonb_array_elements(virtual_network_rules) as r
       where
-        id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+        id = $1
     )
     select
       l.storage_account_id as from_id,
@@ -735,7 +735,7 @@ node "azure_storage_account_subnet_to_vpc_node" {
         azure_storage_account,
         jsonb_array_elements(virtual_network_rules) as r
       where
-        id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+        id = $1
     )
     select
       lower(id) as id,
@@ -767,7 +767,7 @@ edge "azure_storage_account_subnet_to_vpc_edge" {
         azure_storage_account,
         jsonb_array_elements(virtual_network_rules) as r
       where
-        id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550'
+        id = $1
     )
     select
       lower(l.subnet_id) as from_id,
@@ -799,7 +799,7 @@ node "azure_storage_account_to_storage_table_node" {
       azure_storage_account as a
       left join azure_storage_table as t on t.storage_account_name = a.name
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -816,7 +816,7 @@ edge "azure_storage_account_to_storage_table_edge" {
       azure_storage_account as a
       left join azure_storage_table as t on t.storage_account_name = a.name
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -841,7 +841,7 @@ node "azure_storage_account_to_storage_queue_node" {
       azure_storage_account as a
       left join azure_storage_queue as q on q.storage_account_name = a.name
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -858,7 +858,7 @@ edge "azure_storage_account_to_storage_queue_edge" {
       azure_storage_account as a
       left join azure_storage_queue as q on q.storage_account_name = a.name
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -883,7 +883,7 @@ node "azure_storage_account_to_storage_container_node" {
       left join azure_storage_account as a on a.name = c.account_name
       and a.resource_group = c.resource_group
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -901,7 +901,7 @@ edge "azure_storage_account_to_storage_container_edge" {
       left join azure_storage_account as a on a.name = c.account_name
       and a.resource_group = c.resource_group
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -927,7 +927,7 @@ node "azure_storage_account_container_to_storage_blob_node" {
       left join azure_storage_blob as b on b.storage_account_name = a.name
       and b.resource_group = a.resource_group and b.container_name = c.name
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -946,7 +946,7 @@ edge "azure_storage_account_container_to_storage_blob_edge" {
       left join azure_storage_blob as b on b.storage_account_name = a.name
       and b.resource_group = a.resource_group and b.container_name = c.name
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -970,7 +970,7 @@ node "azure_storage_account_to_key_vault_node" {
       azure_storage_account as a
       left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -987,7 +987,7 @@ edge "azure_storage_account_to_key_vault_edge" {
       azure_storage_account as a
       left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -1012,7 +1012,7 @@ node "azure_storage_account_key_vault_to_key_vault_key_node" {
       left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
       left join azure_key_vault_key as key on key.vault_name = k.name
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
@@ -1030,7 +1030,7 @@ edge "azure_storage_account_key_vault_to_key_vault_key_edge" {
       left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
       left join azure_key_vault_key as key on key.vault_name = k.name
     where
-      a.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/turbottest29550/providers/Microsoft.Storage/storageAccounts/turbottest29550';
+      a.id = $1;
   EOQ
 
   param "id" {}
