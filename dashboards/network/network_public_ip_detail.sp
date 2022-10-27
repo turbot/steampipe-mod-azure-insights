@@ -30,14 +30,6 @@ dashboard "azure_network_public_ip_detail" {
         id = self.input.nip_id.value
       }
     }
-
-    card {
-      width = 2
-      query = query.azure_network_public_ip_ddos_settings_protected_ip
-      args = {
-        id = self.input.nip_id.value
-      }
-    }
   }
 
   container {
@@ -103,14 +95,6 @@ dashboard "azure_network_public_ip_detail" {
           id = self.input.nip_id.value
         }
       }
-
-      // table {
-      //   title = "Other IP Addresses"
-      //   query = query.aws_vpc_eip_other_ip
-      //   args = {
-      //     arn = self.input.eip_arn.value
-      //   }
-      // }
     }
   }
 }
