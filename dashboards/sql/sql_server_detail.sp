@@ -322,6 +322,7 @@ node "azure_sql_server_node" {
       title as title,
       jsonb_build_object(
         'ID', id,
+        'Name', name,
         'Region', region,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id,
@@ -428,6 +429,7 @@ node "azure_sql_server_from_subnet_node" {
       title as title,
       json_build_object(
         'Name', name,
+        'ID', id,
         'Type', type,
         'Address_prefix', address_prefix,
         'Resource Group', resource_group,
@@ -478,6 +480,7 @@ node "azure_sql_server_subnet_from_virtual_network_node" {
       json_build_object(
         'Name', name,
         'Type', type,
+        'ID', id,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id,
         'Address Prefixes', jsonb_array_elements_text(address_prefixes),
@@ -535,6 +538,7 @@ node "azure_sql_server_to_key_vault_node" {
       name as title,
       json_build_object(
         'Name', name,
+        'ID', id,
         'Type', type,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id,
@@ -552,10 +556,10 @@ node "azure_sql_server_to_key_vault_node" {
           azure_sql_server,
           jsonb_array_elements(encryption_protector) as ep
         where
-          id = $1 
+          id = $1
           and ep ->> 'kind' = 'azurekeyvault'
       );
-    
+
   EOQ
   param "id" {}
 }
@@ -611,7 +615,7 @@ node "azure_sql_server_keyvault_to_key_vault_key_node" {
         enabled,
         expires_at,
         key_type
-      from 
+      from
         azure_key_vault_key
     ),
     attached_keys as (
@@ -631,6 +635,7 @@ node "azure_sql_server_keyvault_to_key_vault_key_node" {
       json_build_object(
         'Name', b.key_vault_key_name,
         'Type', b.type,
+        'ID', b.id,
         'Resource Group', b.resource_group,
         'Subscription ID', b.subscription_id,
         'Curve Name', b.curve_name,
@@ -657,7 +662,7 @@ edge "azure_sql_server_keyvault_to_key_vault_key_edge" {
         name as key_vault_key_name,
         vault_name as key_vault_name,
         concat('/subscriptions/',subscription_id,'/resourceGroups/',resource_group,'/providers/Microsoft.KeyVault/vaults/',vault_name) as key_vault_id
-      from 
+      from
         azure_key_vault_key
     ),
     attached_keys as (
@@ -684,7 +689,7 @@ edge "azure_sql_server_keyvault_to_key_vault_key_edge" {
 
 node "azure_sql_server_to_sql_database_node" {
   category = category.azure_sql_database
-  
+
   sql = <<-EOQ
     select
       id as id,
@@ -692,6 +697,7 @@ node "azure_sql_server_to_sql_database_node" {
       json_build_object(
         'Name', name,
         'Type', type,
+        'ID', id,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id,
         'Zone Redundant', zone_redundant,
