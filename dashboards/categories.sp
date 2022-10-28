@@ -86,9 +86,25 @@ category "azure_key_vault" {
   }
 }
 
+category "azure_key_vault_firewall" {
+  icon = local.azure_key_vault_firewall_icon
+  fold {
+    title     = "Networking Firewalls"
+    icon      = local.azure_key_vault_firewall_icon
+    threshold = 3
+  }
+}
+
 category "azure_key_vault_key" {
   fold {
     title     = "Keys"
+    threshold = 3
+  }
+}
+
+category "azure_key_vault_secret" {
+  fold {
+    title     = "Secrets"
     threshold = 3
   }
 }
@@ -245,6 +261,13 @@ category "azure_mssql_elasticpool" {
   fold {
     title     = "SQL Elastic Pools"
     icon      = local.azure_mssql_elasticpool_icon
+    threshold = 3
+  }
+}
+
+category "azure_compute_disk_encryption_set" {
+  fold {
+    title     = "Compute Disk Encryption Sets"
     threshold = 3
   }
 }

@@ -6,6 +6,7 @@ locals {
   azure_compute_virtual_machine_icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/compute_virtual_machine.svg"))
   azure_cosmosdb_account_icon        = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/cosmosdb_account.svg"))
   azure_image_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/image.svg"))
+  azure_key_vault_firewall_icon      = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/azure_network_acl_light.svg"))
   azure_key_vault_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/key_vault.svg"))
   azure_manage_disk_icon             = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/manage_disk.svg"))
   azure_mssql_elasticpool_icon       = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/mssql_elasticpool.svg"))

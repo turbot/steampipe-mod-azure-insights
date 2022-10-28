@@ -52,6 +52,34 @@ dashboard "azure_key_vault_detail" {
 
   container {
 
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.azure_key_vault_node,
+        node.azure_key_vault_to_network_acl_node,
+        node.azure_key_vault_to_key_node,
+        node.azure_key_vault_to_secret_node,
+        node.azure_key_vault_from_compute_disk_encryption_set_node
+      ]
+
+      edges = [
+        edge.azure_key_vault_to_network_acl_edge,
+        edge.azure_key_vault_to_key_edge,
+        edge.azure_key_vault_to_secret_edge,
+        edge.azure_key_vault_from_compute_disk_encryption_set_edge
+      ]
+
+      args = {
+        id = self.input.key_vault_id.value
+      }
+    }
+  }
+
+  container {
+
     container {
       width = 6
 
@@ -305,6 +333,202 @@ query "azure_key_vault_usage" {
       azure_key_vault
     where
       id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_key_vault_node" {
+  category = category.azure_key_vault
+
+  sql = <<-EOQ
+    select
+      id,
+      name as title,
+      jsonb_build_object(
+        'Vault Name', name,
+        'Vault Id', id
+      ) as properties
+    from
+      azure_key_vault
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_key_vault_to_network_acl_node" {
+  category = category.azure_key_vault_firewall
+
+  sql = <<-EOQ
+    select
+      ip ->> 'value' as title,
+      ip ->> 'value' as id,
+      jsonb_build_object(
+        'By Pass', network_acls ->> 'bypass',
+        'Ip Rules', network_acls ->> 'ipRules',
+        'Default Action', network_acls ->> 'defaultAction',
+        'Virtual Network Rules', network_acls ->> 'virtualNetworkRules'
+      ) as properties
+      from
+        azure_key_vault,
+        jsonb_array_elements(network_acls -> 'ipRules') as ip
+      where
+        id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_key_vault_to_network_acl_edge" {
+  title = "allows access"
+
+  sql = <<-EOQ
+    select
+      id as from_id,
+      ip ->> 'value' as to_id
+    from
+      azure_key_vault,
+      jsonb_array_elements(network_acls -> 'ipRules') as ip
+    where
+     id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_key_vault_to_key_node" {
+  category = category.azure_key_vault_key
+
+  sql = <<-EOQ
+    select
+      k.name as title,
+      k.id as id,
+      jsonb_build_object(
+        'Key Name', k.name,
+        'Id',  k.id,
+        'Key Type', k.key_type,
+        'Key Size', k.key_size,
+        'Created At', k.created_at,
+        'Expires At', k.expires_at,
+        'Vault Name', k.vault_name
+      ) as properties
+    from
+      azure_key_vault_key as k
+      left join azure_key_vault as v on v.name = k.vault_name
+    where
+      v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_key_vault_to_key_edge" {
+  title = "key"
+
+  sql = <<-EOQ
+    select
+      v.id as from_id,
+      k.id as to_id
+    from
+      azure_key_vault as v,
+      azure_key_vault_key as k
+    where
+      v.name = k.vault_name
+    and
+      v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_key_vault_to_secret_node" {
+  category = category.azure_key_vault_secret
+
+  sql = <<-EOQ
+    select
+      s.name as title,
+      s.id as id,
+      jsonb_build_object(
+        'Secret Name', s.name,
+        'Secret Id', s.id,
+        'Created At', s.created_at,
+        'Expires At', s.expires_at,
+        'Vault Name', s.vault_name
+      ) as properties
+    from
+      azure_key_vault_secret as s
+      left join azure_key_vault as v on v.name = s.vault_name
+    where
+      v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_key_vault_to_secret_edge" {
+  title = "secret"
+
+  sql = <<-EOQ
+    select
+      v.id as from_id,
+      s.id as to_id
+    from
+      azure_key_vault as v,
+      azure_key_vault_secret as s
+    where
+      v.name = s.vault_name
+    and
+      v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_key_vault_from_compute_disk_encryption_set_node" {
+  category = category.azure_compute_disk_encryption_set
+
+  sql = <<-EOQ
+    select
+      s.id as id,
+      s.title as title,
+      jsonb_build_object(
+        'Name', s.name,
+        'ID', s.id,
+        'Provisioning State', s.provisioning_state,
+        'Encryption Type', s.encryption_type,
+        'Type', s.type,
+        'Region', s.region,
+        'Resource Group', s.resource_group,
+        'Subscription ID', s.subscription_id
+      ) as properties
+    from
+      azure_key_vault as v,
+      azure_key_vault_key as k
+      left join azure_compute_disk_encryption_set as s on s.active_key_url = k.key_uri_with_version
+    where
+      v.name = k.vault_name
+      and v.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.KeyVault/vaults/test-delete90';
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_key_vault_from_compute_disk_encryption_set_edge" {
+  title = "disk encryption set"
+
+  sql = <<-EOQ
+    select
+      s.id as from_id,
+      k.id as to_id
+    from
+      azure_key_vault as v,
+      azure_key_vault_key as k
+      left join azure_compute_disk_encryption_set as s on s.active_key_url = k.key_uri_with_version
+    where
+      v.name = k.vault_name
+      and v.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.KeyVault/vaults/test-delete90';
   EOQ
 
   param "id" {}
