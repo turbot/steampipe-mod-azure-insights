@@ -795,12 +795,7 @@ edge "azure_virtual_network_to_subnet_edge" {
   sql = <<-EOQ
     select
       v.id as from_id,
-      sub.id as to_id,
-      jsonb_build_object(
-        'Name', sub.name,
-        'Resource Group', sub.resource_group,
-        'Subscription ID', sub.subscription_id
-      ) as properties
+      sub.id as to_id
     from
       azure_virtual_network as v,
       jsonb_array_elements(subnets) as s
@@ -846,7 +841,7 @@ node "azure_virtual_network_subnet_to_route_table_node" {
 }
 
 edge "azure_virtual_network_subnet_to_route_table_edge" {
-  title = "nsg"
+  title = "route table"
 
   sql = <<-EOQ
     with subnet_list as (
@@ -860,12 +855,7 @@ edge "azure_virtual_network_subnet_to_route_table_edge" {
     )
     select
       sub ->> 'id' as from_id,
-      r.id as to_id,
-      jsonb_build_object(
-        'Name', r.name,
-        'Resource Group', r.resource_group,
-        'Subscription ID', r.subscription_id
-      ) as properties
+      r.id as to_id
     from
       azure_route_table as r,
       jsonb_array_elements(r.subnets) as sub
@@ -925,12 +915,7 @@ edge "azure_virtual_network_subnet_to_network_security_group_edge" {
     )
     select
       sub ->> 'id' as from_id,
-      nsg.id as to_id,
-      jsonb_build_object(
-        'Name', nsg.name,
-        'Resource Group', nsg.resource_group,
-        'Subscription ID', nsg.subscription_id
-      ) as properties
+      nsg.id as to_id
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(nsg.subnets) as sub
@@ -990,14 +975,7 @@ edge "azure_virtual_network_subnet_to_network_peering_edge" {
     )
     select
       $1 as from_id,
-      p.peering_vn as to_id,
-      jsonb_build_object(
-        'Name', v.name,
-        'Etag', v.etag,
-        'Region', v.region,
-        'Resource Group', v.resource_group,
-        'Subscription ID', v.subscription_id
-      ) as properties
+      p.peering_vn as to_id
     from
       azure_virtual_network as v
       right join peering_vn as p on p.peering_vn = v.id

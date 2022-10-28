@@ -117,6 +117,7 @@ category "azure_log_profile" {
 }
 
 category "azure_network_interface" {
+  href = "/azure_insights.dashboard.azure_network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
   icon = local.azure_network_interface_icon
   fold {
     title     = "Network Interfaces"
@@ -136,6 +137,7 @@ category "azure_network_security_group" {
 }
 
 category "azure_public_ip" {
+  href = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
   icon = local.azure_public_ip_icon
   fold {
     title     = "Public IPs"
@@ -154,6 +156,7 @@ category "azure_route_table" {
 }
 
 category "azure_sql_database" {
+  href = "/azure_insights.dashboard.azure_sql_database_detail?input.database_id={{.properties.'ID' | @uri}}"
   icon = local.azure_sql_database_icon
   fold {
     title     = "SQL Databases"
@@ -163,6 +166,7 @@ category "azure_sql_database" {
 }
 
 category "azure_sql_server" {
+  href = "/azure_insights.dashboard.azure_sql_server_detail?input.server_id={{.properties.'ID' | @uri}}"
   icon = local.azure_sql_server_icon
   fold {
     title     = "SQL Servers"
@@ -185,9 +189,9 @@ category "azure_sql_server_firewall" {
   }
 }
 
-category "azure_sql_server_private_endpoint_connection" {
+category "azure_private_endpoint_connection" {
   fold {
-    title     = "SQL Server Private Endpoint Connections"
+    title     = "Private Endpoint Connections"
     threshold = 3
   }
 }
@@ -248,6 +252,22 @@ category "azure_virtual_network" {
   fold {
     title     = "Virtual Networks"
     icon      = local.azure_virtual_network_icon
+    threshold = 3
+  }
+}
+
+category "azure_mssql_elasticpool" {
+  icon = local.azure_mssql_elasticpool_icon
+  fold {
+    title     = "SQL Elastic Pools"
+    icon      = local.azure_mssql_elasticpool_icon
+    threshold = 3
+  }
+}
+
+category "azure_compute_disk_encryption_set" {
+  fold {
+    title     = "Compute Disk Encryption Sets"
     threshold = 3
   }
 }

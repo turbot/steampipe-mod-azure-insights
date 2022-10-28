@@ -375,7 +375,7 @@ node "azure_compute_virtual_machine_node" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'VM ID', vm_id,
+        'ID', vm_id,
         'Subscription ID', subscription_id,
         'Resource Group', resource_group,
         'Provisioning State', provisioning_state,

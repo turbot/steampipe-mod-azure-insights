@@ -61,13 +61,15 @@ dashboard "azure_key_vault_detail" {
         node.azure_key_vault_node,
         node.azure_key_vault_to_network_acl_node,
         node.azure_key_vault_to_key_node,
-        node.azure_key_vault_to_secret_node
+        node.azure_key_vault_to_secret_node,
+        node.azure_key_vault_from_compute_disk_encryption_set_node
       ]
 
       edges = [
         edge.azure_key_vault_to_network_acl_edge,
         edge.azure_key_vault_to_key_edge,
-        edge.azure_key_vault_to_secret_edge
+        edge.azure_key_vault_to_secret_edge,
+        edge.azure_key_vault_from_compute_disk_encryption_set_edge
       ]
 
       args = {
@@ -401,7 +403,7 @@ node "azure_key_vault_to_key_node" {
 
   sql = <<-EOQ
     select
-      k.name as name,
+      k.name as title,
       k.id as id,
       jsonb_build_object(
         'Key Name', k.name,
@@ -446,7 +448,7 @@ node "azure_key_vault_to_secret_node" {
 
   sql = <<-EOQ
     select
-      s.name as name,
+      s.name as title,
       s.id as id,
       jsonb_build_object(
         'Secret Name', s.name,
@@ -479,6 +481,54 @@ edge "azure_key_vault_to_secret_edge" {
       v.name = s.vault_name
     and
       v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_key_vault_from_compute_disk_encryption_set_node" {
+  category = category.azure_compute_disk_encryption_set
+
+  sql = <<-EOQ
+    select
+      s.id as id,
+      s.title as title,
+      jsonb_build_object(
+        'Name', s.name,
+        'ID', s.id,
+        'Provisioning State', s.provisioning_state,
+        'Encryption Type', s.encryption_type,
+        'Type', s.type,
+        'Region', s.region,
+        'Resource Group', s.resource_group,
+        'Subscription ID', s.subscription_id
+      ) as properties
+    from
+      azure_key_vault as v,
+      azure_key_vault_key as k
+      left join azure_compute_disk_encryption_set as s on s.active_key_url = k.key_uri_with_version
+    where
+      v.name = k.vault_name
+      and v.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.KeyVault/vaults/test-delete90';
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_key_vault_from_compute_disk_encryption_set_edge" {
+  title = "disk encryption set"
+
+  sql = <<-EOQ
+    select
+      s.id as from_id,
+      k.id as to_id
+    from
+      azure_key_vault as v,
+      azure_key_vault_key as k
+      left join azure_compute_disk_encryption_set as s on s.active_key_url = k.key_uri_with_version
+    where
+      v.name = k.vault_name
+      and v.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.KeyVault/vaults/test-delete90';
   EOQ
 
   param "id" {}

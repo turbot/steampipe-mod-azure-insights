@@ -67,6 +67,31 @@ dashboard "azure_sql_database_detail" {
   }
 
   container {
+    graph {
+      title = "Relationships"
+      type = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.azure_sql_database_node,
+        node.azure_sql_database_from_sql_server_node,
+        node.azure_sql_database_to_vulnerability_assessments_node,
+        node.azure_sql_databaset_from_mssql_elasticpool_node
+      ]
+
+      edges = [
+        edge.azure_sql_database_from_sql_server_edge,
+        edge.azure_sql_database_to_vulnerability_assessments_edge,
+        edge.azure_sql_databaset_from_mssql_elasticpool_edge
+      ]
+
+      args = {
+        id = self.input.database_id.value
+      }
+    }
+  }
+
+  container {
 
     container {
       width = 6
@@ -263,6 +288,199 @@ query "azure_sql_database_geo_redundant_backup_enabled" {
       and id = $1;
   EOQ
 
+  param "id" {}
+}
+
+node "azure_sql_database_node" {
+  category = category.azure_sql_database
+  
+  sql = <<-EOQ
+    select
+      id as id,
+      name as title,
+      json_build_object(
+        'Location', location,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id,
+        'Database ID', database_id,
+        'status', status,
+        'Kind', kind,
+        'Type', type,
+        'Zone Redundant', zone_redundant,
+        'Default Secondary Location', default_secondary_location
+      ) as properties
+    from
+      azure_sql_database
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_database_from_sql_server_node" {
+  category = category.azure_sql_server
+
+  sql = <<-EOQ
+    with sql_servers as (
+      select
+        id,
+        name,
+        kind,
+        location,
+        public_network_access,
+        resource_group,
+        subscription_id,
+        version,
+        type
+      from
+        azure_sql_server
+    )
+    select
+      sv.id as id,
+      sv.name as title,
+      json_build_object(
+        'Name', sv.name,
+        'Kind', sv.kind,
+        'Location', sv.location,
+        'Public Network Access', sv.public_network_access,
+        'Resource Group', sv.resource_group,
+        'Subscription ID', sv.subscription_id,
+        'Version', sv.version,
+        'Type', sv.type,
+        'ID', sv.id
+      ) as properties
+    from
+      azure_sql_database as db,
+      sql_servers as sv
+    where
+      db.id = $1
+      and db.server_name = sv.name;
+  EOQ  
+
+  param "id" {}
+}
+
+edge "azure_sql_database_from_sql_server_edge" {
+  title = "manages"
+
+  sql = <<-EOQ
+    with sql_servers as (
+      select
+        id,
+        name
+      from
+        azure_sql_server
+    )
+    select
+      sv.id as from_id,
+      db.id as to_id
+    from
+      azure_sql_database as db,
+      sql_servers as sv
+    where
+      db.id = $1
+      and db.server_name = sv.name;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_database_to_vulnerability_assessments_node" {
+  sql = <<-EOQ
+    select
+      vs ->> 'id' as id,
+      vs ->> 'name' as title,
+      json_build_object(
+        'Name', vs ->> 'name',
+        'Type', vs ->> 'type',
+        'Enabled', vs -> 'recurringScans' ->> 'isEnabled'
+      ) as properties
+    from
+      azure_sql_database,
+      jsonb_array_elements(vulnerability_assessments) as vs
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_sql_database_to_vulnerability_assessments_edge" {
+  title = "vulnerability assessments"
+
+  sql = <<-EOQ
+    select
+      id as from_id,
+      vs ->> 'id' as to_id
+    from
+      azure_sql_database,
+      jsonb_array_elements(vulnerability_assessments) as vs
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_databaset_from_mssql_elasticpool_node" {
+  category = category.azure_mssql_elasticpool
+
+  sql = <<-EOQ
+    with sql_pools as (
+      select
+        id,
+        name,
+        type,
+        edition,
+        kind,
+        region,
+        state,
+        zone_redundant
+      from
+        azure_mssql_elasticpool
+    )
+    select
+      sp.id as id,
+      sp.name as title,
+      json_build_object(
+        'Edition', sp.edition,
+        'State', sp.state,
+        'Zone Redundant', sp.zone_redundant,
+        'Type', sp.type,
+        'ID', sp.id
+      ) as properties
+    from
+      azure_sql_database as db,
+      sql_pools as sp
+    where
+      db.id = $1
+      and sp.name = db.elastic_pool_name;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_sql_databaset_from_mssql_elasticpool_edge" {
+  title = "elastic pool"
+  sql = <<-EOQ
+    with sql_pools as (
+      select
+        id,
+        name
+      from
+        azure_mssql_elasticpool
+    )
+    select
+      sp.id as from_id,
+      db.id as to_id
+    from
+      azure_sql_database as db,
+      sql_pools as sp
+    where
+      db.id = $1
+      and sp.name = db.elastic_pool_name;
+  EOQ
   param "id" {}
 }
 
