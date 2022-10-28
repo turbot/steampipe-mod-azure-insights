@@ -84,7 +84,6 @@ dashboard "azure_network_subnet_detail" {
         args = {
           id = self.input.subnet_id.value
         }
-
       }
 
     }
@@ -138,11 +137,11 @@ query "azure_network_subnet_input" {
 query "azure_network_subnet_num_ips" {
   sql = <<-EOQ
     select
-       power(2, 32 - masklen(address_prefix:: cidr)) as "IP Addresses"
+      power(2, 32 - masklen(address_prefix:: cidr)) as "IP Addresses"
     from
       azure_subnet
     where
-      id = $1
+      id = $1;
   EOQ
 
   param "id" {}
@@ -155,7 +154,7 @@ query "azure_network_subnet_address_prefix" {
     from
       azure_subnet
     where
-      id = $1
+      id = $1;
   EOQ
 
   param "id" {}
@@ -175,7 +174,7 @@ query "azure_network_subnet_overview" {
     from
       azure_subnet
     where
-      id = $1
+      id = $1;
   EOQ
 
   param "id" {}
@@ -283,7 +282,7 @@ query "azure_network_subnet_association" {
       azure_route_table as r,
       jsonb_array_elements(r.subnets) as sub
     where
-      sub ->> 'id' = $1
+      sub ->> 'id' = $1;
   EOQ
 
   param "id" {}
@@ -347,12 +346,7 @@ edge "azure_network_subnet_to_virtual_network_edge" {
   sql = <<-EOQ
     select
       vn.id as from_id,
-      s.id as to_id,
-      jsonb_build_object(
-        'Name', vn.name,
-        'Resource Group', vn.resource_group,
-        'Subscription ID', vn.subscription_id
-      ) as properties
+      s.id as to_id
     from
       azure_subnet as s
       left join azure_virtual_network as vn on vn.name = s.virtual_network_name
@@ -374,6 +368,7 @@ node "azure_network_subnet_to_route_table_node" {
       r.title as title,
       jsonb_build_object(
         'Name', r.name,
+        'ID', r.id,
         'Type', r.type,
         'Resource Group', r.resource_group,
         'Subscription ID', r.subscription_id
@@ -382,7 +377,7 @@ node "azure_network_subnet_to_route_table_node" {
       azure_route_table as r,
       jsonb_array_elements(r.subnets) as sub
     where
-      sub ->> 'id' = $1
+      sub ->> 'id' = $1;
   EOQ
 
   param "id" {}
@@ -394,12 +389,7 @@ edge "azure_network_subnet_to_route_table_edge" {
   sql = <<-EOQ
     select
       sub ->> 'id' as from_id,
-      r.id as to_id,
-      jsonb_build_object(
-        'Name', r.name,
-        'Resource Group', r.resource_group,
-        'Subscription ID', r.subscription_id
-      ) as properties
+      r.id as to_id
     from
       azure_route_table as r,
       jsonb_array_elements(r.subnets) as sub
@@ -441,12 +431,7 @@ edge "azure_network_subnet_to_network_security_group_edge" {
   sql = <<-EOQ
     select
       sub ->> 'id' as from_id,
-      nsg.id as to_id,
-      jsonb_build_object(
-        'Name', nsg.name,
-        'Resource Group', nsg.resource_group,
-        'Subscription ID', nsg.subscription_id
-      ) as properties
+      nsg.id as to_id
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(nsg.subnets) as sub
@@ -479,7 +464,6 @@ node "azure_network_subnet_to_application_gateway_node" {
   EOQ
 
   param "id" {}
-
 }
 
 edge "azure_network_subnet_to_application_gateway_edge" {
@@ -488,12 +472,7 @@ edge "azure_network_subnet_to_application_gateway_edge" {
   sql = <<-EOQ
     select
       $1 as from_id,
-      id as to_id,
-      jsonb_build_object(
-        'Name', name,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      id as to_id
     from
       azure_application_gateway,
       jsonb_array_elements(gateway_ip_configurations) as c
@@ -514,7 +493,6 @@ node "azure_network_subnet_from_app_service_web_app_node" {
       jsonb_build_object(
         'ID', id,
         'Name', name,
-        'ID', id,
         'Type', type,
         'Kind', kind,
         'Resource Group', resource_group,
@@ -535,15 +513,7 @@ edge "azure_network_subnet_from_app_service_web_app_edge" {
   sql = <<-EOQ
     select
       id as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'Type', type,
-        'Kind', kind,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      $1 as to_id
     from
       azure_app_service_web_app
     where
@@ -585,15 +555,7 @@ edge "azure_network_subnet_from_sql_server_edge" {
   sql = <<-EOQ
     select
       id as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'Type', type,
-        'Kind', kind,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      $1 as to_id
     from
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as r
@@ -636,15 +598,7 @@ edge "azure_network_subnet_from_storage_account_edge" {
   sql = <<-EOQ
     select
       id as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'Type', type,
-        'Kind', kind,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      $1 as to_id
     from
       azure_storage_account,
       jsonb_array_elements(virtual_network_rules) as r
@@ -685,14 +639,7 @@ edge "azure_network_subnet_from_cosmosdb_account_edge" {
   sql = <<-EOQ
     select
       id as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'Type', type,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      $1 as to_id
     from
       azure_cosmosdb_account,
       jsonb_array_elements(virtual_network_rules) as r
@@ -733,15 +680,7 @@ edge "azure_network_subnet_from_api_management_edge" {
   sql = <<-EOQ
     select
       id as from_id,
-      $1 as to_id,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'ETag', etag,
-        'Type', type,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      $1 as to_id
     from
       azure_api_management
     where
