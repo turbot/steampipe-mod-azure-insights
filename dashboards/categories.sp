@@ -173,9 +173,9 @@ category "azure_sql_server_firewall" {
   }
 }
 
-category "azure_sql_server_private_endpoint_connection" {
+category "azure_private_endpoint_connection" {
   fold {
-    title     = "SQL Server Private Endpoint Connections"
+    title     = "Private Endpoint Connections"
     threshold = 3
   }
 }

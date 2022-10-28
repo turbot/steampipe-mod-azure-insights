@@ -730,7 +730,7 @@ edge "azure_sql_server_to_sql_database_edge" {
 }
 
 node "azure_sql_server_to_private_endpoint_node" {
-  category = category.azure_sql_server_private_endpoint_connection
+  category = category.azure_private_endpoint_connection
 
   sql = <<-EOQ
     select
