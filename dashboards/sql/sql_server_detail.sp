@@ -431,7 +431,8 @@ node "azure_sql_server_from_subnet_node" {
         'Type', type,
         'Address_prefix', address_prefix,
         'Resource Group', resource_group,
-        'Subscription ID', subscription_id
+        'Subscription ID', subscription_id,
+        'ID', id
       ) as properties
     from
       azure_subnet
@@ -479,7 +480,8 @@ node "azure_sql_server_subnet_from_virtual_network_node" {
         'Type', type,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id,
-        'Address Prefixes', jsonb_array_elements_text(address_prefixes)
+        'Address Prefixes', jsonb_array_elements_text(address_prefixes),
+        'ID', id
       ) as properties
     from
       azure_virtual_network,
@@ -537,7 +539,8 @@ node "azure_sql_server_to_key_vault_node" {
         'Resource Group', resource_group,
         'Subscription ID', subscription_id,
         'Soft Delete Enabled', soft_delete_enabled,
-        'Soft Delete Retention Days', soft_delete_retention_in_days
+        'Soft Delete Retention Days', soft_delete_retention_in_days,
+        'ID', id
       ) as properties
     from
       azure_key_vault
@@ -633,7 +636,8 @@ node "azure_sql_server_keyvault_to_key_vault_key_node" {
         'Curve Name', b.curve_name,
         'Enabled', b.enabled,
         'Expires At', b.expires_at,
-        'Key Type', b.key_type
+        'Key Type', b.key_type,
+        'ID',b.id
       ) as properties
     from
       attached_keys as a
@@ -691,7 +695,8 @@ node "azure_sql_server_to_sql_database_node" {
         'Resource Group', resource_group,
         'Subscription ID', subscription_id,
         'Zone Redundant', zone_redundant,
-        'Status', status
+        'Status', status,
+        'ID', id
       ) as properties
     from
       azure_sql_database
