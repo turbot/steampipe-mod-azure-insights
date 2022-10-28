@@ -140,6 +140,7 @@ category "azure_route_table" {
 }
 
 category "azure_sql_database" {
+  href = "/azure_insights.dashboard.azure_sql_database_detail?input.database_id={{.properties.'ID' | @uri}}"
   icon = local.azure_sql_database_icon
   fold {
     title     = "SQL Databases"
@@ -149,6 +150,7 @@ category "azure_sql_database" {
 }
 
 category "azure_sql_server" {
+  href = "/azure_insights.dashboard.azure_sql_server_detail?input.server_id={{.properties.'ID' | @uri}}"
   icon = local.azure_sql_server_icon
   fold {
     title     = "SQL Servers"
@@ -171,9 +173,9 @@ category "azure_sql_server_firewall" {
   }
 }
 
-category "azure_sql_server_private_endpoint_connection" {
+category "azure_private_endpoint_connection" {
   fold {
-    title     = "SQL Server Private Endpoint Connections"
+    title     = "Private Endpoint Connections"
     threshold = 3
   }
 }
@@ -234,6 +236,15 @@ category "azure_virtual_network" {
   fold {
     title     = "Virtual Networks"
     icon      = local.azure_virtual_network_icon
+    threshold = 3
+  }
+}
+
+category "azure_mssql_elasticpool" {
+  icon = local.azure_mssql_elasticpool_icon
+  fold {
+    title     = "SQL Elastic Pools"
+    icon      = local.azure_mssql_elasticpool_icon
     threshold = 3
   }
 }
