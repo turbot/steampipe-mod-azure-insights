@@ -76,7 +76,8 @@ dashboard "azure_storage_account_detail" {
         node.azure_storage_account_to_storage_queue_node,
         node.azure_storage_account_to_storage_container_node,
         node.azure_storage_account_container_to_storage_blob_node,
-        node.azure_storage_account_to_key_vault_node
+        node.azure_storage_account_to_key_vault_node,
+        node.azure_storage_account_key_vault_to_key_vault_key_node
       ]
 
       edges = [
@@ -90,7 +91,8 @@ dashboard "azure_storage_account_detail" {
         edge.azure_storage_account_to_storage_queue_edge,
         edge.azure_storage_account_to_storage_container_edge,
         edge.azure_storage_account_container_to_storage_blob_edge,
-        edge.azure_storage_account_to_key_vault_edge
+        edge.azure_storage_account_to_key_vault_edge,
+        edge.azure_storage_account_key_vault_to_key_vault_key_edge
       ]
 
       args = {
@@ -534,12 +536,7 @@ edge "azure_storage_account_from_log_profile_edge" {
   sql = <<-EOQ
     select
       id as from_id,
-      storage_account_id as to_id,
-      jsonb_build_object(
-        'Region', region,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      storage_account_id as to_id
     from
       azure_log_profile
     where
@@ -580,12 +577,7 @@ edge "azure_storage_account_from_compute_snapshot_edge" {
   sql = <<-EOQ
     select
       id as from_id,
-      storage_account_id as to_id,
-      jsonb_build_object(
-        'Region', region,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      storage_account_id as to_id
     from
       azure_compute_snapshot
     where
@@ -627,12 +619,7 @@ edge "azure_storage_account_from_compute_disk_edge" {
   sql = <<-EOQ
     select
       id as from_id,
-      creation_data_storage_account_id as to_id,
-      jsonb_build_object(
-        'Region', region,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      creation_data_storage_account_id as to_id
     from
       azure_compute_disk
     where
@@ -651,6 +638,7 @@ node "azure_storage_account_from_diagnostic_setting_node" {
       title as title,
       jsonb_build_object(
         'Name', name,
+        'ID', id,
         'Type', type,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
@@ -670,11 +658,7 @@ edge "azure_storage_account_from_diagnostic_setting_edge" {
   sql = <<-EOQ
     select
       id as from_id,
-      storage_account_id as to_id,
-      jsonb_build_object(
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      storage_account_id as to_id
     from
       azure_diagnostic_setting
     where
@@ -731,13 +715,7 @@ edge "azure_storage_account_to_subnet_edge" {
     )
     select
       l.storage_account_id as from_id,
-      lower(l.subnet_id) as to_id,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
+      lower(l.subnet_id) as to_id
     from
       subnet_list as l
       left join azure_subnet as s on lower(l.subnet_id) = lower(s.id);
@@ -793,13 +771,7 @@ edge "azure_storage_account_subnet_to_vpc_edge" {
     )
     select
       lower(l.subnet_id) as from_id,
-      lower(l.vn_id) as to_id,
-      jsonb_build_object(
-        'Name', n.name,
-        'ID', n.id,
-        'Resource Group', n.resource_group,
-        'Subscription ID', n.subscription_id
-      ) as properties
+      lower(l.vn_id) as to_id
     from
       vn_list as l
       left join azure_virtual_network as n on lower(n.id) = lower(l.vn_id);
@@ -839,12 +811,7 @@ edge "azure_storage_account_to_storage_table_edge" {
   sql = <<-EOQ
     select
       a.id as from_id,
-      t.id as to_id,
-      jsonb_build_object(
-        'Region', t.region,
-        'Resource Group', t.resource_group,
-        'Subscription ID',t.subscription_id
-      ) as properties
+      t.id as to_id
     from
       azure_storage_account as a
       left join azure_storage_table as t on t.storage_account_name = a.name
@@ -886,12 +853,7 @@ edge "azure_storage_account_to_storage_queue_edge" {
   sql = <<-EOQ
     select
       a.id as from_id,
-      q.id as to_id,
-      jsonb_build_object(
-        'Region', q.region,
-        'Resource Group', q.resource_group,
-        'Subscription ID',q.subscription_id
-      ) as properties
+      q.id as to_id
     from
       azure_storage_account as a
       left join azure_storage_queue as q on q.storage_account_name = a.name
@@ -933,11 +895,7 @@ edge "azure_storage_account_to_storage_container_edge" {
   sql = <<-EOQ
     select
       a.id as from_id,
-      c.id as to_id,
-      jsonb_build_object(
-        'Resource Group', c.resource_group,
-        'Subscription ID',c.subscription_id
-      ) as properties
+      c.id as to_id
    from
       azure_storage_container as c
       left join azure_storage_account as a on a.name = c.account_name
@@ -981,12 +939,8 @@ edge "azure_storage_account_container_to_storage_blob_edge" {
   sql = <<-EOQ
     select
       c.id as from_id,
-      b.name as to_id,
-      jsonb_build_object(
-        'Resource Group', c.resource_group,
-        'Subscription ID', c.subscription_id
-      ) as properties
-   from
+      b.name as to_id
+    from
       azure_storage_account as a
       left join azure_storage_container as c on a.name = c.account_name
       left join azure_storage_blob as b on b.storage_account_name = a.name
@@ -1028,14 +982,53 @@ edge "azure_storage_account_to_key_vault_edge" {
   sql = <<-EOQ
     select
       a.id as from_id,
-      k.id as to_id,
-      jsonb_build_object(
-        'Resource Group', k.resource_group,
-        'Subscription ID', k.subscription_id
-      ) as properties
-   from
+      k.id as to_id
+    from
       azure_storage_account as a
       left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
+    where
+      a.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_storage_account_key_vault_to_key_vault_key_node" {
+  category = category.azure_key_vault_key
+
+  sql = <<-EOQ
+    select
+      key.id as id,
+      key.title as title,
+      jsonb_build_object(
+        'Name', key.name,
+        'ID', key.id,
+        'Type', key.type,
+        'Resource Group', key.resource_group,
+        'Subscription ID', key.subscription_id
+      ) as properties
+    from
+      azure_storage_account as a
+      left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
+      left join azure_key_vault_key as key on key.vault_name = k.name
+    where
+      a.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_storage_account_key_vault_to_key_vault_key_edge" {
+  title = "key"
+
+  sql = <<-EOQ
+    select
+      k.id as from_id,
+      key.id as to_id
+    from
+      azure_storage_account as a
+      left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
+      left join azure_key_vault_key as key on key.vault_name = k.name
     where
       a.id = $1;
   EOQ
