@@ -509,7 +509,7 @@ node "azure_key_vault_from_compute_disk_encryption_set_node" {
       left join azure_compute_disk_encryption_set as s on s.active_key_url = k.key_uri_with_version
     where
       v.name = k.vault_name
-      and v.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.KeyVault/vaults/test-delete90';
+      and v.id = $1;
   EOQ
 
   param "id" {}
@@ -528,7 +528,7 @@ edge "azure_key_vault_from_compute_disk_encryption_set_edge" {
       left join azure_compute_disk_encryption_set as s on s.active_key_url = k.key_uri_with_version
     where
       v.name = k.vault_name
-      and v.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.KeyVault/vaults/test-delete90';
+      and v.id = $1
   EOQ
 
   param "id" {}
