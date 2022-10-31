@@ -266,8 +266,10 @@ category "azure_mssql_elasticpool" {
 }
 
 category "azure_compute_disk_encryption_set" {
+  icon = local.azure_compute_disk_encryption_set_icon
   fold {
     title     = "Compute Disk Encryption Sets"
+    icon = local.azure_compute_disk_encryption_set_icon
     threshold = 3
   }
 }
