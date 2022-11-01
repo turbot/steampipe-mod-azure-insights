@@ -1,7 +1,7 @@
 
 This dashboard answers the following questions:
 
-- How many network interface are in each subscription, resource group and region?
+- How is the network interface configured?
 - What tags are applied?
-- How is the network interface detail configured?
-- How many virtual machines, public ip and network security group is it attached to?
+- Which network security groups and virtual machines is it attached to?
+- What relationships does the network interface have with other resources?

@@ -61,15 +61,13 @@ dashboard "azure_key_vault_detail" {
         node.azure_key_vault_node,
         node.azure_key_vault_to_network_acl_node,
         node.azure_key_vault_to_key_node,
-        node.azure_key_vault_to_secret_node,
-        node.azure_key_vault_from_compute_disk_encryption_set_node
+        node.azure_key_vault_to_secret_node
       ]
 
       edges = [
         edge.azure_key_vault_to_network_acl_edge,
         edge.azure_key_vault_to_key_edge,
-        edge.azure_key_vault_to_secret_edge,
-        edge.azure_key_vault_from_compute_disk_encryption_set_edge
+        edge.azure_key_vault_to_secret_edge
       ]
 
       args = {
@@ -486,50 +484,3 @@ edge "azure_key_vault_to_secret_edge" {
   param "id" {}
 }
 
-node "azure_key_vault_from_compute_disk_encryption_set_node" {
-  category = category.azure_compute_disk_encryption_set
-
-  sql = <<-EOQ
-    select
-      s.id as id,
-      s.title as title,
-      jsonb_build_object(
-        'Name', s.name,
-        'ID', s.id,
-        'Provisioning State', s.provisioning_state,
-        'Encryption Type', s.encryption_type,
-        'Type', s.type,
-        'Region', s.region,
-        'Resource Group', s.resource_group,
-        'Subscription ID', s.subscription_id
-      ) as properties
-    from
-      azure_key_vault as v,
-      azure_key_vault_key as k
-      left join azure_compute_disk_encryption_set as s on s.active_key_url = k.key_uri_with_version
-    where
-      v.name = k.vault_name
-      and v.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_key_vault_from_compute_disk_encryption_set_edge" {
-  title = "disk encryption set"
-
-  sql = <<-EOQ
-    select
-      s.id as from_id,
-      k.id as to_id
-    from
-      azure_key_vault as v,
-      azure_key_vault_key as k
-      left join azure_compute_disk_encryption_set as s on s.active_key_url = k.key_uri_with_version
-    where
-      v.name = k.vault_name
-      and v.id = $1
-  EOQ
-
-  param "id" {}
-}
