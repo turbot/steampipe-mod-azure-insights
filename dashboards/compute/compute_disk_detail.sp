@@ -7,7 +7,7 @@ dashboard "azure_compute_disk_detail" {
     type = "Detail"
   })
 
-  input "d_id" {
+  input "disk_id" {
     title = "Select a disk:"
     query = query.azure_compute_disk_input
     width = 4
@@ -19,7 +19,15 @@ dashboard "azure_compute_disk_detail" {
       width = 2
       query = query.azure_compute_disk_status
       args = {
-        id = self.input.d_id.value
+        id = self.input.disk_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.azure_compute_disk_os_type
+      args = {
+        id = self.input.disk_id.value
       }
     }
 
@@ -27,7 +35,7 @@ dashboard "azure_compute_disk_detail" {
       width = 2
       query = query.azure_compute_disk_sku_name
       args = {
-        id = self.input.d_id.value
+        id = self.input.disk_id.value
       }
     }
 
@@ -35,10 +43,10 @@ dashboard "azure_compute_disk_detail" {
       width = 2
       query = query.azure_compute_disk_encryption_status
       args = {
-        id = self.input.d_id.value
+        id = self.input.disk_id.value
       }
     }
-    
+
   }
 
   container {
@@ -67,7 +75,7 @@ dashboard "azure_compute_disk_detail" {
       ]
 
       args = {
-        id = self.input.d_id.value
+        id = self.input.disk_id.value
       }
     }
   }
@@ -83,7 +91,7 @@ dashboard "azure_compute_disk_detail" {
         width = 6
         query = query.azure_compute_disk_overview
         args = {
-          id = self.input.d_id.value
+          id = self.input.disk_id.value
         }
       }
 
@@ -92,7 +100,7 @@ dashboard "azure_compute_disk_detail" {
         width = 6
         query = query.azure_compute_virtual_machine_tags
         args = {
-          id = self.input.d_id.value
+          id = self.input.disk_id.value
         }
       }
     }
@@ -105,7 +113,7 @@ dashboard "azure_compute_disk_detail" {
         title = "Associated Virtual Machine"
         query = query.azure_compute_disk_associated_virtual_machine_details
         args = {
-          id = self.input.d_id.value
+          id = self.input.disk_id.value
         }
 
         column "Title" {
@@ -123,7 +131,7 @@ dashboard "azure_compute_disk_detail" {
       title = "Disk Encryption"
       query = query.azure_compute_disk_encryption_set_details
       args = {
-        id = self.input.d_id.value
+        id = self.input.disk_id.value
       }
     }
   }
@@ -162,6 +170,20 @@ query "azure_compute_disk_status" {
 
   param "id" {}
 
+}
+
+query "azure_compute_disk_os_type" {
+  sql = <<-EOQ
+    select
+      'OS Type' as label,
+      os_type as value
+    from
+      azure_compute_disk
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
 }
 
 query "azure_compute_disk_sku_name" {
@@ -455,15 +477,14 @@ query "azure_compute_disk_overview" {
   sql = <<-EOQ
     select
       name as "Name",
-      id as "ID",
       type as "Type",
       provisioning_state as "Provisioning State",
-      os_type as "OS Type",
       time_created as "Time Created",
       disk_access_id as "Disk Access ID",
       region as "Region",
       resource_group as "Resource Group",
-      subscription_id as "Subscription ID"
+      subscription_id as "Subscription ID",
+      id as "ID"
     from
       azure_compute_disk
     where
@@ -489,22 +510,6 @@ query "azure_compute_disk_tags" {
   param "id" {}
 }
 
-query "azure_compute_disk_storage_profile" {
-  sql = <<-EOQ
-    select
-      os_disk_name as "Disk Name",
-      creation_data_storage_account_id as "Data Storage Account ID",
-      disk_size_gb as "Disk Size",
-      creation_data_source_uri as "Blob URI"
-    from
-      azure_compute_virtual_machine
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
 query "azure_compute_disk_associated_virtual_machine_details" {
   sql = <<-EOQ
     with vm_disk_id as (
@@ -519,8 +524,7 @@ query "azure_compute_disk_associated_virtual_machine_details" {
     select
       v.title as "Title",
       v.type as  "Type",
-      v.id as "ID",
-      null as link
+      v.id as "ID"
     from
       vm_disk_id as v
       left join azure_compute_disk as d on v.did = d.id

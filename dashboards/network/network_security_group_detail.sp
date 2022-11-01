@@ -67,6 +67,36 @@ dashboard "azure_network_security_group_detail" {
 
   container {
 
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+
+      nodes = [
+        node.azure_network_security_group_node,
+        node.azure_network_security_group_from_network_interface_node,
+        node.azure_network_security_group_from_network_subnet_node,
+        node.azure_network_security_group_subnet_from_virtual_network_node,
+        node.azure_network_security_group_from_network_watcher_flow_log_node,
+        node.azure_network_security_group_network_interface_from_compute_virtual_machine_node
+      ]
+
+      edges = [
+        edge.azure_network_security_group_from_network_interface_edge,
+        edge.azure_network_security_group_from_network_subnet_edge,
+        edge.azure_network_security_group_subnet_from_virtual_network_edge,
+        edge.azure_network_security_group_from_network_watcher_flow_log_edge,
+        edge.azure_network_security_group_network_interface_from_compute_virtual_machine_edge
+      ]
+
+      args = {
+        id = self.input.nsg_id.value
+      }
+    }
+  }
+
+  container {
+
     container {
       width = 6
 
@@ -242,7 +272,6 @@ query "azure_network_security_group_attached_enis_count" {
 
   param "id" {}
 }
-
 
 query "azure_network_security_group_attached_subnets_count" {
   sql = <<-EOQ
@@ -732,6 +761,282 @@ query "azure_network_security_group_egress_rule_sankey" {
         trim((split_part(id, '/', 9)), '""') as to_id
       from
         rules
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_network_security_group_node" {
+  category = category.azure_network_security_group
+
+  sql = <<-EOQ
+    select
+      id as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', id,
+        'Region', region,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
+      ) as properties
+    from
+      azure_network_security_group
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_network_security_group_from_network_interface_node" {
+  category = category.azure_network_interface
+
+  sql = <<-EOQ
+    select
+      nic.id as id,
+      nic.title as title,
+      jsonb_build_object(
+        'Name', nic.name,
+        'ID', nic.id,
+        'Region', nic.region,
+        'Resource Group', nic.resource_group,
+        'Subscription ID', nic.subscription_id
+      ) as properties
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(network_interfaces) as ni
+      left join azure_network_interface as nic on nic.id = ni ->> 'id'
+    where
+      nsg.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_network_security_group_from_network_interface_edge" {
+  title = "network interface"
+
+  sql = <<-EOQ
+    select
+      nic.id as from_id,
+      nsg.id as to_id
+   from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(network_interfaces) as ni
+      left join azure_network_interface as nic on nic.id = ni ->> 'id'
+    where
+      nsg.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_network_security_group_from_network_subnet_node" {
+  category = category.azure_network_interface
+
+  sql = <<-EOQ
+    select
+      s.id as id,
+      s.title as title,
+      jsonb_build_object(
+        'Name', s.name,
+        'ID', s.id,
+        'Resource Group', s.resource_group,
+        'Subscription ID', s.subscription_id
+      ) as properties
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(subnets) as sub
+      left join azure_subnet as s on s.id = sub ->> 'id'
+    where
+      nsg.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_network_security_group_from_network_subnet_edge" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      s.id as from_id,
+      nsg.id as to_id
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(subnets) as sub
+      left join azure_subnet as s on s.id = sub ->> 'id'
+    where
+      nsg.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_network_security_group_subnet_from_virtual_network_node" {
+  category = category.azure_virtual_network
+
+  sql = <<-EOQ
+    with subnet_list as (
+      select
+        nsg.id as nsg_id,
+        sub ->> 'id' as subnet_id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(subnets) as sub
+      where
+        nsg.id = $1
+    ) select
+        vn.id as id,
+        vn.title as title,
+        jsonb_build_object(
+          'Name', vn.name,
+          'ID', vn.id,
+          'Resource Group', vn.resource_group,
+          'Subscription ID', vn.subscription_id
+        ) as properties
+      from
+        azure_virtual_network as vn,
+        jsonb_array_elements(subnets) as sub
+        right join subnet_list as s on s.subnet_id = sub ->> 'id'
+      where
+        s.nsg_id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_network_security_group_subnet_from_virtual_network_edge" {
+  title = "virtual network"
+
+  sql = <<-EOQ
+    with subnet_list as (
+      select
+        nsg.id as nsg_id,
+        sub ->> 'id' as subnet_id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(subnets) as sub
+      where
+        nsg.id = $1
+    )
+    select
+      vn.id as from_id,
+      s.subnet_id as to_id
+      from
+        azure_virtual_network as vn,
+        jsonb_array_elements(subnets) as sub
+        right join subnet_list as s on s.subnet_id = sub ->> 'id'
+      where
+        s.nsg_id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_network_security_group_from_network_watcher_flow_log_node" {
+  category = category.azure_network_watcher_flow_log
+
+  sql = <<-EOQ
+    select
+      fl.id as id,
+      fl.title as title,
+      jsonb_build_object(
+        'Name', fl.name,
+        'ID', fl.id,
+        'Region', fl.region,
+        'Resource Group', fl.resource_group,
+        'Subscription ID', fl.subscription_id
+      ) as properties
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(flow_logs) as f
+      left join azure_network_watcher_flow_log as fl on fl.id = f->> 'id'
+    where
+      nsg.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_network_security_group_from_network_watcher_flow_log_edge" {
+  title = "flow log"
+
+  sql = <<-EOQ
+    select
+      fl.id as from_id,
+      nsg.id as to_id
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(flow_logs) as f
+      left join azure_network_watcher_flow_log as fl on fl.id = f->> 'id'
+    where
+      nsg.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_network_security_group_network_interface_from_compute_virtual_machine_node" {
+  category = category.azure_compute_virtual_machine
+
+  sql = <<-EOQ
+    with network_interface_list as (
+      select
+      nsg.id as nsg_id,
+      nic.id as nic_id
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(network_interfaces) as ni
+      left join azure_network_interface as nic on nic.id = ni ->> 'id'
+    where
+      nsg.id = $1
+    )
+    select
+      vm.id as id,
+      vm.title as title,
+      jsonb_build_object(
+        'Name', vm.name,
+        'ID', vm.id,
+        'Resource Group', vm.resource_group,
+        'Subscription ID', vm.subscription_id
+      ) as properties
+    from
+      azure_compute_virtual_machine as vm,
+      jsonb_array_elements(network_interfaces) as ni
+      left join network_interface_list as nic on nic.nic_id = ni ->> 'id'
+    where
+      nic.nsg_id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_network_security_group_network_interface_from_compute_virtual_machine_edge" {
+  title = "virtual machine"
+
+  sql = <<-EOQ
+    with network_interface_list as (
+      select
+        nsg.id as nsg_id,
+        nic.id as nic_id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(network_interfaces) as ni
+        left join azure_network_interface as nic on nic.id = ni ->> 'id'
+      where
+        nsg.id = $1
+    )
+    select
+      vm.id as from_id,
+      nic.nic_id as to_id
+    from
+      azure_compute_virtual_machine as vm,
+      jsonb_array_elements(network_interfaces) as ni
+      left join network_interface_list as nic on nic.nic_id = ni ->> 'id'
+    where
+      nic.nsg_id = $1;
   EOQ
 
   param "id" {}

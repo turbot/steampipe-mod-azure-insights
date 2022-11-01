@@ -23,6 +23,13 @@ category "azure_app_service_web_app" {
   }
 }
 
+category "azure_container_registry" {
+  fold {
+    title     = "Container Registries"
+    threshold = 3
+  }
+}
+
 category "azure_compute_disk" {
   icon = local.azure_compute_disk_icon
   fold {
@@ -63,6 +70,13 @@ category "azure_cosmosdb_account" {
 category "azure_diagnostic_setting" {
   fold {
     title     = "Diagnostic Settings"
+    threshold = 3
+  }
+}
+
+category "azure_eventhub_namespace" {
+  fold {
+    title     = "EventHub Namespace"
     threshold = 3
   }
 }
@@ -136,6 +150,13 @@ category "azure_network_security_group" {
   }
 }
 
+category "azure_postgresql_server" {
+  fold {
+    title     = "Postgresql Server"
+    threshold = 3
+  }
+}
+
 category "azure_public_ip" {
   href = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
   icon = local.azure_public_ip_icon
@@ -190,8 +211,17 @@ category "azure_sql_server_firewall" {
 }
 
 category "azure_private_endpoint_connection" {
+  icon = local.azure_private_endpoint_connection_icon
   fold {
     title     = "Private Endpoint Connections"
+    icon = local.azure_private_endpoint_connection_icon
+    threshold = 3
+  }
+}
+
+category "azure_servicebus_namespace" {
+  fold {
+    title     = "Servicebus Namespace"
     threshold = 3
   }
 }
@@ -270,6 +300,13 @@ category "azure_compute_disk_encryption_set" {
   fold {
     title     = "Compute Disk Encryption Sets"
     icon = local.azure_compute_disk_encryption_set_icon
+    threshold = 3
+  }
+}
+
+category "azure_network_watcher_flow_log" {
+  fold {
+    title     = "Network Watcher Flow Logs"
     threshold = 3
   }
 }

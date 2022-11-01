@@ -77,7 +77,8 @@ dashboard "azure_storage_account_detail" {
         node.azure_storage_account_to_storage_container_node,
         node.azure_storage_account_container_to_storage_blob_node,
         node.azure_storage_account_to_key_vault_node,
-        node.azure_storage_account_key_vault_to_key_vault_key_node
+        node.azure_storage_account_key_vault_to_key_vault_key_node,
+        node.azure_storage_account_from_batch_account_node
       ]
 
       edges = [
@@ -92,7 +93,8 @@ dashboard "azure_storage_account_detail" {
         edge.azure_storage_account_to_storage_container_edge,
         edge.azure_storage_account_container_to_storage_blob_edge,
         edge.azure_storage_account_to_key_vault_edge,
-        edge.azure_storage_account_key_vault_to_key_vault_key_edge
+        edge.azure_storage_account_key_vault_to_key_vault_key_edge,
+        edge.azure_storage_account_from_batch_account_edge
       ]
 
       args = {
@@ -967,10 +969,11 @@ node "azure_storage_account_to_key_vault_node" {
         'Subscription ID', k.subscription_id
       ) as properties
     from
-      azure_storage_account as a
-      left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
+      azure_storage_account as a,
+      azure_key_vault as k
     where
-      a.id = $1;
+      a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
+      and a.id = $1;
   EOQ
 
   param "id" {}
@@ -1029,6 +1032,47 @@ edge "azure_storage_account_key_vault_to_key_vault_key_edge" {
       azure_storage_account as a
       left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
       left join azure_key_vault_key as key on key.vault_name = k.name
+    where
+      a.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_storage_account_from_batch_account_node" {
+  category = category.azure_key_vault_key
+
+  sql = <<-EOQ
+    select
+      b.id as id,
+      b.title as title,
+      jsonb_build_object(
+        'Name', b.name,
+        'ID', b.id,
+        'Type', b.type,
+        'Resource Group', b.resource_group,
+        'Subscription ID', b.subscription_id
+      ) as properties
+    from
+      azure_batch_account as b
+      left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
+    where
+      a.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_storage_account_from_batch_account_edge" {
+  title = "batch account"
+
+  sql = <<-EOQ
+    select
+      b.id as from_id,
+      a.id as to_id
+   from
+      azure_batch_account as b
+      left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
     where
       a.id = $1;
   EOQ
