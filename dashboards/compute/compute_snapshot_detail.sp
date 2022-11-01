@@ -116,13 +116,6 @@ dashboard "azure_compute_snapshot_detail" {
       }
     }
 
-    table {
-      title = "Storage Profile"
-      query = query.azure_compute_snapshot_storage_profile
-      args = {
-        id = self.input.id.value
-      }
-    }
     }
 
   }
@@ -414,21 +407,6 @@ query "azure_compute_snapshot_tags" {
     order by
       tags ->> 'Key';
     EOQ
-
-  param "id" {}
-}
-
-query "azure_compute_snapshot_storage_profile" {
-  sql = <<-EOQ
-    select
-      storage_account_id as "Data Storage Account ID",
-      source_resource_id as "Source Resource ID",
-      source_uri as "Source URI"
-    from
-      azure_compute_snapshot
-    where
-      id = $1;
-  EOQ
 
   param "id" {}
 }
