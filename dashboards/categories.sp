@@ -31,6 +31,7 @@ category "azure_container_registry" {
 }
 
 category "azure_compute_disk" {
+  href = "/azure_insights.dashboard.azure_compute_disk_detail?input.d_id={{.properties.'ID' | @uri}}"
   icon = local.azure_compute_disk_icon
   fold {
     title     = "Compute Disks"
@@ -40,6 +41,7 @@ category "azure_compute_disk" {
 }
 
 category "azure_compute_snapshot" {
+  href = "/azure_insights.dashboard.azure_compute_snapshot_detail?input.id={{.properties.'ID' | @uri}}"
   icon = local.azure_compute_snapshot_icon
   fold {
     title     = "Compute Snapshots"
