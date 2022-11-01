@@ -76,7 +76,7 @@ category "azure_diagnostic_setting" {
 
 category "azure_eventhub_namespace" {
   fold {
-    title     = "EventHub Namespace"
+    title     = "EventHub Namespaces"
     threshold = 3
   }
 }
@@ -152,7 +152,7 @@ category "azure_network_security_group" {
 
 category "azure_postgresql_server" {
   fold {
-    title     = "Postgresql Server"
+    title     = "Postgresql Servers"
     threshold = 3
   }
 }
@@ -221,7 +221,7 @@ category "azure_private_endpoint_connection" {
 
 category "azure_servicebus_namespace" {
   fold {
-    title     = "Servicebus Namespace"
+    title     = "Servicebus Namespaces"
     threshold = 3
   }
 }
