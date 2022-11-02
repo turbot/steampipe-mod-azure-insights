@@ -314,13 +314,13 @@ query "azure_app_service_web_app_outbound_ip_addresses" {
 query "azure_app_service_web_app_diagnostic_logs_configuration" {
   sql = <<-EOQ
     select
-      diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'azureBlobStorage' ->> 'level' as "Azure Blob Storage Application Logs",
-      diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'azureTableStorage' ->> 'level' as "Azure Table Storage Application Logs",
-      diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'fileSystem' ->> 'level' as "File System Application Logs",
+      diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'azureBlobStorage' ->> 'level' as "Application logging (Blob)",
+      diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'azureTableStorage' ->> 'level' as "Application logging (Table)",
+      diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'fileSystem' ->> 'level' as "Application logging (Filesystem)",
       case when (diagnostic_logs_configuration -> 'properties' -> 'detailedErrorMessages' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Detailed Error Messages",
       case when (diagnostic_logs_configuration -> 'properties' -> 'failedRequestsTracing' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Failed Requests Tracing",
-      case when (diagnostic_logs_configuration -> 'properties' -> 'httpLogs' -> 'azureBlobStorage' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Azure Blob Storage HTTP Logs",
-      case when (diagnostic_logs_configuration -> 'properties' -> 'httpLogs' -> 'fileSystem' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "File System HTTP Logs"
+      case when (diagnostic_logs_configuration -> 'properties' -> 'httpLogs' -> 'azureBlobStorage' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Web server logging (Storage)",
+      case when (diagnostic_logs_configuration -> 'properties' -> 'httpLogs' -> 'fileSystem' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Web server logging (Filesystem)"
     from
       azure_app_service_web_app
     where
