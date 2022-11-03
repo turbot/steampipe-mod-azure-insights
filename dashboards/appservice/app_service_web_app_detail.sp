@@ -115,7 +115,7 @@ dashboard "azure_app_service_web_app_detail" {
       width = 12
 
       table {
-        title = "Diagnostic Logs Configuration"
+        title = "Diagnostic Configuration"
         query = query.azure_app_service_web_app_diagnostic_logs_configuration
         args = {
           id = self.input.web_app_id.value
