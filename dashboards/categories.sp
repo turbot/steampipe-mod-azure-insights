@@ -312,3 +312,49 @@ category "azure_network_watcher_flow_log" {
     threshold = 3
   }
 }
+
+category "azure_compute_virtual_machine_scale_set" {
+  fold {
+    title     = "Compute Virtual Machine Scale Set"
+    threshold = 3
+  }
+}
+
+category "azure_lb" {
+  icon = local.azure_lb_icon
+  fold {
+    title     = "Load Balancers"
+    icon = local.azure_lb_icon
+    threshold = 3
+  }
+}
+
+category "azure_lb_backend_address_pool" {
+  fold {
+    title     = "Backend Address Pools"
+    threshold = 3
+  }
+}
+
+category "azure_lb_rule" {
+  fold {
+    title     = "Load Balancer Rules"
+    threshold = 3
+  }
+}
+
+category "azure_lb_probe" {
+
+  fold {
+    title     = "Probes"
+    threshold = 3
+  }
+}
+
+category "azure_lb_nat_rule" {
+
+  fold {
+    title     = "NAT Rules"
+    threshold = 3
+  }
+}

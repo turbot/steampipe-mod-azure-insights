@@ -69,7 +69,9 @@ dashboard "azure_compute_virtual_machine_detail" {
         node.azure_compute_virtual_machine_to_network_interface_node,
         node.azure_compute_virtual_machine_to_public_ip_node,
         node.azure_compute_virtual_machine_to_image_node,
-        node.azure_compute_virtual_machine_network_interface_to_network_security_group_node
+        node.azure_compute_virtual_machine_network_interface_to_network_security_group_node,
+        node.azure_compute_virtual_machine_network_interface_to_subnet_node,
+        node.azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_node
       ]
 
       edges = [
@@ -77,7 +79,9 @@ dashboard "azure_compute_virtual_machine_detail" {
         edge.azure_compute_virtual_machine_to_network_interface_edge,
         edge.azure_compute_virtual_machine_to_public_ip_edge,
         edge.azure_compute_virtual_machine_to_image_edge,
-        edge.azure_compute_virtual_machine_network_interface_to_network_security_group_edge
+        edge.azure_compute_virtual_machine_network_interface_to_network_security_group_edge,
+        edge.azure_compute_virtual_machine_network_interface_to_subnet_edge,
+        edge.azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_edge
       ]
 
       args = {
@@ -497,6 +501,148 @@ edge "azure_compute_virtual_machine_to_network_interface_edge" {
       left join azure_network_interface as n on vn.n_id = n.id
     where
       vn.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_compute_virtual_machine_network_interface_to_subnet_node" {
+  category = category.azure_subnet
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as nic_id
+      from
+        azure_compute_virtual_machine
+      where
+        id = $1
+    )
+    select
+      s.id as id,
+      s.title as title,
+      jsonb_build_object(
+        'Name', s.name,
+        'ID', s.id,
+        'Subscription ID', s.subscription_id,
+        'Resource Group', s.resource_group
+      ) as properties
+    from
+      azure_network_interface as nic,
+      jsonb_array_elements(ip_configurations) as c
+      left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+    where
+      nic.id in (select nic_id from network_interface_id);
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_compute_virtual_machine_network_interface_to_subnet_edge" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as nic_id
+      from
+        azure_compute_virtual_machine
+      where
+        id = $1
+    )
+    select
+      s.id as to_id,
+      nic.id as from_id
+    from
+      azure_network_interface as nic,
+      jsonb_array_elements(ip_configurations) as c
+      left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+    where
+      nic.id in (select nic_id from network_interface_id);
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_node" {
+  category = category.azure_virtual_network
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as nic_id
+      from
+        azure_compute_virtual_machine
+      where
+        id = $1
+    ), subnet_id as (
+        select
+          s.id as id,
+          s.virtual_network_name
+        from
+          azure_network_interface as nic,
+          jsonb_array_elements(ip_configurations) as c
+          left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+        where
+          nic.id in (select nic_id from network_interface_id)
+    )
+    select
+      vn.id as id,
+      vn.title as title,
+      sub.id as hhj,
+      s -> 'id'  as klkdhjadjhajdhjas,
+      jsonb_build_object(
+        'Name', vn.name,
+        'ID', vn.id,
+        'Subscription ID', vn.subscription_id,
+        'Resource Group', vn.resource_group
+      ) as properties
+    from
+      azure_virtual_network as vn,
+      jsonb_array_elements(subnets) as s
+      left join subnet_id as sub on sub.id = s ->> 'id'
+    where
+      s ->> 'id' in (select id from subnet_id);
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_edge" {
+  title = "vitual network"
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as nic_id
+      from
+        azure_compute_virtual_machine
+      where
+        id = $1
+    ), subnet_id as (
+        select
+          s.id as id,
+          s.virtual_network_name
+        from
+          azure_network_interface as nic,
+          jsonb_array_elements(ip_configurations) as c
+          left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+        where
+          nic.id in (select nic_id from network_interface_id)
+    )
+    select
+      vn.id as to_id,
+      sub.id as from_id
+    from
+      azure_virtual_network as vn,
+      jsonb_array_elements(subnets) as s
+      left join subnet_id as sub on sub.id = s ->> 'id'
+    where
+      s ->> 'id' in (select id from subnet_id);
   EOQ
 
   param "id" {}
