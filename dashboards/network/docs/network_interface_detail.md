@@ -1,4 +1,3 @@
-
 This dashboard answers the following questions:
 
 - How is the network interface configured?
