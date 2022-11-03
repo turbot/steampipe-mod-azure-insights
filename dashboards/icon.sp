@@ -23,4 +23,5 @@ locals {
   azure_storage_container_icon           = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/storage_container.svg"))
   azure_storage_queue_icon               = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/storage_queue.svg"))
   azure_virtual_network_icon             = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/virtual_network.svg"))
+  azure_diagnostic_setting_icon          = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/diagonostic_settings.svg"))
 }

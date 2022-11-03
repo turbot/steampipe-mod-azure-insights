@@ -518,7 +518,7 @@ query "azure_network_interface_ip_forwarding_enabled" {
     select
       'IP Forwarding' as label,
       case when enable_ip_forwarding then 'Enabled' else 'Disabled' end as value,
-      case when enable_ip_forwarding then 'Ok' else 'Alert' end as type
+      case when enable_ip_forwarding then 'ok' else 'alert' end as type
     from
       azure_network_interface
     where
@@ -533,7 +533,7 @@ query "azure_network_interface_accelerated_networking_enabled" {
     select
       'Accelerated Networking' as label,
       case when enable_accelerated_networking then 'Enabled' else 'Disabled' end as value,
-      case when enable_accelerated_networking then 'Ok' else 'Alert' end as type
+      case when enable_accelerated_networking then 'ok' else 'alert' end as type
     from
       azure_network_interface
     where

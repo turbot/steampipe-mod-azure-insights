@@ -70,8 +70,10 @@ category "azure_cosmosdb_account" {
 }
 
 category "azure_diagnostic_setting" {
+  icon = local.azure_diagnostic_setting_icon
   fold {
     title     = "Diagnostic Settings"
+    icon = local.azure_diagnostic_setting_icon
     threshold = 3
   }
 }
