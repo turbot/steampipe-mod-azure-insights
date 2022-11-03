@@ -76,7 +76,7 @@ dashboard "azure_diagnostic_setting_detail" {
       ]
 
       edges = [
-        // edge.azure_storage_account_from_log_profile_edge
+        
       ]
 
       args = {
@@ -105,7 +105,6 @@ dashboard "azure_diagnostic_setting_detail" {
   }
 
 }
-
 
 query "azure_diagnostic_setting_input" {
   sql = <<-EOQ
