@@ -359,3 +359,11 @@ category "azure_lb_nat_rule" {
     threshold = 3
   }
 }
+
+category "azure_firewall" {
+
+  fold {
+    title     = "Firewall"
+    threshold = 3
+  }
+}
