@@ -141,7 +141,7 @@ dashboard "azure_network_load_balancer_detail" {
       }
 
       table {
-        title = "Backend pools"
+        title = "Backend Pools"
         query = query.azure_load_balancer_backend_pools
         args  = {
           id = self.input.lb_id.value
