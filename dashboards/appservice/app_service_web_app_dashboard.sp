@@ -1,7 +1,7 @@
 dashboard "azure_app_service_web_app_dashboard" {
 
   title         = "Azure App Service Web App Dashboard"
-  documentation = file("./dashboards/compute/docs/compute_disk_dashboard.md")
+  documentation = file("./dashboards/appservice/docs/app_service_web_app_dashboard.md")
 
   tags = merge(local.app_service_common_tags, {
     type = "Dashboard"
