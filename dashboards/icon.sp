@@ -12,6 +12,7 @@ locals {
   azure_lb_icon                         = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/load_balancer.svg"))
   azure_manage_disk_icon                 = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/manage_disk.svg"))
   azure_mssql_elasticpool_icon           = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/mssql_elasticpool.svg"))
+  azure_nat_gateway_icon                 = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/nat_gateway.svg"))
   azure_network_interface_icon           = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/network_interface.svg"))
   azure_network_security_group_icon      = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/network_security_group.svg"))
   azure_private_endpoint_connection_icon = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/private_endpoint_connection.svg"))

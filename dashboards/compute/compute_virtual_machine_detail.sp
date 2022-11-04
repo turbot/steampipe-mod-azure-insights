@@ -65,7 +65,8 @@ dashboard "azure_compute_virtual_machine_detail" {
 
       nodes = [
         node.azure_compute_virtual_machine_node,
-        node.azure_compute_virtual_machine_to_managed_disk_node,
+        node.azure_compute_virtual_machine_to_data_disk_node,
+        node.azure_compute_virtual_machine_to_os_disk_node,
         node.azure_compute_virtual_machine_to_network_interface_node,
         node.azure_compute_virtual_machine_to_public_ip_node,
         node.azure_compute_virtual_machine_to_image_node,
@@ -75,7 +76,8 @@ dashboard "azure_compute_virtual_machine_detail" {
       ]
 
       edges = [
-        edge.azure_compute_virtual_machine_to_managed_disk_edge,
+        edge.azure_compute_virtual_machine_to_data_disk_edge,
+        edge.azure_compute_virtual_machine_to_os_disk_edge,
         edge.azure_compute_virtual_machine_to_network_interface_edge,
         edge.azure_compute_virtual_machine_to_public_ip_edge,
         edge.azure_compute_virtual_machine_to_image_edge,
@@ -395,7 +397,7 @@ node "azure_compute_virtual_machine_node" {
   param "id" {}
 }
 
-node "azure_compute_virtual_machine_to_managed_disk_node" {
+node "azure_compute_virtual_machine_to_data_disk_node" {
   category = category.azure_compute_disk
 
   sql = <<-EOQ
@@ -408,17 +410,22 @@ node "azure_compute_virtual_machine_to_managed_disk_node" {
     )
     select
       d.id as id,
+      v.d_id,
       d.title as title,
       jsonb_build_object(
         'Name', d.name,
         'ID', d.id,
+        'Disk Size GB', d.disk_size_gb,
+        'Encryption Type' , d.encryption_type,
+        'SKU Name', d.sku_name,
+        'Type', d.type,
         'Subscription ID', d.subscription_id,
         'Resource Group', d.resource_group,
         'Region', d.region
       ) as properties
     from
       azure_compute_disk as d
-      left join vm_disk_id as v on d.id = v.d_id
+      left join vm_disk_id as v on lower(d.id) = lower(v.d_id)
     where
       v.id = $1;
   EOQ
@@ -426,8 +433,8 @@ node "azure_compute_virtual_machine_to_managed_disk_node" {
   param "id" {}
 }
 
-edge "azure_compute_virtual_machine_to_managed_disk_edge" {
-  title = "manage disk"
+edge "azure_compute_virtual_machine_to_data_disk_edge" {
+  title = "data disk"
 
   sql = <<-EOQ
     with vm_disk_id as (
@@ -442,13 +449,59 @@ edge "azure_compute_virtual_machine_to_managed_disk_edge" {
       d.id as to_id
     from
       azure_compute_disk as d
-      left join vm_disk_id as v on d.id = v.d_id
+      left join vm_disk_id as v on lower(d.id) = lower(v.d_id)
     where
       v.id = $1;
   EOQ
 
   param "id" {}
 }
+
+node "azure_compute_virtual_machine_to_os_disk_node" {
+  category = category.azure_compute_disk
+
+  sql = <<-EOQ
+    select
+      d.id as id,
+      d.title as title,
+      jsonb_build_object(
+        'Name', d.name,
+        'ID', d.id,
+        'Disk Size GB', d.disk_size_gb,
+        'Encryption Type' , d.encryption_type,
+        'SKU Name', d.sku_name,
+        'Type', d.type,
+        'Subscription ID', d.subscription_id,
+        'Resource Group', d.resource_group,
+        'Region', d.region
+      ) as properties
+    from
+      azure_compute_virtual_machine as vm
+      left join azure_compute_disk as d on lower(d.managed_by) = lower(vm.id)
+    where
+      vm.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_compute_virtual_machine_to_os_disk_edge" {
+  title = "os disk"
+
+  sql = <<-EOQ
+    select
+      vm.id as from_id,
+      d.id as to_id
+    from
+      azure_compute_virtual_machine as vm
+      left join azure_compute_disk as d on lower(d.managed_by) = lower(vm.id)
+    where
+      vm.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
 
 node "azure_compute_virtual_machine_to_network_interface_node" {
   category = category.azure_network_interface

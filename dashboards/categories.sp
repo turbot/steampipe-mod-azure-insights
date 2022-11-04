@@ -367,3 +367,26 @@ category "azure_firewall" {
     threshold = 3
   }
 }
+
+category "azure_nat_gateway" {
+  icon = local.azure_nat_gateway_icon
+  fold {
+    title     = "NAT Gateway"
+    icon = local.azure_nat_gateway_icon
+    threshold = 3
+  }
+}
+
+category "azure_storage_share_file" {
+  fold {
+    title     = "Share Files"
+    threshold = 3
+  }
+}
+
+category "azure_compute_disk_access" {
+  fold {
+    title     = "Compute Disk Access"
+    threshold = 3
+  }
+}

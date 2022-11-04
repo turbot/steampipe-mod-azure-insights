@@ -17,7 +17,7 @@ dashboard "azure_compute_disk_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_disk_status
+      query = query.azure_compute_disk_size
       args = {
         id = self.input.disk_id.value
       }
@@ -41,7 +41,15 @@ dashboard "azure_compute_disk_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_disk_encryption_status
+      query = query.azure_compute_disk_status
+      args = {
+        id = self.input.disk_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.azure_compute_disk_network_access_policy
       args = {
         id = self.input.disk_id.value
       }
@@ -59,6 +67,7 @@ dashboard "azure_compute_disk_detail" {
       nodes = [
         node.azure_compute_disk_node,
         node.azure_compute_disk_from_compute_virtual_machine_node,
+        node.azure_compute_disk_to_compute_disk_access_node,
         node.azure_compute_disk_to_compute_disk_encryption_set_node,
         node.azure_compute_disk_compute_disk_encryption_set_to_key_vault_node,
         node.azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_node,
@@ -68,6 +77,7 @@ dashboard "azure_compute_disk_detail" {
 
       edges = [
         edge.azure_compute_disk_from_compute_virtual_machine_edge,
+        edge.azure_compute_disk_to_compute_disk_access_edge,
         edge.azure_compute_disk_to_compute_disk_encryption_set_edge,
         edge.azure_compute_disk_compute_disk_encryption_set_to_key_vault_edge,
         edge.azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_edge,
@@ -110,31 +120,44 @@ dashboard "azure_compute_disk_detail" {
       width = 6
 
       table {
-        title = "Associated Virtual Machine"
+        title = "Attached To"
         query = query.azure_compute_disk_associated_virtual_machine_details
         args = {
           id = self.input.disk_id.value
         }
 
-        column "Title" {
+        column "Name" {
           href = "${dashboard.azure_compute_virtual_machine_detail.url_path}?input.vm_id={{.ID | @uri}}"
+        }
+      }
+
+      table {
+        title = "Disk Encryption Set"
+        query = query.azure_compute_disk_encryption_set_details
+        args = {
+          id = self.input.disk_id.value
+        }
+
+        column "Key Vault ID" {
+          display = "none"
+        }
+
+        column "Key ID" {
+          display = "none"
+        }
+
+        column "Key Vault Name" {
+          href = "${dashboard.azure_key_vault_detail.url_path}?input.key_vault_id={{.'Key Vault ID' | @uri}}"
+        }
+
+        column "Key Name" {
+          href = "${dashboard.azure_key_vault_key_detail.url_path}?input.key_vault_key_id={{.'Key ID' | @uri}}"
         }
       }
     }
 
   }
 
-  container {
-    width = 12
-
-    table {
-      title = "Disk Encryption"
-      query = query.azure_compute_disk_encryption_set_details
-      args = {
-        id = self.input.disk_id.value
-      }
-    }
-  }
 }
 
 query "azure_compute_disk_input" {
@@ -161,7 +184,8 @@ query "azure_compute_disk_status" {
   sql = <<-EOQ
     select
       'Status' as label,
-      disk_state as value
+      disk_state as value,
+      case when disk_state = 'Attached' then 'ok' else 'alert' end as type
     from
       azure_compute_disk
     where
@@ -172,11 +196,41 @@ query "azure_compute_disk_status" {
 
 }
 
+query "azure_compute_disk_network_access_policy" {
+  sql = <<-EOQ
+    select
+      'Network Access Policy' as label,
+      network_access_policy as value,
+      case when network_access_policy = 'AllowAll' then 'alert' else 'ok' end as type
+    from
+      azure_compute_disk
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+
+}
+
+query "azure_compute_disk_size" {
+  sql = <<-EOQ
+    select
+      'Size (GB)' as label,
+      disk_size_gb as value
+    from
+      azure_compute_disk
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
 query "azure_compute_disk_os_type" {
   sql = <<-EOQ
     select
       'OS Type' as label,
-      os_type as value
+      case when  os_type = '' then 'NA' else os_type end as value
     from
       azure_compute_disk
     where
@@ -191,21 +245,6 @@ query "azure_compute_disk_sku_name" {
     select
       'SKU Name' as label,
       sku_name as value
-    from
-      azure_compute_disk
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-query "azure_compute_disk_encryption_status" {
-  sql = <<-EOQ
-    select
-      'Host Encryption' as label,
-      case when encryption_settings_collection_enabled <> 'true' then 'Disabled' else 'Enabled' end as value,
-      case when encryption_settings_collection_enabled <> 'true' then 'alert' else 'ok' end as type
     from
       azure_compute_disk
     where
@@ -298,6 +337,49 @@ edge "azure_compute_disk_from_compute_virtual_machine_edge" {
     from
       vm_disk_id as v
       left join azure_compute_disk as d on v.did = d.id
+    where
+      d.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_compute_disk_to_compute_disk_access_node" {
+  category = category.azure_compute_disk_access
+
+  sql = <<-EOQ
+    select
+      a.id as id,
+      a.title as title,
+      jsonb_build_object(
+        'Name', a.name,
+        'ID', a.id,
+        'Type', a.type,
+        'Provisioning State', a.provisioning_state,
+        'Subscription ID', a.subscription_id,
+        'Resource Group', a.resource_group,
+        'Region', a.region
+      ) as properties
+    from
+      azure_compute_disk_access as a
+      left join azure_compute_disk as d on lower(d.disk_access_id) = lower(a.id)
+    where
+      d.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_compute_disk_to_compute_disk_access_edge" {
+  title = "disk access"
+
+  sql = <<-EOQ
+    select
+      d.id as from_id,
+      a.id as to_id
+    from
+      azure_compute_disk_access as a
+      left join azure_compute_disk as d on lower(d.disk_access_id) = lower(a.id)
     where
       d.id = $1;
   EOQ
@@ -512,25 +594,29 @@ query "azure_compute_disk_tags" {
 
 query "azure_compute_disk_associated_virtual_machine_details" {
   sql = <<-EOQ
-    with vm_disk_id as (
+    (
       select
-        id,
-        type,
-        title,
-        jsonb_array_elements(data_disks)->'managedDisk'->>'id' as did
+        name as "Name",
+        type as "Type",
+        id as "ID"
+      from
+        azure_compute_virtual_machine,
+        jsonb_array_elements(data_disks)  as data_disk
+      where
+        lower(data_disk -> 'managedDisk' ->> 'id' ) = lower($1)
+    )
+    union
+    (
+      select
+        name as "Name",
+        type as "Type",
+        id as "ID"
       from
         azure_compute_virtual_machine
+      where
+        lower(managed_disk_id) = lower($1)
     )
-    select
-      v.title as "Title",
-      v.type as  "Type",
-      v.id as "ID"
-    from
-      vm_disk_id as v
-      left join azure_compute_disk as d on v.did = d.id
-    where
-      d.id = $1
-  EOQ
+EOQ
 
   param "id" {}
 }
@@ -539,13 +625,17 @@ query "azure_compute_disk_encryption_set_details" {
   sql = <<-EOQ
     select
       e.name as "Name",
-      e.type as "Type",
-      e.active_key_source_vault_id as "Key Vault ID",
-      e.active_key_url as "Key URI",
+      e.encryption_type as "Encryption Type",
+      v.name as "Key Vault Name",
+      v.id as "Key Vault ID",
+      k.id as "Key ID",
+      k.name as "Key Name",
       e.id as "ID"
     from
       azure_compute_disk_encryption_set as e
       left join azure_compute_disk as d on d.encryption_disk_encryption_set_id = e.id
+      left join azure_key_vault as v on v.id = e.active_key_source_vault_id
+      left join azure_key_vault_key as k on k.key_uri_with_version = e.active_key_url
     where
       d.id = $1;
   EOQ

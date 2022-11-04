@@ -44,6 +44,7 @@ dashboard "azure_network_subnet_detail" {
         node.azure_network_subnet_node,
         node.azure_network_subnet_to_virtual_network_node,
         node.azure_network_subnet_to_route_table_node,
+        node.azure_network_subnet_to_nat_gateway_node,
         node.azure_network_subnet_to_network_security_group_node,
         node.azure_network_subnet_from_app_service_web_app_node,
         node.azure_network_subnet_from_sql_server_node,
@@ -56,6 +57,7 @@ dashboard "azure_network_subnet_detail" {
       edges = [
         edge.azure_network_subnet_to_virtual_network_edge,
         edge.azure_network_subnet_to_route_table_edge,
+        edge.azure_network_subnet_to_nat_gateway_edge,
         edge.azure_network_subnet_to_network_security_group_edge,
         edge.azure_network_subnet_from_app_service_web_app_edge,
         edge.azure_network_subnet_from_sql_server_edge,
@@ -478,6 +480,47 @@ edge "azure_network_subnet_to_application_gateway_edge" {
       jsonb_array_elements(gateway_ip_configurations) as c
     where
       c -> 'properties' -> 'subnet' ->> 'id' = $1
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_network_subnet_to_nat_gateway_node" {
+  category = category.azure_nat_gateway
+
+  sql = <<-EOQ
+    select
+      id as id,
+      title as title,
+      jsonb_build_object(
+        'ID', id,
+        'Name', name,
+        'Type', type,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
+      ) as properties
+    from
+      azure_nat_gateway,
+      jsonb_array_elements(subnets) as s
+    where
+      s ->> 'id' = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_network_subnet_to_nat_gateway_edge" {
+  title = "nat gateway"
+
+  sql = <<-EOQ
+    select
+      $1 as from_id,
+      id as to_id
+    from
+      azure_nat_gateway,
+      jsonb_array_elements(subnets) as s
+    where
+      s ->> 'id' = $1;
   EOQ
 
   param "id" {}

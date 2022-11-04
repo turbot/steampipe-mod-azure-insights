@@ -75,7 +75,8 @@ dashboard "azure_storage_account_detail" {
         node.azure_storage_account_to_storage_table_node,
         node.azure_storage_account_to_storage_queue_node,
         node.azure_storage_account_to_storage_container_node,
-        node.azure_storage_account_container_to_storage_blob_node,
+        node.azure_storage_account_to_storage_share_file_node,
+        # node.azure_storage_account_container_to_storage_blob_node,
         node.azure_storage_account_to_key_vault_node,
         node.azure_storage_account_key_vault_to_key_vault_key_node,
         node.azure_storage_account_from_batch_account_node
@@ -91,7 +92,8 @@ dashboard "azure_storage_account_detail" {
         edge.azure_storage_account_to_storage_table_edge,
         edge.azure_storage_account_to_storage_queue_edge,
         edge.azure_storage_account_to_storage_container_edge,
-        edge.azure_storage_account_container_to_storage_blob_edge,
+        edge.azure_storage_account_to_storage_share_file_edge,
+        # edge.azure_storage_account_container_to_storage_blob_edge,
         edge.azure_storage_account_to_key_vault_edge,
         edge.azure_storage_account_key_vault_to_key_vault_key_edge,
         edge.azure_storage_account_from_batch_account_edge
@@ -902,6 +904,49 @@ edge "azure_storage_account_to_storage_container_edge" {
       azure_storage_container as c
       left join azure_storage_account as a on a.name = c.account_name
       and a.resource_group = c.resource_group
+    where
+      a.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_storage_account_to_storage_share_file_node" {
+  category = category.azure_storage_share_file
+
+  sql = <<-EOQ
+    select
+      f.id as id,
+      f.title as title,
+      jsonb_build_object(
+        'Name', f.name,
+        'ID', f.id,
+        'Type', f.type,
+        'Resource Group', f.resource_group,
+        'Subscription ID', f.subscription_id
+      ) as properties
+    from
+      azure_storage_share_file as f
+      left join azure_storage_account as a on a.name = f.storage_account_name
+      and a.resource_group = f.resource_group
+    where
+      a.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_storage_account_to_storage_share_file_edge" {
+  title = "share file"
+
+  sql = <<-EOQ
+    select
+      a.id as from_id,
+      f.id as to_id
+    from
+      azure_storage_share_file as f
+      left join azure_storage_account as a on a.name = f.storage_account_name
+      and a.resource_group = f.resource_group
     where
       a.id = $1;
   EOQ
