@@ -16,6 +16,7 @@ category "azure_application_gateway" {
 
 category "azure_app_service_web_app" {
   icon = local.azure_app_service_web_app_icon
+  href = "/azure_insights.dashboard.azure_app_service_web_app_detail?input.web_app_id={{.properties.'ID' | @uri}}"
   fold {
     title     = "Web Apps"
     icon      = local.azure_app_service_web_app_icon

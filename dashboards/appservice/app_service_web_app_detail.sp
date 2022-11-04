@@ -66,73 +66,93 @@ dashboard "azure_app_service_web_app_detail" {
   }
 
   container {
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-    container {
-      width = 6
+      nodes = [
+        node.azure_app_service_web_app_node,
+        node.azure_app_service_web_app_to_subnet_node,
+        node.azure_app_service_web_app_subnet_to_virtual_network_node
+      ]
 
-      table {
-        title = "Overview"
-        type  = "line"
-        width = 6
-        query = query.azure_app_service_web_app_overview
-        args = {
-          id = self.input.web_app_id.value
-        }
+      edges = [
+        edge.azure_app_service_web_app_to_subnet_edge,
+        edge.azure_app_service_web_app_subnet_to_virtual_network_edge
+      ]
+
+      args = {
+        id = self.input.web_app_id.value
       }
+    }
+  }
 
-      table {
-        title = "Tags"
-        width = 6
-        query = query.azure_app_service_web_app_tags
-        args = {
-          id = self.input.web_app_id.value
-        }
+  container {
+    width = 6
+
+    table {
+      title = "Overview"
+      type  = "line"
+      width = 6
+      query = query.azure_app_service_web_app_overview
+      args = {
+        id = self.input.web_app_id.value
       }
     }
 
-    container {
+    table {
+      title = "Tags"
       width = 6
-
-      table {
-        title = "IP Security Restrictions"
-        query = query.azure_app_service_web_app_ip_security_restrictions
-        args = {
-          id = self.input.web_app_id.value
-        }
+      query = query.azure_app_service_web_app_tags
+      args = {
+        id = self.input.web_app_id.value
       }
+    }
+  }
 
-      # table {
-      #   title = "Outbound IP Addresses"
-      #   query = query.azure_app_service_web_app_outbound_ip_addresses
-      #   args = {
-      #     id = self.input.web_app_id.value
-      #   }
-      # }
+  container {
+    width = 6
 
+    table {
+      title = "IP Security Restrictions"
+      query = query.azure_app_service_web_app_ip_security_restrictions
+      args = {
+        id = self.input.web_app_id.value
+      }
     }
 
-    container {
-      width = 12
+    # table {
+    #   title = "Outbound IP Addresses"
+    #   query = query.azure_app_service_web_app_outbound_ip_addresses
+    #   args = {
+    #     id = self.input.web_app_id.value
+    #   }
+    # }
 
-      table {
-        title = "Diagnostic Configuration"
-        query = query.azure_app_service_web_app_diagnostic_logs_configuration
-        args = {
-          id = self.input.web_app_id.value
-        }
+  }
+
+  container {
+    width = 12
+
+    table {
+      title = "Diagnostic Configuration"
+      query = query.azure_app_service_web_app_diagnostic_logs_configuration
+      args = {
+        id = self.input.web_app_id.value
       }
+    }
 
-      table {
-        title = "Site Configuration"
-        query = query.azure_app_service_web_app_configuration
-        args = {
-          id = self.input.web_app_id.value
-        }
+    table {
+      title = "Site Configuration"
+      query = query.azure_app_service_web_app_configuration
+      args = {
+        id = self.input.web_app_id.value
       }
-
     }
 
   }
+
 }
 
 query "azure_app_service_web_app_input" {
@@ -187,7 +207,8 @@ query "azure_app_service_web_app_ftps_state" {
   sql = <<-EOQ
     select
       'FTP State' as label,
-      configuration -> 'properties' ->> 'ftpsState' as value
+      configuration -> 'properties' ->> 'ftpsState' as value,
+      case when configuration -> 'properties' ->> 'ftpsState' = 'AllAllowed' then 'alert' else 'ok' end as type
     from
       azure_app_service_web_app
     where
@@ -237,6 +258,131 @@ query "azure_app_service_web_app_tls_version" {
       azure_app_service_web_app
     where
       id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_app_service_web_app_node" {
+  category = category.azure_app_service_web_app
+
+  sql = <<-EOQ
+    select
+      id,
+      name as title,
+      json_build_object(
+        'Name', name,
+        'Region', region,
+        'Subscription ID', subscription_id,
+        'ID', id
+      ) as properties
+    from
+      azure_app_service_web_app
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_app_service_web_app_to_subnet_node" {
+  category = category.azure_subnet
+
+  sql = <<-EOQ
+    select
+      id as id,
+      title as title,
+      json_build_object(
+        'Name', name,
+        'ID', id,
+        'Type', type,
+        'Address_prefix', address_prefix,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
+      ) as properties
+    from
+      azure_subnet
+    where
+      id in (
+        select
+          vnet_connection -> 'properties' ->> 'vnetResourceId'
+        from
+          azure_app_service_web_app
+        where
+          id = $1
+      );
+  EOQ
+  
+  param "id" {}
+}
+
+edge "azure_app_service_web_app_to_subnet_edge" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      vnet_connection -> 'properties' ->> 'vnetResourceId' as to_id,
+      id as from_id
+    from
+      azure_app_service_web_app
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_app_service_web_app_subnet_to_virtual_network_node" {
+  category = category.azure_virtual_network
+
+  sql = <<-EOQ
+    select
+      id as id,
+      title as title,
+      json_build_object(
+        'Name', name,
+        'Type', type,
+        'ID', id,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id,
+        'Address Prefixes', jsonb_array_elements_text(address_prefixes)
+      ) as properties
+    from
+      azure_virtual_network,
+      jsonb_array_elements(subnets) as sub
+    where
+      sub ->> 'id' in (
+        select
+          vnet_connection -> 'properties' ->> 'vnetResourceId'
+        from
+          azure_app_service_web_app
+        where
+          id = $1
+      );
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_app_service_web_app_subnet_to_virtual_network_edge" {
+  title = "virtual network"
+
+  sql = <<-EOQ
+    select
+      id as to_id,
+      sub ->> 'id' as from_id
+    from
+      azure_virtual_network,
+      jsonb_array_elements(subnets) as sub
+    where
+      sub ->> 'id' in (
+        select
+          vnet_connection -> 'properties' ->> 'vnetResourceId'
+        from
+          azure_app_service_web_app
+        where
+          id = $1
+      );
   EOQ
 
   param "id" {}
