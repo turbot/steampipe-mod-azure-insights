@@ -127,6 +127,10 @@ dashboard "azure_compute_virtual_machine_detail" {
         args = {
           id = self.input.vm_id.value
         }
+
+        column "Disk Name" {
+          href = "/azure_insights.dashboard.azure_compute_disk_detail?input.disk_id={{ .ID | @uri }}"
+        }
       }
 
       table {
@@ -902,11 +906,13 @@ query "azure_compute_virtual_machine_storage_profile" {
       os_disk_name as "Disk Name",
       os_disk_caching as "Disk Caching",
       os_disk_create_option as "Disk Create Option",
-      os_disk_vhd_uri as "Virtual Hard Disk URI"
+      os_disk_vhd_uri as "Virtual Hard Disk URI",
+      d.id as "ID"
     from
-      azure_compute_virtual_machine
+      azure_compute_virtual_machine as vm
+      left join azure_compute_disk as d on  vm.os_disk_name = d.name  and lower(vm.id)= lower(d.managed_by)
     where
-      id = $1;
+      vm.id = $1;
   EOQ
 
   param "id" {}
