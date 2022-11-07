@@ -1,7 +1,7 @@
 dashboard "azure_app_service_web_app_detail" {
 
   title         = "Azure App Service Web App Detail"
-  documentation = file("./dashboards/keyvault/docs/key_vault_detail.md")
+  documentation = file("./dashboards/appservice/docs/app_service_web_app_detail.md")
 
   tags = merge(local.app_service_common_tags, {
     type = "Detail"
@@ -74,12 +74,14 @@ dashboard "azure_app_service_web_app_detail" {
       nodes = [
         node.azure_app_service_web_app_node,
         node.azure_app_service_web_app_to_subnet_node,
-        node.azure_app_service_web_app_subnet_to_virtual_network_node
+        node.azure_app_service_web_app_subnet_to_virtual_network_node,
+        node.azure_app_service_web_app_to_app_service_plan_node
       ]
 
       edges = [
         edge.azure_app_service_web_app_to_subnet_edge,
-        edge.azure_app_service_web_app_subnet_to_virtual_network_edge
+        edge.azure_app_service_web_app_subnet_to_virtual_network_edge,
+        edge.azure_app_service_web_app_to_app_service_plan_edge
       ]
 
       args = {
@@ -121,14 +123,6 @@ dashboard "azure_app_service_web_app_detail" {
         id = self.input.web_app_id.value
       }
     }
-
-    # table {
-    #   title = "Outbound IP Addresses"
-    #   query = query.azure_app_service_web_app_outbound_ip_addresses
-    #   args = {
-    #     id = self.input.web_app_id.value
-    #   }
-    # }
 
   }
 
@@ -274,6 +268,7 @@ node "azure_app_service_web_app_node" {
         'Name', name,
         'Region', region,
         'Subscription ID', subscription_id,
+        'Resource Group', resource_group,
         'ID', id
       ) as properties
     from
@@ -344,6 +339,7 @@ node "azure_app_service_web_app_subnet_to_virtual_network_node" {
         'Type', type,
         'ID', id,
         'Resource Group', resource_group,
+        'Region', region,
         'Subscription ID', subscription_id,
         'Address Prefixes', jsonb_array_elements_text(address_prefixes)
       ) as properties
@@ -383,6 +379,51 @@ edge "azure_app_service_web_app_subnet_to_virtual_network_edge" {
         where
           id = $1
       );
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_app_service_web_app_to_app_service_plan_node" {
+  category = category.azure_app_service_plan
+  sql = <<-EOQ
+    select
+      id as id,
+      title as title,
+      json_build_object(
+        'Name', name,
+        'ID', id,
+        'Type', type,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id,
+        'Kind', kind,
+        'SKU Name', sku_name,
+        'SKU Size', sku_size,
+        'SKU Tier', sku_tier,
+        'SKU Capacity', sku_capacity
+      ) as properties
+    from
+      azure_app_service_plan,
+      jsonb_array_elements(apps) as app
+    where
+      app ->> 'ID' = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_app_service_web_app_to_app_service_plan_edge" {
+  title = "app service plan"
+
+  sql = <<-EOQ
+    select
+      id as to_id,
+      app ->> 'ID' as from_id
+    from
+      azure_app_service_plan,
+      jsonb_array_elements(apps) as app
+    where
+      app ->> 'ID' = $1;
   EOQ
 
   param "id" {}
@@ -437,19 +478,6 @@ query "azure_app_service_web_app_ip_security_restrictions" {
     from
       azure_app_service_web_app,
       jsonb_array_elements(configuration -> 'properties' -> 'ipSecurityRestrictions') as r
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-query "azure_app_service_web_app_outbound_ip_addresses" {
-  sql = <<-EOQ
-    select
-      unnest(string_to_array(possible_outbound_ip_addresses,',')) as "Outbound IP Address"
-    from
-      azure_app_service_web_app
     where
       id = $1;
   EOQ
