@@ -24,6 +24,15 @@ category "azure_app_service_web_app" {
   }
 }
 
+category "azure_app_service_plan" {
+  icon = local.azure_app_service_plan_icon
+  fold {
+    title     = "App Service Plans"
+    icon      = local.azure_app_service_plan_icon
+    threshold = 3
+  }
+}
+
 category "azure_container_registry" {
   fold {
     title     = "Container Registries"
