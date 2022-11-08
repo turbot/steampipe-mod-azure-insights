@@ -324,13 +324,17 @@ category "azure_network_watcher_flow_log" {
 }
 
 category "azure_compute_virtual_machine_scale_set" {
+  href = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_detail?input.vm_scale_set_id={{.properties.'ID' | @uri}}"
+  icon = local.azure_compute_virtual_machine_scale_set_icon
   fold {
     title     = "Compute Virtual Machine Scale Set"
+    icon = local.azure_compute_virtual_machine_scale_set_icon
     threshold = 3
   }
 }
 
 category "azure_lb" {
+  href = "/azure_insights.dashboard.azure_network_load_balancer_detail?input.lb_id={{.properties.'ID' | @uri}}"
   icon = local.azure_lb_icon
   fold {
     title     = "Load Balancers"
@@ -370,7 +374,6 @@ category "azure_lb_nat_rule" {
 }
 
 category "azure_firewall" {
-
   fold {
     title     = "Firewall"
     threshold = 3
@@ -395,7 +398,26 @@ category "azure_storage_share_file" {
 
 category "azure_compute_disk_access" {
   fold {
-    title     = "Compute Disk Access"
+    title     = "Compute Disk Accesses"
+    threshold = 3
+  }
+}
+
+category "azure_compute_virtual_machine_scale_set_vm" {
+  href = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_vm_detail?input.scale_set_vm_id={{.properties.'ID' | @uri}}"
+  icon = local.azure_compute_virtual_machine_icon
+  fold {
+    title     = "Compute Virtual Machine Scale Set VMs"
+    icon = local.azure_compute_virtual_machine_icon
+    threshold = 3
+  }
+}
+
+category "azure_compute_virtual_machine_scale_set_network_interface" {
+  icon = local.azure_network_interface_icon
+  fold {
+    title     = "Compute Virtual Machine Scale Set Network Interfaces"
+    icon = local.azure_network_interface_icon
     threshold = 3
   }
 }

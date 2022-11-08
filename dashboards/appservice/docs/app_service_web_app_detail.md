@@ -5,3 +5,4 @@ This dashboard answers the following questions for each SQL server:
 - What tags are applied?
 - Is HTTPS & HTTP logging enabled?
 - What FTP & TLS version are configured?
+- What relationships does the web app have with other resources?

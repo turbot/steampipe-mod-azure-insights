@@ -5,3 +5,4 @@ This dashboard answers the following questions for each virtual machine scale se
 - Is logging enabled?
 - Which data disks, and network interfaces is it attached to?
 - How is encryption configured?
+- What relationships does the virtual machine scale set have with other resources?
