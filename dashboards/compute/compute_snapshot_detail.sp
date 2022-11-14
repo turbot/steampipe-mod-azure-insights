@@ -59,7 +59,7 @@ dashboard "azure_compute_snapshot_detail" {
       nodes = [
         node.azure_compute_snapshot_node,
         node.azure_compute_snapshot_to_compute_disk_node,
-        node.azure_compute_snapshot_to_compute_snapshot_node,
+        node.azure_compute_snapshot_from_compute_snapshot_node,
         node.azure_compute_snapshot_to_compute_disk_encryption_set_node,
         node.azure_compute_snapshot_compute_disk_encryption_set_to_key_vault_node,
         node.azure_compute_snapshot_compute_disk_encryption_set_key_vault_to_key_node,
@@ -73,6 +73,7 @@ dashboard "azure_compute_snapshot_detail" {
         edge.azure_compute_snapshot_to_compute_disk_encryption_set_edge,
         edge.azure_compute_snapshot_compute_disk_encryption_set_to_key_vault_edge,
         edge.azure_compute_snapshot_compute_disk_encryption_set_key_vault_to_key_edge,
+        edge.azure_compute_snapshot_from_compute_snapshot_edge,
         edge.azure_compute_snapshot_from_compute_disk_edge
       ]
 
@@ -299,20 +300,13 @@ edge "azure_compute_snapshot_to_compute_disk_edge" {
   param "id" {}
 }
 
-node "azure_compute_snapshot_to_compute_snapshot_node" {
-  category = category.azure_compute_snapshot
+edge "azure_compute_snapshot_from_compute_snapshot_edge" {
+  title = "snapshot"
 
   sql = <<-EOQ
     select
-      d.id as id,
-      d.title as title,
-      jsonb_build_object(
-        'Name', d.name,
-        'ID', d.id,
-        'Subscription ID', d.subscription_id,
-        'Resource Group', d.resource_group,
-        'Region', d.region
-      ) as properties
+      s.id as to_id,
+      d.id as from_id
     from
       azure_compute_snapshot as d
       left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
@@ -323,18 +317,51 @@ node "azure_compute_snapshot_to_compute_snapshot_node" {
   param "id" {}
 }
 
+node "azure_compute_snapshot_from_compute_snapshot_node" {
+  category = category.azure_compute_snapshot
+
+  sql = <<-EOQ
+    with self as (
+      select 
+        id, 
+        source_resource_id 
+      from 
+        azure_compute_snapshot 
+      where 
+        id = $1)
+    select
+      acs.id as id,
+      acs.title as title,
+      jsonb_build_object(
+        'Name', acs.name,
+        'ID', acs.id,
+        'Subscription ID', acs.subscription_id,
+        'Resource Group', acs.resource_group,
+        'Region', acs.region
+      ) as properties
+    from
+      azure_compute_snapshot as acs,
+      self
+    where
+      acs.id = self.source_resource_id
+      or
+      acs.source_resource_id = self.id;
+  EOQ
+
+  param "id" {}
+}
+
 edge "azure_compute_snapshot_to_compute_snapshot_edge" {
-  title = "source snapshot"
+  title = "snapshot"
 
   sql = <<-EOQ
     select
-      s.id as from_id,
-      d.id as to_id
+      s.id as to_id,
+      s.source_resource_id as from_id
     from
-      azure_compute_snapshot as d
-      left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
+      azure_compute_snapshot as s
     where
-      s.id = $1;
+      s.source_resource_id = $1;
   EOQ
 
   param "id" {}
@@ -588,7 +615,7 @@ query "azure_compute_disk_encryption_details" {
       k.name as "Key Name",
       e.id as "ID"
     from
-     azure_compute_disk_encryption_set as e
+      azure_compute_disk_encryption_set as e
       left join azure_compute_snapshot as s on s.disk_encryption_set_id = e.id
       left join azure_key_vault as v on v.id = e.active_key_source_vault_id
       left join azure_key_vault_key as k on k.key_uri_with_version = e.active_key_url
