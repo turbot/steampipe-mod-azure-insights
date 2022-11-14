@@ -390,7 +390,7 @@ edge "azure_key_vault_to_network_acl_edge" {
       azure_key_vault,
       jsonb_array_elements(network_acls -> 'ipRules') as ip
     where
-     id = $1;
+    id = $1;
   EOQ
 
   param "id" {}
