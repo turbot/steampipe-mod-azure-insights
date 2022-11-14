@@ -299,8 +299,13 @@ query "azure_compute_virtual_machine_scale_set_vm_network_interface" {
   param "id" {}
 }
 
+category "azure_compute_virtual_machine_scale_set_vm_no_link" {
+  icon = local.azure_compute_virtual_machine_icon
+  color = "orange"
+}
+
 node "azure_compute_virtual_machine_scale_set_vm_node" {
-  category = category.azure_compute_virtual_machine_scale_set_vm
+  category = category.azure_compute_virtual_machine_scale_set_vm_no_link
 
   sql = <<-EOQ
     select
@@ -536,7 +541,7 @@ edge "azure_compute_virtual_machine_scale_set_vm_network_interface_subnet_to_vir
         jsonb_array_elements(ip_config) as c
     )
     select
-       s ->> 'id' as from_id,
+      s ->> 'id' as from_id,
       vn.id as to_id
     from
       azure_virtual_network as vn,
@@ -623,7 +628,7 @@ node "azure_compute_virtual_machine_scale_set_vm_from_vm_scale_set_node" {
 }
 
 edge "azure_compute_virtual_machine_scale_set_vm_from_vm_scale_set_edge" {
-  title = "scale set"
+  title = "scale set vm"
 
   sql = <<-EOQ
     select

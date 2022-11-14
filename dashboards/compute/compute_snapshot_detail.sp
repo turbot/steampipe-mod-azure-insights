@@ -229,8 +229,12 @@ query "azure_compute_snapshot_network_access_policy" {
 
 }
 
+category "azure_compute_snapshot_no_link" {
+  icon = local.azure_compute_snapshot_icon
+}
+
 node "azure_compute_snapshot" {
-  category = category.azure_compute_snapshot
+  category = category.azure_compute_snapshot_no_link
 
   sql = <<-EOQ
     select
@@ -489,7 +493,7 @@ node "azure_compute_snapshot_from_compute_disk_node" {
 }
 
 edge "azure_compute_snapshot_from_compute_disk_edge" {
-  title = "managed disk"
+  title = "snapshot"
 
   sql = <<-EOQ
     select

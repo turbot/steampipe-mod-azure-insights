@@ -336,13 +336,17 @@ query "azure_key_vault_usage" {
   param "id" {}
 }
 
+category "azure_key_vault_no_link" {
+  icon = local.azure_key_vault_icon
+}
+
 node "azure_key_vault_node" {
-  category = category.azure_key_vault
+  category = category.azure_key_vault_no_link
 
   sql = <<-EOQ
     select
       id,
-      name as title,
+      title,
       jsonb_build_object(
         'Vault Name', name,
         'Vault Id', id
@@ -390,7 +394,7 @@ edge "azure_key_vault_to_network_acl_edge" {
       azure_key_vault,
       jsonb_array_elements(network_acls -> 'ipRules') as ip
     where
-     id = $1;
+      id = $1;
   EOQ
 
   param "id" {}

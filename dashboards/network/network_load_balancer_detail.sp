@@ -495,8 +495,12 @@ query "azure_load_balancer_load_balancing_rules" {
   param "id" {}
 }
 
+category "azure_load_balancer_no_link" {
+  icon = local.azure_lb_icon
+}
+
 node "azure_load_balancer_node" {
-  category = category.azure_lb
+  category = category.azure_load_balancer_no_link
 
   sql = <<-EOQ
     select
@@ -552,7 +556,7 @@ edge "azure_load_balancer_to_backend_address_pool_edge" {
     select
       lb.id as from_id,
       p.id as to_id
-   from
+    from
       azure_lb as lb,
       jsonb_array_elements(backend_address_pools) as b
       left join azure_lb_backend_address_pool as p on p.id = b ->> 'id'
@@ -991,7 +995,7 @@ node "azure_load_balancer_from_virtual_machine_scale_set_node" {
 }
 
 edge "azure_load_balancer_from_virtual_machine_scale_set_edge" {
-  title = "vm scale set"
+  title = "network load balancer"
 
   sql = <<-EOQ
     select

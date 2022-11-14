@@ -224,8 +224,12 @@ query "azure_network_firewall_ip_configurations" {
   param "id" {}
 }
 
+category "azure_network_firewall_no_link" {
+  icon = local.azure_firewall_icon
+}
+
 node "azure_network_firewall_node" {
-  category = category.azure_firewall
+  category = category.azure_network_firewall_no_link
 
   sql = <<-EOQ
     select
@@ -366,7 +370,7 @@ node "azure_network_firewall_subnet_to_virtual_machine_node" {
       jsonb_array_elements(subnets) as s,
       subnet_list as sub
     where
-     s ->> 'id' = sub.subnet_id
+      s ->> 'id' = sub.subnet_id
   EOQ
 
   param "id" {}
@@ -395,7 +399,7 @@ edge "azure_network_firewall_subnet_to_virtual_machine_edge" {
       jsonb_array_elements(subnets) as s,
       subnet_list as sub
     where
-     s ->> 'id' = sub.subnet_id
+      s ->> 'id' = sub.subnet_id
   EOQ
 
   param "id" {}

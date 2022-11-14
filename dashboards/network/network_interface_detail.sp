@@ -172,8 +172,12 @@ query "azure_network_interface_input" {
   EOQ
 }
 
+category "azure_network_interface_no_link" {
+  icon  = local.azure_network_interface_icon
+}
+
 node "azure_network_interface_node" {
-  category = category.azure_network_interface
+  category = category.azure_network_interface_no_link
 
   sql = <<-EOQ
     select
@@ -227,7 +231,7 @@ node "azure_network_interface_to_network_security_group_node" {
 }
 
 edge "azure_network_interface_to_network_security_group_edge" {
-  title = "nsg"
+  title = "network security group"
   sql   = <<-EOQ
     with network_security_group_id as (
       select
@@ -453,7 +457,7 @@ node "azure_network_interface_from_public_ip_address_node" {
 }
 
 edge "azure_network_interface_from_public_ip_address_edge" {
-  title = "public ip"
+  title = "network interface"
 
   sql = <<-EOQ
     with network_interface_public_ip as (

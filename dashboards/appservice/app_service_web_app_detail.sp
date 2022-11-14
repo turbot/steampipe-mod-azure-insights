@@ -257,8 +257,12 @@ query "azure_app_service_web_app_tls_version" {
   param "id" {}
 }
 
+category "azure_app_service_web_app_instance_no_link" {
+  icon  = local.azure_app_service_web_app_icon
+}
+
 node "azure_app_service_web_app_node" {
-  category = category.azure_app_service_web_app
+  category = category.azure_app_service_web_app_instance_no_link
 
   sql = <<-EOQ
     select
