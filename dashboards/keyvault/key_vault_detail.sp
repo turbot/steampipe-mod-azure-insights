@@ -336,13 +336,17 @@ query "azure_key_vault_usage" {
   param "id" {}
 }
 
+category "azure_key_vault_no_link" {
+  icon  = local.azure_key_vault_icon
+}
+
 node "azure_key_vault_node" {
-  category = category.azure_key_vault
+  category = category.azure_key_vault_no_link
 
   sql = <<-EOQ
     select
       id,
-      name as title,
+      title as title,
       jsonb_build_object(
         'Vault Name', name,
         'Vault Id', id
@@ -401,7 +405,7 @@ node "azure_key_vault_to_key_node" {
 
   sql = <<-EOQ
     select
-      k.name as title,
+      k.title as title,
       k.id as id,
       jsonb_build_object(
         'Key Name', k.name,
@@ -446,7 +450,7 @@ node "azure_key_vault_to_secret_node" {
 
   sql = <<-EOQ
     select
-      s.name as title,
+      s.title as title,
       s.id as id,
       jsonb_build_object(
         'Secret Name', s.name,

@@ -74,25 +74,21 @@ dashboard "azure_sql_server_detail" {
 
       nodes = [
         node.azure_sql_server_node,
-        node.azure_sql_server_to_firewall_rule_node,
-        node.azure_sql_server_to_audit_policy_node,
         node.azure_sql_server_from_subnet_node,
+        node.azure_sql_server_to_private_endpoint_node,
         node.azure_sql_server_subnet_from_virtual_network_node,
         node.azure_sql_server_to_key_vault_node,
         node.azure_sql_server_keyvault_to_key_vault_key_node,
-        node.azure_sql_server_to_sql_database_node,
-        node.azure_sql_server_to_private_endpoint_node
+        node.azure_sql_server_to_sql_database_node
       ]
 
       edges = [
-        edge.azure_sql_server_to_firewall_rule_edge,
-        edge.azure_sql_server_to_audit_policy_edge,
         edge.azure_sql_server_from_subnet_edge,
+        edge.azure_sql_server_to_private_endpoint_edge,
         edge.azure_sql_server_subnet_from_virtual_network_edge,
         edge.azure_sql_server_to_key_vault_edge,
         edge.azure_sql_server_keyvault_to_key_vault_key_edge,
-        edge.azure_sql_server_to_sql_database_edge,
-        edge.azure_sql_server_to_private_endpoint_edge
+        edge.azure_sql_server_to_sql_database_edge
       ]
 
       args = {
@@ -145,6 +141,14 @@ dashboard "azure_sql_server_detail" {
           id = self.input.server_id.value
         }
       }
+
+      table {
+      title = "Firewall Rule"
+      query = query.azure_sql_server_firewall_rule
+      args = {
+        id = self.input.server_id.value
+      }
+    }
 
     }
 
@@ -313,8 +317,12 @@ query "azure_sql_server_vulnerability_assessment_enabled" {
   param "id" {}
 }
 
+category "azure_sql_server_no_link" {
+  icon  = local.azure_sql_server_icon
+}
+
 node "azure_sql_server_node" {
-  category = category.azure_sql_server
+  category = category.azure_sql_server_no_link
 
   sql = <<-EOQ
     select
@@ -331,88 +339,6 @@ node "azure_sql_server_node" {
       ) as properties
     from
       azure_sql_server
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_sql_server_to_firewall_rule_node"{
-  category = category.azure_sql_server_firewall
-
-  sql = <<-EOQ
-    select
-      rule -> 'id' as id,
-      rule -> 'name' as title,
-      json_build_object(
-        'Name', rule -> 'name',
-        'Start IP Address', rule -> 'properties' -> 'startIpAddress',
-        'End IP Address', rule -> 'properties' -> 'endIpAddress',
-        'Type', rule -> 'type'
-      ) as properties
-    from
-      azure_sql_server,
-      jsonb_array_elements(firewall_rules) as rule
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_sql_server_to_firewall_rule_edge" {
-  title = "firewall rule"
-
-  sql = <<-EOQ
-    select
-      id as from_id,
-      rule -> 'id' as to_id
-    from
-      azure_sql_server,
-      jsonb_array_elements(firewall_rules) as rule
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_sql_server_to_audit_policy_node" {
-  category = category.azure_sql_server_audit_policy
-
-  sql = <<-EOQ
-    select
-      sap -> 'id' as id,
-      sap -> 'name' as title,
-      json_build_object(
-        'Name', sap -> 'name',
-        'Retention Days', sap -> 'properties' -> 'retentionDays',
-        'State', sap -> 'properties' -> 'state',
-        'Azure Monitor Target Enabled', sap -> 'properties' -> 'isAzureMonitorTargetEnabled',
-        'Storage Secondary Key In Use', sap -> 'properties' -> 'isStorageSecondaryKeyInUse',
-        'Type', sap -> 'type'
-      ) as properties
-    from
-      azure_sql_server,
-      jsonb_array_elements(server_audit_policy) as sap
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_sql_server_to_audit_policy_edge"  {
-  title = "audit policy"
-
-  sql = <<-EOQ
-    select
-      id as from_id,
-      sap -> 'id' as to_id
-    from
-      azure_sql_server,
-      jsonb_array_elements(server_audit_policy) as sap
     where
       id = $1;
   EOQ
@@ -454,7 +380,7 @@ node "azure_sql_server_from_subnet_node" {
 }
 
 edge "azure_sql_server_from_subnet_edge" {
-  title = "subnet"
+  title = "sql server"
 
   sql = <<-EOQ
     select
@@ -463,6 +389,45 @@ edge "azure_sql_server_from_subnet_edge" {
     from
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as vnr
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_server_to_private_endpoint_node" {
+  category = category.azure_private_endpoint_connection
+
+  sql = <<-EOQ
+    select
+      pec ->> 'PrivateEndpointConnectionId' as id,
+      pec ->> 'PrivateEndpointConnectionName' as title,
+      json_build_object(
+        'Private Endpoint Connection Name', pec ->> 'PrivateEndpointConnectionName',
+        'Type', pec ->> 'PrivateEndpointConnectionType',
+        'Provisioning State', pec ->> 'ProvisioningState'
+      ) as properties
+    from
+      azure_sql_server,
+      jsonb_array_elements(private_endpoint_connections) as pec
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_sql_server_to_private_endpoint_edge" {
+  title = "private endpoint"
+
+  sql = <<-EOQ
+    select
+      pec ->> 'PrivateEndpointConnectionId' as to_id,
+      id as from_id
+    from
+      azure_sql_server,
+      jsonb_array_elements(private_endpoint_connections) as pec
     where
       id = $1;
   EOQ
@@ -505,7 +470,7 @@ node "azure_sql_server_subnet_from_virtual_network_node" {
 }
 
 edge "azure_sql_server_subnet_from_virtual_network_edge" {
-  title = "vpc"
+  title = "subnet"
 
   sql = <<-EOQ
     select
@@ -535,7 +500,7 @@ node "azure_sql_server_to_key_vault_node" {
   sql = <<-EOQ
     select
       id as id,
-      name as title,
+      title as title,
       json_build_object(
         'Name', name,
         'ID', id,
@@ -603,22 +568,7 @@ node "azure_sql_server_keyvault_to_key_vault_key_node" {
   category = category.azure_key_vault_key
 
   sql = <<-EOQ
-    with all_keys as (
-      select
-        name as key_vault_key_name,
-        vault_name as key_vault_name,
-        id,
-        type,
-        resource_group,
-        subscription_id,
-        curve_name,
-        enabled,
-        expires_at,
-        key_type
-      from
-        azure_key_vault_key
-    ),
-    attached_keys as (
+    with attached_keys as (
       select
         split_part(ep ->> 'serverKeyName','_',1) as key_vault_name,
         split_part(ep ->> 'serverKeyName','_',2) as key_vault_key_name
@@ -631,9 +581,9 @@ node "azure_sql_server_keyvault_to_key_vault_key_node" {
     )
     select
       b.id as id,
-      b.key_vault_key_name as title,
+      b.title as title,
       json_build_object(
-        'Name', b.key_vault_key_name,
+        'Name', b.vault_name,
         'Type', b.type,
         'ID', b.id,
         'Resource Group', b.resource_group,
@@ -646,14 +596,14 @@ node "azure_sql_server_keyvault_to_key_vault_key_node" {
       ) as properties
     from
       attached_keys as a
-      left join all_keys as b on a.key_vault_key_name = b.key_vault_key_name;
+      left join azure_key_vault_key as b on a.key_vault_key_name = b.name;
   EOQ
 
   param "id" {}
 }
 
 edge "azure_sql_server_keyvault_to_key_vault_key_edge" {
-  title = "contains"
+  title = "key"
 
   sql = <<-EOQ
     with all_keys as (
@@ -693,7 +643,7 @@ node "azure_sql_server_to_sql_database_node" {
   sql = <<-EOQ
     select
       id as id,
-      name as title,
+      title as title,
       json_build_object(
         'Name', name,
         'Type', type,
@@ -724,45 +674,6 @@ edge "azure_sql_server_to_sql_database_edge" {
       azure_sql_database
     where
       server_name = split_part($1, '/', 9);
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_sql_server_to_private_endpoint_node" {
-  category = category.azure_private_endpoint_connection
-
-  sql = <<-EOQ
-    select
-      pec ->> 'PrivateEndpointConnectionId' as id,
-      split_part(pec ->> 'PrivateEndpointId','/',9) as title,
-      json_build_object(
-        'Private Endpoint Connection Name', pec ->> 'PrivateEndpointConnectionName',
-        'Type', pec ->> 'PrivateEndpointConnectionType',
-        'Provisioning State', pec ->> 'ProvisioningState'
-      ) as properties
-    from
-      azure_sql_server,
-      jsonb_array_elements(private_endpoint_connections) as pec
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_sql_server_to_private_endpoint_edge" {
-  title = "private endpoint"
-
-  sql = <<-EOQ
-    select
-      pec ->> 'PrivateEndpointConnectionId' as to_id,
-      id as from_id
-    from
-      azure_sql_server,
-      jsonb_array_elements(private_endpoint_connections) as pec
-    where
-      id = $1;
   EOQ
 
   param "id" {}
@@ -841,11 +752,28 @@ query "azure_sql_server_virtual_network_rules" {
   param "id" {}
 }
 
+query "azure_sql_server_firewall_rule" {
+  sql = <<-EOQ
+    select
+      r ->> 'name' as "Name",
+      r -> 'properties' -> 'endIpAddress' as "End IP Address",
+      r -> 'properties' -> 'startIpAddress' as "Start IP Address",
+      r ->> type as "Type"
+    from
+      azure_sql_server,
+      jsonb_array_elements(firewall_rules) as r
+    where
+      id = $1;
+  EOQ
+
+  param "id" {}
+}
+
 query "azure_sql_server_audit_policy" {
   sql = <<-EOQ
     select
       p ->> 'name' as "Name",
-      p -> 'properties' -> 'auditActionsAndGroups' as "Audit Actions And Groups",
+      p -> 'properties' -> 'endIpAddress' as "Audit Actions And Groups",
       p ->> 'isAzureMonitorTargetEnabled' as "Is Azure Monitor Target Enabled",
       p ->> 'retentionDays' as "Retention Days",
       p ->> 'state' as "State",

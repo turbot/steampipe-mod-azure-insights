@@ -290,8 +290,11 @@ query "azure_network_subnet_association" {
   param "id" {}
 }
 
+category "azure_network_subnet_no_link" {
+}
+
 node "azure_network_subnet_node" {
-  category = category.azure_subnet
+  category = category.azure_network_subnet_no_link
 
   sql = <<-EOQ
     select
@@ -551,7 +554,7 @@ node "azure_network_subnet_from_app_service_web_app_node" {
 }
 
 edge "azure_network_subnet_from_app_service_web_app_edge" {
-  title = "web app"
+  title = "subnet"
 
   sql = <<-EOQ
     select
@@ -593,7 +596,7 @@ node "azure_network_subnet_from_sql_server_node" {
 }
 
 edge "azure_network_subnet_from_sql_server_edge" {
-  title = "sql server"
+  title = "subnet"
 
   sql = <<-EOQ
     select
@@ -636,7 +639,7 @@ node "azure_network_subnet_from_storage_account_node" {
 }
 
 edge "azure_network_subnet_from_storage_account_edge" {
-  title = "storage account"
+  title = "subnet"
 
   sql = <<-EOQ
     select
@@ -677,7 +680,7 @@ node "azure_network_subnet_from_cosmosdb_account_node" {
 }
 
 edge "azure_network_subnet_from_cosmosdb_account_edge" {
-  title = "cosmosdb account"
+  title = "subnet"
 
   sql = <<-EOQ
     select
@@ -718,7 +721,7 @@ node "azure_network_subnet_from_api_management_node" {
 }
 
 edge "azure_network_subnet_from_api_management_edge" {
-  title = "api management"
+  title = "subnet"
 
   sql = <<-EOQ
     select

@@ -76,7 +76,6 @@ dashboard "azure_storage_account_detail" {
         node.azure_storage_account_to_storage_queue_node,
         node.azure_storage_account_to_storage_container_node,
         node.azure_storage_account_to_storage_share_file_node,
-        # node.azure_storage_account_container_to_storage_blob_node,
         node.azure_storage_account_to_key_vault_node,
         node.azure_storage_account_key_vault_to_key_vault_key_node,
         node.azure_storage_account_from_batch_account_node
@@ -93,7 +92,6 @@ dashboard "azure_storage_account_detail" {
         edge.azure_storage_account_to_storage_queue_edge,
         edge.azure_storage_account_to_storage_container_edge,
         edge.azure_storage_account_to_storage_share_file_edge,
-        # edge.azure_storage_account_container_to_storage_blob_edge,
         edge.azure_storage_account_to_key_vault_edge,
         edge.azure_storage_account_key_vault_to_key_vault_key_edge,
         edge.azure_storage_account_from_batch_account_edge
@@ -486,8 +484,12 @@ query "azure_storage_account_blob_logging" {
   param "id" {}
 }
 
+category "azure_storage_account_no_link" {
+  icon  = local.azure_storage_account_icon
+}
+
 node "azure_storage_account_node" {
-  category = category.azure_storage_account
+  category = category.azure_storage_account_no_link
 
   sql = <<-EOQ
     select
@@ -535,7 +537,7 @@ node "azure_storage_account_from_log_profile_node" {
 }
 
 edge "azure_storage_account_from_log_profile_edge" {
-  title = "log profile"
+  title = "storage account"
 
   sql = <<-EOQ
     select
@@ -576,7 +578,7 @@ node "azure_storage_account_from_compute_snapshot_node" {
 }
 
 edge "azure_storage_account_from_compute_snapshot_edge" {
-  title = "compute snapshot"
+  title = "storage account"
 
   sql = <<-EOQ
     select
@@ -618,7 +620,7 @@ node "azure_storage_account_from_compute_disk_node" {
 }
 
 edge "azure_storage_account_from_compute_disk_edge" {
-  title = "compute disk"
+  title = "storage account"
 
   sql = <<-EOQ
     select
@@ -657,7 +659,7 @@ node "azure_storage_account_from_diagnostic_setting_node" {
 }
 
 edge "azure_storage_account_from_diagnostic_setting_edge" {
-  title = "diagnostic setting"
+  title = "storage account"
 
   sql = <<-EOQ
     select
@@ -760,7 +762,7 @@ node "azure_storage_account_subnet_to_vpc_node" {
 }
 
 edge "azure_storage_account_subnet_to_vpc_edge" {
-  title = "virtual network"
+  title = "vpc"
 
   sql = <<-EOQ
     with vn_list as (
@@ -937,7 +939,7 @@ node "azure_storage_account_to_storage_share_file_node" {
 }
 
 edge "azure_storage_account_to_storage_share_file_edge" {
-  title = "share file"
+  title = "storage share file"
 
   sql = <<-EOQ
     select
@@ -1109,7 +1111,7 @@ node "azure_storage_account_from_batch_account_node" {
 }
 
 edge "azure_storage_account_from_batch_account_edge" {
-  title = "batch account"
+  title = "storage account"
 
   sql = <<-EOQ
     select

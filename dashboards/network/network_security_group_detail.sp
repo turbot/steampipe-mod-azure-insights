@@ -766,8 +766,12 @@ query "azure_network_security_group_egress_rule_sankey" {
   param "id" {}
 }
 
+category "azure_network_security_group_no_link" {
+  icon  = local.azure_network_security_group_icon
+}
+
 node "azure_network_security_group_node" {
-  category = category.azure_network_security_group
+  category = category.azure_network_security_group_no_link
 
   sql = <<-EOQ
     select
@@ -815,7 +819,7 @@ node "azure_network_security_group_from_network_interface_node" {
 }
 
 edge "azure_network_security_group_from_network_interface_edge" {
-  title = "network interface"
+  title = "nsg"
 
   sql = <<-EOQ
     select
@@ -857,7 +861,7 @@ node "azure_network_security_group_from_network_subnet_node" {
 }
 
 edge "azure_network_security_group_from_network_subnet_edge" {
-  title = "subnet"
+  title = "nsg"
 
   sql = <<-EOQ
     select
@@ -908,7 +912,7 @@ node "azure_network_security_group_subnet_from_virtual_network_node" {
 }
 
 edge "azure_network_security_group_subnet_from_virtual_network_edge" {
-  title = "virtual network"
+  title = "subet"
 
   sql = <<-EOQ
     with subnet_list as (
@@ -961,7 +965,7 @@ node "azure_network_security_group_from_network_watcher_flow_log_node" {
 }
 
 edge "azure_network_security_group_from_network_watcher_flow_log_edge" {
-  title = "flow log"
+  title = "nsg"
 
   sql = <<-EOQ
     select
@@ -1014,7 +1018,7 @@ node "azure_network_security_group_network_interface_from_compute_virtual_machin
 }
 
 edge "azure_network_security_group_network_interface_from_compute_virtual_machine_edge" {
-  title = "virtual machine"
+  title = "network interface"
 
   sql = <<-EOQ
     with network_interface_list as (

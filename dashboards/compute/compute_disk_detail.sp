@@ -254,8 +254,12 @@ query "azure_compute_disk_sku_name" {
   param "id" {}
 }
 
+category "azure_compute_disk_no_link" {
+  icon  = local.azure_compute_disk_icon
+}
+
 node "azure_compute_disk_node" {
-  category = category.azure_compute_disk
+  category = category.azure_compute_disk_no_link
 
   sql = <<-EOQ
     select
@@ -316,7 +320,7 @@ node "azure_compute_disk_from_compute_virtual_machine_node" {
 }
 
 edge "azure_compute_disk_from_compute_virtual_machine_edge" {
-  title = "virtual machine"
+  title = "disk"
 
   sql = <<-EOQ
     with vm_disk_id as (
@@ -454,7 +458,7 @@ node "azure_compute_disk_compute_disk_encryption_set_to_key_vault_node" {
 }
 
 edge "azure_compute_disk_compute_disk_encryption_set_to_key_vault_edge" {
-  title = "key vault"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
