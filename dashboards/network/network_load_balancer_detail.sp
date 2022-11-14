@@ -192,7 +192,7 @@ dashboard "azure_network_load_balancer_detail" {
 
   container {
 
-   table {
+    table {
       title = "Outbound Rules"
       query = query.azure_load_balancer_outbound_rules
       args = {
@@ -204,7 +204,7 @@ dashboard "azure_network_load_balancer_detail" {
 
   container {
 
-   table {
+    table {
       title = "Load Balancing Rules"
       query = query.azure_load_balancer_load_balancing_rules
       args = {
