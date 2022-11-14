@@ -52,13 +52,13 @@ dashboard "azure_network_firewall_detail" {
         node.azure_network_firewall_node,
         node.azure_network_firewall_to_public_ip_node,
         node.azure_network_firewall_to_subnet_node,
-        node.azure_network_firewall_subnet_to_virtual_machine_node
+        node.azure_network_firewall_subnet_to_virtual_network_node
       ]
 
       edges = [
         edge.azure_network_firewall_to_public_ip_edge,
         edge.azure_network_firewall_to_subnet_edge,
-        edge.azure_network_firewall_subnet_to_virtual_machine_edge
+        edge.azure_network_firewall_subnet_to_virtual_network_edge
       ]
 
       args = {
@@ -340,7 +340,7 @@ edge "azure_network_firewall_to_subnet_edge" {
   param "id" {}
 }
 
-node "azure_network_firewall_subnet_to_virtual_machine_node" {
+node "azure_network_firewall_subnet_to_virtual_network_node" {
   category = category.azure_virtual_network
 
   sql = <<-EOQ
@@ -353,7 +353,7 @@ node "azure_network_firewall_subnet_to_virtual_machine_node" {
       jsonb_array_elements(ip_configurations) as c
       left join azure_subnet as s on s.id = c -> 'subnet' ->> 'id'
     where
-      f.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.Network/azureFirewalls/firewall1'
+      f.id = $1
     )
     select
       vn.id as id,
@@ -376,7 +376,7 @@ node "azure_network_firewall_subnet_to_virtual_machine_node" {
   param "id" {}
 }
 
-edge "azure_network_firewall_subnet_to_virtual_machine_edge" {
+edge "azure_network_firewall_subnet_to_virtual_network_edge" {
   title = "virtual network"
 
   sql = <<-EOQ

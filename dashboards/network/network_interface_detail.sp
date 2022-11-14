@@ -231,7 +231,7 @@ node "azure_network_interface_to_network_security_group_node" {
 }
 
 edge "azure_network_interface_to_network_security_group_edge" {
-  title = "network security group"
+  title = "nsg"
   sql   = <<-EOQ
     with network_security_group_id as (
       select
