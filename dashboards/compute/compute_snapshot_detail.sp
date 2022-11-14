@@ -57,7 +57,7 @@ dashboard "azure_compute_snapshot_detail" {
       direction = "TD"
 
       nodes = [
-        node.azure_compute_snapshot,
+        node.azure_compute_snapshot_node,
         node.azure_compute_snapshot_to_compute_disk_node,
         node.azure_compute_snapshot_to_compute_snapshot_node,
         node.azure_compute_snapshot_to_compute_disk_encryption_set_node,
@@ -233,7 +233,7 @@ category "azure_compute_snapshot_no_link" {
   icon = local.azure_compute_snapshot_icon
 }
 
-node "azure_compute_snapshot" {
+node "azure_compute_snapshot_node" {
   category = category.azure_compute_snapshot_no_link
 
   sql = <<-EOQ

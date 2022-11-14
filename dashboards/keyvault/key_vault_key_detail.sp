@@ -244,8 +244,12 @@ query "azure_key_vault_key_age" {
   param "id" {}
 }
 
+category "azure_key_vault_key_no_link" {
+  
+}
+
 node "azure_key_vault_key_node" {
-  category = category.azure_key_vault_key
+  category = category.azure_key_vault_key_no_link
 
   sql = <<-EOQ
     select
@@ -333,7 +337,7 @@ node "azure_key_vault_key_from_compute_disk_encryption_set_node" {
 }
 
 edge "azure_key_vault_key_from_compute_disk_encryption_set_edge" {
-  title = "disk encryption set"
+  title = "encryption key"
 
   sql = <<-EOQ
     select
@@ -376,7 +380,7 @@ node "azure_key_vault_key_from_container_registry_node" {
 }
 
 edge "azure_key_vault_key_from_container_registry_edge" {
-  title = "container registry"
+  title = "encryption key"
 
   sql = <<-EOQ
     select
@@ -435,7 +439,7 @@ node "azure_key_vault_key_from_sql_server_node" {
 }
 
 edge "azure_key_vault_key_from_sql_server_edge" {
-  title = "sql server"
+  title = "encryption key"
 
   sql = <<-EOQ
     with sql_server as (
@@ -500,7 +504,7 @@ node "azure_key_vault_key_from_eventhub_namespace_node" {
 }
 
 edge "azure_key_vault_key_from_eventhub_namespace_edge" {
-  title = "eventhub namespace"
+  title = "encryption key"
 
   sql = <<-EOQ
     select
@@ -545,7 +549,7 @@ node "azure_key_vault_key_from_storage_account_node" {
 }
 
 edge "azure_key_vault_key_from_storage_account_edge" {
-  title = "storage account"
+  title = "encryption key"
 
   sql = <<-EOQ
     select
@@ -593,7 +597,7 @@ node "azure_key_vault_key_from_servicebus_namespace_node" {
 }
 
 edge "azure_key_vault_key_from_servicebus_namespace_edge" {
-  title = "servicebus namespace"
+  title = "encryption key"
 
   sql = <<-EOQ
     select
@@ -640,7 +644,7 @@ node "azure_key_vault_key_from_postgresql_server_node" {
 }
 
 edge "azure_key_vault_key_from_postgresql_server_edge" {
-  title = "postgresql server"
+  title = "encryption key"
 
   sql = <<-EOQ
     select

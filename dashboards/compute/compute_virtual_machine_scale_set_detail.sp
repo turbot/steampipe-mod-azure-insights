@@ -416,8 +416,12 @@ query "azure_compute_virtual_machine_scale_set_data_disks" {
   param "id" {}
 }
 
+category "azure_compute_virtual_machine_scale_set_no_link" {
+  icon = local.azure_compute_virtual_machine_scale_set_icon
+}
+
 node "azure_compute_virtual_machine_scale_set_node" {
-  category = category.azure_compute_virtual_machine_scale_set
+  category = category.azure_compute_virtual_machine_scale_set_no_link
 
   sql = <<-EOQ
     select
