@@ -42,7 +42,8 @@ category "azure_container_registry" {
 
 category "azure_compute_disk" {
   href = "/azure_insights.dashboard.azure_compute_disk_detail?input.d_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_compute_disk_icon
+  icon  = local.azure_compute_disk_icon
+  color = "green"
   fold {
     title     = "Compute Disks"
     icon      = local.azure_compute_disk_icon
@@ -61,11 +62,13 @@ category "azure_compute_snapshot" {
 }
 
 category "azure_compute_virtual_machine" {
-  href = "/azure_insights.dashboard.azure_compute_virtual_machine_detail?input.vm_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_compute_virtual_machine_icon
+  href  = "/azure_insights.dashboard.azure_compute_virtual_machine_detail?input.vm_id={{.properties.'ID' | @uri}}"
+  icon  = local.azure_compute_virtual_machine_icon
+  color = "orange"
+
   fold {
-    title     = "Compute Virtual Machines"
-    icon = local.azure_compute_virtual_machine_icon
+    title     = "Virtual Machine"
+    icon      = local.azure_compute_virtual_machine_icon
     threshold = 3
   }
 }
@@ -94,7 +97,8 @@ category "azure_eventhub_namespace" {
 }
 
 category "azure_image" {
-  icon = local.azure_image_icon
+  color = "orange"
+  icon  = local.azure_image_icon
   fold {
     title     = "Compute Images"
     icon      = local.azure_image_icon
@@ -144,7 +148,8 @@ category "azure_log_profile" {
 
 category "azure_network_interface" {
   href = "/azure_insights.dashboard.azure_network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_network_interface_icon
+  icon  = local.azure_network_interface_icon
+  color = "purple"
   fold {
     title     = "Network Interfaces"
     icon      = local.azure_network_interface_icon
@@ -152,12 +157,15 @@ category "azure_network_interface" {
   }
 }
 
+
 category "azure_network_security_group" {
   href = "/azure_insights.dashboard.azure_network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_network_security_group_icon
+  icon  = "heroicons-solid:lock-closed"
+  color = "purple"
+
   fold {
+    icon      = "heroicons-outline:lock-closed"
     title     = "Network Security Groups"
-    icon = local.azure_network_security_group_icon
     threshold = 3
   }
 }
@@ -170,8 +178,9 @@ category "azure_postgresql_server" {
 }
 
 category "azure_public_ip" {
+  color = "purple"
   href = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_public_ip_icon
+  icon  = local.azure_public_ip_icon
   fold {
     title     = "Public IPs"
     icon      = local.azure_public_ip_icon
@@ -282,7 +291,12 @@ category "azure_storage_table" {
 
 category "azure_subnet" {
   href = "/azure_insights.dashboard.azure_network_subnet_detail?input.subnet_id={{.properties.'ID' | @uri}}"
+  icon  = "heroicons-solid:share"
+  color = "purple"
+
   fold {
+    icon = "heroicons-solid:share"
+    // color = "purple"
     title     = "Subnets"
     threshold = 3
   }
@@ -290,10 +304,12 @@ category "azure_subnet" {
 
 category "azure_virtual_network" {
   href = "/azure_insights.dashboard.azure_virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_virtual_network_icon
+  icon  = "heroicons-outline:cloud" //"text:vpc"
+  color = "purple"
+
   fold {
+    icon      = "heroicons-outline:cloud" //"text:vpc"
     title     = "Virtual Networks"
-    icon      = local.azure_virtual_network_icon
     threshold = 3
   }
 }

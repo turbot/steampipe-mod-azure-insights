@@ -378,6 +378,13 @@ query "azure_compute_virtual_machine_vulnerability_assessment_solution" {
 
 category "azure_compute_virtual_machine_no_link" {
   icon  = local.azure_compute_virtual_machine_icon
+  color = "orange"
+
+  fold {
+    title     = "Virtual Machine"
+    icon      = local.azure_compute_virtual_machine_icon
+    threshold = 3
+  }
 }
 
 node "azure_compute_virtual_machine_node" {
@@ -673,7 +680,7 @@ node "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_
 }
 
 edge "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_edge" {
-  title = "vitual network"
+  title = "virtual network"
 
   sql = <<-EOQ
     with network_interface_id as (
