@@ -122,29 +122,29 @@ dashboard "azure_compute_snapshot_detail" {
       }
 
       table {
-      title = "Disk Encryption Set"
-      query = query.azure_compute_disk_encryption_details
-      args = {
-        id = self.input.id.value
-      }
+        title = "Disk Encryption Set"
+        query = query.azure_compute_disk_encryption_details
+        args = {
+          id = self.input.id.value
+        }
 
-      column "Key Vault ID" {
-        display = "none"
-      }
+        column "Key Vault ID" {
+          display = "none"
+        }
 
-      column "Key ID" {
-        display = "none"
-      }
+        column "Key ID" {
+          display = "none"
+        }
 
-      column "Key Vault Name" {
-        href = "${dashboard.azure_key_vault_detail.url_path}?input.key_vault_id={{.'Key Vault ID' | @uri}}"
-      }
+        column "Key Vault Name" {
+          href = "${dashboard.azure_key_vault_detail.url_path}?input.key_vault_id={{.'Key Vault ID' | @uri}}"
+        }
 
-      column "Key Name" {
-        href = "${dashboard.azure_key_vault_key_detail.url_path}?input.key_vault_key_id={{.'Key ID' | @uri}}"
-      }
+        column "Key Name" {
+          href = "${dashboard.azure_key_vault_key_detail.url_path}?input.key_vault_key_id={{.'Key ID' | @uri}}"
+        }
 
-    }
+      }
 
     }
 
@@ -231,7 +231,8 @@ query "azure_compute_snapshot_network_access_policy" {
 }
 
 category "azure_compute_snapshot_no_link" {
-  icon = local.azure_compute_snapshot_icon
+  icon  = local.azure_compute_snapshot_icon
+  color = "green"
 }
 
 node "azure_compute_snapshot_node" {

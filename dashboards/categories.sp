@@ -52,8 +52,9 @@ category "azure_compute_disk" {
 }
 
 category "azure_compute_snapshot" {
-  href = "/azure_insights.dashboard.azure_compute_snapshot_detail?input.id={{.properties.'ID' | @uri}}"
-  icon = local.azure_compute_snapshot_icon
+  href  = "/azure_insights.dashboard.azure_compute_snapshot_detail?input.id={{.properties.'ID' | @uri}}"
+  icon  = local.azure_compute_snapshot_icon
+  color = "green"
   fold {
     title     = "Compute Snapshots"
     icon      = local.azure_compute_snapshot_icon
@@ -105,8 +106,9 @@ category "azure_image" {
 }
 
 category "azure_key_vault" {
-  href = "/azure_insights.dashboard.azure_key_vault_detail?input.key_vault_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_key_vault_icon
+  href  = "/azure_insights.dashboard.azure_key_vault_detail?input.key_vault_id={{.properties.'ID' | @uri}}"
+  icon  = local.azure_key_vault_icon
+  color = "red"
   fold {
     title     = "Key Vaults"
     icon      = local.azure_key_vault_icon
@@ -124,6 +126,8 @@ category "azure_key_vault_firewall" {
 }
 
 category "azure_key_vault_key" {
+  icon  = local.azure_key_vault_key_icon
+  color = "red"
   fold {
     title     = "Keys"
     threshold = 3
@@ -145,8 +149,8 @@ category "azure_log_profile" {
 }
 
 category "azure_network_interface" {
-  href = "/azure_insights.dashboard.azure_network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_network_interface_icon
+  href  = "/azure_insights.dashboard.azure_network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
+  icon  = local.azure_network_interface_icon
   color = "purple"
   fold {
     title     = "Network Interfaces"
@@ -174,8 +178,8 @@ category "azure_postgresql_server" {
 }
 
 category "azure_public_ip" {
-  href = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_public_ip_icon
+  href  = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
+  icon  = local.azure_public_ip_icon
   color = "purple"
   fold {
     title     = "Public IPs"
@@ -317,7 +321,8 @@ category "azure_mssql_elasticpool" {
 }
 
 category "azure_compute_disk_encryption_set" {
-  icon = local.azure_compute_disk_encryption_set_icon
+  icon  = local.azure_compute_disk_encryption_set_icon
+  color = "green"
   fold {
     title     = "Compute Disk Encryption Sets"
     icon      = local.azure_compute_disk_encryption_set_icon
@@ -344,8 +349,8 @@ category "azure_compute_virtual_machine_scale_set" {
 }
 
 category "azure_lb" {
-  href = "/azure_insights.dashboard.azure_network_load_balancer_detail?input.lb_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_lb_icon
+  href  = "/azure_insights.dashboard.azure_network_load_balancer_detail?input.lb_id={{.properties.'ID' | @uri}}"
+  icon  = local.azure_lb_icon
   color = "purple"
   fold {
     title     = "Load Balancers"
@@ -355,7 +360,7 @@ category "azure_lb" {
 }
 
 category "azure_lb_backend_address_pool" {
-  icon = "text:BAP"
+  icon  = "text:BAP"
   color = "purple"
   fold {
     title     = "Backend Address Pools"
