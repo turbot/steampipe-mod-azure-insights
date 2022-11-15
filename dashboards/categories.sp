@@ -108,10 +108,11 @@ category "azure_image" {
 
 category "azure_key_vault" {
   href = "/azure_insights.dashboard.azure_key_vault_detail?input.key_vault_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_key_vault_icon
+  icon  = "heroicons-outline:key"
+  color = "red"
+
   fold {
     title     = "Key Vaults"
-    icon      = local.azure_key_vault_icon
     threshold = 3
   }
 }
@@ -126,6 +127,8 @@ category "azure_key_vault_firewall" {
 }
 
 category "azure_key_vault_key" {
+  icon  = "heroicons-outline:key"
+  color = "red"
   fold {
     title     = "Keys"
     threshold = 3
@@ -324,10 +327,11 @@ category "azure_mssql_elasticpool" {
 }
 
 category "azure_compute_disk_encryption_set" {
-  icon = local.azure_compute_disk_encryption_set_icon
+  icon  = local.azure_compute_disk_encryption_set_icon
+  color = "green"
   fold {
     title     = "Compute Disk Encryption Sets"
-    icon = local.azure_compute_disk_encryption_set_icon
+    icon      = local.azure_compute_disk_encryption_set_icon
     threshold = 3
   }
 }

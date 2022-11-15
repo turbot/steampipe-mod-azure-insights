@@ -256,6 +256,7 @@ query "azure_compute_disk_sku_name" {
 
 category "azure_compute_disk_no_link" {
   icon  = local.azure_compute_disk_icon
+  color = "green"
 }
 
 node "azure_compute_disk_node" {
