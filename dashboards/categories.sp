@@ -9,7 +9,7 @@ category "azure_application_gateway" {
   icon = local.azure_application_gateway_icon
   fold {
     title     = "Application Gateways"
-    icon = local.azure_application_gateway_icon
+    icon      = local.azure_application_gateway_icon
     threshold = 3
   }
 }
@@ -41,8 +41,9 @@ category "azure_container_registry" {
 }
 
 category "azure_compute_disk" {
-  href = "/azure_insights.dashboard.azure_compute_disk_detail?input.d_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_compute_disk_icon
+  href  = "/azure_insights.dashboard.azure_compute_disk_detail?input.d_id={{.properties.'ID' | @uri}}"
+  icon  = local.azure_compute_disk_icon
+  color = "green"
   fold {
     title     = "Compute Disks"
     icon      = local.azure_compute_disk_icon
@@ -55,7 +56,7 @@ category "azure_compute_snapshot" {
   icon = local.azure_compute_snapshot_icon
   fold {
     title     = "Compute Snapshots"
-    icon = local.azure_compute_snapshot_icon
+    icon      = local.azure_compute_snapshot_icon
     threshold = 3
   }
 }
@@ -65,7 +66,7 @@ category "azure_compute_virtual_machine" {
   icon = local.azure_compute_virtual_machine_icon
   fold {
     title     = "Compute Virtual Machines"
-    icon = local.azure_compute_virtual_machine_icon
+    icon      = local.azure_compute_virtual_machine_icon
     threshold = 3
   }
 }
@@ -74,7 +75,7 @@ category "azure_cosmosdb_account" {
   icon = local.azure_cosmosdb_account_icon
   fold {
     title     = "Cosmos DB Accounts"
-    icon = local.azure_cosmosdb_account_icon
+    icon      = local.azure_cosmosdb_account_icon
     threshold = 3
   }
 }
@@ -153,11 +154,12 @@ category "azure_network_interface" {
 }
 
 category "azure_network_security_group" {
-  href = "/azure_insights.dashboard.azure_network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_network_security_group_icon
+  href  = "/azure_insights.dashboard.azure_network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
+  icon  = "heroicons-solid:lock-closed"
+  color = "purple"
   fold {
     title     = "Network Security Groups"
-    icon = local.azure_network_security_group_icon
+    icon      = "heroicons-solid:lock-closed"
     threshold = 3
   }
 }
@@ -183,7 +185,7 @@ category "azure_route_table" {
   icon = local.azure_route_table_icon
   fold {
     title     = "Route Tables"
-    icon = local.azure_route_table_icon
+    icon      = local.azure_route_table_icon
     threshold = 3
   }
 }
@@ -226,7 +228,7 @@ category "azure_private_endpoint_connection" {
   icon = local.azure_private_endpoint_connection_icon
   fold {
     title     = "Private Endpoint Connections"
-    icon = local.azure_private_endpoint_connection_icon
+    icon      = local.azure_private_endpoint_connection_icon
     threshold = 3
   }
 }
@@ -243,7 +245,7 @@ category "azure_storage_account" {
   icon = local.azure_storage_account_icon
   fold {
     title     = "Storage Accounts"
-    icon = local.azure_storage_account_icon
+    icon      = local.azure_storage_account_icon
     threshold = 3
   }
 }
@@ -259,7 +261,7 @@ category "azure_storage_container" {
   icon = local.azure_storage_container_icon
   fold {
     title     = "Storage Containers"
-    icon = local.azure_storage_container_icon
+    icon      = local.azure_storage_container_icon
     threshold = 3
   }
 }
@@ -268,7 +270,7 @@ category "azure_storage_queue" {
   icon = local.azure_storage_queue_icon
   fold {
     title     = "Storage Queues"
-    icon = local.azure_storage_queue_icon
+    icon      = local.azure_storage_queue_icon
     threshold = 3
   }
 }
@@ -281,19 +283,23 @@ category "azure_storage_table" {
 }
 
 category "azure_subnet" {
-  href = "/azure_insights.dashboard.azure_network_subnet_detail?input.subnet_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.azure_network_subnet_detail?input.subnet_id={{.properties.'ID' | @uri}}"
+  icon  = "heroicons-solid:share"
+  color = "purple"
   fold {
     title     = "Subnets"
+    icon      = "heroicons-solid:share"
     threshold = 3
   }
 }
 
 category "azure_virtual_network" {
-  href = "/azure_insights.dashboard.azure_virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_virtual_network_icon
+  href  = "/azure_insights.dashboard.azure_virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
+  icon  = "heroicons-outline:cloud"
+  color = "purple"
   fold {
     title     = "Virtual Networks"
-    icon      = local.azure_virtual_network_icon
+    icon      = "heroicons-outline:cloud"
     threshold = 3
   }
 }
@@ -311,7 +317,7 @@ category "azure_compute_disk_encryption_set" {
   icon = local.azure_compute_disk_encryption_set_icon
   fold {
     title     = "Compute Disk Encryption Sets"
-    icon = local.azure_compute_disk_encryption_set_icon
+    icon      = local.azure_compute_disk_encryption_set_icon
     threshold = 3
   }
 }
@@ -325,10 +331,11 @@ category "azure_network_watcher_flow_log" {
 
 category "azure_compute_virtual_machine_scale_set" {
   href = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_detail?input.vm_scale_set_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_compute_virtual_machine_scale_set_icon
+  icon  = "heroicons-outline:square-2-stack"
+  color = "orange"
   fold {
     title     = "Compute Virtual Machine Scale Set"
-    icon = local.azure_compute_virtual_machine_scale_set_icon
+    icon  = "heroicons-outline:square-2-stack"
     threshold = 3
   }
 }
@@ -338,7 +345,7 @@ category "azure_lb" {
   icon = local.azure_lb_icon
   fold {
     title     = "Load Balancers"
-    icon = local.azure_lb_icon
+    icon      = local.azure_lb_icon
     threshold = 3
   }
 }
@@ -384,7 +391,7 @@ category "azure_nat_gateway" {
   icon = local.azure_nat_gateway_icon
   fold {
     title     = "NAT Gateway"
-    icon = local.azure_nat_gateway_icon
+    icon      = local.azure_nat_gateway_icon
     threshold = 3
   }
 }
@@ -408,16 +415,17 @@ category "azure_compute_virtual_machine_scale_set_vm" {
   icon = local.azure_compute_virtual_machine_icon
   fold {
     title     = "Compute Virtual Machine Scale Set VMs"
-    icon = local.azure_compute_virtual_machine_icon
+    icon      = local.azure_compute_virtual_machine_icon
     threshold = 3
   }
 }
 
 category "azure_compute_virtual_machine_scale_set_network_interface" {
-  icon = local.azure_network_interface_icon
+  icon  = local.azure_network_interface_icon
+  color = "purple"
   fold {
     title     = "Compute Virtual Machine Scale Set Network Interfaces"
-    icon = local.azure_network_interface_icon
+    icon      = local.azure_network_interface_icon
     threshold = 3
   }
 }
