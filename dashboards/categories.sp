@@ -62,8 +62,9 @@ category "azure_compute_snapshot" {
 }
 
 category "azure_compute_virtual_machine" {
-  href = "/azure_insights.dashboard.azure_compute_virtual_machine_detail?input.vm_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_compute_virtual_machine_icon
+  href  = "/azure_insights.dashboard.azure_compute_virtual_machine_detail?input.vm_id={{.properties.'ID' | @uri}}"
+  icon  = local.azure_compute_virtual_machine_icon
+  color = "orange"
   fold {
     title     = "Compute Virtual Machines"
     icon      = local.azure_compute_virtual_machine_icon
@@ -330,12 +331,12 @@ category "azure_network_watcher_flow_log" {
 }
 
 category "azure_compute_virtual_machine_scale_set" {
-  href = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_detail?input.vm_scale_set_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_detail?input.vm_scale_set_id={{.properties.'ID' | @uri}}"
   icon  = "heroicons-outline:square-2-stack"
   color = "orange"
   fold {
     title     = "Compute Virtual Machine Scale Set"
-    icon  = "heroicons-outline:square-2-stack"
+    icon      = "heroicons-outline:square-2-stack"
     threshold = 3
   }
 }
@@ -343,6 +344,7 @@ category "azure_compute_virtual_machine_scale_set" {
 category "azure_lb" {
   href = "/azure_insights.dashboard.azure_network_load_balancer_detail?input.lb_id={{.properties.'ID' | @uri}}"
   icon = local.azure_lb_icon
+  color = "purple"
   fold {
     title     = "Load Balancers"
     icon      = local.azure_lb_icon
@@ -351,6 +353,8 @@ category "azure_lb" {
 }
 
 category "azure_lb_backend_address_pool" {
+  icon = "text:BAP"
+  color = "purple"
   fold {
     title     = "Backend Address Pools"
     threshold = 3
@@ -411,8 +415,9 @@ category "azure_compute_disk_access" {
 }
 
 category "azure_compute_virtual_machine_scale_set_vm" {
-  href = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_vm_detail?input.scale_set_vm_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_compute_virtual_machine_icon
+  href  = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_vm_detail?input.scale_set_vm_id={{.properties.'ID' | @uri}}"
+  icon  = local.azure_compute_virtual_machine_icon
+  color = "orange"
   fold {
     title     = "Compute Virtual Machine Scale Set VMs"
     icon      = local.azure_compute_virtual_machine_icon
