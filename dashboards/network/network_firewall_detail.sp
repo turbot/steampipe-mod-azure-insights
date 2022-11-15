@@ -254,7 +254,7 @@ node "azure_network_firewall_node" {
 }
 
 node "azure_network_firewall_to_public_ip_node" {
-  category = category.azure_firewall
+  category = category.azure_public_ip
 
   sql = <<-EOQ
     select
@@ -389,7 +389,7 @@ edge "azure_network_firewall_subnet_to_virtual_network_edge" {
       jsonb_array_elements(ip_configurations) as c
       left join azure_subnet as s on s.id = c -> 'subnet' ->> 'id'
     where
-      f.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.Network/azureFirewalls/firewall1'
+      f.id = $1
     )
     select
       sub.subnet_id as from_id,
