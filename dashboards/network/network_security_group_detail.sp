@@ -767,7 +767,8 @@ query "azure_network_security_group_egress_rule_sankey" {
 }
 
 category "azure_network_security_group_no_link" {
-  icon  = local.azure_network_security_group_icon
+  icon  = "heroicons-solid:lock-closed"
+  color = "purple"
 }
 
 node "azure_network_security_group_node" {

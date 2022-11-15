@@ -333,8 +333,11 @@ category "azure_compute_disk_encryption_set" {
 }
 
 category "azure_network_watcher_flow_log" {
+  color = "purple"
+  icon  = local.azure_network_watcher_flow_log_icon
   fold {
     title     = "Network Watcher Flow Logs"
+    icon      = local.azure_network_watcher_flow_log_icon
     threshold = 3
   }
 }
