@@ -174,6 +174,7 @@ query "azure_network_interface_input" {
 
 category "azure_network_interface_no_link" {
   icon  = local.azure_network_interface_icon
+  color = "purple"
 }
 
 node "azure_network_interface_node" {

@@ -147,6 +147,7 @@ category "azure_log_profile" {
 category "azure_network_interface" {
   href = "/azure_insights.dashboard.azure_network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
   icon = local.azure_network_interface_icon
+  color = "purple"
   fold {
     title     = "Network Interfaces"
     icon      = local.azure_network_interface_icon
@@ -175,6 +176,7 @@ category "azure_postgresql_server" {
 category "azure_public_ip" {
   href = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
   icon = local.azure_public_ip_icon
+  color = "purple"
   fold {
     title     = "Public IPs"
     icon      = local.azure_public_ip_icon
