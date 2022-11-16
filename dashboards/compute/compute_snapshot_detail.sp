@@ -231,7 +231,7 @@ query "azure_compute_snapshot_network_access_policy" {
 }
 
 category "azure_compute_snapshot_no_link" {
-  icon  = local.azure_compute_snapshot_icon
+  icon  = "viewfinder-circle"
   color = "green"
 }
 
