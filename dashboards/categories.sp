@@ -115,7 +115,7 @@ category "azure_image" {
 
 category "azure_key_vault" {
   href  = "/azure_insights.dashboard.azure_key_vault_detail?input.key_vault_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:key"
+  icon  = "key"
   color = "red"
 
   fold {
@@ -134,7 +134,7 @@ category "azure_key_vault_firewall" {
 }
 
 category "azure_key_vault_key" {
-  icon  = "heroicons-outline:key"
+  icon  = "key"
   color = "red"
   fold {
     title     = "Keys"
