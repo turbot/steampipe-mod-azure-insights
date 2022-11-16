@@ -42,28 +42,28 @@ dashboard "azure_network_subnet_detail" {
 
       nodes = [
         node.azure_network_subnet_node,
-        node.azure_network_subnet_to_virtual_network_node,
+        node.azure_network_subnet_from_virtual_network_node,
         node.azure_network_subnet_to_route_table_node,
         node.azure_network_subnet_to_nat_gateway_node,
         node.azure_network_subnet_to_network_security_group_node,
-        node.azure_network_subnet_from_app_service_web_app_node,
-        node.azure_network_subnet_from_sql_server_node,
-        node.azure_network_subnet_from_storage_account_node,
-        node.azure_network_subnet_from_cosmosdb_account_node,
-        node.azure_network_subnet_from_api_management_node,
+        node.azure_network_subnet_to_app_service_web_app_node,
+        node.azure_network_subnet_to_sql_server_node,
+        node.azure_network_subnet_to_storage_account_node,
+        node.azure_network_subnet_to_cosmosdb_account_node,
+        node.azure_network_subnet_to_api_management_node,
         node.azure_network_subnet_to_application_gateway_node
       ]
 
       edges = [
-        edge.azure_network_subnet_to_virtual_network_edge,
+        edge.azure_network_subnet_from_virtual_network_edge,
         edge.azure_network_subnet_to_route_table_edge,
         edge.azure_network_subnet_to_nat_gateway_edge,
         edge.azure_network_subnet_to_network_security_group_edge,
-        edge.azure_network_subnet_from_app_service_web_app_edge,
-        edge.azure_network_subnet_from_sql_server_edge,
-        edge.azure_network_subnet_from_storage_account_edge,
-        edge.azure_network_subnet_from_cosmosdb_account_edge,
-        edge.azure_network_subnet_from_api_management_edge,
+        edge.azure_network_subnet_to_app_service_web_app_edge,
+        edge.azure_network_subnet_to_sql_server_edge,
+        edge.azure_network_subnet_to_storage_account_edge,
+        edge.azure_network_subnet_to_cosmosdb_account_edge,
+        edge.azure_network_subnet_to_api_management_edge,
         edge.azure_network_subnet_to_application_gateway_edge
       ]
 
@@ -291,6 +291,8 @@ query "azure_network_subnet_association" {
 }
 
 category "azure_network_subnet_no_link" {
+  icon  = "share"
+  color = "purple"
 }
 
 node "azure_network_subnet_node" {
@@ -317,7 +319,7 @@ node "azure_network_subnet_node" {
   param "id" {}
 }
 
-node "azure_network_subnet_to_virtual_network_node" {
+node "azure_network_subnet_from_virtual_network_node" {
   category = category.azure_virtual_network
 
   sql = <<-EOQ
@@ -345,8 +347,8 @@ node "azure_network_subnet_to_virtual_network_node" {
   param "id" {}
 }
 
-edge "azure_network_subnet_to_virtual_network_edge" {
-  title = "virtual network"
+edge "azure_network_subnet_from_virtual_network_edge" {
+  title = "subnet"
 
   sql = <<-EOQ
     select
@@ -529,7 +531,7 @@ edge "azure_network_subnet_to_nat_gateway_edge" {
   param "id" {}
 }
 
-node "azure_network_subnet_from_app_service_web_app_node" {
+node "azure_network_subnet_to_app_service_web_app_node" {
   category = category.azure_app_service_web_app
 
   sql = <<-EOQ
@@ -553,13 +555,13 @@ node "azure_network_subnet_from_app_service_web_app_node" {
   param "id" {}
 }
 
-edge "azure_network_subnet_from_app_service_web_app_edge" {
-  title = "subnet"
+edge "azure_network_subnet_to_app_service_web_app_edge" {
+  title = "web app"
 
   sql = <<-EOQ
     select
-      id as from_id,
-      $1 as to_id
+      $1 as from_id,
+      id as to_id
     from
       azure_app_service_web_app
     where
@@ -569,7 +571,7 @@ edge "azure_network_subnet_from_app_service_web_app_edge" {
   param "id" {}
 }
 
-node "azure_network_subnet_from_sql_server_node" {
+node "azure_network_subnet_to_sql_server_node" {
   category = category.azure_sql_server
 
   sql = <<-EOQ
@@ -595,13 +597,13 @@ node "azure_network_subnet_from_sql_server_node" {
   param "id" {}
 }
 
-edge "azure_network_subnet_from_sql_server_edge" {
-  title = "subnet"
+edge "azure_network_subnet_to_sql_server_edge" {
+  title = "sql server"
 
   sql = <<-EOQ
     select
-      id as from_id,
-      $1 as to_id
+      $1 as from_id,
+      id as to_id
     from
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as r
@@ -612,7 +614,7 @@ edge "azure_network_subnet_from_sql_server_edge" {
   param "id" {}
 }
 
-node "azure_network_subnet_from_storage_account_node" {
+node "azure_network_subnet_to_storage_account_node" {
   category = category.azure_storage_account
 
   sql = <<-EOQ
@@ -638,13 +640,13 @@ node "azure_network_subnet_from_storage_account_node" {
   param "id" {}
 }
 
-edge "azure_network_subnet_from_storage_account_edge" {
-  title = "subnet"
+edge "azure_network_subnet_to_storage_account_edge" {
+  title = "storage account"
 
   sql = <<-EOQ
     select
-      id as from_id,
-      $1 as to_id
+      $1 as from_id,
+      id as to_id
     from
       azure_storage_account,
       jsonb_array_elements(virtual_network_rules) as r
@@ -655,7 +657,7 @@ edge "azure_network_subnet_from_storage_account_edge" {
   param "id" {}
 }
 
-node "azure_network_subnet_from_cosmosdb_account_node" {
+node "azure_network_subnet_to_cosmosdb_account_node" {
   category = category.azure_cosmosdb_account
 
   sql = <<-EOQ
@@ -679,13 +681,13 @@ node "azure_network_subnet_from_cosmosdb_account_node" {
   param "id" {}
 }
 
-edge "azure_network_subnet_from_cosmosdb_account_edge" {
-  title = "subnet"
+edge "azure_network_subnet_to_cosmosdb_account_edge" {
+  title = "cosmosdb account"
 
   sql = <<-EOQ
     select
-      id as from_id,
-      $1 as to_id
+      $1 as from_id,
+      id as to_id
     from
       azure_cosmosdb_account,
       jsonb_array_elements(virtual_network_rules) as r
@@ -696,7 +698,7 @@ edge "azure_network_subnet_from_cosmosdb_account_edge" {
   param "id" {}
 }
 
-node "azure_network_subnet_from_api_management_node" {
+node "azure_network_subnet_to_api_management_node" {
   category = category.azure_api_management
 
   sql = <<-EOQ
@@ -720,13 +722,13 @@ node "azure_network_subnet_from_api_management_node" {
   param "id" {}
 }
 
-edge "azure_network_subnet_from_api_management_edge" {
-  title = "subnet"
+edge "azure_network_subnet_to_api_management_edge" {
+  title = "api management"
 
   sql = <<-EOQ
     select
-      id as from_id,
-      $1 as to_id
+      $1 as from_id,
+      id as to_id
     from
       azure_api_management
     where

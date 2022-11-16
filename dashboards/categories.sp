@@ -1,25 +1,31 @@
 category "azure_api_management" {
+  icon  = "bolt"
+  color = "red"
+
   fold {
-    title     = "API Managements"
+    icon      = "bolt"
+    title     = "API Management"
     threshold = 3
   }
 }
 
 category "azure_application_gateway" {
-  icon = local.azure_application_gateway_icon
+  icon  = "text:app_gateway"
+  color = "purple"
   fold {
     title     = "Application Gateways"
-    icon = local.azure_application_gateway_icon
+    icon = "text:app_gateway"
     threshold = 3
   }
 }
 
 category "azure_app_service_web_app" {
-  icon = local.azure_app_service_web_app_icon
+  icon = "text:web_app"
   href = "/azure_insights.dashboard.azure_app_service_web_app_detail?input.web_app_id={{.properties.'ID' | @uri}}"
+  color = "orange"
   fold {
     title     = "Web Apps"
-    icon      = local.azure_app_service_web_app_icon
+    icon      = "text:web_app"
     threshold = 3
   }
 }
@@ -74,10 +80,11 @@ category "azure_compute_virtual_machine" {
 }
 
 category "azure_cosmosdb_account" {
-  icon = local.azure_cosmosdb_account_icon
+  color = "blue"
+  icon  = "text:cosmosdb"
   fold {
     title     = "Cosmos DB Accounts"
-    icon = local.azure_cosmosdb_account_icon
+    icon      = "text:cosmosdb"
     threshold = 3
   }
 }
@@ -163,11 +170,11 @@ category "azure_network_interface" {
 
 category "azure_network_security_group" {
   href = "/azure_insights.dashboard.azure_network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-solid:lock-closed"
+  icon  = "lock-closed"
   color = "purple"
 
   fold {
-    icon      = "heroicons-outline:lock-closed"
+    icon      = "lock-closed"
     title     = "Network Security Groups"
     threshold = 3
   }
@@ -192,10 +199,11 @@ category "azure_public_ip" {
 }
 
 category "azure_route_table" {
-  icon = local.azure_route_table_icon
+  icon  = "text:route_table"
+  color = "purple"
   fold {
     title     = "Route Tables"
-    icon = local.azure_route_table_icon
+    icon      = "text:route_table"
     threshold = 3
   }
 }
@@ -212,10 +220,11 @@ category "azure_sql_database" {
 
 category "azure_sql_server" {
   href = "/azure_insights.dashboard.azure_sql_server_detail?input.server_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_sql_server_icon
+  icon = "circle-stack"
+  color = "blue"
   fold {
     title     = "SQL Servers"
-    icon      = local.azure_sql_server_icon
+    icon      = "circle-stack"
     threshold = 3
   }
 }
@@ -252,10 +261,12 @@ category "azure_servicebus_namespace" {
 
 category "azure_storage_account" {
   href = "/azure_insights.dashboard.azure_storage_account_detail?input.storage_account_id={{.properties.'ID' | @uri}}"
-  icon = local.azure_storage_account_icon
+  icon  = "archive-box"
+  color = "green"
+
   fold {
     title     = "Storage Accounts"
-    icon = local.azure_storage_account_icon
+    icon      = "archive-box"
     threshold = 3
   }
 }
@@ -307,11 +318,11 @@ category "azure_subnet" {
 
 category "azure_virtual_network" {
   href = "/azure_insights.dashboard.azure_virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:cloud" //"text:vpc"
+  icon  = "cloud" //"text:vpc"
   color = "purple"
 
   fold {
-    icon      = "heroicons-outline:cloud" //"text:vpc"
+    icon      = "cloud" //"text:vpc"
     title     = "Virtual Networks"
     threshold = 3
   }
@@ -404,10 +415,12 @@ category "azure_firewall" {
 }
 
 category "azure_nat_gateway" {
-  icon = local.azure_nat_gateway_icon
+  icon  = "text:nat_gateway"
+  color = "purple"
+
   fold {
     title     = "NAT Gateway"
-    icon = local.azure_nat_gateway_icon
+    icon      = "text:nat_gateway"
     threshold = 3
   }
 }
