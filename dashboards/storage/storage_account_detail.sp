@@ -485,7 +485,8 @@ query "azure_storage_account_blob_logging" {
 }
 
 category "azure_storage_account_no_link" {
-  icon  = local.azure_storage_account_icon
+  icon  = "archive-box"
+  color = "green"
 }
 
 node "azure_storage_account_node" {

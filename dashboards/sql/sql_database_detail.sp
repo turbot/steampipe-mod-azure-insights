@@ -289,7 +289,8 @@ query "azure_sql_database_geo_redundant_backup_enabled" {
 }
 
 category "azure_sql_database_no_link" {
-  icon  = local.azure_sql_database_icon
+  icon  = "text:sql_database"
+  color = "blue"
 }
 
 node "azure_sql_database_node" {

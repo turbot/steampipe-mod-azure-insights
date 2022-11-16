@@ -318,7 +318,8 @@ query "azure_sql_server_vulnerability_assessment_enabled" {
 }
 
 category "azure_sql_server_no_link" {
-  icon  = local.azure_sql_server_icon
+  icon  = "circle-stack"
+  color = "blue"
 }
 
 node "azure_sql_server_node" {

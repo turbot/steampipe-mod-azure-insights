@@ -740,7 +740,8 @@ query "azure_virtual_network_address_prefixes" {
 }
 
 category "azure_virtual_network_no_link" {
-  icon  = local.azure_virtual_network_icon
+  icon  = "cloud" //"text:vpc"
+  color = "purple"
 }
 
 node "azure_virtual_network_node" {

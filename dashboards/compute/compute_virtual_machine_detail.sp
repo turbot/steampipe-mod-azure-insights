@@ -377,7 +377,7 @@ query "azure_compute_virtual_machine_vulnerability_assessment_solution" {
 }
 
 category "azure_compute_virtual_machine_no_link" {
-  icon  = local.azure_compute_virtual_machine_icon
+  icon  = "cpu-chip"
   color = "orange"
 }
 

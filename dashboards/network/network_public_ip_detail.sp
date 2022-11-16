@@ -143,7 +143,8 @@ query "azure_network_public_association" {
 }
 
 category "azure_network_public_ip_no_link" {
-  icon  = local.azure_public_ip_icon
+  icon  = "text:public_ip"
+  color = "purple"
 }
 
 node "azure_network_public_ip_node" {
