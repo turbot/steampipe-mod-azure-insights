@@ -417,7 +417,7 @@ query "azure_compute_virtual_machine_scale_set_data_disks" {
 }
 
 category "azure_compute_virtual_machine_scale_set_no_link" {
-  icon  = "heroicons-outline:square-2-stack"
+  icon  = "square-2-stack"
   color = "orange"
 }
 

@@ -300,7 +300,7 @@ query "azure_compute_virtual_machine_scale_set_vm_network_interface" {
 }
 
 category "azure_compute_virtual_machine_scale_set_vm_no_link" {
-  icon = local.azure_compute_virtual_machine_icon
+  icon = "cpu-chip"
   color = "orange"
 }
 

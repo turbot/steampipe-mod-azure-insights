@@ -173,7 +173,7 @@ query "azure_network_interface_input" {
 }
 
 category "azure_network_interface_no_link" {
-  icon  = "presentation-chart-line"
+  icon  = "text:nic"
   color = "purple"
 }
 

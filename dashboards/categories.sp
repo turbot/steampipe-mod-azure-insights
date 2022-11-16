@@ -3,7 +3,8 @@ category "azure_api_management" {
 }
 
 category "azure_application_gateway" {
-  icon  = local.azure_application_gateway_icon
+  // icon  = local.azure_application_gateway_icon
+  icon  = "text:AG"
   title = "Application Gateway"
 }
 
@@ -54,6 +55,7 @@ category "azure_diagnostic_setting" {
 
 category "azure_eventhub_namespace" {
   title = "EventHub Namespace"
+  color = "purple"
 }
 
 category "azure_image" {
@@ -106,8 +108,9 @@ category "azure_postgresql_server" {
 }
 
 category "azure_public_ip" {
-  href  = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
-  icon  = local.azure_public_ip_icon
+  href = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
+  // icon  = local.azure_public_ip_icon
+  icon  = "public ip"
   color = "purple"
   title = "Public IP"
 }
@@ -207,8 +210,9 @@ category "azure_compute_virtual_machine_scale_set" {
 }
 
 category "azure_lb" {
-  href  = "/azure_insights.dashboard.azure_network_load_balancer_detail?input.lb_id={{.properties.'ID' | @uri}}"
-  icon  = local.azure_lb_icon
+  href = "/azure_insights.dashboard.azure_network_load_balancer_detail?input.lb_id={{.properties.'ID' | @uri}}"
+  // icon  = local.azure_lb_icon
+  icon  = "text:lb"
   color = "purple"
   title = "Load Balancer"
 }
@@ -233,6 +237,8 @@ category "azure_lb_nat_rule" {
 
 category "azure_firewall" {
   title = "Firewall"
+  icon  = "fire"
+  color = "red"
 }
 
 category "azure_nat_gateway" {

@@ -225,7 +225,7 @@ query "azure_network_firewall_ip_configurations" {
 }
 
 category "azure_network_firewall_no_link" {
-  icon  = local.azure_firewall_icon
+  icon  = "fire"
   color = "red"
 }
 
