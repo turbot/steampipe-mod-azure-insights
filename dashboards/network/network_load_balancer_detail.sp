@@ -135,7 +135,7 @@ dashboard "azure_network_load_balancer_detail" {
       table {
         title = "Associated Virtual Machine Scale Sets"
         query = query.azure_load_balancer_associated_virtual_machine_scale_sets
-        args  = {
+        args = {
           id = self.input.lb_id.value
         }
 
@@ -147,7 +147,7 @@ dashboard "azure_network_load_balancer_detail" {
       table {
         title = "Backend Pools"
         query = query.azure_load_balancer_backend_pools
-        args  = {
+        args = {
           id = self.input.lb_id.value
         }
       }
@@ -161,7 +161,7 @@ dashboard "azure_network_load_balancer_detail" {
     table {
       title = "Frontend IP Configurations"
       query = query.azure_load_balancer_frontend_ip_configurations
-      args  = {
+      args = {
         id = self.input.lb_id.value
       }
     }
@@ -172,7 +172,7 @@ dashboard "azure_network_load_balancer_detail" {
     table {
       title = "Probes"
       query = query.azure_load_balancer_probe
-      args  = {
+      args = {
         id = self.input.lb_id.value
       }
     }
@@ -496,7 +496,8 @@ query "azure_load_balancer_load_balancing_rules" {
 }
 
 category "azure_load_balancer_no_link" {
-  icon = local.azure_lb_icon
+  icon  = local.azure_lb_icon
+  color = "purple"
 }
 
 node "azure_load_balancer_node" {
