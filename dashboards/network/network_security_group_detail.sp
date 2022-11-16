@@ -838,7 +838,7 @@ edge "azure_network_security_group_to_network_interface_edge" {
 }
 
 node "azure_network_security_group_from_network_subnet_node" {
-  category = category.azure_network_interface
+  category = category.azure_subnet
 
   sql = <<-EOQ
     select
@@ -913,7 +913,7 @@ node "azure_network_security_group_subnet_from_virtual_network_node" {
 }
 
 edge "azure_network_security_group_subnet_from_virtual_network_edge" {
-  title = "subet"
+  title = "subnet"
 
   sql = <<-EOQ
     with subnet_list as (
@@ -966,7 +966,7 @@ node "azure_network_security_group_to_network_watcher_flow_log_node" {
 }
 
 edge "azure_network_security_group_to_network_watcher_flow_log_edge" {
-  title = "nsg"
+  title = "nw flow log"
 
   sql = <<-EOQ
     select
@@ -1019,7 +1019,7 @@ node "azure_network_security_group_to_compute_virtual_machine_node" {
 }
 
 edge "azure_network_security_group_to_compute_virtual_machine_edge" {
-  title = "network interface"
+  title = "virtual machine"
 
   sql = <<-EOQ
     with network_interface_list as (

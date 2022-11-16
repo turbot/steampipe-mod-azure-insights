@@ -143,12 +143,12 @@ dashboard "azure_sql_server_detail" {
       }
 
       table {
-      title = "Firewall Rule"
-      query = query.azure_sql_server_firewall_rule
-      args = {
-        id = self.input.server_id.value
+        title = "Firewall Rule"
+        query = query.azure_sql_server_firewall_rule
+        args = {
+          id = self.input.server_id.value
+        }
       }
-    }
 
     }
 
