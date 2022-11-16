@@ -80,8 +80,8 @@ category "azure_compute_virtual_machine" {
 }
 
 category "azure_cosmosdb_account" {
+  icon = "circle-stack"
   color = "blue"
-  icon  = "text:cosmosdb"
   fold {
     title     = "Cosmos DB Accounts"
     icon      = "text:cosmosdb"
@@ -158,15 +158,24 @@ category "azure_log_profile" {
 
 category "azure_network_interface" {
   href = "/azure_insights.dashboard.azure_network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
-  icon  = local.azure_network_interface_icon
+  icon  = "text:network-interface"
   color = "purple"
   fold {
     title     = "Network Interfaces"
-    icon      = local.azure_network_interface_icon
+    icon      = "text:network-interface"
     threshold = 3
   }
 }
 
+category "azure_network_peering" {
+  icon  = "text:network-peering"
+  color = "purple"
+  fold {
+    title     = "Network Peering"
+    icon      = "text:network-peering"
+    threshold = 3
+  }
+}
 
 category "azure_network_security_group" {
   href = "/azure_insights.dashboard.azure_network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
@@ -199,11 +208,11 @@ category "azure_public_ip" {
 }
 
 category "azure_route_table" {
-  icon  = "text:route_table"
+  icon  = "arrows-right-left"
   color = "purple"
   fold {
     title     = "Route Tables"
-    icon      = "text:route_table"
+    icon      = "arrows-right-left"
     threshold = 3
   }
 }
@@ -349,10 +358,10 @@ category "azure_compute_disk_encryption_set" {
 
 category "azure_network_watcher_flow_log" {
   color = "purple"
-  icon  = local.azure_network_watcher_flow_log_icon
+  icon  = "text:nw-flow-log"
   fold {
     title     = "Network Watcher Flow Logs"
-    icon      = local.azure_network_watcher_flow_log_icon
+    icon      = "text:nw-flow-log"
     threshold = 3
   }
 }

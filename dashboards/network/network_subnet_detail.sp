@@ -682,7 +682,7 @@ node "azure_network_subnet_to_cosmosdb_account_node" {
 }
 
 edge "azure_network_subnet_to_cosmosdb_account_edge" {
-  title = "cosmosdb account"
+  title = "cosmosdb"
 
   sql = <<-EOQ
     select
