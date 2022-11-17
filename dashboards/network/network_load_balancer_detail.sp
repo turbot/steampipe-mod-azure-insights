@@ -496,7 +496,7 @@ query "azure_load_balancer_load_balancing_rules" {
 }
 
 category "azure_load_balancer_no_link" {
-  icon  = local.azure_lb_icon
+  icon  = "text:lb"
   color = "purple"
 }
 

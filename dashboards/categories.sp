@@ -4,7 +4,8 @@ category "azure_api_management" {
 
 category "azure_application_gateway" {
   // icon  = local.azure_application_gateway_icon
-  icon  = "text:AG"
+  icon  = "text:App Gateway"
+  color = "purple"
   title = "Application Gateway"
 }
 
@@ -110,7 +111,7 @@ category "azure_postgresql_server" {
 category "azure_public_ip" {
   href = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
   // icon  = local.azure_public_ip_icon
-  icon  = "public ip"
+  icon  = "text:public ip"
   color = "purple"
   title = "Public IP"
 }
@@ -224,15 +225,21 @@ category "azure_lb_backend_address_pool" {
 }
 
 category "azure_lb_rule" {
+  icon  = "text:lb rule"
+  color = "purple"
   title = "Load Balancer Rule"
 }
 
 category "azure_lb_probe" {
+  icon = "text:probe"
+  color = "purple"
   title = "Probe"
 }
 
 category "azure_lb_nat_rule" {
   title = "NAT Rule"
+  icon  = "text:nat rule"
+  color = "purple"
 }
 
 category "azure_firewall" {
