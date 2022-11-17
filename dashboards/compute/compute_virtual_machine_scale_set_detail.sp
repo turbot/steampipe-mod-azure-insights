@@ -64,7 +64,8 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
         node.azure_compute_virtual_machine_scale_set_to_application_gateway_node,
         node.azure_compute_virtual_machine_scale_set_to_network_interface_node,
         node.azure_compute_virtual_machine_scale_set_network_interface_to_subnet_node,
-        node.azure_compute_virtual_machine_scale_set_network_interface_subnet_to_virtual_network_node
+        node.azure_compute_virtual_machine_scale_set_network_interface_subnet_to_virtual_network_node,
+        node.azure_compute_virtual_machine_scale_set_from_kubernetes_cluster_node
       ]
 
       edges = [
@@ -74,7 +75,8 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
         edge.azure_compute_virtual_machine_scale_set_to_application_gateway_edge,
         edge.azure_compute_virtual_machine_scale_set_to_network_interface_edge,
         edge.azure_compute_virtual_machine_scale_set_network_interface_to_subnet_edge,
-        edge.azure_compute_virtual_machine_scale_set_network_interface_subnet_to_virtual_network_edge
+        edge.azure_compute_virtual_machine_scale_set_network_interface_subnet_to_virtual_network_edge,
+        edge.azure_compute_virtual_machine_scale_set_from_kubernetes_cluster_edge
       ]
 
       args = {
@@ -843,6 +845,51 @@ edge "azure_compute_virtual_machine_scale_set_network_interface_subnet_to_virtua
       jsonb_array_elements(vn.subnets) as s
     where
       s ->> 'id' in (select subnet_id from subnet_list)
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_compute_virtual_machine_scale_set_from_kubernetes_cluster_node" {
+  category = category.azure_kubernetes_cluster
+
+  sql = <<-EOQ
+    select
+      c.id,
+      c.title,
+      jsonb_build_object(
+        'ID', c.id,
+        'Subscription ID', c.subscription_id,
+        'Resource Group', c.resource_group,
+        'Provisioning State', c.provisioning_state,
+        'Type', c.type,
+        'Kubernetes Version', c.kubernetes_version,
+        'Region', c.region
+      ) as properties
+    from
+      azure_kubernetes_cluster c,
+      azure_compute_virtual_machine_scale_set as set
+    where
+      lower(set.resource_group) = lower(c.node_resource_group)
+      and c.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_compute_virtual_machine_scale_set_from_kubernetes_cluster_edge" {
+  title = "vm scale set"
+
+  sql = <<-EOQ
+    select
+      c.id as from_id,
+      set.id as to_id
+    from
+      azure_kubernetes_cluster c,
+      azure_compute_virtual_machine_scale_set set
+    where
+      lower(set.resource_group) = lower(c.node_resource_group)
+      and c.id = $1;
   EOQ
 
   param "id" {}

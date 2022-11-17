@@ -301,3 +301,16 @@ category "azure_compute_virtual_machine_scale_set_network_interface" {
   icon  = "cloud-arrow-down"
   color = local.network_color
 }
+
+category "azure_kubernetes_cluster" {
+  title = "Kubernetes Clusters"
+  href = "/azure_insights.dashboard.azure_kubernetes_cluster_detail?input.cluster_id={{.properties.'ID' | @uri}}"
+  icon = "cog"
+  color = local.container_color
+}
+
+category "azure_kubernetes_node_pool" {
+  title = "Kubernetes Node Pools"
+  icon  = "text:node_pool"
+  color = local.container_color
+}
