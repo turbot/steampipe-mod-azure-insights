@@ -59,13 +59,15 @@ dashboard "azure_key_vault_detail" {
 
       nodes = [
         node.azure_key_vault_node,
-        node.azure_key_vault_to_network_acl_node,
+        node.azure_key_vault_to_subnet_node,
+        node.azure_key_vault_subnet_to_vpc_node,
         node.azure_key_vault_to_key_node,
         node.azure_key_vault_to_secret_node
       ]
 
       edges = [
-        edge.azure_key_vault_to_network_acl_edge,
+        edge.azure_key_vault_to_subnet_edge,
+        edge.azure_key_vault_subnet_to_vpc_edge,
         edge.azure_key_vault_to_key_edge,
         edge.azure_key_vault_to_secret_edge
       ]
@@ -356,41 +358,104 @@ node "azure_key_vault_node" {
   param "id" {}
 }
 
-node "azure_key_vault_to_network_acl_node" {
-  category = category.azure_key_vault_firewall
+node "azure_key_vault_to_subnet_node" {
+  category = category.azure_subnet
 
   sql = <<-EOQ
     select
-      ip ->> 'value' as title,
-      ip ->> 'value' as id,
+      lower(s.id) as id,
+      s.title as title,
       jsonb_build_object(
-        'By Pass', network_acls ->> 'bypass',
-        'Ip Rules', network_acls ->> 'ipRules',
-        'Default Action', network_acls ->> 'defaultAction',
-        'Virtual Network Rules', network_acls ->> 'virtualNetworkRules'
+        'Name', s.name,
+        'ID', s.id,
+        'Address Prefix', s.address_prefix,
+        'Subscription ID', s.subscription_id,
+        'Resource Group', s.resource_group
       ) as properties
       from
-        azure_key_vault,
-        jsonb_array_elements(network_acls -> 'ipRules') as ip
+        azure_key_vault as v,
+        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
+        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
       where
-        id = $1;
+        v.id = $1;
   EOQ
 
   param "id" {}
 }
 
-edge "azure_key_vault_to_network_acl_edge" {
-  title = "allows access"
+edge "azure_key_vault_to_subnet_edge" {
+  title = "subnet"
 
   sql = <<-EOQ
     select
-      id as from_id,
-      ip ->> 'value' as to_id
+      v.id as from_id,
+      lower(s.id) as to_id
+      from
+        azure_key_vault as v,
+        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
+        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
+      where
+        v.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_key_vault_subnet_to_vpc_node" {
+  category = category.azure_virtual_network
+
+  sql = <<-EOQ
+    with subnet as (
+      select
+        lower(s.id) as id
+      from
+        azure_key_vault as v,
+        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
+        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
+      where
+        v.id = $1
+    )
+    select
+      lower(n.id) as id,
+      n.title as title,
+      jsonb_build_object(
+        'Name', n.name,
+        'ID', n.id,
+        'Subscription ID', n.subscription_id,
+        'Resource Group', n.resource_group
+      ) as properties
+      from
+        azure_virtual_network as n,
+        jsonb_array_elements(subnets) as s
+      where
+        lower(s ->> 'id') in (select id from subnet)
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_key_vault_subnet_to_vpc_edge" {
+  title = "vpc"
+
+  sql = <<-EOQ
+    with subnet as (
+      select
+        lower(s.id) as id
+      from
+        azure_key_vault as v,
+        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
+        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
+      where
+        v.id = $1
+    )
+    select
+      lower(s ->> 'id') as from_id,
+      lower(n.id) as to_id
     from
-      azure_key_vault,
-      jsonb_array_elements(network_acls -> 'ipRules') as ip
+      azure_virtual_network as n,
+      jsonb_array_elements(subnets) as s
     where
-      id = $1;
+      lower(s ->> 'id') in (select id from subnet)
   EOQ
 
   param "id" {}
