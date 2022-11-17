@@ -927,7 +927,7 @@ edge "azure_virtual_network_subnet_to_network_security_group_edge" {
 }
 
 node "azure_virtual_network_subnet_to_network_peering_node" {
-  category = category.azure_virtual_network
+  category = category.azure_network_peering
 
   sql = <<-EOQ
     with peering_vn as (

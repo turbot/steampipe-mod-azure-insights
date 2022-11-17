@@ -669,7 +669,7 @@ node "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_
 }
 
 edge "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_edge" {
-  title = "vitual network"
+  title = "virtual network"
 
   sql = <<-EOQ
     with network_interface_id as (
