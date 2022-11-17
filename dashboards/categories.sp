@@ -12,8 +12,8 @@ category "azure_application_gateway" {
 
 category "azure_app_service_web_app" {
   title = "Web App"
-  icon  = "text:web_app"
   href  = "/azure_insights.dashboard.azure_app_service_web_app_detail?input.web_app_id={{.properties.'ID' | @uri}}"
+  icon  = "text:web_app"
   color = "blue"
 }
 
@@ -25,8 +25,8 @@ category "azure_app_service_plan" {
 
 category "azure_container_registry" {
   title = "Container Registry"
-  color = "orange"
   icon  = "text:container_registry"
+  color = "orange"
 }
 
 category "azure_compute_disk" {
@@ -58,8 +58,8 @@ category "azure_cosmosdb_account" {
 
 category "azure_diagnostic_setting" {
   title = "Diagnostic Setting"
-  color = "red"
   icon  = "magnifying-glass"
+  color = "red"
 }
 
 category "azure_eventhub_namespace" {
@@ -70,8 +70,8 @@ category "azure_eventhub_namespace" {
 
 category "azure_image" {
   title = "Compute Image"
-  color = "orange"
   icon  = "text:compute_image"
+  color = "orange"
 }
 
 category "azure_key_vault" {
@@ -82,9 +82,9 @@ category "azure_key_vault" {
 }
 
 category "azure_key_vault_firewall" {
-  color = "red"
   title = "Networking Firewall"
   icon  = "text:firewall"
+  color = "red"
 }
 
 category "azure_key_vault_key" {
@@ -133,9 +133,9 @@ category "azure_postgresql_server" {
 
 category "azure_public_ip" {
   title = "Public IP"
-  color = "purple"
   href  = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
   icon  = "text:public_ip"
+  color = "purple"
 }
 
 category "azure_route_table" {
@@ -159,13 +159,14 @@ category "azure_sql_server" {
 }
 
 category "azure_private_endpoint_connection" {
-  icon  = local.azure_private_endpoint_connection_icon
   title = "Private Endpoint Connection"
+  icon  = "text:private-ep"
   color = "purple"
 }
 
 category "azure_servicebus_namespace" {
   title = "Servicebus Namespace"
+  icon  = "text:servicebus-ns"
   color = "purple"
 }
 
@@ -178,56 +179,58 @@ category "azure_storage_account" {
 
 category "azure_storage_blob" {
   title = "Storage Blob"
+  icon  = "text:storage-blob"
   color = "green"
 }
 
 category "azure_storage_container" {
-  icon  = local.azure_storage_container_icon
   title = "Storage Container"
+  icon  = "text:storage-container"
   color = "green"
 }
 
 category "azure_storage_queue" {
-  icon  = local.azure_storage_queue_icon
   title = "Storage Queue"
+  icon  = "text:storage-queue"
   color = "green"
 }
 
 category "azure_storage_table" {
   title = "Storage Table"
+  icon  = "text:storage-table"
   color = "green"
 }
 
 category "azure_subnet" {
   title = "Subnet"
   href  = "/azure_insights.dashboard.azure_network_subnet_detail?input.subnet_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-solid:share"
+  icon  = "share"
   color = "purple"
 }
 
 category "azure_virtual_network" {
   title = "Virtual Network"
   href  = "/azure_insights.dashboard.azure_virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
-  icon  = "cloud" //"text:vpc"
+  icon  = "cloud"
   color = "purple"
 }
 
 category "azure_mssql_elasticpool" {
   title = "SQL Elastic Pool"
-  icon  = local.azure_mssql_elasticpool_icon
+  icon  = "text:mssql-elastic-pool"
   color = "purple"
 }
 
 category "azure_compute_disk_encryption_set" {
   title = "Compute Disk Encryption Set"
-  icon  = local.azure_compute_disk_encryption_set_icon
+  icon  = "text:disk-encryp-set"
   color = "green"
 }
 
 category "azure_network_watcher_flow_log" {
   title = "Network Watcher Flow Log"
-  color = "deeppink"
   icon  = "text:nw-flow-log"
+  color = "deeppink"
 }
 
 category "azure_compute_virtual_machine_scale_set" {
@@ -246,8 +249,8 @@ category "azure_lb" {
 
 category "azure_lb_backend_address_pool" {
   title = "Backend Address Pool"
-  color = "purple"
   icon  = "text:backend_address_pool"
+  color = "purple"
 }
 
 category "azure_lb_rule" {
@@ -264,13 +267,13 @@ category "azure_lb_probe" {
 
 category "azure_lb_nat_rule" {
   title = "NAT Rule"
-  color = "purple"
   icon  = "text:nat_rule"
+  color = "purple"
 }
 
 category "azure_firewall" {
   title = "Firewall"
-  icon  = "text:fire"
+  icon  = "fire"
   color = "red"
 }
 
