@@ -135,7 +135,7 @@ dashboard "azure_network_load_balancer_detail" {
       table {
         title = "Associated Virtual Machine Scale Sets"
         query = query.azure_load_balancer_associated_virtual_machine_scale_sets
-        args  = {
+        args = {
           id = self.input.lb_id.value
         }
 
@@ -147,7 +147,7 @@ dashboard "azure_network_load_balancer_detail" {
       table {
         title = "Backend Pools"
         query = query.azure_load_balancer_backend_pools
-        args  = {
+        args = {
           id = self.input.lb_id.value
         }
       }
@@ -161,7 +161,7 @@ dashboard "azure_network_load_balancer_detail" {
     table {
       title = "Frontend IP Configurations"
       query = query.azure_load_balancer_frontend_ip_configurations
-      args  = {
+      args = {
         id = self.input.lb_id.value
       }
     }
@@ -172,7 +172,7 @@ dashboard "azure_network_load_balancer_detail" {
     table {
       title = "Probes"
       query = query.azure_load_balancer_probe
-      args  = {
+      args = {
         id = self.input.lb_id.value
       }
     }
@@ -192,7 +192,7 @@ dashboard "azure_network_load_balancer_detail" {
 
   container {
 
-   table {
+    table {
       title = "Outbound Rules"
       query = query.azure_load_balancer_outbound_rules
       args = {
@@ -204,7 +204,7 @@ dashboard "azure_network_load_balancer_detail" {
 
   container {
 
-   table {
+    table {
       title = "Load Balancing Rules"
       query = query.azure_load_balancer_load_balancing_rules
       args = {
@@ -552,7 +552,7 @@ edge "azure_load_balancer_to_backend_address_pool_edge" {
     select
       lb.id as from_id,
       p.id as to_id
-   from
+    from
       azure_lb as lb,
       jsonb_array_elements(backend_address_pools) as b
       left join azure_lb_backend_address_pool as p on p.id = b ->> 'id'
@@ -991,7 +991,7 @@ node "azure_load_balancer_from_virtual_machine_scale_set_node" {
 }
 
 edge "azure_load_balancer_from_virtual_machine_scale_set_edge" {
-  title = "vm scale set"
+  title = "network load balancer"
 
   sql = <<-EOQ
     select

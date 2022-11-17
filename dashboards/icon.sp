@@ -11,6 +11,7 @@ locals {
   azure_image_icon                             = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/image.svg"))
   azure_key_vault_firewall_icon                = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/azure_network_acl_light.svg"))
   azure_key_vault_icon                         = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/key_vault.svg"))
+  azure_key_vault_key_icon                     = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/key_vault_key.svg"))
   azure_lb_icon                                = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/load_balancer.svg"))
   azure_manage_disk_icon                       = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/manage_disk.svg"))
   azure_mssql_elasticpool_icon                 = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/mssql_elasticpool.svg"))
@@ -28,4 +29,5 @@ locals {
   azure_storage_container_icon                 = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/storage_container.svg"))
   azure_storage_queue_icon                     = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/storage_queue.svg"))
   azure_virtual_network_icon                   = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/virtual_network.svg"))
+  azure_firewall_icon                          = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/network_firewall.svg"))
 }
