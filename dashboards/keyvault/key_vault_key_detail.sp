@@ -333,7 +333,7 @@ node "azure_key_vault_key_from_compute_disk_encryption_set_node" {
 }
 
 edge "azure_key_vault_key_from_compute_disk_encryption_set_edge" {
-  title = "encryption key"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -376,7 +376,7 @@ node "azure_key_vault_key_from_container_registry_node" {
 }
 
 edge "azure_key_vault_key_from_container_registry_edge" {
-  title = "encryption key"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -435,7 +435,7 @@ node "azure_key_vault_key_from_sql_server_node" {
 }
 
 edge "azure_key_vault_key_from_sql_server_edge" {
-  title = "encryption key"
+  title = "encrypted with"
 
   sql = <<-EOQ
     with sql_server as (
@@ -500,7 +500,7 @@ node "azure_key_vault_key_from_eventhub_namespace_node" {
 }
 
 edge "azure_key_vault_key_from_eventhub_namespace_edge" {
-  title = "encryption key"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -545,7 +545,7 @@ node "azure_key_vault_key_from_storage_account_node" {
 }
 
 edge "azure_key_vault_key_from_storage_account_edge" {
-  title = "encryption key"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -593,7 +593,7 @@ node "azure_key_vault_key_from_servicebus_namespace_node" {
 }
 
 edge "azure_key_vault_key_from_servicebus_namespace_edge" {
-  title = "encryption key"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -640,7 +640,7 @@ node "azure_key_vault_key_from_postgresql_server_node" {
 }
 
 edge "azure_key_vault_key_from_postgresql_server_edge" {
-  title = "encryption key"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
