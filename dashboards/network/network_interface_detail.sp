@@ -69,7 +69,7 @@ dashboard "azure_network_interface_detail" {
         edge.azure_network_interface_to_network_security_group_edge,
         edge.azure_network_interface_from_compute_virtual_machine_edge,
         edge.azure_network_interface_from_public_ip_address_edge,
-        edge.azure_network_interface_to_network_subnet_edge,
+        edge.azure_network_interface_to_security_group_network_subnet_edge,
         edge.azure_network_interface_subnet_to_vpc_edge
       ]
 
@@ -273,13 +273,16 @@ node "azure_network_interface_to_network_subnet_node" {
   param "id" {}
 }
 
-edge "azure_network_interface_to_network_subnet_edge" {
+edge "azure_network_interface_to_security_group_network_subnet_edge" {
   title = "subnet"
 
   sql   = <<-EOQ
     select
       s.id as to_id,
-      ni.id as from_id
+      coalesce(
+        ni.network_security_group_id,
+        ni.id
+      ) as from_id
     from
       azure_network_interface as ni,
       jsonb_array_elements(ip_configurations) as c
@@ -453,7 +456,7 @@ node "azure_network_interface_from_public_ip_address_node" {
 }
 
 edge "azure_network_interface_from_public_ip_address_edge" {
-  title = "public ip"
+  title = "network interface"
 
   sql = <<-EOQ
     with network_interface_public_ip as (
