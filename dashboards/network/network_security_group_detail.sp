@@ -74,19 +74,19 @@ dashboard "azure_network_security_group_detail" {
 
       nodes = [
         node.azure_network_security_group_node,
-        node.azure_network_security_group_from_network_interface_node,
+        node.azure_network_security_group_to_network_interface_node,
         node.azure_network_security_group_from_network_subnet_node,
         node.azure_network_security_group_subnet_from_virtual_network_node,
-        node.azure_network_security_group_from_network_watcher_flow_log_node,
-        node.azure_network_security_group_network_interface_from_compute_virtual_machine_node
+        node.azure_network_security_group_to_network_watcher_flow_log_node,
+        node.azure_network_security_group_to_compute_virtual_machine_node
       ]
 
       edges = [
-        edge.azure_network_security_group_from_network_interface_edge,
+        edge.azure_network_security_group_to_network_interface_edge,
         edge.azure_network_security_group_from_network_subnet_edge,
         edge.azure_network_security_group_subnet_from_virtual_network_edge,
-        edge.azure_network_security_group_from_network_watcher_flow_log_edge,
-        edge.azure_network_security_group_network_interface_from_compute_virtual_machine_edge
+        edge.azure_network_security_group_to_network_watcher_flow_log_edge,
+        edge.azure_network_security_group_to_compute_virtual_machine_edge
       ]
 
       args = {
@@ -789,7 +789,7 @@ node "azure_network_security_group_node" {
   param "id" {}
 }
 
-node "azure_network_security_group_from_network_interface_node" {
+node "azure_network_security_group_to_network_interface_node" {
   category = category.azure_network_interface
 
   sql = <<-EOQ
@@ -814,13 +814,13 @@ node "azure_network_security_group_from_network_interface_node" {
   param "id" {}
 }
 
-edge "azure_network_security_group_from_network_interface_edge" {
+edge "azure_network_security_group_to_network_interface_edge" {
   title = "network interface"
 
   sql = <<-EOQ
     select
-      nic.id as from_id,
-      nsg.id as to_id
+      nsg.id as from_id,
+      nic.id as to_id
    from
       azure_network_security_group as nsg,
       jsonb_array_elements(network_interfaces) as ni
@@ -833,7 +833,7 @@ edge "azure_network_security_group_from_network_interface_edge" {
 }
 
 node "azure_network_security_group_from_network_subnet_node" {
-  category = category.azure_network_interface
+  category = category.azure_subnet
 
   sql = <<-EOQ
     select
@@ -857,7 +857,7 @@ node "azure_network_security_group_from_network_subnet_node" {
 }
 
 edge "azure_network_security_group_from_network_subnet_edge" {
-  title = "subnet"
+  title = "nsg"
 
   sql = <<-EOQ
     select
@@ -899,7 +899,7 @@ node "azure_network_security_group_subnet_from_virtual_network_node" {
       from
         azure_virtual_network as vn,
         jsonb_array_elements(subnets) as sub
-        right join subnet_list as s on s.subnet_id = sub ->> 'id'
+        join subnet_list as s on s.subnet_id = sub ->> 'id'
       where
         s.nsg_id = $1;
   EOQ
@@ -908,7 +908,7 @@ node "azure_network_security_group_subnet_from_virtual_network_node" {
 }
 
 edge "azure_network_security_group_subnet_from_virtual_network_edge" {
-  title = "virtual network"
+  title = "subnet"
 
   sql = <<-EOQ
     with subnet_list as (
@@ -935,7 +935,7 @@ edge "azure_network_security_group_subnet_from_virtual_network_edge" {
   param "id" {}
 }
 
-node "azure_network_security_group_from_network_watcher_flow_log_node" {
+node "azure_network_security_group_to_network_watcher_flow_log_node" {
   category = category.azure_network_watcher_flow_log
 
   sql = <<-EOQ
@@ -960,13 +960,13 @@ node "azure_network_security_group_from_network_watcher_flow_log_node" {
   param "id" {}
 }
 
-edge "azure_network_security_group_from_network_watcher_flow_log_edge" {
-  title = "flow log"
+edge "azure_network_security_group_to_network_watcher_flow_log_edge" {
+  title = "nw flow log"
 
   sql = <<-EOQ
     select
-      fl.id as from_id,
-      nsg.id as to_id
+      nsg.id as from_id,
+      fl.id as to_id
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(flow_logs) as f
@@ -978,7 +978,7 @@ edge "azure_network_security_group_from_network_watcher_flow_log_edge" {
   param "id" {}
 }
 
-node "azure_network_security_group_network_interface_from_compute_virtual_machine_node" {
+node "azure_network_security_group_to_compute_virtual_machine_node" {
   category = category.azure_compute_virtual_machine
 
   sql = <<-EOQ
@@ -1013,7 +1013,7 @@ node "azure_network_security_group_network_interface_from_compute_virtual_machin
   param "id" {}
 }
 
-edge "azure_network_security_group_network_interface_from_compute_virtual_machine_edge" {
+edge "azure_network_security_group_to_compute_virtual_machine_edge" {
   title = "virtual machine"
 
   sql = <<-EOQ
@@ -1024,19 +1024,17 @@ edge "azure_network_security_group_network_interface_from_compute_virtual_machin
       from
         azure_network_security_group as nsg,
         jsonb_array_elements(network_interfaces) as ni
-        left join azure_network_interface as nic on nic.id = ni ->> 'id'
+        join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
       where
-        nsg.id = $1
+        lower(nsg.id) = lower($1)
     )
     select
-      vm.id as from_id,
-      nic.nic_id as to_id
+      nic.nsg_id as from_id,
+      vm.id as to_id
     from
       azure_compute_virtual_machine as vm,
       jsonb_array_elements(network_interfaces) as ni
-      left join network_interface_list as nic on nic.nic_id = ni ->> 'id'
-    where
-      nic.nsg_id = $1;
+      join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
   EOQ
 
   param "id" {}

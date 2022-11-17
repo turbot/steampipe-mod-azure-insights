@@ -148,6 +148,7 @@ node "azure_network_public_ip_node" {
   sql = <<-EOQ
     select
       id as id,
+      title as title,
       jsonb_build_object(
         'Name', name,
         'ID', id,
@@ -203,7 +204,7 @@ node "azure_network_public_ip_from_network_interface_node" {
 }
 
 edge "azure_network_public_ip_from_network_interface_edge" {
-  title = "network interface"
+  title = "public ip"
 
   sql = <<-EOQ
     with network_interface_public_ip as (
@@ -272,7 +273,7 @@ node "azure_network_public_ip_network_interface_from_compute_virtual_machine_nod
 }
 
 edge "azure_network_public_ip_network_interface_from_compute_virtual_machine_edge" {
-  title = "virtual machine"
+  title = "network interface"
 
   sql = <<-EOQ
     with vm_network_interface as (
@@ -347,7 +348,7 @@ node "azure_network_public_ip_from_api_management_node" {
 }
 
 edge "azure_network_public_ip_from_api_management_edge" {
-  title = "api management"
+  title = "public ip"
 
   sql = <<-EOQ
    with public_ip_api_management as (

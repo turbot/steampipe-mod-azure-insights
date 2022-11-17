@@ -18,6 +18,7 @@ locals {
   azure_nat_gateway_icon                       = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/nat_gateway.svg"))
   azure_network_interface_icon                 = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/network_interface.svg"))
   azure_network_security_group_icon            = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/network_security_group.svg"))
+  azure_network_watcher_flow_log_icon          = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/network_watcher_flow_log.svg"))
   azure_private_endpoint_connection_icon       = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/private_endpoint_connection.svg"))
   azure_public_ip_icon                         = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/public_ip.svg"))
   azure_route_table_icon                       = format("%s,%s", "data:image/svg+xml;base64", filebase64("./icons/route_table.svg"))
