@@ -244,37 +244,37 @@ category "azure_lb" {
 category "azure_lb_backend_address_pool" {
   title = "Backend Address Pool"
   icon  = "text:backend_address_pool"
-   color = local.network_color
+  color = local.network_color
 }
 
 category "azure_lb_rule" {
   title = "Load Balancer Rule"
   icon  = "text:lb_rule"
-   color = local.network_color
+  color = local.network_color
 }
 
 category "azure_lb_probe" {
   title = "Probe"
   icon  = "text:lb_probe"
-   color = local.network_color
+  color = local.network_color
 }
 
 category "azure_lb_nat_rule" {
   title = "NAT Rule"
   icon  = "text:nat_rule"
-   color = local.network_color
+  color = local.network_color
 }
 
 category "azure_firewall" {
   title = "Firewall"
   icon  = "fire"
-   color = local.network_color
+  color = local.network_color
 }
 
 category "azure_nat_gateway" {
   title = "NAT Gateway"
   icon  = "text:nat_gateway"
-   color = local.network_color
+  color = local.network_color
 }
 
 category "azure_storage_share_file" {
