@@ -299,13 +299,8 @@ query "azure_compute_virtual_machine_scale_set_vm_network_interface" {
   param "id" {}
 }
 
-category "azure_compute_virtual_machine_scale_set_vm_no_link" {
-  icon = "cpu-chip"
-  color = "orange"
-}
-
 node "azure_compute_virtual_machine_scale_set_vm_node" {
-  category = category.azure_compute_virtual_machine_scale_set_vm_no_link
+  category = category.azure_compute_virtual_machine_scale_set_vm
 
   sql = <<-EOQ
     select

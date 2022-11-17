@@ -244,12 +244,8 @@ query "azure_key_vault_key_age" {
   param "id" {}
 }
 
-category "azure_key_vault_key_no_link" {
-  icon= "key"
-}
-
 node "azure_key_vault_key_node" {
-  category = category.azure_key_vault_key_no_link
+  category = category.azure_key_vault_key
 
   sql = <<-EOQ
     select

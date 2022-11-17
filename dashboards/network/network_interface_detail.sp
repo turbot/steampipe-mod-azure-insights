@@ -172,13 +172,8 @@ query "azure_network_interface_input" {
   EOQ
 }
 
-category "azure_network_interface_no_link" {
-  icon  = "text:nic"
-  color = "purple"
-}
-
 node "azure_network_interface_node" {
-  category = category.azure_network_interface_no_link
+  category = category.azure_network_interface
 
   sql = <<-EOQ
     select

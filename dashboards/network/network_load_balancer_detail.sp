@@ -495,13 +495,8 @@ query "azure_load_balancer_load_balancing_rules" {
   param "id" {}
 }
 
-category "azure_load_balancer_no_link" {
-  icon  = "text:lb"
-  color = "purple"
-}
-
 node "azure_load_balancer_node" {
-  category = category.azure_load_balancer_no_link
+  category = category.azure_lb
 
   sql = <<-EOQ
     select

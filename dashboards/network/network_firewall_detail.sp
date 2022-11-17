@@ -224,13 +224,8 @@ query "azure_network_firewall_ip_configurations" {
   param "id" {}
 }
 
-category "azure_network_firewall_no_link" {
-  icon  = "fire"
-  color = "red"
-}
-
 node "azure_network_firewall_node" {
-  category = category.azure_network_firewall_no_link
+  category = category.azure_firewall
 
   sql = <<-EOQ
     select
