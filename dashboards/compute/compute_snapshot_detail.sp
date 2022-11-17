@@ -59,6 +59,7 @@ dashboard "azure_compute_snapshot_detail" {
       nodes = [
         node.azure_compute_snapshot_node,
         node.azure_compute_snapshot_to_compute_disk_node,
+        node.azure_compute_snapshot_to_compute_snapshot_node,
         node.azure_compute_snapshot_from_compute_snapshot_node,
         node.azure_compute_snapshot_to_compute_disk_encryption_set_node,
         node.azure_compute_snapshot_compute_disk_encryption_set_to_key_vault_node,
@@ -297,7 +298,7 @@ edge "azure_compute_snapshot_to_compute_disk_edge" {
 }
 
 edge "azure_compute_snapshot_from_compute_snapshot_edge" {
-  title = "snapshot"
+  title = "source snapshot"
 
   sql = <<-EOQ
     select
@@ -308,6 +309,38 @@ edge "azure_compute_snapshot_from_compute_snapshot_edge" {
       left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
     where
       s.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_compute_snapshot_to_compute_snapshot_node" {
+  category = category.azure_compute_snapshot
+
+  sql = <<-EOQ
+    with self as (
+      select 
+        id, 
+        source_resource_id 
+      from 
+        azure_compute_snapshot 
+      where 
+        id = $1)
+    select
+      acs.id as id,
+      acs.title as title,
+      jsonb_build_object(
+        'Name', acs.name,
+        'ID', acs.id,
+        'Subscription ID', acs.subscription_id,
+        'Resource Group', acs.resource_group,
+        'Region', acs.region
+      ) as properties
+    from
+      azure_compute_snapshot as acs,
+      self
+    where
+      acs.id = self.source_resource_id;
   EOQ
 
   param "id" {}
@@ -339,8 +372,6 @@ node "azure_compute_snapshot_from_compute_snapshot_node" {
       azure_compute_snapshot as acs,
       self
     where
-      acs.id = self.source_resource_id
-      or
       acs.source_resource_id = self.id;
   EOQ
 
