@@ -290,13 +290,8 @@ query "azure_network_subnet_association" {
   param "id" {}
 }
 
-category "azure_network_subnet_no_link" {
-  icon  = "share"
-  color = "purple"
-}
-
 node "azure_network_subnet_node" {
-  category = category.azure_network_subnet_no_link
+  category = category.azure_subnet
 
   sql = <<-EOQ
     select

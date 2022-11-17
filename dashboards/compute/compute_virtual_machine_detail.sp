@@ -376,13 +376,8 @@ query "azure_compute_virtual_machine_vulnerability_assessment_solution" {
   param "id" {}
 }
 
-category "azure_compute_virtual_machine_no_link" {
-  icon  = "cpu-chip"
-  color = "orange"
-}
-
 node "azure_compute_virtual_machine_node" {
-  category = category.azure_compute_virtual_machine_no_link
+  category = category.azure_compute_virtual_machine
 
   sql = <<-EOQ
     select

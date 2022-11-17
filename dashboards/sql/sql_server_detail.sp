@@ -317,13 +317,8 @@ query "azure_sql_server_vulnerability_assessment_enabled" {
   param "id" {}
 }
 
-category "azure_sql_server_no_link" {
-  icon  = "circle-stack"
-  color = "blue"
-}
-
 node "azure_sql_server_node" {
-  category = category.azure_sql_server_no_link
+  category = category.azure_sql_server
 
   sql = <<-EOQ
     select

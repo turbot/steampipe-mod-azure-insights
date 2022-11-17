@@ -254,13 +254,8 @@ query "azure_compute_disk_sku_name" {
   param "id" {}
 }
 
-category "azure_compute_disk_no_link" {
-  icon  = local.azure_compute_disk_icon
-  color = "green"
-}
-
 node "azure_compute_disk_node" {
-  category = category.azure_compute_disk_no_link
+  category = category.azure_compute_disk
 
   sql = <<-EOQ
     select

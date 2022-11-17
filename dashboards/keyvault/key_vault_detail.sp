@@ -336,12 +336,8 @@ query "azure_key_vault_usage" {
   param "id" {}
 }
 
-category "azure_key_vault_no_link" {
-  icon  = local.azure_key_vault_icon
-}
-
 node "azure_key_vault_node" {
-  category = category.azure_key_vault_no_link
+  category = category.azure_key_vault
 
   sql = <<-EOQ
     select

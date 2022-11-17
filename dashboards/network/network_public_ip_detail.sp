@@ -142,13 +142,8 @@ query "azure_network_public_association" {
   param "id" {}
 }
 
-category "azure_network_public_ip_no_link" {
-  icon  = "text:public_ip"
-  color = "purple"
-}
-
 node "azure_network_public_ip_node" {
-  category = category.azure_network_public_ip_no_link
+  category = category.azure_public_ip
 
   sql = <<-EOQ
     select

@@ -484,13 +484,8 @@ query "azure_storage_account_blob_logging" {
   param "id" {}
 }
 
-category "azure_storage_account_no_link" {
-  icon  = "archive-box"
-  color = "green"
-}
-
 node "azure_storage_account_node" {
-  category = category.azure_storage_account_no_link
+  category = category.azure_storage_account
 
   sql = <<-EOQ
     select

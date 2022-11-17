@@ -766,13 +766,8 @@ query "azure_network_security_group_egress_rule_sankey" {
   param "id" {}
 }
 
-category "azure_network_security_group_no_link" {
-  icon  = "lock-closed"
-  color = "purple"
-}
-
 node "azure_network_security_group_node" {
-  category = category.azure_network_security_group_no_link
+  category = category.azure_network_security_group
 
   sql = <<-EOQ
     select

@@ -739,13 +739,8 @@ query "azure_virtual_network_address_prefixes" {
   param "id" {}
 }
 
-category "azure_virtual_network_no_link" {
-  icon  = "cloud" //"text:vpc"
-  color = "purple"
-}
-
 node "azure_virtual_network_node" {
-  category = category.azure_virtual_network_no_link
+  category = category.azure_virtual_network
 
   sql = <<-EOQ
     select

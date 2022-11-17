@@ -288,13 +288,8 @@ query "azure_sql_database_geo_redundant_backup_enabled" {
   param "id" {}
 }
 
-category "azure_sql_database_no_link" {
-  icon  = "text:sql_database"
-  color = "blue"
-}
-
 node "azure_sql_database_node" {
-  category = category.azure_sql_database_no_link
+  category = category.azure_sql_database
 
   sql = <<-EOQ
     select
