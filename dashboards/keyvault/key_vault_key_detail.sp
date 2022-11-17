@@ -428,7 +428,7 @@ node "azure_key_vault_key_from_sql_server_node" {
       azure_key_vault_key as k
       left join sql_server as s on k.name = s.key_vault_key_name
     where
-      k.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.KeyVault/vaults/test-delete90/keys/tets56';
+      k.id = $1
   EOQ
 
   param "id" {}
@@ -462,7 +462,7 @@ edge "azure_key_vault_key_from_sql_server_edge" {
       azure_key_vault_key as k
       left join sql_server as s on k.name = s.key_vault_key_name
     where
-      k.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.KeyVault/vaults/test-delete90/keys/tets56';
+      k.id = $1
   EOQ
 
   param "id" {}
