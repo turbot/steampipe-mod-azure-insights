@@ -102,7 +102,7 @@ category "azure_log_profile" {
 category "azure_network_interface" {
   title = "Network Interface"
   href  = "/azure_insights.dashboard.azure_network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
-  icon  = "text:eni"
+  icon  = "cloud-arrow-down"
   color = local.network_color
 }
 
@@ -298,6 +298,6 @@ category "azure_compute_virtual_machine_scale_set_vm" {
 
 category "azure_compute_virtual_machine_scale_set_network_interface" {
   title = "Compute Virtual Machine Scale Set Network Interface"
-  icon  = "text:eni"
+  icon  = "cloud-arrow-down"
   color = local.network_color
 }
