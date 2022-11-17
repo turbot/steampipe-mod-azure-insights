@@ -769,7 +769,7 @@ query "azure_sql_server_audit_policy" {
   sql = <<-EOQ
     select
       p ->> 'name' as "Name",
-      p -> 'properties' -> 'endIpAddress' as "Audit Actions And Groups",
+      p -> 'properties' -> 'auditActionsAndGroups' as "Audit Actions And Groups",
       p ->> 'isAzureMonitorTargetEnabled' as "Is Azure Monitor Target Enabled",
       p ->> 'retentionDays' as "Retention Days",
       p ->> 'state' as "State",

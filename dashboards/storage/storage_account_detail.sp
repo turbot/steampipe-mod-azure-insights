@@ -758,7 +758,7 @@ node "azure_storage_account_subnet_to_vpc_node" {
 }
 
 edge "azure_storage_account_subnet_to_vpc_edge" {
-  title = "vpc"
+  title = "virtual network"
 
   sql = <<-EOQ
     with vn_list as (
