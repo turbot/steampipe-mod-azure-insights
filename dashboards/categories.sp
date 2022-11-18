@@ -1,7 +1,7 @@
 category "azure_api_management" {
   title = "API Management"
   icon  = "bolt"
-  color = local.network_color
+  color = local.front_end_web
 }
 
 category "azure_application_gateway" {
@@ -70,14 +70,14 @@ category "azure_eventhub_namespace" {
 
 category "azure_image" {
   title = "Compute Image"
-  icon  = "text:compute_image"
+  icon  = "text:image"
   color = local.compute_color
 }
 
 category "azure_key_vault" {
   title = "Key Vault"
   href  = "/azure_insights.dashboard.azure_key_vault_detail?input.key_vault_id={{.properties.'ID' | @uri}}"
-  icon  = "text:key_vault"
+  icon  = "text:kv"
   color = local.security_color
 }
 
@@ -95,14 +95,14 @@ category "azure_key_vault_secret" {
 
 category "azure_log_profile" {
   title = "Log Profile"
-  icon  = "text:log_profile"
+  icon  = "text:CT"
   color = local.management_governance_color
 }
 
 category "azure_network_interface" {
   title = "Network Interface"
   href  = "/azure_insights.dashboard.azure_network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
-  icon  = "cloud-arrow-down"
+  icon  = "text:eni"
   color = local.network_color
 }
 
@@ -121,7 +121,7 @@ category "azure_network_security_group" {
 
 category "azure_postgresql_server" {
   title = "Postgresql Server"
-  icon  = "text:postgresql_server"
+  icon  = "circle-stack"
   color = local.database_color
 }
 
@@ -141,7 +141,7 @@ category "azure_route_table" {
 category "azure_sql_database" {
   title = "SQL Database"
   href  = "/azure_insights.dashboard.azure_sql_database_detail?input.database_id={{.properties.'ID' | @uri}}"
-  icon  = "text:sql_database"
+  icon  = "circle-stack"
   color = local.database_color
 }
 
@@ -160,7 +160,7 @@ category "azure_private_endpoint_connection" {
 
 category "azure_servicebus_namespace" {
   title = "Servicebus Namespace"
-  icon  = "text:servicebus-ns"
+  icon  = "text:Topic"
   color = local.integration_color
 }
 
@@ -211,7 +211,7 @@ category "azure_virtual_network" {
 
 category "azure_mssql_elasticpool" {
   title = "SQL Elastic Pool"
-  icon  = "text:mssql-elastic-pool"
+  icon  = "text:Pool"
   color = local.database_color
 }
 
@@ -230,7 +230,7 @@ category "azure_network_watcher_flow_log" {
 category "azure_compute_virtual_machine_scale_set" {
   title = "Compute Virtual Machine Scale Set"
   href  = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_detail?input.vm_scale_set_id={{.properties.'ID' | @uri}}"
-  icon  = "rectangle-stack"
+  icon  = "square-2-stack"
   color = local.compute_color
 }
 
@@ -311,6 +311,6 @@ category "azure_kubernetes_cluster" {
 
 category "azure_kubernetes_node_pool" {
   title = "Kubernetes Node Pools"
-  icon  = "text:node_pool"
+  icon  = "text:pool"
   color = local.container_color
 }

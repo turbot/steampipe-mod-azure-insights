@@ -4,6 +4,7 @@ locals {
   container_color             = "orange"
   database_color              = "blue"
   dev_tool_color              = "blue"
+  front_end_web               = "purple"
   iam_color                   = "red"
   integration_color           = "deeppink"
   management_governance_color = "pink"
