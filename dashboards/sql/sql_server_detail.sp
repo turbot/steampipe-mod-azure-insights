@@ -74,21 +74,23 @@ dashboard "azure_sql_server_detail" {
 
       nodes = [
         node.azure_sql_server_node,
-        node.azure_sql_server_from_subnet_node,
+        node.azure_sql_server_to_subnet_node,
         node.azure_sql_server_to_private_endpoint_node,
-        node.azure_sql_server_subnet_from_virtual_network_node,
+        node.azure_sql_server_subnet_to_virtual_network_node,
         node.azure_sql_server_to_key_vault_node,
-        node.azure_sql_server_keyvault_to_key_vault_key_node,
-        node.azure_sql_server_to_sql_database_node
+        node.azure_sql_server_key_vault_to_key_vault_key_node,
+        node.azure_sql_server_to_sql_database_node,
+        node.azure_sql_server_to_mssql_elasticpool_node
       ]
 
       edges = [
-        edge.azure_sql_server_from_subnet_edge,
+        edge.azure_sql_server_to_subnet_edge,
         edge.azure_sql_server_to_private_endpoint_edge,
-        edge.azure_sql_server_subnet_from_virtual_network_edge,
+        edge.azure_sql_server_subnet_to_virtual_network_edge,
         edge.azure_sql_server_to_key_vault_edge,
-        edge.azure_sql_server_keyvault_to_key_vault_key_edge,
-        edge.azure_sql_server_to_sql_database_edge
+        edge.azure_sql_server_key_vault_to_key_vault_key_edge,
+        edge.azure_sql_server_to_sql_database_edge,
+        edge.azure_sql_server_to_mssql_elasticpool_edge
       ]
 
       args = {
@@ -260,7 +262,7 @@ query "azure_sql_server_auditing_enabled" {
       case when a.id is not null then 'Enabled' else 'Disabled' end as value,
       case when a.id is not null then 'ok' else 'alert' end as type
     from
-      azure_sql_server as s left join sql_server_audit_enabled as a on lower(s.id = a.id);
+      azure_sql_server as s left join sql_server_audit_enabled as a on lower(s.id) = lower(a.id);
   EOQ
 }
 
@@ -342,7 +344,7 @@ node "azure_sql_server_node" {
   param "id" {}
 }
 
-node "azure_sql_server_from_subnet_node" {
+node "azure_sql_server_to_subnet_node" {
   category = category.azure_subnet
 
   sql = <<-EOQ
@@ -375,13 +377,13 @@ node "azure_sql_server_from_subnet_node" {
   param "id" {}
 }
 
-edge "azure_sql_server_from_subnet_edge" {
+edge "azure_sql_server_to_subnet_edge" {
   title = "sql server"
 
   sql = <<-EOQ
     select
-      vnr -> 'properties' ->> 'virtualNetworkSubnetId' as from_id,
-      id as to_id
+      id as from_id,
+      vnr -> 'properties' ->> 'virtualNetworkSubnetId' as to_id
     from
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as vnr
@@ -431,7 +433,7 @@ edge "azure_sql_server_to_private_endpoint_edge" {
   param "id" {}
 }
 
-node "azure_sql_server_subnet_from_virtual_network_node" {
+node "azure_sql_server_subnet_to_virtual_network_node" {
   category = category.azure_virtual_network
 
   sql = <<-EOQ
@@ -465,13 +467,13 @@ node "azure_sql_server_subnet_from_virtual_network_node" {
   param "id" {}
 }
 
-edge "azure_sql_server_subnet_from_virtual_network_edge" {
+edge "azure_sql_server_subnet_to_virtual_network_edge" {
   title = "subnet"
 
   sql = <<-EOQ
     select
-      id as from_id,
-      sub ->> 'id' as to_id
+      sub ->> 'id' as from_id,
+      id as to_id
     from
       azure_virtual_network,
       jsonb_array_elements(subnets) as sub
@@ -560,7 +562,7 @@ edge "azure_sql_server_to_key_vault_edge" {
   param "id" {}
 }
 
-node "azure_sql_server_keyvault_to_key_vault_key_node" {
+node "azure_sql_server_key_vault_to_key_vault_key_node" {
   category = category.azure_key_vault_key
 
   sql = <<-EOQ
@@ -598,7 +600,7 @@ node "azure_sql_server_keyvault_to_key_vault_key_node" {
   param "id" {}
 }
 
-edge "azure_sql_server_keyvault_to_key_vault_key_edge" {
+edge "azure_sql_server_key_vault_to_key_vault_key_edge" {
   title = "key"
 
   sql = <<-EOQ
@@ -670,6 +672,44 @@ edge "azure_sql_server_to_sql_database_edge" {
       azure_sql_database
     where
       server_name = split_part($1, '/', 9);
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_sql_server_to_mssql_elasticpool_node" {
+  category = category.azure_mssql_elasticpool
+
+  sql = <<-EOQ
+    select
+      e.id as id,
+      e.title as title,
+      json_build_object(
+        'Name', e.name,
+        'Type', e.type,
+        'ID', e.id,
+        'Resource Group', e.resource_group,
+        'Subscription ID', e.subscription_id,
+        'Edition', e.edition
+      ) as properties
+    from
+      azure_mssql_elasticpool as e
+      left join azure_sql_server as s on e.server_name = s.name;
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_sql_server_to_mssql_elasticpool_edge" {
+  title = "elastic pool"
+
+  sql = <<-EOQ
+    select
+      $1 as from_id,
+      e.id as to_id
+    from
+      azure_mssql_elasticpool as e
+      left join azure_sql_server as s on e.server_name = s.name;
   EOQ
 
   param "id" {}
