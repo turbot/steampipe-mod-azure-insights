@@ -163,7 +163,7 @@ query "azure_app_service_web_app_input" {
       azure_app_service_web_app as wa,
       azure_subscription as s
     where
-      wa.subscription_id = s.subscription_id
+      lower(wa.subscription_id) = lower(s.subscription_id)
     order by
       wa.title;
   EOQ
@@ -263,7 +263,7 @@ node "azure_app_service_web_app_node" {
   sql = <<-EOQ
     select
       id,
-      name as title,
+      title as title,
       json_build_object(
         'Name', name,
         'Region', region,
@@ -307,7 +307,7 @@ node "azure_app_service_web_app_to_subnet_node" {
           id = $1
       );
   EOQ
-  
+
   param "id" {}
 }
 

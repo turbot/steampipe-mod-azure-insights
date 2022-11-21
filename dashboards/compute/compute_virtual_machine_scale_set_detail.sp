@@ -184,7 +184,7 @@ query "azure_compute_virtual_machine_scale_set_input" {
       azure_compute_virtual_machine_scale_set as v,
       azure_subscription as s
     where
-      v.subscription_id = s.subscription_id
+      lower(v.subscription_id) = lower(s.subscription_id)
     order by
       v.title;
   EOQ
@@ -251,7 +251,7 @@ query "azure_compute_virtual_machine_scale_set_logging_status" {
       else 'alert' end as type
     from
       azure_compute_virtual_machine_scale_set as a
-      left join logging_details as b on a.id = b.vm_scale_set_id
+      left join logging_details as b on lower(a.id) = lower(b.vm_scale_set_id)
     where
       id = $1;
   EOQ
@@ -280,7 +280,7 @@ query "azure_compute_virtual_machine_scale_set_log_analytics_agent" {
       case when b.vm_id is not null then 'ok' else 'alert' end as type
     from
       azure_compute_virtual_machine_scale_set as a
-      left join agent_installed_vm_scale_set as b on a.id = b.vm_id
+      left join agent_installed_vm_scale_set as b on lower(a.id) = lower(b.vm_id)
     where
       id = $1;
   EOQ
@@ -510,7 +510,7 @@ node "azure_compute_virtual_machine_scale_set_to_backend_address_pool_node" {
       jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations' ) as p,
       jsonb_array_elements(p -> 'properties' -> 'ipConfigurations' ) as c,
       jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools' ) as b
-      left join azure_lb_backend_address_pool as pool on pool.id = b ->> 'id'
+      left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(b ->> 'id')
     where
       s.id = $1;
   EOQ
@@ -530,7 +530,7 @@ edge "azure_compute_virtual_machine_scale_set_to_backend_address_pool_edge" {
       jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations' ) as p,
       jsonb_array_elements(p -> 'properties' -> 'ipConfigurations' ) as c,
       jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools' ) as b
-      left join azure_lb_backend_address_pool as pool on pool.id = b ->> 'id'
+      left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(b ->> 'id')
     where
       s.id = $1;
   EOQ
@@ -632,7 +632,7 @@ node "azure_compute_virtual_machine_scale_set_to_application_gateway_node" {
     from
       azure_application_gateway as g,
       jsonb_array_elements(backend_address_pools) as p
-      left join application_gateway_backend_address_pool as pool on pool.backend_address_pool_id = p ->> 'id'
+      left join application_gateway_backend_address_pool as pool on lower(pool.backend_address_pool_id) = lower(p ->> 'id')
   EOQ
 
   param "id" {}
@@ -660,7 +660,7 @@ edge "azure_compute_virtual_machine_scale_set_to_application_gateway_edge" {
     from
       azure_application_gateway as g,
       jsonb_array_elements(backend_address_pools) as p
-      left join application_gateway_backend_address_pool as pool on pool.backend_address_pool_id = p ->> 'id'
+      left join application_gateway_backend_address_pool as pool on lower(pool.backend_address_pool_id) = lower(p ->> 'id')
   EOQ
 
   param "id" {}
@@ -752,7 +752,7 @@ node "azure_compute_virtual_machine_scale_set_network_interface_to_subnet_node" 
       ) as properties
     from
       subnet_list as l
-      left join azure_subnet as s on s.id = l.subnet_id
+      left join azure_subnet as s on lower(s.id) = lower(l.subnet_id)
   EOQ
 
   param "id" {}
@@ -779,7 +779,7 @@ edge "azure_compute_virtual_machine_scale_set_network_interface_to_subnet_edge" 
       s.id as to_id
     from
       subnet_list as l
-      left join azure_subnet as s on s.id = l.subnet_id
+      left join azure_subnet as s on lower(s.id) = lower(l.subnet_id)
   EOQ
 
   param "id" {}

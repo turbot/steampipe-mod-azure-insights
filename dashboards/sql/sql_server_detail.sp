@@ -209,7 +209,7 @@ query "azure_sql_server_input" {
       azure_sql_server as s,
       azure_subscription as sub
     where
-      s.subscription_id = s.subscription_id
+      lower(s.subscription_id) = lower(s.subscription_id)
     order by
       s.title;
   EOQ
@@ -260,7 +260,7 @@ query "azure_sql_server_auditing_enabled" {
       case when a.id is not null then 'Enabled' else 'Disabled' end as value,
       case when a.id is not null then 'ok' else 'alert' end as type
     from
-      azure_sql_server as s left join sql_server_audit_enabled as a on s.id = a.id;
+      azure_sql_server as s left join sql_server_audit_enabled as a on lower(s.id = a.id);
   EOQ
 }
 
@@ -310,7 +310,7 @@ query "azure_sql_server_vulnerability_assessment_enabled" {
       case when v.id is not null then 'Enabled' else 'Disabled' end as value,
       case when v.id is not null then 'ok' else 'alert' end as type
     from
-      azure_sql_server as s left join sql_server_va as v on s.id = v.id
+      azure_sql_server as s left join sql_server_va as v on lower(s.id) = lower(v.id)
       where s.id = $1;
   EOQ
 
@@ -592,7 +592,7 @@ node "azure_sql_server_keyvault_to_key_vault_key_node" {
       ) as properties
     from
       attached_keys as a
-      left join azure_key_vault_key as b on a.key_vault_key_name = b.name;
+      left join azure_key_vault_key as b on lower(a.key_vault_key_name) = lower(b.name);
   EOQ
 
   param "id" {}
@@ -627,7 +627,7 @@ edge "azure_sql_server_keyvault_to_key_vault_key_edge" {
       b.key_vault_id as from_id
     from
       attached_keys as a
-      left join all_keys as b on a.key_vault_key_name = b.key_vault_key_name;
+      left join all_keys as b on lower(a.key_vault_key_name) = lower(b.key_vault_key_name);
   EOQ
 
   param "id" {}

@@ -11,21 +11,21 @@ category "azure_application_gateway" {
 }
 
 category "azure_app_service_web_app" {
-  title = "Web App"
+  title = "App Service Web App"
   href  = "/azure_insights.dashboard.azure_app_service_web_app_detail?input.web_app_id={{.properties.'ID' | @uri}}"
-  icon  = "text:web_app"
+  icon  = "text:WA"
   color = local.storage_color
 }
 
 category "azure_app_service_plan" {
   title = "App Service Plan"
-  icon  = "text:app_service_plan"
+  icon  = "text:ASP"
   color = local.storage_color
 }
 
 category "azure_container_registry" {
   title = "Container Registry"
-  icon  = "text:container_registry"
+  icon  = "text:CR"
   color = local.container_color
 }
 
@@ -44,7 +44,7 @@ category "azure_compute_snapshot" {
 }
 
 category "azure_compute_virtual_machine" {
-  title = "Virtual Machine"
+  title = "Compute Virtual Machine"
   href  = "/azure_insights.dashboard.azure_compute_virtual_machine_detail?input.vm_id={{.properties.'ID' | @uri}}"
   icon  = "cpu-chip"
   color = local.compute_color
@@ -64,20 +64,20 @@ category "azure_diagnostic_setting" {
 
 category "azure_eventhub_namespace" {
   title = "EventHub Namespace"
-  icon  = "text:eventHub_namespace"
+  icon  = "text:EN"
   color = local.analytics_color
 }
 
-category "azure_image" {
+category "azure_compute_image" {
   title = "Compute Image"
-  icon  = "text:image"
+  icon  = "text:Image"
   color = local.compute_color
 }
 
 category "azure_key_vault" {
   title = "Key Vault"
   href  = "/azure_insights.dashboard.azure_key_vault_detail?input.key_vault_id={{.properties.'ID' | @uri}}"
-  icon  = "text:kv"
+  icon  = "text:KV"
   color = local.security_color
 }
 
@@ -89,20 +89,20 @@ category "azure_key_vault_key" {
 
 category "azure_key_vault_secret" {
   title = "Key Vault Secret"
-  icon  = "text:secret"
+  icon  = "text:Secret"
   color = local.security_color
 }
 
 category "azure_log_profile" {
   title = "Log Profile"
-  icon  = "text:CT"
+  icon  = "text:LP"
   color = local.management_governance_color
 }
 
 category "azure_network_interface" {
   title = "Network Interface"
   href  = "/azure_insights.dashboard.azure_network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
-  icon  = "text:eni"
+  icon  = "text:ENI"
   color = local.network_color
 }
 
@@ -128,7 +128,7 @@ category "azure_postgresql_server" {
 category "azure_public_ip" {
   title = "Public IP"
   href  = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
-  icon  = "text:public_ip"
+  icon  = "text:EIP"
   color = local.network_color
 }
 
@@ -154,13 +154,13 @@ category "azure_sql_server" {
 
 category "azure_private_endpoint_connection" {
   title = "Private Endpoint Connection"
-  icon  = "text:private-ep"
+  icon  = "text:PEP"
   color = local.network_color
 }
 
 category "azure_servicebus_namespace" {
   title = "Servicebus Namespace"
-  icon  = "text:Topic"
+  icon  = "text:SN"
   color = local.integration_color
 }
 
@@ -173,25 +173,25 @@ category "azure_storage_account" {
 
 category "azure_storage_blob" {
   title = "Storage Blob"
-  icon  = "text:storage-blob"
+  icon  = "text:StorageBlob"
   color = local.storage_color
 }
 
 category "azure_storage_container" {
   title = "Storage Container"
-  icon  = "text:storage-container"
+  icon  = "text:StorageContainer"
   color = local.storage_color
 }
 
 category "azure_storage_queue" {
   title = "Storage Queue"
-  icon  = "text:storage-queue"
+  icon  = "text:StorageQueue"
   color = local.storage_color
 }
 
 category "azure_storage_table" {
   title = "Storage Table"
-  icon  = "text:storage-table"
+  icon  = "text:StorageTable"
   color = local.storage_color
 }
 
@@ -211,19 +211,19 @@ category "azure_virtual_network" {
 
 category "azure_mssql_elasticpool" {
   title = "SQL Elastic Pool"
-  icon  = "text:Pool"
+  icon  = "text:ElasticPool"
   color = local.database_color
 }
 
 category "azure_compute_disk_encryption_set" {
   title = "Compute Disk Encryption Set"
-  icon  = "text:disk-encryp-set"
+  icon  = "text:DES"
   color = local.security_color
 }
 
 category "azure_network_watcher_flow_log" {
   title = "Network Watcher Flow Log"
-  icon  = "text:nw-flow-log"
+  icon  = "text:NWFlowLog"
   color = local.network_color
 }
 
@@ -237,31 +237,31 @@ category "azure_compute_virtual_machine_scale_set" {
 category "azure_lb" {
   title = "Load Balancer"
   href  = "/azure_insights.dashboard.azure_network_load_balancer_detail?input.lb_id={{.properties.'ID' | @uri}}"
-  icon  = "text:lb"
+  icon  = "text:LB"
   color = local.network_color
 }
 
 category "azure_lb_backend_address_pool" {
   title = "Backend Address Pool"
-  icon  = "text:backend_address_pool"
+  icon  = "text:LBBackendAddressPool"
   color = local.network_color
 }
 
 category "azure_lb_rule" {
   title = "Load Balancer Rule"
-  icon  = "text:lb_rule"
+  icon  = "text:LBRule"
   color = local.network_color
 }
 
 category "azure_lb_probe" {
-  title = "Probe"
-  icon  = "text:lb_probe"
+  title = "Load Balancer Probe"
+  icon  = "text:LBProbe"
   color = local.network_color
 }
 
 category "azure_lb_nat_rule" {
-  title = "NAT Rule"
-  icon  = "text:nat_rule"
+  title = "Load Balancer NAT Rule"
+  icon  = "text:LBNatRule"
   color = local.network_color
 }
 
@@ -273,19 +273,19 @@ category "azure_firewall" {
 
 category "azure_nat_gateway" {
   title = "NAT Gateway"
-  icon  = "text:nat_gateway"
+  icon  = "text:LBNatGateway"
   color = local.network_color
 }
 
 category "azure_storage_share_file" {
-  title = "Share File"
-  icon  = "text:share_file"
+  title = "Storage Share File"
+  icon  = "text:StorageShareFile"
   color = local.storage_color
 }
 
 category "azure_compute_disk_access" {
   title = "Compute Disk Access"
-  icon  = "text:disk_acces"
+  icon  = "text:DiskAccess"
   color = local.storage_color
 }
 
@@ -311,6 +311,6 @@ category "azure_kubernetes_cluster" {
 
 category "azure_kubernetes_node_pool" {
   title = "Kubernetes Node Pools"
-  icon  = "text:pool"
+  icon  = "text:NodePool"
   color = local.container_color
 }

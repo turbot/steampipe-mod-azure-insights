@@ -255,7 +255,7 @@ query "azure_sql_database_vulnerability_assessment_enabled" {
       case when v.id is not null then 'Enabled' else 'Disabled' end as value,
       case when v.id is not null then 'ok' else 'alert' end as type
     from
-     azure_sql_database as d left join sql_database_va as v on v.id = d.id
+     azure_sql_database as d left join sql_database_va as v on lower(v.id) = lower(d.id)
     where
       d.name <> 'master'
       and d.id = $1;
@@ -378,7 +378,7 @@ edge "azure_sql_database_from_sql_server_edge" {
       sql_servers as sv
     where
       db.id = $1
-      and db.server_name = sv.name;
+      and lower(db.server_name) = lower(sv.name);
   EOQ
 
   param "id" {}
@@ -417,7 +417,7 @@ node "azure_sql_databaset_from_mssql_elasticpool_node" {
       sql_pools as sp
     where
       db.id = $1
-      and sp.name = db.elastic_pool_name;
+      and lower(sp.name) = lower(db.elastic_pool_name);
   EOQ
 
   param "id" {}
@@ -441,7 +441,7 @@ edge "azure_sql_databaset_from_mssql_elasticpool_edge" {
       sql_pools as sp
     where
       db.id = $1
-      and sp.name = db.elastic_pool_name;
+      and lower(sp.name) = lower(db.elastic_pool_name);
   EOQ
   param "id" {}
 }

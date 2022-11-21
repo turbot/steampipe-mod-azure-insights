@@ -216,7 +216,7 @@ query "azure_virtual_network_input" {
       azure_virtual_network as n,
       azure_subscription as s
     where
-      n.subscription_id = s.subscription_id
+      lower(n.subscription_id) = lower(s.subscription_id)
     order by
       n.title;
   EOQ
@@ -639,7 +639,7 @@ query "azure_virtual_network_route_tables" {
       rt.provisioning_state as "Provisioning State",
       r.id as "Route Table ID"
     from
-      route_table as r left join azure_route_table as rt on rt.id = r.id
+      route_table as r left join azure_route_table as rt on lower(rt.id) = lower(r.id)
   EOQ
 
   param "id" {}
@@ -661,7 +661,7 @@ query "azure_virtual_network_routes" {
     select
       *
     from
-      route_tables as t left join azure_route_table as rt on t.id = rt.id
+      route_tables as t left join azure_route_table as rt on lower(t.id) = lower(rt.id)
   ) select
       r ->> 'name' as "Name",
       r -> 'properties' ->> 'addressPrefix' as  "Address Prefix",
@@ -696,7 +696,7 @@ query "azure_virtual_network_nsg" {
       nsg_id as "Network Security Group ID",
       n.subnet_id as "Subnet ID"
     from
-      all_nsg as n left join azure_network_security_group as nsg on nsg.id = n.nsg_id
+      all_nsg as n left join azure_network_security_group as nsg on lower(nsg.id) = lower(n.nsg_id)
   EOQ
 
   param "id" {}

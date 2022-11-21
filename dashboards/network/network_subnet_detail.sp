@@ -130,7 +130,7 @@ query "azure_network_subnet_input" {
       azure_subnet as g,
       azure_subscription as s
     where
-      g.subscription_id = s.subscription_id
+      lower(g.subscription_id) = lower(s.subscription_id)
     order by
       g.title;
   EOQ
@@ -334,8 +334,8 @@ node "azure_network_subnet_from_virtual_network_node" {
       azure_subnet as s
       left join azure_virtual_network as vn on vn.name = s.virtual_network_name
     where
-      s.subscription_id = vn.subscription_id
-      and s.resource_group = vn.resource_group
+      lower(s.subscription_id) = lower(vn.subscription_id)
+      and lower(s.resource_group) = lower(vn.resource_group)
       and s.id = $1;
   EOQ
 
@@ -353,8 +353,8 @@ edge "azure_network_subnet_from_virtual_network_edge" {
       azure_subnet as s
       left join azure_virtual_network as vn on vn.name = s.virtual_network_name
     where
-      s.subscription_id = vn.subscription_id
-      and s.resource_group = vn.resource_group
+      lower(s.subscription_id) = lower(vn.subscription_id)
+      and lower(s.resource_group) = lower(vn.resource_group)
       and s.id = $1;
   EOQ
 

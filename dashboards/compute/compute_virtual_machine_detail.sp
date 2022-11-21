@@ -355,7 +355,7 @@ query "azure_compute_virtual_machine_vulnerability_assessment_solution" {
         distinct a.vm_id as vm_id
       from
         defender_enabled_vms as a
-        left join azure_compute_virtual_machine as w on w.vm_id = a.vm_id,
+        left join azure_compute_virtual_machine as w on lower(w.vm_id) = lower(a.vm_id),
         jsonb_array_elements(extensions) as b
       where
         b ->> 'Publisher' = 'Qualys'
@@ -368,7 +368,7 @@ query "azure_compute_virtual_machine_vulnerability_assessment_solution" {
       case when b.vm_id is not null then 'ok' else 'alert' end as type
     from
       azure_compute_virtual_machine as a
-      left join agent_installed_vm as b on a.vm_id = b.vm_id
+      left join agent_installed_vm as b on lower(a.vm_id) = lower(b.vm_id)
     where
       id = $1;
   EOQ
@@ -531,7 +531,7 @@ node "azure_compute_virtual_machine_to_network_interface_node" {
       ) as properties
     from
       network_interface_id as vn
-      left join azure_network_interface as n on vn.n_id = n.id
+      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
     where
       vn.vm_id = $1;
   EOQ
@@ -555,7 +555,7 @@ edge "azure_compute_virtual_machine_to_network_interface_edge" {
       vn.id as from_id
     from
       network_interface_id as vn
-      left join azure_network_interface as n on vn.n_id = n.id
+      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
     where
       vn.id = $1;
   EOQ
@@ -588,7 +588,7 @@ node "azure_compute_virtual_machine_network_interface_to_subnet_node" {
     from
       azure_network_interface as nic,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
     where
       nic.id in (select nic_id from network_interface_id);
   EOQ
@@ -615,7 +615,7 @@ edge "azure_compute_virtual_machine_network_interface_to_subnet_edge" {
     from
       azure_network_interface as nic,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
     where
       nic.id in (select nic_id from network_interface_id);
   EOQ
@@ -642,7 +642,7 @@ node "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_
         from
           azure_network_interface as nic,
           jsonb_array_elements(ip_configurations) as c
-          left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+          left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
         where
           nic.id in (select nic_id from network_interface_id)
     )
@@ -660,7 +660,7 @@ node "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_
     from
       azure_virtual_network as vn,
       jsonb_array_elements(subnets) as s
-      left join subnet_id as sub on sub.id = s ->> 'id'
+      left join subnet_id as sub on lower(sub.id) = lower(s ->> 'id')
     where
       s ->> 'id' in (select id from subnet_id);
   EOQ
@@ -687,7 +687,7 @@ edge "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_
         from
           azure_network_interface as nic,
           jsonb_array_elements(ip_configurations) as c
-          left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+          left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
         where
           nic.id in (select nic_id from network_interface_id)
     )
@@ -697,7 +697,7 @@ edge "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_
     from
       azure_virtual_network as vn,
       jsonb_array_elements(subnets) as s
-      left join subnet_id as sub on sub.id = s ->> 'id'
+      left join subnet_id as sub on lower(sub.id) = lower(s ->> 'id')
     where
       s ->> 'id' in (select id from subnet_id);
   EOQ
@@ -762,7 +762,7 @@ edge "azure_compute_virtual_machine_to_public_ip_edge" {
 }
 
 node "azure_compute_virtual_machine_to_image_node" {
-  category = category.azure_image
+  category = category.azure_compute_image
 
   sql = <<-EOQ
     select
@@ -778,7 +778,7 @@ node "azure_compute_virtual_machine_to_image_node" {
       ) as properties
     from
       azure_compute_image as i
-      left join azure_compute_virtual_machine as v on i.id = v.image_id
+      left join azure_compute_virtual_machine as v on lower(i.id) = lower(v.image_id)
     where
       v.id = $1;
   EOQ
@@ -795,7 +795,7 @@ edge "azure_compute_virtual_machine_to_image_edge" {
       i.id as to_id
     from
       azure_compute_image as i
-      left join azure_compute_virtual_machine as v on i.id = v.image_id
+      left join azure_compute_virtual_machine as v on lower(i.id) = lower(v.image_id)
     where
       v.id = $1;
   EOQ
@@ -827,7 +827,7 @@ node "azure_compute_virtual_machine_network_interface_to_network_security_group_
     from
       network_interface_id as vn
       left join azure_network_interface as n on vn.n_id = n.id
-      left join azure_network_security_group as s on n.network_security_group_id = s.id
+      left join azure_network_security_group as s on lower(n.network_security_group_id) = lower(s.id)
     where
       vn.vm_id = $1;
   EOQ
@@ -852,7 +852,7 @@ edge "azure_compute_virtual_machine_network_interface_to_network_security_group_
     from
       network_interface_id as vn
       left join azure_network_interface as n on vn.n_id = n.id
-      left join azure_network_security_group as s on n.network_security_group_id = s.id
+      left join azure_network_security_group as s on lower(n.network_security_group_id) = lower(s.id)
     where
       vn.id = $1;
   EOQ
@@ -996,7 +996,7 @@ query "azure_compute_virtual_machine_network_interfaces" {
       i.id as "Network Interface ID"
     from
       vm_interface vi
-      left join azure_network_interface as i on i.id = vi.network_id
+      left join azure_network_interface as i on lower(i.id) = lower(vi.network_id)
       left join jsonb_array_elements(i.ip_configurations) as ip_config on true;
   EOQ
 

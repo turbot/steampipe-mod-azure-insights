@@ -220,7 +220,7 @@ query "azure_network_security_group_input" {
       azure_network_security_group as g,
       azure_subscription as s
     where
-      g.subscription_id = s.subscription_id
+      lower(g.subscription_id) = lower(s.subscription_id)
     order by
       g.title;
   EOQ
@@ -410,7 +410,7 @@ query "azure_network_security_group_assoc" {
      from
        azure_network_security_group as nsg,
        jsonb_array_elements(nsg.network_interfaces) as nic
-       left join azure_network_interface as ni on ni.id = nic ->> 'id'
+       left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
      where
       nsg.id = $1
 
@@ -422,7 +422,7 @@ query "azure_network_security_group_assoc" {
      from
        azure_network_security_group as nsg,
        jsonb_array_elements(nsg.subnets) as subnets
-       left join azure_subnet as s on s.id = subnets ->> 'id'
+       left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
      where
       nsg.id = $1
     EOQ
@@ -447,7 +447,7 @@ query "azure_network_security_group_flow_logs" {
       fl.enabled as "Enabled",
       f.id as "Flow Log ID"
     from
-      flow_logs as f left join azure_network_watcher_flow_log as fl on fl.id = f.id
+      flow_logs as f left join azure_network_watcher_flow_log as fl on lower(fl.id) = lower(f.id)
     order by
       fl.name;
 
@@ -510,7 +510,7 @@ query "azure_network_security_group_ingress_rule_sankey" {
       from
         azure_network_security_group as nsg,
         jsonb_array_elements(nsg.network_interfaces) as nic
-        left join azure_network_interface as ni on ni.id = nic ->> 'id'
+        left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
       where
         nsg.id = $1
 
@@ -523,7 +523,7 @@ query "azure_network_security_group_ingress_rule_sankey" {
       from
         azure_network_security_group as nsg,
         jsonb_array_elements(nsg.subnets) as subnets
-        left join azure_subnet as s on s.id = subnets ->> 'id'
+        left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
       where
         nsg.id = $1
       ),
@@ -639,7 +639,7 @@ query "azure_network_security_group_egress_rule_sankey" {
       from
         azure_network_security_group as nsg,
         jsonb_array_elements(nsg.network_interfaces) as nic
-        left join azure_network_interface as ni on ni.id = nic ->> 'id'
+        left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
       where
         nsg.id = $1
 
@@ -652,7 +652,7 @@ query "azure_network_security_group_egress_rule_sankey" {
       from
         azure_network_security_group as nsg,
         jsonb_array_elements(nsg.subnets) as subnets
-        left join azure_subnet as s on s.id = subnets ->> 'id'
+        left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
       where
         nsg.id = $1
       ),
@@ -728,7 +728,7 @@ query "azure_network_security_group_egress_rule_sankey" {
         null as to_id
       from
         azure_network_security_group as nsg
-        inner join rules as r on nsg.id = r.id
+        inner join rules as r on lower(nsg.id) = lower(r.id)
 
       union
       select
@@ -806,7 +806,7 @@ node "azure_network_security_group_to_network_interface_node" {
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(network_interfaces) as ni
-      left join azure_network_interface as nic on nic.id = ni ->> 'id'
+      left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
     where
       nsg.id = $1;
   EOQ
@@ -824,7 +824,7 @@ edge "azure_network_security_group_to_network_interface_edge" {
    from
       azure_network_security_group as nsg,
       jsonb_array_elements(network_interfaces) as ni
-      left join azure_network_interface as nic on nic.id = ni ->> 'id'
+      left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
     where
       nsg.id = $1;
   EOQ
@@ -848,7 +848,7 @@ node "azure_network_security_group_from_network_subnet_node" {
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(subnets) as sub
-      left join azure_subnet as s on s.id = sub ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(sub ->> 'id')
     where
       nsg.id = $1;
   EOQ
@@ -866,7 +866,7 @@ edge "azure_network_security_group_from_network_subnet_edge" {
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(subnets) as sub
-      left join azure_subnet as s on s.id = sub ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(sub ->> 'id')
     where
       nsg.id = $1;
   EOQ
@@ -899,7 +899,7 @@ node "azure_network_security_group_subnet_from_virtual_network_node" {
       from
         azure_virtual_network as vn,
         jsonb_array_elements(subnets) as sub
-        join subnet_list as s on s.subnet_id = sub ->> 'id'
+        join subnet_list as s on lower(s.subnet_id) = lower(sub ->> 'id')
       where
         s.nsg_id = $1;
   EOQ
@@ -927,7 +927,7 @@ edge "azure_network_security_group_subnet_from_virtual_network_edge" {
       from
         azure_virtual_network as vn,
         jsonb_array_elements(subnets) as sub
-        right join subnet_list as s on s.subnet_id = sub ->> 'id'
+        right join subnet_list as s on lower(s.subnet_id) = lower(sub ->> 'id')
       where
         s.nsg_id = $1;
   EOQ
@@ -952,7 +952,7 @@ node "azure_network_security_group_to_network_watcher_flow_log_node" {
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(flow_logs) as f
-      left join azure_network_watcher_flow_log as fl on fl.id = f->> 'id'
+      left join azure_network_watcher_flow_log as fl on lower(fl.id) = lower(f->> 'id')
     where
       nsg.id = $1;
   EOQ
@@ -970,7 +970,7 @@ edge "azure_network_security_group_to_network_watcher_flow_log_edge" {
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(flow_logs) as f
-      left join azure_network_watcher_flow_log as fl on fl.id = f->> 'id'
+      left join azure_network_watcher_flow_log as fl on lower(fl.id) = lower(f->> 'id')
     where
       nsg.id = $1;
   EOQ
@@ -989,7 +989,7 @@ node "azure_network_security_group_to_compute_virtual_machine_node" {
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(network_interfaces) as ni
-      left join azure_network_interface as nic on nic.id = ni ->> 'id'
+      left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
     where
       nsg.id = $1
     )
@@ -1005,7 +1005,7 @@ node "azure_network_security_group_to_compute_virtual_machine_node" {
     from
       azure_compute_virtual_machine as vm,
       jsonb_array_elements(network_interfaces) as ni
-      left join network_interface_list as nic on nic.nic_id = ni ->> 'id'
+      left join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
     where
       nic.nsg_id = $1;
   EOQ

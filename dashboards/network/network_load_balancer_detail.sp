@@ -229,7 +229,7 @@ query "azure_network_load_balancer_input" {
       azure_lb as lb,
       azure_subscription as s
     where
-      lb.subscription_id = s.subscription_id
+      lower(lb.subscription_id) = lower(s.subscription_id)
     order by
       lb.title;
   EOQ
@@ -537,7 +537,7 @@ node "azure_load_balancer_to_backend_address_pool_node" {
     from
       azure_lb as lb,
       jsonb_array_elements(backend_address_pools) as b
-      left join azure_lb_backend_address_pool as p on p.id = b ->> 'id'
+      left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
     where
       lb.id = $1;
   EOQ
@@ -555,7 +555,7 @@ edge "azure_load_balancer_to_backend_address_pool_edge" {
     from
       azure_lb as lb,
       jsonb_array_elements(backend_address_pools) as b
-      left join azure_lb_backend_address_pool as p on p.id = b ->> 'id'
+      left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
     where
       lb.id = $1;
   EOQ
@@ -575,7 +575,7 @@ node "azure_load_balancer_backend_address_pool_to_network_interface_node" {
       from
         azure_lb as lb,
         jsonb_array_elements(backend_address_pools) as b
-        left join azure_lb_backend_address_pool as p on p.id = b ->> 'id'
+        left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
       where
         p.backend_ip_configurations is not null
         and lb.id = $1
@@ -603,7 +603,7 @@ node "azure_load_balancer_backend_address_pool_to_network_interface_node" {
       jsonb_array_elements(ip_configurations) as c,
       backend_ip_configurations as b
     where
-      c ->> 'id' = b.backend_ip_configuration_id
+      lower(c ->> 'id') = lower(b.backend_ip_configuration_id)
   EOQ
 
   param "id" {}
@@ -621,7 +621,7 @@ edge "azure_load_balancer_backend_address_pool_to_network_interface_edge" {
       from
         azure_lb as lb,
         jsonb_array_elements(backend_address_pools) as b
-        left join azure_lb_backend_address_pool as p on p.id = b ->> 'id'
+        left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
       where
         p.backend_ip_configurations is not null
         and lb.id = $1
@@ -642,7 +642,7 @@ edge "azure_load_balancer_backend_address_pool_to_network_interface_edge" {
       jsonb_array_elements(ip_configurations) as c,
       backend_ip_configurations as b
     where
-      c ->> 'id' = b.backend_ip_configuration_id
+      lower(c ->> 'id') = lower(b.backend_ip_configuration_id)
   EOQ
 
   param "id" {}
@@ -660,7 +660,7 @@ node "azure_load_balancer_backend_address_pool_to_virtual_network_node" {
       from
         azure_lb as lb,
         jsonb_array_elements(backend_address_pools) as b
-        left join azure_lb_backend_address_pool as p on p.id = b ->> 'id'
+        left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
       where
         p.load_balancer_backend_addresses is not null
         and lb.id = $1
@@ -686,7 +686,7 @@ node "azure_load_balancer_backend_address_pool_to_virtual_network_node" {
       ) as properties
     from
       azure_virtual_network as vn
-      right join load_balancer_backend_addresses_list as b on b.vn_id = vn.id
+      right join load_balancer_backend_addresses_list as b on lower(b.vn_id) = lower(vn.id)
   EOQ
 
   param "id" {}
@@ -704,7 +704,7 @@ edge "azure_load_balancer_backend_address_pool_to_virtual_network_edge" {
       from
         azure_lb as lb,
         jsonb_array_elements(backend_address_pools) as b
-        left join azure_lb_backend_address_pool as p on p.id = b ->> 'id'
+        left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
       where
         p.load_balancer_backend_addresses is not null
         and lb.id = $1
@@ -724,7 +724,7 @@ edge "azure_load_balancer_backend_address_pool_to_virtual_network_edge" {
       vn.id as to_id
     from
       azure_virtual_network as vn
-      right join load_balancer_backend_addresses_list as b on b.vn_id = vn.id
+      right join load_balancer_backend_addresses_list as b on lower(b.vn_id) = lower(vn.id)
   EOQ
 
   param "id" {}
@@ -742,7 +742,7 @@ node "azure_load_balancer_backend_address_pool_network_interface_to_compute_virt
       from
         azure_lb as lb,
         jsonb_array_elements(backend_address_pools) as b
-        left join azure_lb_backend_address_pool as p on p.id = b ->> 'id'
+        left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
       where
         p.backend_ip_configurations is not null
         and lb.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.Network/loadBalancers/vm-scale-set-90-lb'
@@ -780,7 +780,7 @@ node "azure_load_balancer_backend_address_pool_network_interface_to_compute_virt
       ) as properties
     from
       azure_compute_virtual_machine as vm
-      right join network_interface as nic on  nic.virtual_machine_id = vm.id
+      right join network_interface as nic on lower(nic.virtual_machine_id) = lower(vm.id)
   EOQ
 
   param "id" {}
@@ -798,7 +798,7 @@ edge "azure_load_balancer_backend_address_pool_network_interface_to_compute_virt
       from
         azure_lb as lb,
         jsonb_array_elements(backend_address_pools) as b
-        left join azure_lb_backend_address_pool as p on p.id = b ->> 'id'
+        left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
       where
         p.backend_ip_configurations is not null
         and lb.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.Network/loadBalancers/vm-scale-set-90-lb'
@@ -829,7 +829,7 @@ edge "azure_load_balancer_backend_address_pool_network_interface_to_compute_virt
       vm.id as to_id
     from
       azure_compute_virtual_machine as vm
-      right join network_interface as nic on  nic.virtual_machine_id = vm.id
+      right join network_interface as nic on lower(nic.virtual_machine_id) = lower(vm.id)
   EOQ
 
   param "id" {}
@@ -852,7 +852,7 @@ node "azure_load_balancer_to_load_balancer_rule_node" {
     from
       azure_lb as lb,
       jsonb_array_elements(load_balancing_rules) as r
-      left join azure_lb_rule as lb_rule on lb_rule.id = r ->> 'id'
+      left join azure_lb_rule as lb_rule on lower(lb_rule.id) = lower(r ->> 'id')
     where
       lb.id = $1;
   EOQ
@@ -870,7 +870,7 @@ edge "azure_load_balancer_to_load_balancer_rule_edge" {
     from
       azure_lb as lb,
       jsonb_array_elements(load_balancing_rules) as r
-      left join azure_lb_rule as lb_rule on lb_rule.id = r ->> 'id'
+      left join azure_lb_rule as lb_rule on lower(lb_rule.id) = lower(r ->> 'id')
     where
       lb.id = $1;
   EOQ
@@ -895,7 +895,7 @@ node "azure_load_balancer_to_lb_probe_node" {
     from
       azure_lb as lb,
       jsonb_array_elements(probes) as probe
-      left join azure_lb_probe as p on p.id = probe ->> 'id'
+      left join azure_lb_probe as p on lower(p.id) = lower(probe ->> 'id')
     where
       lb.id = $1;
   EOQ
@@ -913,7 +913,7 @@ edge "azure_load_balancer_to_lb_probe_edge" {
     from
       azure_lb as lb,
       jsonb_array_elements(probes) as probe
-      left join azure_lb_probe as p on p.id = probe ->> 'id'
+      left join azure_lb_probe as p on lower(p.id) = lower(probe ->> 'id')
     where
       lb.id = $1;
   EOQ
@@ -938,7 +938,7 @@ node "azure_load_balancer_to_lb_nat_rule_node" {
     from
       azure_lb as lb,
       jsonb_array_elements(inbound_nat_rules) as nat_rule
-      left join azure_lb_nat_rule as r on r.id = nat_rule ->> 'id'
+      left join azure_lb_nat_rule as r on lower(r.id) = lower(nat_rule ->> 'id')
     where
       lb.id = $1;
   EOQ
@@ -956,7 +956,7 @@ edge "azure_load_balancer_to_lb_nat_rule_edge" {
     from
       azure_lb as lb,
       jsonb_array_elements(inbound_nat_rules) as nat_rule
-      left join azure_lb_nat_rule as r on r.id = nat_rule ->> 'id'
+      left join azure_lb_nat_rule as r on lower(r.id) = lower(nat_rule ->> 'id')
     where
       lb.id = $1;
   EOQ
@@ -1026,7 +1026,7 @@ node "azure_load_balancer_to_public_ip_node" {
     from
       azure_lb as lb,
       jsonb_array_elements(frontend_ip_configurations) as f
-      left join azure_public_ip as ip on ip.id = f -> 'properties' -> 'publicIPAddress' ->> 'id'
+      left join azure_public_ip as ip on lower(ip.id) = lower(f -> 'properties' -> 'publicIPAddress' ->> 'id')
     where
       lb.id = $1;
   EOQ
@@ -1051,7 +1051,7 @@ edge "azure_load_balancer_to_public_ip_edge" {
     from
       azure_lb as lb,
       jsonb_array_elements(frontend_ip_configurations) as f
-      left join azure_public_ip as ip on ip.id = f -> 'properties' -> 'publicIPAddress' ->> 'id'
+      left join azure_public_ip as ip on lower(ip.id) = lower(f -> 'properties' -> 'publicIPAddress' ->> 'id')
     where
       lb.id = $1;;
   EOQ

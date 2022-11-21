@@ -536,7 +536,7 @@ node "azure_key_vault_key_from_storage_account_node" {
       ) as properties
     from
       azure_storage_account as s
-      left join azure_key_vault_key as k on s.encryption_key_vault_properties_key_current_version_id = key_uri_with_version
+      left join azure_key_vault_key as k on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(key_uri_with_version)
     where
       k.id = $1;
   EOQ
@@ -553,7 +553,7 @@ edge "azure_key_vault_key_from_storage_account_edge" {
       k.id as to_id
     from
       azure_storage_account as s
-      left join azure_key_vault_key as k on s.encryption_key_vault_properties_key_current_version_id = key_uri_with_version
+      left join azure_key_vault_key as k on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(key_uri_with_version)
     where
       k.id = $1;
   EOQ
@@ -583,8 +583,8 @@ node "azure_key_vault_key_from_servicebus_namespace_node" {
       left join azure_key_vault_key as k on p ->> 'keyName' = k.name
       left join azure_key_vault as v on v.name = k.vault_name
     where
-      k.resource_group = v.resource_group
-      and k.resource_group = n.resource_group
+      lower(k.resource_group) = lower(v.resource_group)
+      and lower(k.resource_group) = lower(n.resource_group)
       and k.id = $1;
 
   EOQ

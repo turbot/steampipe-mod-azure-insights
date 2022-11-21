@@ -122,7 +122,7 @@ query "azure_network_firewall_input" {
       azure_firewall as f,
       azure_subscription as s
     where
-      f.subscription_id = s.subscription_id
+      lower(f.subscription_id) = lower(s.subscription_id)
     order by
       f.title;
   EOQ
@@ -267,7 +267,7 @@ node "azure_network_firewall_to_public_ip_node" {
     from
       azure_firewall as f,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_public_ip as ip on ip.id = c -> 'publicIPAddress' ->> 'id'
+      left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
     where
       f.id = $1;
   EOQ
@@ -285,7 +285,7 @@ edge "azure_network_firewall_to_public_ip_edge" {
     from
       azure_firewall as f,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_public_ip as ip on ip.id = c -> 'publicIPAddress' ->> 'id'
+      left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
     where
       f.id = $1;
   EOQ
@@ -310,7 +310,7 @@ node "azure_network_firewall_to_subnet_node" {
     from
       azure_firewall as f,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on s.id = c -> 'subnet' ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
     where
       f.id = $1;
   EOQ
@@ -328,7 +328,7 @@ edge "azure_network_firewall_to_subnet_edge" {
     from
       azure_firewall as f,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on s.id = c -> 'subnet' ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
     where
       f.id = $1;
   EOQ
@@ -347,7 +347,7 @@ node "azure_network_firewall_subnet_to_virtual_network_node" {
     from
       azure_firewall as f,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on s.id = c -> 'subnet' ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
     where
       f.id = $1
     )
@@ -366,7 +366,7 @@ node "azure_network_firewall_subnet_to_virtual_network_node" {
       jsonb_array_elements(subnets) as s,
       subnet_list as sub
     where
-      s ->> 'id' = sub.subnet_id
+      lower(s ->> 'id') = lower(sub.subnet_id)
   EOQ
 
   param "id" {}
@@ -383,7 +383,7 @@ edge "azure_network_firewall_subnet_to_virtual_network_edge" {
     from
       azure_firewall as f,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on s.id = c -> 'subnet' ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
     where
       f.id = $1
     )
@@ -395,7 +395,7 @@ edge "azure_network_firewall_subnet_to_virtual_network_edge" {
       jsonb_array_elements(subnets) as s,
       subnet_list as sub
     where
-      s ->> 'id' = sub.subnet_id
+      lower(s ->> 'id') = lower(sub.subnet_id)
   EOQ
 
   param "id" {}

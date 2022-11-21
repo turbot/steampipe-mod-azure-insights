@@ -142,7 +142,7 @@ query "azure_kubernetes_cluster_input" {
       azure_kubernetes_cluster as c,
       azure_subscription as s
     where
-      c.subscription_id = s.subscription_id
+      lower(c.subscription_id) = lower(s.subscription_id)
     order by
       c.title;
   EOQ

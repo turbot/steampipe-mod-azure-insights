@@ -174,7 +174,7 @@ query "azure_compute_disk_input" {
       azure_compute_disk as d,
       azure_subscription as s
     where
-      d.subscription_id = s.subscription_id
+      lower(d.subscription_id) = lower(s.subscription_id)
     order by
       d.title;
   EOQ
@@ -307,7 +307,7 @@ node "azure_compute_disk_from_compute_virtual_machine_node" {
       ) as properties
     from
       vm_disk_id as v
-      left join azure_compute_disk as d on v.did = d.id
+      left join azure_compute_disk as d on lower(v.did) = lower(d.id)
     where
       d.id = $1;
   EOQ
@@ -336,7 +336,7 @@ edge "azure_compute_disk_from_compute_virtual_machine_edge" {
       d.id as to_id
     from
       vm_disk_id as v
-      left join azure_compute_disk as d on v.did = d.id
+      left join azure_compute_disk as d on lower(v.did) = lower(d.id)
     where
       d.id = $1;
   EOQ
@@ -403,7 +403,7 @@ node "azure_compute_disk_to_compute_disk_encryption_set_node" {
       ) as properties
     from
       azure_compute_disk_encryption_set as e
-      left join azure_compute_disk as d on d.encryption_disk_encryption_set_id = e.id
+      left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
     where
       d.id = $1;
   EOQ
@@ -420,7 +420,7 @@ edge "azure_compute_disk_to_compute_disk_encryption_set_edge" {
       e.id as to_id
     from
       azure_compute_disk_encryption_set as e
-      left join azure_compute_disk as d on d.encryption_disk_encryption_set_id = e.id
+      left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
     where
       d.id = $1;
   EOQ
@@ -444,8 +444,8 @@ node "azure_compute_disk_compute_disk_encryption_set_to_key_vault_node" {
       ) as properties
     from
       azure_compute_disk_encryption_set as e
-      left join azure_compute_disk as d on d.encryption_disk_encryption_set_id = e.id
-      left join azure_key_vault as k on e.active_key_source_vault_id = k.id
+      left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
+      left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
     where
       d.id = $1;
   EOQ
@@ -462,8 +462,8 @@ edge "azure_compute_disk_compute_disk_encryption_set_to_key_vault_edge" {
       k.id as to_id
     from
       azure_compute_disk_encryption_set as e
-      left join azure_compute_disk as d on d.encryption_disk_encryption_set_id = e.id
-      left join azure_key_vault as k on e.active_key_source_vault_id = k.id
+      left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
+      left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
     where
       d.id = $1;
   EOQ
@@ -487,8 +487,8 @@ node "azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_node" {
       ) as properties
     from
       azure_compute_disk_encryption_set as e
-      left join azure_compute_disk as d on d.encryption_disk_encryption_set_id = e.id
-      left join azure_key_vault_key as k on e.active_key_url = k.key_uri_with_version
+      left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
+      left join azure_key_vault_key as k on lower(e.active_key_url) = lower(k.key_uri_with_version)
     where
       d.id = $1;
   EOQ
@@ -505,8 +505,8 @@ edge "azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_edge" {
       k.id as to_id
     from
       azure_compute_disk_encryption_set as e
-      left join azure_compute_disk as d on d.encryption_disk_encryption_set_id = e.id
-      left join azure_key_vault_key as k on e.active_key_url = k.key_uri_with_version
+      left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
+      left join azure_key_vault_key as k on lower(e.active_key_url) = lower(k.key_uri_with_version)
     where
       d.id = $1;
   EOQ
@@ -530,7 +530,7 @@ node "azure_compute_disk_to_compute_snapshot_node" {
       ) as properties
     from
       azure_compute_snapshot as s
-      left join azure_compute_disk as d on s.source_resource_id = d.id
+      left join azure_compute_disk as d on lower(s.source_resource_id) = lower(d.id)
     where
       d.id = $1;
   EOQ
