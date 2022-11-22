@@ -155,7 +155,7 @@ category "azure_sql_server" {
 
 category "azure_private_endpoint_connection" {
   title = "Private Endpoint Connection"
-  icon  = "text:PEP"
+  icon  = "text:PEC"
   color = local.network_color
 }
 

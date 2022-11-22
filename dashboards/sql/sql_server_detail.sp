@@ -378,7 +378,7 @@ node "azure_sql_server_to_subnet_node" {
 }
 
 edge "azure_sql_server_to_subnet_edge" {
-  title = "sql server"
+  title = "subnet"
 
   sql = <<-EOQ
     select
@@ -468,7 +468,7 @@ node "azure_sql_server_subnet_to_virtual_network_node" {
 }
 
 edge "azure_sql_server_subnet_to_virtual_network_edge" {
-  title = "subnet"
+  title = "virtual network"
 
   sql = <<-EOQ
     select
@@ -528,7 +528,7 @@ node "azure_sql_server_to_key_vault_node" {
 }
 
 edge "azure_sql_server_to_key_vault_edge" {
-  title = "encrypted with"
+  title = "key vault"
 
   sql = <<-EOQ
     with key_vault as (
@@ -601,7 +601,7 @@ node "azure_sql_server_key_vault_to_key_vault_key_node" {
 }
 
 edge "azure_sql_server_key_vault_to_key_vault_key_edge" {
-  title = "key"
+  title = "encrypted with"
 
   sql = <<-EOQ
     with all_keys as (
