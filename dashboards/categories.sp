@@ -82,6 +82,7 @@ category "azure_key_vault" {
 }
 
 category "azure_key_vault_key" {
+   href  = "/azure_insights.dashboard.azure_key_vault_key_detail?input.key_vault_key_id={{.properties.'Key ID' | @uri}}"
   title = "Key Vault Key"
   icon  = "key"
   color = local.security_color

@@ -253,7 +253,7 @@ node "azure_key_vault_key_node" {
       name as title,
       jsonb_build_object(
         'Key Name', name,
-        'Key Id', id,
+        'Key ID', id,
         'Vault Name', vault_name
       ) as properties
     from
@@ -274,7 +274,7 @@ node "azure_key_vault_key_to_key_vault_node" {
       v.name as title,
       jsonb_build_object(
         'Name', v.name,
-        'Key Id', v.id,
+        'Key ID', v.id,
         'Type', v.type,
         'Purge Protection Enabled', v.purge_protection_enabled
       ) as properties

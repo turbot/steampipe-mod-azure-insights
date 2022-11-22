@@ -470,7 +470,7 @@ node "azure_key_vault_to_key_node" {
       k.id as id,
       jsonb_build_object(
         'Key Name', k.name,
-        'Id',  k.id,
+        'Key ID',  k.id,
         'Key Type', k.key_type,
         'Key Size', k.key_size,
         'Created At', k.created_at,
