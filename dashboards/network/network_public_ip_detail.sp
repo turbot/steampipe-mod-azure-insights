@@ -284,7 +284,7 @@ edge "azure_network_public_ip_network_interface_from_compute_virtual_machine_edg
         subscription_id,
         resource_group,
         region,
-        jsonb_array_elements(network_interfaces)->>'id' as nid
+        jsonb_array_elements(network_interfaces)->>'id' as n_id
       from
         azure_compute_virtual_machine
     ),

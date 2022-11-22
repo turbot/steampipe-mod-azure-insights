@@ -745,7 +745,7 @@ node "azure_load_balancer_backend_address_pool_network_interface_to_compute_virt
         left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
       where
         p.backend_ip_configurations is not null
-        and lb.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.Network/loadBalancers/vm-scale-set-90-lb'
+        and lb.id = $1
     ), backend_ip_configurations as (
         select
           lb_id,
@@ -801,7 +801,7 @@ edge "azure_load_balancer_backend_address_pool_network_interface_to_compute_virt
         left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
       where
         p.backend_ip_configurations is not null
-        and lb.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.Network/loadBalancers/vm-scale-set-90-lb'
+        and lb.id = $1
     ), backend_ip_configurations as (
         select
           lb_id,
