@@ -68,7 +68,7 @@ dashboard "azure_compute_virtual_machine_detail" {
         node.azure_compute_virtual_machine_to_data_disk_node,
         node.azure_compute_virtual_machine_to_os_disk_node,
         node.azure_compute_virtual_machine_to_network_interface_node,
-        node.azure_compute_virtual_machine_to_public_ip_node,
+        node.azure_compute_virtual_machine_network_interface_to_public_ip_node,
         node.azure_compute_virtual_machine_to_image_node,
         node.azure_compute_virtual_machine_network_interface_to_network_security_group_node,
         node.azure_compute_virtual_machine_to_subnet_node,
@@ -83,7 +83,7 @@ dashboard "azure_compute_virtual_machine_detail" {
         edge.azure_compute_virtual_machine_to_data_disk_edge,
         edge.azure_compute_virtual_machine_to_os_disk_edge,
         edge.azure_compute_virtual_machine_to_network_interface_edge,
-        edge.azure_compute_virtual_machine_to_public_ip_edge,
+        edge.azure_compute_virtual_machine_network_interface_to_public_ip_edge,
         edge.azure_compute_virtual_machine_to_image_edge,
         edge.azure_compute_virtual_machine_network_interface_to_network_security_group_edge,
         edge.azure_compute_virtual_machine_to_subnet_edge,
@@ -514,7 +514,6 @@ edge "azure_compute_virtual_machine_to_os_disk_edge" {
   param "id" {}
 }
 
-
 node "azure_compute_virtual_machine_to_network_interface_node" {
   category = category.azure_network_interface
 
@@ -772,57 +771,83 @@ edge "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_
   param "id" {}
 }
 
-node "azure_compute_virtual_machine_to_public_ip_node" {
+node "azure_compute_virtual_machine_network_interface_to_public_ip_node" {
   category = category.azure_public_ip
 
   sql = <<-EOQ
-    with ip_address as (
+    with network_interfaces as (
+      select
+        vm.id as vm_id,
+        nic.id as nic_id,
+        nic.ip_configurations as ip_configuration
+      from
+        azure_compute_virtual_machine as vm,
+        jsonb_array_elements(network_interfaces) as n
+        left join azure_network_interface as nic on lower(nic.id) = lower(n ->> 'id')
+      where
+        lower(vm.id) = lower($1)
+    ),
+     ip_address as (
       select
         id,
         jsonb_array_elements_text(public_ips) as ip
       from
         azure_compute_virtual_machine
+      where
+        lower(id) = lower($1)
     )
     select
-      lower(a.id) as id,
-      a.title as title,
+      lower(p.id) as id,
+      p.title as title,
       jsonb_build_object(
-        'Name', a.name,
-        'ID', a.id,
-        'IP Address', a.ip_address,
-        'Subscription ID', a.subscription_id,
-        'Resource Group', a.resource_group,
-        'Region', a.region
+        'Name', p.name,
+        'ID', p.id,
+        'IP Address', p.ip_address,
+        'Subscription ID', p.subscription_id,
+        'Resource Group', p.resource_group,
+        'Region', p.region
       ) as properties
     from
-      ip_address as p
-      left join azure_public_ip as a on (p.ip)::inet = a.ip_address
-    where
-      p.id = $1;
+      network_interfaces as n,
+      jsonb_array_elements(ip_configuration) as ip_config
+      left join azure_public_ip as p on lower(p.id) = lower(ip_config -> 'properties' -> 'publicIPAddress' ->> 'id');
   EOQ
 
   param "id" {}
 }
 
-edge "azure_compute_virtual_machine_to_public_ip_edge" {
+edge "azure_compute_virtual_machine_network_interface_to_public_ip_edge" {
   title = "public ip"
 
   sql = <<-EOQ
-    with ip_address as (
+    with network_interfaces as (
+      select
+        vm.id as vm_id,
+        nic.id as nic_id,
+        nic.ip_configurations as ip_configuration
+      from
+        azure_compute_virtual_machine as vm,
+        jsonb_array_elements(network_interfaces) as n
+        left join azure_network_interface as nic on lower(nic.id) = lower(n ->> 'id')
+      where
+        lower(vm.id) = lower($1)
+    ),
+     ip_address as (
       select
         id,
         jsonb_array_elements_text(public_ips) as ip
       from
         azure_compute_virtual_machine
+      where
+        lower(id) = lower($1)
     )
     select
-      lower(a.id) as to_id,
-      lower(p.id) as from_id
+      lower(n.nic_id) as from_id,
+      lower(p.id) as to_id
     from
-      ip_address as p
-      left join azure_public_ip as a on (p.ip)::inet = a.ip_address
-    where
-      p.id = $1;
+      network_interfaces as n,
+      jsonb_array_elements(ip_configuration) as ip_config
+      left join azure_public_ip as p on lower(p.id) = lower(ip_config -> 'properties' -> 'publicIPAddress' ->> 'id');
   EOQ
 
   param "id" {}

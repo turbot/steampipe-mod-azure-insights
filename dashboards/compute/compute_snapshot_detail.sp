@@ -282,12 +282,12 @@ node "azure_compute_snapshot_to_compute_disk_node" {
 }
 
 edge "azure_compute_snapshot_to_compute_disk_edge" {
-  title = "source disk"
+  title = "source disk for snapshot"
 
   sql = <<-EOQ
     select
-      lower(s.id) as from_id,
-      lower(d.id) as to_id
+      lower(d.id) as from_id,
+      lower(s.id) as to_id
     from
       azure_compute_disk as d
       left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
@@ -323,12 +323,12 @@ node "azure_compute_snapshot_from_compute_disk_node" {
 }
 
 edge "azure_compute_snapshot_from_compute_disk_edge" {
-  title = "snapshot"
+  title = "disk"
 
   sql = <<-EOQ
     select
-      lower(d.id) as from_id,
-      lower(s.id) as to_id
+      lower(s.id) as from_id,
+      lower(d.id) as to_id
     from
       azure_compute_disk as d
       left join azure_compute_snapshot as s on lower(d.creation_data_source_resource_id) = lower(s.id)
@@ -373,7 +373,7 @@ node "azure_compute_snapshot_from_compute_snapshot_node" {
 }
 
 edge "azure_compute_snapshot_from_compute_snapshot_edge" {
-  title = "snapshot"
+  title = "duplicate of"
 
   sql = <<-EOQ
     select
@@ -423,12 +423,12 @@ node "azure_compute_snapshot_to_compute_snapshot_node" {
 }
 
 edge "azure_compute_snapshot_to_compute_snapshot_edge" {
-  title = "snapshot"
+  title = "duplicate of"
 
   sql = <<-EOQ
     select
-      lower(s.id) as to_id,
-      lower(s.source_resource_id) as from_id
+      lower(s.source_resource_id) as to_id,
+      lower(s.id) as from_id
     from
       azure_compute_snapshot as s
     where

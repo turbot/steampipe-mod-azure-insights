@@ -63,6 +63,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
         node.azure_compute_virtual_machine_scale_set_backend_address_pool_to_load_balancer_node,
         node.azure_compute_virtual_machine_scale_set_to_application_gateway_node,
         node.azure_compute_virtual_machine_scale_set_to_network_interface_node,
+        node.azure_compute_virtual_machine_scale_set_network_interface_to_nsg_node,
         node.azure_compute_virtual_machine_scale_set_network_interface_to_subnet_node,
         node.azure_compute_virtual_machine_scale_set_network_interface_subnet_to_virtual_network_node,
         node.azure_compute_virtual_machine_scale_set_from_kubernetes_cluster_node
@@ -74,6 +75,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
         edge.azure_compute_virtual_machine_scale_set_backend_address_pool_to_load_balancer_edge,
         edge.azure_compute_virtual_machine_scale_set_to_application_gateway_edge,
         edge.azure_compute_virtual_machine_scale_set_to_network_interface_edge,
+        edge.azure_compute_virtual_machine_scale_set_network_interface_to_nsg_edge,
         edge.azure_compute_virtual_machine_scale_set_network_interface_to_subnet_edge,
         edge.azure_compute_virtual_machine_scale_set_network_interface_subnet_to_virtual_network_edge,
         edge.azure_compute_virtual_machine_scale_set_from_kubernetes_cluster_edge
@@ -711,7 +713,8 @@ edge "azure_compute_virtual_machine_scale_set_to_network_interface_edge" {
       from
         azure_compute_virtual_machine_scale_set as s,
         jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') n
-      where s.id = $1
+      where
+        s.id = $1
     )
     select
       (select scale_set_id from nic_list ) as from_id,
@@ -720,6 +723,66 @@ edge "azure_compute_virtual_machine_scale_set_to_network_interface_edge" {
       azure_compute_virtual_machine_scale_set_network_interface as nic
     where
       nic.name = (select nic_name from nic_list ) limit 1
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_compute_virtual_machine_scale_set_network_interface_to_nsg_node" {
+  category = category.azure_network_security_group
+
+  sql = <<-EOQ
+    with nic_list as (
+      select
+        n -> 'properties' -> 'networkSecurityGroup' ->> 'id' as nsg_id,
+        n ->> 'name' as nic_name
+      from
+        azure_compute_virtual_machine_scale_set as s,
+        jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') n
+      where
+        s.id = $1
+    )
+    select
+      lower(nsg.id) as id,
+      nsg.title as title,
+      jsonb_build_object(
+        'Name', nsg.name,
+        'Type', nsg.type,
+        'Etag', nsg.etag,
+        'Subscription ID', nsg.subscription_id,
+        'Resource Group', nsg.resource_group,
+        'Region', nsg.region
+      ) as properties
+    from
+      nic_list as nic
+      left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.nsg_id)
+    limit 1
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_compute_virtual_machine_scale_set_network_interface_to_nsg_edge" {
+  title = "nsg"
+
+  sql = <<-EOQ
+    with nic_list as (
+      select
+        n -> 'properties' -> 'networkSecurityGroup' ->> 'id' as nsg_id,
+        n ->> 'name' as nic_name
+      from
+        azure_compute_virtual_machine_scale_set as s,
+        jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') n
+      where
+        s.id = $1
+    )
+    select
+      nic.nic_name as from_id,
+      lower(nsg.id) as to_id
+    from
+      nic_list as nic
+      left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.nsg_id)
+    limit 1
   EOQ
 
   param "id" {}
@@ -764,6 +827,7 @@ edge "azure_compute_virtual_machine_scale_set_network_interface_to_subnet_edge" 
   sql = <<-EOQ
     with subnet_list as (
       select
+        n -> 'properties' -> 'networkSecurityGroup' ->> 'id' as nsg_id,
         c -> 'properties' -> 'subnet' ->> 'id' as subnet_id,
         s.id as scale_set_id,
         n ->> 'name' as nic_name
@@ -775,11 +839,14 @@ edge "azure_compute_virtual_machine_scale_set_network_interface_to_subnet_edge" 
         s.id = $1
     )
     select
-      l.nic_name as from_id,
+      coalesce(
+        lower(l.nsg_id),
+        l.nic_name
+      ) as from_id,
       s.id as to_id
     from
       subnet_list as l
-      left join azure_subnet as s on lower(s.id) = lower(l.subnet_id)
+      left join azure_subnet as s on lower(s.id) = lower(l.subnet_id);
   EOQ
 
   param "id" {}

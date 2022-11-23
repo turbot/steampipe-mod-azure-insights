@@ -453,6 +453,7 @@ edge "azure_compute_virtual_machine_scale_set_vm_network_interface_to_subnet_edg
     with ip_configs as (
       select
         nic.ip_configurations as ip_config,
+        nic.network_security_group ->> 'id' as nsg_id,
         lower(vm.id) as vm_id,
         lower(nic.id) as nic_id
       from
@@ -462,7 +463,10 @@ edge "azure_compute_virtual_machine_scale_set_vm_network_interface_to_subnet_edg
         lower(vm.id) = lower($1)
     )
     select
-      lower(config.nic_id) as from_id,
+      coalesce(
+        lower(config.nsg_id),
+        lower(config.nic_id)
+      ) as from_id,
       lower(s.id) as to_id
     from
       ip_configs as config,

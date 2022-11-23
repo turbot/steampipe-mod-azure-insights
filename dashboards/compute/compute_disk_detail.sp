@@ -473,7 +473,7 @@ node "azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_node" {
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault_key as k on lower(e.active_key_url) = lower(k.key_uri_with_version)
     where
-      d.id = $1;
+      lower(d.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -491,7 +491,7 @@ edge "azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_edge" {
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault_key as k on lower(e.active_key_url) = lower(k.key_uri_with_version)
     where
-      d.id = $1;
+      lower(d.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -502,7 +502,7 @@ node "azure_compute_disk_from_compute_snapshot_node" {
 
   sql = <<-EOQ
     select
-     lower(s.id) as id,
+      lower(s.id) as id,
       s.title as title,
       jsonb_build_object(
         'Name', s.name,
@@ -512,8 +512,8 @@ node "azure_compute_disk_from_compute_snapshot_node" {
         'Region', s.region
       ) as properties
     from
-      azure_compute_snapshot as s
-      left join azure_compute_disk as d on lower(s.source_resource_id) = lower(d.id)
+      azure_compute_disk as d
+      left join azure_compute_snapshot as s on lower(s.source_resource_id) = lower(d.id)
     where
       d.id = $1;
   EOQ
@@ -565,12 +565,12 @@ node "azure_compute_disk_to_compute_snapshot_node" {
 }
 
 edge "azure_compute_disk_to_compute_snapshot_edge" {
-  title = "source snapshot"
+  title = "snapshot source for disk"
 
   sql = <<-EOQ
     select
-      lower(d.id) as from_id,
-      lower(s.id) as to_id
+      lower(s.id) as from_id,
+      lower(d.id) as to_id
     from
       azure_compute_disk as d
       left join azure_compute_snapshot as s on lower(s.id) = lower(d.creation_data_source_resource_id)
@@ -608,12 +608,12 @@ node "azure_compute_disk_to_compute_disk_node" {
 }
 
 edge "azure_compute_disk_to_compute_disk_edge" {
-  title = "source disk"
+  title = "disk source for disk"
 
   sql = <<-EOQ
     select
-      lower(d1.id) as from_id,
-      lower(d2.id) as to_id
+      lower(d2.id) as from_id,
+      lower(d1.id) as to_id
     from
       azure_compute_disk as d1
       left join azure_compute_disk d2 on d1.creation_data_source_resource_id = d2.id
@@ -650,12 +650,12 @@ node "azure_compute_disk_to_storage_account_node" {
 }
 
 edge "azure_compute_disk_to_storage_account_edge" {
-  title = "source storage account"
+  title = "blob source for disk"
 
   sql = <<-EOQ
     select
-      lower(d.id) as from_id,
-      lower(a.id) as to_id
+      lower(a.id) as from_id,
+      lower(d.id) as to_id
     from
       azure_compute_disk as d
       left join azure_storage_account as a on lower(a.id) = lower(d.creation_data_storage_account_id)

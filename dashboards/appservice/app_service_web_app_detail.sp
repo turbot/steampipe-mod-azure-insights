@@ -75,13 +75,15 @@ dashboard "azure_app_service_web_app_detail" {
         node.azure_app_service_web_app_node,
         node.azure_app_service_web_app_to_subnet_node,
         node.azure_app_service_web_app_subnet_to_virtual_network_node,
-        node.azure_app_service_web_app_to_app_service_plan_node
+        node.azure_app_service_web_app_to_app_service_plan_node,
+        node.azure_app_service_web_app_from_application_gateway_node
       ]
 
       edges = [
         edge.azure_app_service_web_app_to_subnet_edge,
         edge.azure_app_service_web_app_subnet_to_virtual_network_edge,
-        edge.azure_app_service_web_app_to_app_service_plan_edge
+        edge.azure_app_service_web_app_to_app_service_plan_edge,
+        edge.azure_app_service_web_app_from_application_gateway_edge
       ]
 
       args = {
@@ -262,7 +264,7 @@ node "azure_app_service_web_app_node" {
 
   sql = <<-EOQ
     select
-      id,
+      lower(id) as id,
       title as title,
       json_build_object(
         'Name', name,
@@ -274,7 +276,7 @@ node "azure_app_service_web_app_node" {
     from
       azure_app_service_web_app
     where
-      id = $1;
+      lower(id) = lower($1);
   EOQ
 
   param "id" {}
@@ -285,7 +287,7 @@ node "azure_app_service_web_app_to_subnet_node" {
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       json_build_object(
         'Name', name,
@@ -298,13 +300,13 @@ node "azure_app_service_web_app_to_subnet_node" {
     from
       azure_subnet
     where
-      id in (
+      lower(id) in (
         select
-          vnet_connection -> 'properties' ->> 'vnetResourceId'
+          lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
         from
           azure_app_service_web_app
         where
-          id = $1
+          lower(id) = lower($1)
       );
   EOQ
 
@@ -316,12 +318,12 @@ edge "azure_app_service_web_app_to_subnet_edge" {
 
   sql = <<-EOQ
     select
-      vnet_connection -> 'properties' ->> 'vnetResourceId' as to_id,
-      id as from_id
+      lower(vnet_connection -> 'properties' ->> 'vnetResourceId') as to_id,
+      lower(id) as from_id
     from
       azure_app_service_web_app
     where
-      id = $1;
+      lower(id) = lower($1);
   EOQ
 
   param "id" {}
@@ -332,7 +334,7 @@ node "azure_app_service_web_app_subnet_to_virtual_network_node" {
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       json_build_object(
         'Name', name,
@@ -347,13 +349,13 @@ node "azure_app_service_web_app_subnet_to_virtual_network_node" {
       azure_virtual_network,
       jsonb_array_elements(subnets) as sub
     where
-      sub ->> 'id' in (
+      lower(sub ->> 'id') in (
         select
-          vnet_connection -> 'properties' ->> 'vnetResourceId'
+          lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
         from
           azure_app_service_web_app
         where
-          id = $1
+          lower(id) = lower($1)
       );
   EOQ
 
@@ -365,19 +367,19 @@ edge "azure_app_service_web_app_subnet_to_virtual_network_edge" {
 
   sql = <<-EOQ
     select
-      id as to_id,
-      sub ->> 'id' as from_id
+      lower(id) as to_id,
+      lower(sub ->> 'id') as from_id
     from
       azure_virtual_network,
       jsonb_array_elements(subnets) as sub
     where
-      sub ->> 'id' in (
+      lower(sub ->> 'id') in (
         select
-          vnet_connection -> 'properties' ->> 'vnetResourceId'
+          lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
         from
           azure_app_service_web_app
         where
-          id = $1
+          lower(id) = lower($1)
       );
   EOQ
 
@@ -386,9 +388,10 @@ edge "azure_app_service_web_app_subnet_to_virtual_network_edge" {
 
 node "azure_app_service_web_app_to_app_service_plan_node" {
   category = category.azure_app_service_plan
+
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       json_build_object(
         'Name', name,
@@ -406,7 +409,7 @@ node "azure_app_service_web_app_to_app_service_plan_node" {
       azure_app_service_plan,
       jsonb_array_elements(apps) as app
     where
-      app ->> 'ID' = $1;
+      lower(app ->> 'ID') = lower($1);
   EOQ
 
   param "id" {}
@@ -417,13 +420,86 @@ edge "azure_app_service_web_app_to_app_service_plan_edge" {
 
   sql = <<-EOQ
     select
-      id as to_id,
-      app ->> 'ID' as from_id
+      lower(id) as to_id,
+      lower(app ->> 'ID') as from_id
     from
       azure_app_service_plan,
       jsonb_array_elements(apps) as app
     where
       app ->> 'ID' = $1;
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_app_service_web_app_from_application_gateway_node" {
+  category = category.azure_application_gateway
+
+  sql = <<-EOQ
+    with application_gateway as (
+      select
+        g.id as id,
+        g.name as name,
+        g.subscription_id,
+        g.resource_group,
+        g.title,
+        g.region,
+        backend_address ->> 'fqdn' as app_host_name
+      from
+        azure_application_gateway as g,
+        jsonb_array_elements(backend_address_pools) as pool,
+        jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
+    )
+    select
+      lower(g.id) as id,
+      g.title as title,
+      jsonb_build_object(
+        'Name', g.name,
+        'ID', g.id,
+        'Subscription ID', g.subscription_id,
+        'Resource Group', g.resource_group,
+        'Region', g.region
+      ) as properties
+    from
+      azure_app_service_web_app as a,
+      jsonb_array_elements(a.host_names) as host_name,
+      application_gateway as g
+    where
+      g.app_host_name = trim((host_name::text), '""')
+      and lower(a.id) = lower($1);
+  EOQ
+
+  param "id" {}
+}
+
+edge "azure_app_service_web_app_from_application_gateway_edge" {
+  title = "application gateway"
+
+  sql = <<-EOQ
+    with application_gateway as (
+      select
+        g.id as id,
+        g.name as name,
+        g.subscription_id,
+        g.resource_group,
+        g.title,
+        g.region,
+        backend_address ->> 'fqdn' as app_host_name
+      from
+        azure_application_gateway as g,
+        jsonb_array_elements(backend_address_pools) as pool,
+        jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
+    )
+    select
+      lower(g.id) as from_id,
+      lower($1) as to_id
+    from
+      azure_app_service_web_app as a,
+      jsonb_array_elements(a.host_names) as host_name,
+      application_gateway as g
+    where
+      g.app_host_name = trim((host_name::text), '""')
+      and lower(a.id) = lower($1)
   EOQ
 
   param "id" {}
