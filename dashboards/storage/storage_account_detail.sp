@@ -489,7 +489,7 @@ node "azure_storage_account_node" {
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'Name', name,
@@ -502,7 +502,7 @@ node "azure_storage_account_node" {
     from
       azure_storage_account
     where
-      id = $1;
+      lower(id) = lower($1);
   EOQ
 
   param "id" {}
@@ -513,7 +513,7 @@ node "azure_storage_account_from_log_profile_node" {
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'Name', name,
@@ -526,7 +526,7 @@ node "azure_storage_account_from_log_profile_node" {
     from
       azure_log_profile
     where
-      storage_account_id = $1;
+      lower(storage_account_id) = $1;
   EOQ
 
   param "id" {}
@@ -537,12 +537,12 @@ edge "azure_storage_account_from_log_profile_edge" {
 
   sql = <<-EOQ
     select
-      id as from_id,
+      lower(id) as from_id,
       storage_account_id as to_id
     from
       azure_log_profile
     where
-      storage_account_id = $1;
+      lower(storage_account_id) = lower($1);
   EOQ
 
   param "id" {}
@@ -553,7 +553,7 @@ node "azure_storage_account_from_compute_snapshot_node" {
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'Name', name,
@@ -567,7 +567,7 @@ node "azure_storage_account_from_compute_snapshot_node" {
     from
       azure_compute_snapshot
     where
-      storage_account_id = $1;
+      lower(storage_account_id) = lower($1);
   EOQ
 
   param "id" {}
@@ -578,12 +578,12 @@ edge "azure_storage_account_from_compute_snapshot_edge" {
 
   sql = <<-EOQ
     select
-      id as from_id,
-      storage_account_id as to_id
+      lower(id) as from_id,
+      lower(storage_account_id) as to_id
     from
       azure_compute_snapshot
     where
-      storage_account_id = $1;
+      lower(storage_account_id) = lower($1);
   EOQ
 
   param "id" {}
@@ -594,7 +594,7 @@ node "azure_storage_account_from_compute_disk_node" {
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'Name', name,
@@ -609,7 +609,7 @@ node "azure_storage_account_from_compute_disk_node" {
     from
       azure_compute_disk
     where
-      creation_data_storage_account_id = $1;
+      lower(creation_data_storage_account_id) = lower($1);
   EOQ
 
   param "id" {}
@@ -620,12 +620,12 @@ edge "azure_storage_account_from_compute_disk_edge" {
 
   sql = <<-EOQ
     select
-      id as from_id,
-      creation_data_storage_account_id as to_id
+      lower(id) as from_id,
+      lower(creation_data_storage_account_id) as to_id
     from
       azure_compute_disk
     where
-      creation_data_storage_account_id = $1;
+      lower(creation_data_storage_account_id) = lower($1);
   EOQ
 
   param "id" {}
@@ -636,7 +636,7 @@ node "azure_storage_account_from_diagnostic_setting_node" {
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'Name', name,
@@ -648,7 +648,7 @@ node "azure_storage_account_from_diagnostic_setting_node" {
     from
       azure_diagnostic_setting
     where
-      storage_account_id = $1;
+      lower(storage_account_id) = lower($1);
   EOQ
 
   param "id" {}
@@ -659,12 +659,12 @@ edge "azure_storage_account_from_diagnostic_setting_edge" {
 
   sql = <<-EOQ
     select
-      id as from_id,
-      storage_account_id as to_id
+      lower(id) as from_id,
+      lower(storage_account_id) as to_id
     from
       azure_diagnostic_setting
     where
-      storage_account_id = $1;
+      lower(storage_account_id) = $1;
   EOQ
 
   param "id" {}
@@ -716,7 +716,7 @@ edge "azure_storage_account_to_subnet_edge" {
         id = $1
     )
     select
-      l.storage_account_id as from_id,
+      lower(l.storage_account_id) as from_id,
       lower(l.subnet_id) as to_id
     from
       subnet_list as l
@@ -787,7 +787,7 @@ node "azure_storage_account_to_storage_table_node" {
 
   sql = <<-EOQ
     select
-      t.id as id,
+      lower(t.id) as id,
       t.title as title,
       jsonb_build_object(
         'Name', t.name,
@@ -801,7 +801,7 @@ node "azure_storage_account_to_storage_table_node" {
       azure_storage_account as a
       left join azure_storage_table as t on t.storage_account_name = a.name
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -812,13 +812,13 @@ edge "azure_storage_account_to_storage_table_edge" {
 
   sql = <<-EOQ
     select
-      a.id as from_id,
-      t.id as to_id
+      lower(a.id) as from_id,
+      lower(t.id) as to_id
     from
       azure_storage_account as a
       left join azure_storage_table as t on t.storage_account_name = a.name
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -829,7 +829,7 @@ node "azure_storage_account_to_storage_queue_node" {
 
   sql = <<-EOQ
     select
-      q.id as id,
+      lower(q.id) as id,
       q.title as title,
       jsonb_build_object(
         'Name', q.name,
@@ -843,7 +843,7 @@ node "azure_storage_account_to_storage_queue_node" {
       azure_storage_account as a
       left join azure_storage_queue as q on q.storage_account_name = a.name
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -854,13 +854,13 @@ edge "azure_storage_account_to_storage_queue_edge" {
 
   sql = <<-EOQ
     select
-      a.id as from_id,
-      q.id as to_id
+      lower(a.id) as from_id,
+      lower(q.id) as to_id
     from
       azure_storage_account as a
       left join azure_storage_queue as q on q.storage_account_name = a.name
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -871,7 +871,7 @@ node "azure_storage_account_to_storage_container_node" {
 
   sql = <<-EOQ
     select
-      c.id as id,
+      lower(c.id) as id,
       c.title as title,
       jsonb_build_object(
         'Name', c.name,
@@ -885,7 +885,7 @@ node "azure_storage_account_to_storage_container_node" {
       left join azure_storage_account as a on a.name = c.account_name
       and a.resource_group = c.resource_group
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -896,14 +896,14 @@ edge "azure_storage_account_to_storage_container_edge" {
 
   sql = <<-EOQ
     select
-      a.id as from_id,
-      c.id as to_id
+      lower(a.id) as from_id,
+      lower(c.id) as to_id
    from
       azure_storage_container as c
       left join azure_storage_account as a on a.name = c.account_name
       and a.resource_group = c.resource_group
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -914,7 +914,7 @@ node "azure_storage_account_to_storage_share_file_node" {
 
   sql = <<-EOQ
     select
-      f.id as id,
+      lower(f.id) as id,
       f.title as title,
       jsonb_build_object(
         'Name', f.name,
@@ -928,7 +928,7 @@ node "azure_storage_account_to_storage_share_file_node" {
       left join azure_storage_account as a on a.name = f.storage_account_name
       and a.resource_group = f.resource_group
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -939,59 +939,14 @@ edge "azure_storage_account_to_storage_share_file_edge" {
 
   sql = <<-EOQ
     select
-      a.id as from_id,
-      f.id as to_id
+      lower(a.id) as from_id,
+      lower(f.id) as to_id
     from
       azure_storage_share_file as f
       left join azure_storage_account as a on a.name = f.storage_account_name
       and a.resource_group = f.resource_group
     where
-      a.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_storage_account_container_to_storage_blob_node" {
-  category = category.azure_storage_blob
-
-  sql = <<-EOQ
-    select
-      b.name as id,
-      b.title as title,
-      jsonb_build_object(
-        'Name', c.name,
-        'ID', c.id,
-        'Type', c.type,
-        'Resource Group', c.resource_group,
-        'Subscription ID', c.subscription_id
-      ) as properties
-    from
-      azure_storage_account as a
-      left join azure_storage_container as c on a.name = c.account_name
-      left join azure_storage_blob as b on b.storage_account_name = a.name
-      and b.resource_group = a.resource_group and b.container_name = c.name
-    where
-      a.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_storage_account_container_to_storage_blob_edge" {
-  title = "storage blob"
-
-  sql = <<-EOQ
-    select
-      c.id as from_id,
-      b.name as to_id
-    from
-      azure_storage_account as a
-      left join azure_storage_container as c on a.name = c.account_name
-      left join azure_storage_blob as b on b.storage_account_name = a.name
-      and b.resource_group = a.resource_group and b.container_name = c.name
-    where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -1002,7 +957,7 @@ node "azure_storage_account_to_key_vault_node" {
 
   sql = <<-EOQ
     select
-      k.id as id,
+      lower(k.id) as id,
       k.title as title,
       jsonb_build_object(
         'Name', k.name,
@@ -1016,7 +971,7 @@ node "azure_storage_account_to_key_vault_node" {
       azure_key_vault as k
     where
       a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
-      and a.id = $1;
+      and lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -1027,13 +982,13 @@ edge "azure_storage_account_to_key_vault_edge" {
 
   sql = <<-EOQ
     select
-      a.id as from_id,
-      k.id as to_id
+      lower(a.id) as from_id,
+      lower(k.id) as to_id
     from
       azure_storage_account as a
       left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -1044,21 +999,22 @@ node "azure_storage_account_key_vault_to_key_vault_key_node" {
 
   sql = <<-EOQ
     select
-      key.id as id,
-      key.title as title,
+      lower(key.id) as id,
+      key.name as title,
       jsonb_build_object(
         'Name', key.name,
-        'ID', key.id,
+        'Key ID', key.id,
         'Type', key.type,
         'Resource Group', key.resource_group,
         'Subscription ID', key.subscription_id
       ) as properties
-    from
+   from
       azure_storage_account as a
       left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
-      left join azure_key_vault_key as key on key.vault_name = k.name
+      left join azure_key_vault_key_version as v on lower(v.key_uri_with_version) = lower(a.encryption_key_vault_properties_key_current_version_id)
+      left join azure_key_vault_key as key on lower(key.key_uri) = lower(v.key_uri)
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -1069,25 +1025,26 @@ edge "azure_storage_account_key_vault_to_key_vault_key_edge" {
 
   sql = <<-EOQ
     select
-      k.id as from_id,
-      key.id as to_id
-    from
+      lower(k.id )as from_id,
+      lower(key.id) as to_id
+   from
       azure_storage_account as a
       left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
-      left join azure_key_vault_key as key on key.vault_name = k.name
+      left join azure_key_vault_key_version as v on lower(v.key_uri_with_version) = lower(a.encryption_key_vault_properties_key_current_version_id)
+      left join azure_key_vault_key as key on lower(key.key_uri) = lower(v.key_uri)
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
 }
 
 node "azure_storage_account_from_batch_account_node" {
-  category = category.azure_key_vault_key
+  category = category.azure_batch_account
 
   sql = <<-EOQ
     select
-      b.id as id,
+      lower(b.id) as id,
       b.title as title,
       jsonb_build_object(
         'Name', b.name,
@@ -1100,7 +1057,7 @@ node "azure_storage_account_from_batch_account_node" {
       azure_batch_account as b
       left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -1111,13 +1068,13 @@ edge "azure_storage_account_from_batch_account_edge" {
 
   sql = <<-EOQ
     select
-      b.id as from_id,
-      a.id as to_id
+      lower(b.id) as from_id,
+      lower(a.id) as to_id
    from
       azure_batch_account as b
       left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
     where
-      a.id = $1;
+      lower(a.id) = lower($1);
   EOQ
 
   param "id" {}

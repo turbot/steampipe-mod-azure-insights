@@ -49,26 +49,28 @@ dashboard "azure_key_vault_key_detail" {
       direction = "TD"
 
       nodes = [
-        node.azure_key_vault_key_node,
+        node.azure_key_vault_key_version_node,
+        node.azure_key_vault_key_version_to_key_node,
         node.azure_key_vault_key_to_key_vault_node,
-        node.azure_key_vault_key_from_compute_disk_encryption_set_node,
-        node.azure_key_vault_key_from_container_registry_node,
-        node.azure_key_vault_key_from_sql_server_node,
+        node.azure_key_vault_key_version_from_compute_disk_encryption_set_node,
+        node.azure_key_vault_key_version_from_container_registry_node,
+        node.azure_key_vault_key_version_from_sql_server_node,
         node.azure_key_vault_key_from_eventhub_namespace_node,
-        node.azure_key_vault_key_from_storage_account_node,
+        node.azure_key_vault_key_version_from_storage_account_node,
         node.azure_key_vault_key_from_servicebus_namespace_node,
-        node.azure_key_vault_key_from_postgresql_server_node
+        node.azure_key_vault_key_version_from_postgresql_server_node
       ]
 
       edges = [
+        edge.azure_key_vault_key_version_to_key_edge,
         edge.azure_key_vault_key_to_key_vault_edge,
-        edge.azure_key_vault_key_from_compute_disk_encryption_set_edge,
-        edge.azure_key_vault_key_from_container_registry_edge,
-        edge.azure_key_vault_key_from_sql_server_edge,
+        edge.azure_key_vault_key_version_from_compute_disk_encryption_set_edge,
+        edge.azure_key_vault_key_version_from_container_registry_edge,
+        edge.azure_key_vault_key_version_from_sql_server_edge,
         edge.azure_key_vault_key_from_eventhub_namespace_edge,
-        edge.azure_key_vault_key_from_storage_account_edge,
+        edge.azure_key_vault_key_version_from_storage_account_edge,
         edge.azure_key_vault_key_from_servicebus_namespace_edge,
-        edge.azure_key_vault_key_from_postgresql_server_edge
+        edge.azure_key_vault_key_version_from_postgresql_server_edge
       ]
 
       args = {
@@ -118,31 +120,28 @@ dashboard "azure_key_vault_key_detail" {
 
   }
 
-  container {
-    width = 12
-
-
-  }
-
 }
 
 query "azure_key_vault_key_input" {
   sql = <<-EOQ
     select
-      k.title as label,
+      v.title as label,
       k.id as value,
       json_build_object(
-        'subscription', s.display_name,
-        'resource_group', k.resource_group,
-        'region', k.region
+        'Key Name', k.name,
+        'Vault Name', v.vault_name,
+        'Subscription', s.display_name,
+        'Resource_group', v.resource_group,
+        'region', v.region
       ) as tags
     from
-      azure_key_vault_key as k,
+      azure_key_vault_key as k
+      left join azure_key_vault_key_version as v on k.key_uri = v.key_uri,
       azure_subscription as s
     where
-      k.subscription_id = s.subscription_id
+      v.subscription_id = s.subscription_id
     order by
-      k.title;
+      v.title;
   EOQ
 }
 
@@ -244,12 +243,37 @@ query "azure_key_vault_key_age" {
   param "id" {}
 }
 
-node "azure_key_vault_key_node" {
+node "azure_key_vault_key_version_node" {
+  category = category.azure_key_vault_key_verison
+
+  sql = <<-EOQ
+    select
+      k.key_uri,
+      v.id as id,
+      case when k.key_uri_with_version = v.key_uri_with_version then 'current' || ' ['|| left(v.title,8) || ']' else 'older' || ' ['|| left(v.title,8) || ']' end as title,
+      jsonb_build_object(
+        'Version Name', v.name,
+        'Key Name', v.key_name,
+        'Key URI', v.key_uri,
+        'ID', v.id,
+        'Vault Name', v.vault_name
+      ) as properties
+    from
+      azure_key_vault_key_version as v
+      left join azure_key_vault_key as k on v.key_uri = k.key_uri
+    where
+      lower(split_part(v.id, '/versions', 1)) = lower($1);
+  EOQ
+
+  param "id" {}
+}
+
+node "azure_key_vault_key_version_to_key_node" {
   category = category.azure_key_vault_key
 
   sql = <<-EOQ
     select
-      id,
+      id as id,
       name as title,
       jsonb_build_object(
         'Key Name', name,
@@ -265,6 +289,23 @@ node "azure_key_vault_key_node" {
   param "id" {}
 }
 
+edge "azure_key_vault_key_version_to_key_edge" {
+  title = "key"
+
+  sql = <<-EOQ
+    select
+      v.id as from_id,
+      k.id as to_id
+    from
+      azure_key_vault_key_version as v
+      left join azure_key_vault_key as k on k.key_uri = v.key_uri
+    where
+      k.id = $1;
+  EOQ
+
+  param "id" {}
+}
+
 node "azure_key_vault_key_to_key_vault_node" {
   category = category.azure_key_vault
 
@@ -274,7 +315,7 @@ node "azure_key_vault_key_to_key_vault_node" {
       v.name as title,
       jsonb_build_object(
         'Name', v.name,
-        'Key ID', v.id,
+        'ID', v.id,
         'Type', v.type,
         'Purge Protection Enabled', v.purge_protection_enabled
       ) as properties
@@ -305,7 +346,7 @@ edge "azure_key_vault_key_to_key_vault_edge" {
   param "id" {}
 }
 
-node "azure_key_vault_key_from_compute_disk_encryption_set_node" {
+node "azure_key_vault_key_version_from_compute_disk_encryption_set_node" {
   category = category.azure_compute_disk_encryption_set
 
   sql = <<-EOQ
@@ -323,33 +364,33 @@ node "azure_key_vault_key_from_compute_disk_encryption_set_node" {
         'Subscription ID', s.subscription_id
       ) as properties
     from
-      azure_key_vault_key as k
-      left join azure_compute_disk_encryption_set as s on s.active_key_url = k.key_uri_with_version
+      azure_key_vault_key_version as v
+      left join azure_compute_disk_encryption_set as s on s.active_key_url = v.key_uri_with_version
     where
-      k.id = $1;
+      lower(split_part(v.id, '/versions', 1)) = lower($1);
   EOQ
 
   param "id" {}
 }
 
-edge "azure_key_vault_key_from_compute_disk_encryption_set_edge" {
+edge "azure_key_vault_key_version_from_compute_disk_encryption_set_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
       s.id as from_id,
-      k.id as to_id
+      v.id as to_id
     from
-      azure_key_vault_key as k
-      left join azure_compute_disk_encryption_set as s on s.active_key_url = k.key_uri_with_version
+      azure_key_vault_key_version as v
+      left join azure_compute_disk_encryption_set as s on s.active_key_url = v.key_uri_with_version
     where
-      k.id = $1;
+      lower(split_part(v.id, '/versions', 1)) = lower($1);
   EOQ
 
   param "id" {}
 }
 
-node "azure_key_vault_key_from_container_registry_node" {
+node "azure_key_vault_key_version_from_container_registry_node" {
   category = category.azure_container_registry
 
   sql = <<-EOQ
@@ -368,6 +409,7 @@ node "azure_key_vault_key_from_container_registry_node" {
     from
       azure_key_vault_key as k
       left join azure_container_registry as r on r.encryption -> 'keyVaultProperties' ->> 'keyIdentifier' = k.key_uri
+      left join azure_key_vault_key_version as v on v.key_uri_with_version = k.key_uri_with_version
     where
       k.id = $1;
   EOQ
@@ -375,16 +417,17 @@ node "azure_key_vault_key_from_container_registry_node" {
   param "id" {}
 }
 
-edge "azure_key_vault_key_from_container_registry_edge" {
+edge "azure_key_vault_key_version_from_container_registry_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
       r.id as from_id,
-      k.id as to_id
+      v.id as to_id
     from
       azure_key_vault_key as k
       left join azure_container_registry as r on r.encryption -> 'keyVaultProperties' ->> 'keyIdentifier' = k.key_uri
+      left join azure_key_vault_key_version as v on v.key_uri_with_version = k.key_uri_with_version
     where
       k.id = $1;
   EOQ
@@ -392,14 +435,13 @@ edge "azure_key_vault_key_from_container_registry_edge" {
   param "id" {}
 }
 
-node "azure_key_vault_key_from_sql_server_node" {
+node "azure_key_vault_key_version_from_sql_server_node" {
   category = category.azure_sql_server
 
   sql = <<-EOQ
     with sql_server as (
       select
-        split_part(ep ->> 'serverKeyName','_',1) as key_vault_name,
-        split_part(ep ->> 'serverKeyName','_',2) as key_vault_key_name,
+        ep ->> 'uri' as uri,
         id,
         title,
         name,
@@ -425,23 +467,22 @@ node "azure_key_vault_key_from_sql_server_node" {
         'Subscription ID', s.subscription_id
       ) as properties
     from
-      azure_key_vault_key as k
-      left join sql_server as s on k.name = s.key_vault_key_name
+      azure_key_vault_key_version as v
+      left join sql_server as s on v.key_uri_with_version = s.uri
     where
-      k.id = $1
+      lower(split_part(v.id, '/versions', 1)) = lower($1);
   EOQ
 
   param "id" {}
 }
 
-edge "azure_key_vault_key_from_sql_server_edge" {
+edge "azure_key_vault_key_version_from_sql_server_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
     with sql_server as (
       select
-        split_part(ep ->> 'serverKeyName','_',1) as key_vault_name,
-        split_part(ep ->> 'serverKeyName','_',2) as key_vault_key_name,
+        ep ->> 'uri' as uri,
         id,
         title,
         name,
@@ -457,12 +498,12 @@ edge "azure_key_vault_key_from_sql_server_edge" {
     )
     select
       s.id as from_id,
-      k.id as to_id
+      v.id as to_id
     from
-      azure_key_vault_key as k
-      left join sql_server as s on k.name = s.key_vault_key_name
+      azure_key_vault_key_version as v
+      left join sql_server as s on v.key_uri_with_version = s.uri
     where
-      k.id = $1
+      lower(split_part(v.id, '/versions', 1)) = lower($1);
   EOQ
 
   param "id" {}
@@ -520,7 +561,7 @@ edge "azure_key_vault_key_from_eventhub_namespace_edge" {
   param "id" {}
 }
 
-node "azure_key_vault_key_from_storage_account_node" {
+node "azure_key_vault_key_version_from_storage_account_node" {
   category = category.azure_storage_account
 
   sql = <<-EOQ
@@ -536,26 +577,26 @@ node "azure_key_vault_key_from_storage_account_node" {
       ) as properties
     from
       azure_storage_account as s
-      left join azure_key_vault_key as k on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(key_uri_with_version)
+      left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
     where
-      k.id = $1;
+      lower(split_part(v.id, '/versions', 1)) = lower($1);
   EOQ
 
   param "id" {}
 }
 
-edge "azure_key_vault_key_from_storage_account_edge" {
+edge "azure_key_vault_key_version_from_storage_account_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
       s.id as from_id,
-      k.id as to_id
+      v.id as to_id
     from
       azure_storage_account as s
-      left join azure_key_vault_key as k on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(key_uri_with_version)
+      left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
     where
-      k.id = $1;
+      lower(split_part(v.id, '/versions', 1)) = lower($1);
   EOQ
 
   param "id" {}
@@ -613,7 +654,7 @@ edge "azure_key_vault_key_from_servicebus_namespace_edge" {
   param "id" {}
 }
 
-node "azure_key_vault_key_from_postgresql_server_node" {
+node "azure_key_vault_key_version_from_postgresql_server_node" {
   category = category.azure_postgresql_server
 
   sql = <<-EOQ
@@ -631,27 +672,27 @@ node "azure_key_vault_key_from_postgresql_server_node" {
     from
       azure_postgresql_server as s,
       jsonb_array_elements(server_keys) as sk
-      left join azure_key_vault_key as k on sk ->> 'ServerKeyUri' = k.key_uri_with_version
+      left join azure_key_vault_key_version as v on lower(sk ->> 'ServerKeyUri') = lower(v.key_uri_with_version)
     where
-      k.id = $1;
+      lower(split_part(v.id, '/versions', 1)) = lower($1);
   EOQ
 
   param "id" {}
 }
 
-edge "azure_key_vault_key_from_postgresql_server_edge" {
+edge "azure_key_vault_key_version_from_postgresql_server_edge" {
   title = "encrypted with"
 
   sql = <<-EOQ
     select
       s.id as from_id,
-      k.id as to_id
+      v.id as to_id
     from
       azure_postgresql_server as s,
       jsonb_array_elements(server_keys) as sk
-      left join azure_key_vault_key as k on sk ->> 'ServerKeyUri' = k.key_uri_with_version
+      left join azure_key_vault_key_version as v on lower(sk ->> 'ServerKeyUri') = lower(v.key_uri_with_version)
     where
-      k.id = $1;
+      lower(split_part(v.id, '/versions', 1)) = lower($1);
   EOQ
 
   param "id" {}

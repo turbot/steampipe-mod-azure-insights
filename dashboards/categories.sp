@@ -315,3 +315,15 @@ category "azure_kubernetes_node_pool" {
   icon  = "text:NodePool"
   color = local.container_color
 }
+
+category "azure_key_vault_key_verison" {
+  title = "Key Version"
+  icon  = "key"
+  color = local.security_color
+}
+
+category "azure_batch_account" {
+  title = "Batch Account"
+  icon  = "text:BatchAccount"
+  color = local.compute_color
+}
