@@ -187,7 +187,6 @@ query "azure_compute_virtual_machine_scale_set_sku_name" {
 
 }
 
-
 query "azure_compute_virtual_machine_scale_set_vm_overview" {
   sql = <<-EOQ
     select
