@@ -75,13 +75,11 @@ dashboard "azure_sql_database_detail" {
       nodes = [
         node.azure_sql_database_node,
         node.azure_sql_database_from_sql_server_node,
-        node.azure_sql_database_to_vulnerability_assessments_node,
         node.azure_sql_databaset_from_mssql_elasticpool_node
       ]
 
       edges = [
         edge.azure_sql_database_from_sql_server_edge,
-        edge.azure_sql_database_to_vulnerability_assessments_edge,
         edge.azure_sql_databaset_from_mssql_elasticpool_edge
       ]
 
@@ -178,7 +176,6 @@ query "azure_sql_database_server" {
 
 }
 
-# https://techcommunity.microsoft.com/t5/azure-sql-blog/zone-redundancy-for-azure-sql-database-serverless-and-general/ba-p/1807410#:~:text=The%20zone%20redundant%20configuration%20can,reconfigure%20the%20database%20or%20pool.
 query "azure_sql_database_zone_redundant" {
   sql = <<-EOQ
     select
@@ -258,7 +255,7 @@ query "azure_sql_database_vulnerability_assessment_enabled" {
       case when v.id is not null then 'Enabled' else 'Disabled' end as value,
       case when v.id is not null then 'ok' else 'alert' end as type
     from
-     azure_sql_database as d left join sql_database_va as v on v.id = d.id
+     azure_sql_database as d left join sql_database_va as v on lower(v.id) = lower(d.id)
     where
       d.name <> 'master'
       and d.id = $1;
@@ -293,11 +290,11 @@ query "azure_sql_database_geo_redundant_backup_enabled" {
 
 node "azure_sql_database_node" {
   category = category.azure_sql_database
-  
+
   sql = <<-EOQ
     select
       id as id,
-      name as title,
+      title as title,
       json_build_object(
         'Location', location,
         'Resource Group', resource_group,
@@ -332,13 +329,14 @@ node "azure_sql_database_from_sql_server_node" {
         resource_group,
         subscription_id,
         version,
-        type
+        type,
+        title
       from
         azure_sql_server
     )
     select
       sv.id as id,
-      sv.name as title,
+      sv.title as title,
       json_build_object(
         'Name', sv.name,
         'Kind', sv.kind,
@@ -356,7 +354,7 @@ node "azure_sql_database_from_sql_server_node" {
     where
       db.id = $1
       and db.server_name = sv.name;
-  EOQ  
+  EOQ
 
   param "id" {}
 }
@@ -380,44 +378,7 @@ edge "azure_sql_database_from_sql_server_edge" {
       sql_servers as sv
     where
       db.id = $1
-      and db.server_name = sv.name;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_sql_database_to_vulnerability_assessments_node" {
-  sql = <<-EOQ
-    select
-      vs ->> 'id' as id,
-      vs ->> 'name' as title,
-      json_build_object(
-        'Name', vs ->> 'name',
-        'Type', vs ->> 'type',
-        'Enabled', vs -> 'recurringScans' ->> 'isEnabled'
-      ) as properties
-    from
-      azure_sql_database,
-      jsonb_array_elements(vulnerability_assessments) as vs
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_sql_database_to_vulnerability_assessments_edge" {
-  title = "vulnerability assessments"
-
-  sql = <<-EOQ
-    select
-      id as from_id,
-      vs ->> 'id' as to_id
-    from
-      azure_sql_database,
-      jsonb_array_elements(vulnerability_assessments) as vs
-    where
-      id = $1;
+      and lower(db.server_name) = lower(sv.name);
   EOQ
 
   param "id" {}
@@ -430,6 +391,7 @@ node "azure_sql_databaset_from_mssql_elasticpool_node" {
     with sql_pools as (
       select
         id,
+        title,
         name,
         type,
         edition,
@@ -442,7 +404,7 @@ node "azure_sql_databaset_from_mssql_elasticpool_node" {
     )
     select
       sp.id as id,
-      sp.name as title,
+      sp.title as title,
       json_build_object(
         'Edition', sp.edition,
         'State', sp.state,
@@ -455,14 +417,14 @@ node "azure_sql_databaset_from_mssql_elasticpool_node" {
       sql_pools as sp
     where
       db.id = $1
-      and sp.name = db.elastic_pool_name;
+      and lower(sp.name) = lower(db.elastic_pool_name);
   EOQ
 
   param "id" {}
 }
 
 edge "azure_sql_databaset_from_mssql_elasticpool_edge" {
-  title = "elastic pool"
+  title = "database"
   sql = <<-EOQ
     with sql_pools as (
       select
@@ -479,7 +441,7 @@ edge "azure_sql_databaset_from_mssql_elasticpool_edge" {
       sql_pools as sp
     where
       db.id = $1
-      and sp.name = db.elastic_pool_name;
+      and lower(sp.name) = lower(db.elastic_pool_name);
   EOQ
   param "id" {}
 }

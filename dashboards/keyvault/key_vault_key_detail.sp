@@ -253,7 +253,7 @@ node "azure_key_vault_key_node" {
       name as title,
       jsonb_build_object(
         'Key Name', name,
-        'Key Id', id,
+        'Key ID', id,
         'Vault Name', vault_name
       ) as properties
     from
@@ -274,7 +274,7 @@ node "azure_key_vault_key_to_key_vault_node" {
       v.name as title,
       jsonb_build_object(
         'Name', v.name,
-        'Key Id', v.id,
+        'Key ID', v.id,
         'Type', v.type,
         'Purge Protection Enabled', v.purge_protection_enabled
       ) as properties
@@ -333,7 +333,7 @@ node "azure_key_vault_key_from_compute_disk_encryption_set_node" {
 }
 
 edge "azure_key_vault_key_from_compute_disk_encryption_set_edge" {
-  title = "disk encryption set"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -376,7 +376,7 @@ node "azure_key_vault_key_from_container_registry_node" {
 }
 
 edge "azure_key_vault_key_from_container_registry_edge" {
-  title = "container registry"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -428,14 +428,14 @@ node "azure_key_vault_key_from_sql_server_node" {
       azure_key_vault_key as k
       left join sql_server as s on k.name = s.key_vault_key_name
     where
-      k.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.KeyVault/vaults/test-delete90/keys/tets56';
+      k.id = $1
   EOQ
 
   param "id" {}
 }
 
 edge "azure_key_vault_key_from_sql_server_edge" {
-  title = "sql server"
+  title = "encrypted with"
 
   sql = <<-EOQ
     with sql_server as (
@@ -462,7 +462,7 @@ edge "azure_key_vault_key_from_sql_server_edge" {
       azure_key_vault_key as k
       left join sql_server as s on k.name = s.key_vault_key_name
     where
-      k.id = '/subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.KeyVault/vaults/test-delete90/keys/tets56';
+      k.id = $1
   EOQ
 
   param "id" {}
@@ -500,7 +500,7 @@ node "azure_key_vault_key_from_eventhub_namespace_node" {
 }
 
 edge "azure_key_vault_key_from_eventhub_namespace_edge" {
-  title = "eventhub namespace"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -536,7 +536,7 @@ node "azure_key_vault_key_from_storage_account_node" {
       ) as properties
     from
       azure_storage_account as s
-      left join azure_key_vault_key as k on s.encryption_key_vault_properties_key_current_version_id = key_uri_with_version
+      left join azure_key_vault_key as k on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(key_uri_with_version)
     where
       k.id = $1;
   EOQ
@@ -545,7 +545,7 @@ node "azure_key_vault_key_from_storage_account_node" {
 }
 
 edge "azure_key_vault_key_from_storage_account_edge" {
-  title = "storage account"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -553,7 +553,7 @@ edge "azure_key_vault_key_from_storage_account_edge" {
       k.id as to_id
     from
       azure_storage_account as s
-      left join azure_key_vault_key as k on s.encryption_key_vault_properties_key_current_version_id = key_uri_with_version
+      left join azure_key_vault_key as k on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(key_uri_with_version)
     where
       k.id = $1;
   EOQ
@@ -583,8 +583,8 @@ node "azure_key_vault_key_from_servicebus_namespace_node" {
       left join azure_key_vault_key as k on p ->> 'keyName' = k.name
       left join azure_key_vault as v on v.name = k.vault_name
     where
-      k.resource_group = v.resource_group
-      and k.resource_group = n.resource_group
+      lower(k.resource_group) = lower(v.resource_group)
+      and lower(k.resource_group) = lower(n.resource_group)
       and k.id = $1;
 
   EOQ
@@ -593,7 +593,7 @@ node "azure_key_vault_key_from_servicebus_namespace_node" {
 }
 
 edge "azure_key_vault_key_from_servicebus_namespace_edge" {
-  title = "servicebus namespace"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
@@ -640,7 +640,7 @@ node "azure_key_vault_key_from_postgresql_server_node" {
 }
 
 edge "azure_key_vault_key_from_postgresql_server_edge" {
-  title = "postgresql server"
+  title = "encrypted with"
 
   sql = <<-EOQ
     select

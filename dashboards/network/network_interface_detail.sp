@@ -69,7 +69,7 @@ dashboard "azure_network_interface_detail" {
         edge.azure_network_interface_to_network_security_group_edge,
         edge.azure_network_interface_from_compute_virtual_machine_edge,
         edge.azure_network_interface_from_public_ip_address_edge,
-        edge.azure_network_interface_to_network_subnet_edge,
+        edge.azure_network_interface_to_security_group_network_subnet_edge,
         edge.azure_network_interface_subnet_to_vpc_edge
       ]
 
@@ -218,7 +218,7 @@ node "azure_network_interface_to_network_security_group_node" {
       ) as properties
     from
       azure_network_security_group as nsg
-      left join network_security_group_id as nic on nsg.id = nic.sid
+      left join network_security_group_id as nic on lower(nsg.id) = lower(nic.sid)
     where
       nic.nid = $1
   EOQ
@@ -241,7 +241,7 @@ edge "azure_network_interface_to_network_security_group_edge" {
       nic.nid as from_id
     from
       azure_network_security_group as nsg
-      left join network_security_group_id as nic on nsg.id = nic.sid
+      left join network_security_group_id as nic on lower(nsg.id) = lower(nic.sid)
     where
       nic.nid = $1
   EOQ
@@ -265,7 +265,7 @@ node "azure_network_interface_to_network_subnet_node" {
     from
       azure_network_interface as ni,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
     where
       ni.id = $1
   EOQ
@@ -273,17 +273,20 @@ node "azure_network_interface_to_network_subnet_node" {
   param "id" {}
 }
 
-edge "azure_network_interface_to_network_subnet_edge" {
+edge "azure_network_interface_to_security_group_network_subnet_edge" {
   title = "subnet"
 
   sql   = <<-EOQ
     select
       s.id as to_id,
-      ni.id as from_id
+      coalesce(
+        ni.network_security_group_id,
+        ni.id
+      ) as from_id
     from
       azure_network_interface as ni,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
     where
       ni.id = $1;
   EOQ
@@ -302,7 +305,7 @@ node "azure_network_interface_subnet_to_vpc_node" {
     from
       azure_network_interface as ni,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
     where
       ni.id = $1
     )
@@ -338,7 +341,7 @@ edge "azure_network_interface_subnet_to_vpc_edge" {
     from
       azure_network_interface as ni,
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on s.id = c -> 'properties' -> 'subnet' ->> 'id'
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
     where
       ni.id = $1
     )
@@ -385,7 +388,7 @@ node "azure_network_interface_from_compute_virtual_machine_node" {
       ) as properties
     from
       vm_network_interface_id as v
-      left join azure_network_interface as n on v.n_id = n.id
+      left join azure_network_interface as n on lower(v.n_id) = lower(n.id)
     where
       n.id = $1;
   EOQ
@@ -410,7 +413,7 @@ edge "azure_network_interface_from_compute_virtual_machine_edge" {
       n.id as to_id
     from
       vm_network_interface_id as v
-      left join azure_network_interface as n on v.n_id = n.id
+      left join azure_network_interface as n on lower(v.n_id) = lower(n.id)
     where
       n.id = $1;
   EOQ
@@ -444,7 +447,7 @@ node "azure_network_interface_from_public_ip_address_node" {
       ) as properties
     from
       network_interface_public_ip as n
-      left join azure_public_ip as p on p.id = n.pid
+      left join azure_public_ip as p on lower(p.id) = lower(n.pid)
     where
       n.id = $1;
   EOQ
@@ -453,7 +456,7 @@ node "azure_network_interface_from_public_ip_address_node" {
 }
 
 edge "azure_network_interface_from_public_ip_address_edge" {
-  title = "public ip"
+  title = "network interface"
 
   sql = <<-EOQ
     with network_interface_public_ip as (
@@ -468,7 +471,7 @@ edge "azure_network_interface_from_public_ip_address_edge" {
       n.id as to_id
     from
       network_interface_public_ip as n
-      left join azure_public_ip as p on p.id = n.pid
+      left join azure_public_ip as p on lower(p.id) = lower(n.pid)
     where
       n.id = $1;
   EOQ

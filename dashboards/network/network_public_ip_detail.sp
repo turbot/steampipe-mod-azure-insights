@@ -121,7 +121,7 @@ query "azure_network_public_ip_input" {
       azure_public_ip as p,
       azure_subscription as s
     where
-      p.subscription_id = s.subscription_id
+      lower(p.subscription_id) = lower(s.subscription_id)
     order by
       p.title;
   EOQ
@@ -148,6 +148,7 @@ node "azure_network_public_ip_node" {
   sql = <<-EOQ
     select
       id as id,
+      title as title,
       jsonb_build_object(
         'Name', name,
         'ID', id,
@@ -194,7 +195,7 @@ node "azure_network_public_ip_from_network_interface_node" {
       ) as properties
     from
       network_interface_public_ip as n
-      left join azure_public_ip as p on n.pid = p.id
+      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
     where
       p.id = $1;
   EOQ
@@ -203,7 +204,7 @@ node "azure_network_public_ip_from_network_interface_node" {
 }
 
 edge "azure_network_public_ip_from_network_interface_edge" {
-  title = "network interface"
+  title = "public ip"
 
   sql = <<-EOQ
     with network_interface_public_ip as (
@@ -218,7 +219,7 @@ edge "azure_network_public_ip_from_network_interface_edge" {
       p.id as to_id
     from
       network_interface_public_ip as n
-      left join azure_public_ip as p on n.pid = p.id
+      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
     where
       p.id = $1;
   EOQ
@@ -262,8 +263,8 @@ node "azure_network_public_ip_network_interface_from_compute_virtual_machine_nod
       ) as properties
     from
       vm_network_interface as v
-      left join ni_public_ip as n on v.n_id = n.id
-      left join azure_public_ip as p on n.pid = p.id
+      left join ni_public_ip as n on lower(v.n_id) = lower(n.id)
+      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
     where
       p.id = $1;
   EOQ
@@ -272,7 +273,7 @@ node "azure_network_public_ip_network_interface_from_compute_virtual_machine_nod
 }
 
 edge "azure_network_public_ip_network_interface_from_compute_virtual_machine_edge" {
-  title = "virtual machine"
+  title = "network interface"
 
   sql = <<-EOQ
     with vm_network_interface as (
@@ -283,7 +284,7 @@ edge "azure_network_public_ip_network_interface_from_compute_virtual_machine_edg
         subscription_id,
         resource_group,
         region,
-        jsonb_array_elements(network_interfaces)->>'id' as nid
+        jsonb_array_elements(network_interfaces)->>'id' as n_id
       from
         azure_compute_virtual_machine
     ),
@@ -299,8 +300,8 @@ edge "azure_network_public_ip_network_interface_from_compute_virtual_machine_edg
       n.id as to_id
     from
       vm_network_interface as v
-      left join ni_public_ip as n on v.nid = n.id
-      left join azure_public_ip as p on n.pid = p.id
+      left join ni_public_ip as n on lower(v.n_id) = lower(n.id)
+      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
     where
       p.id = $1;
   EOQ
@@ -347,7 +348,7 @@ node "azure_network_public_ip_from_api_management_node" {
 }
 
 edge "azure_network_public_ip_from_api_management_edge" {
-  title = "api management"
+  title = "public ip"
 
   sql = <<-EOQ
    with public_ip_api_management as (
@@ -482,7 +483,7 @@ query "azure_network_public_ip_association_details" {
       null as link
     from
       network_interface_public_ip as n
-      left join azure_public_ip as p on n.pid = p.id
+      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
     where
       p.id = $1
 
