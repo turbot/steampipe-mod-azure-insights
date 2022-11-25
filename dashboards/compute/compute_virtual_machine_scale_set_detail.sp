@@ -686,11 +686,9 @@ node "azure_compute_virtual_machine_scale_set_to_network_interface_node" {
       jsonb_build_object(
         'Name', nic.name,
         'Primary', nic.primary,
-        'Provisioning State', nic.provisioning_state,
         'Enable Accelerated Networking', nic.enable_accelerated_networking,
         'Subscription ID', nic.subscription_id,
         'Resource Group', nic.resource_group,
-        'Provisioning State', nic.provisioning_state,
         'Region', nic.region
       ) as properties
     from
