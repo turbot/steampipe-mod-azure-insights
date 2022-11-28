@@ -3,3 +3,16 @@ locals {
     service = "Azure/Kubernetes"
   }
 }
+
+category "azure_kubernetes_cluster" {
+  title = "Kubernetes Clusters"
+  href = "/azure_insights.dashboard.azure_kubernetes_cluster_detail?input.cluster_id={{.properties.'ID' | @uri}}"
+  icon = "cog"
+  color = local.container_color
+}
+
+category "azure_kubernetes_node_pool" {
+  title = "Kubernetes Node Pools"
+  icon  = "text:NodePool"
+  color = local.container_color
+}
