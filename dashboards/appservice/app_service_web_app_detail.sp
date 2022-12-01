@@ -72,7 +72,7 @@ dashboard "azure_app_service_web_app_detail" {
       direction = "TD"
 
       nodes = [
-        node.azure_app_service_web_app_node,
+        node.app_service_web_app,
         node.azure_app_service_web_app_to_subnet_node,
         node.azure_app_service_web_app_subnet_to_virtual_network_node,
         node.azure_app_service_web_app_to_app_service_plan_node,
@@ -87,7 +87,8 @@ dashboard "azure_app_service_web_app_detail" {
       ]
 
       args = {
-        id = self.input.web_app_id.value
+        web_app_ids = [self.input.web_app_id.value]
+        id          = self.input.web_app_id.value
       }
     }
   }
@@ -259,7 +260,7 @@ query "azure_app_service_web_app_tls_version" {
   param "id" {}
 }
 
-node "azure_app_service_web_app_node" {
+node "app_service_web_app" {
   category = category.azure_app_service_web_app
 
   sql = <<-EOQ
@@ -276,10 +277,10 @@ node "azure_app_service_web_app_node" {
     from
       azure_app_service_web_app
     where
-      lower(id) = lower($1);
+      lower(id) = any($1);
   EOQ
 
-  param "id" {}
+  param "web_app_ids" {}
 }
 
 node "azure_app_service_web_app_to_subnet_node" {

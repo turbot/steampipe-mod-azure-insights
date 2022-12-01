@@ -15,7 +15,7 @@ dashboard "azure_virtual_network_dashboard" {
     }
 
     card {
-      query = query.azure_virtual_network_ddos_protection_enabled
+      query = query.virtual_network_ddos_protection_enabled
       width = 2
     }
 
@@ -27,7 +27,7 @@ dashboard "azure_virtual_network_dashboard" {
 
     chart {
       title = "DDoS Protection"
-      query = query.azure_virtual_network_ddos_protection_status
+      query = query.virtual_network_ddos_protection_status
       type  = "donut"
       width = 2
 
@@ -87,7 +87,7 @@ query "azure_virtual_network_count" {
   EOQ
 }
 
-query "azure_virtual_network_ddos_protection_enabled" {
+query "virtual_network_ddos_protection_enabled" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -102,7 +102,7 @@ query "azure_virtual_network_ddos_protection_enabled" {
 
 # Assessment Queries
 
-query "azure_virtual_network_ddos_protection_status" {
+query "virtual_network_ddos_protection_status" {
   sql = <<-EOQ
     select
       ddos,

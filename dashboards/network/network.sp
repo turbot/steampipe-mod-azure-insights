@@ -18,7 +18,7 @@ category "azure_firewall" {
 
 category "azure_lb" {
   title = "Load Balancer"
-  href  = "/azure_insights.dashboard.azure_network_load_balancer_detail?input.lb_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.network_load_balancer_detail?input.lb_id={{.properties.'ID' | @uri}}"
   icon  = "text:LB"
   color = local.network_color
 }
@@ -55,7 +55,7 @@ category "azure_nat_gateway" {
 
 category "azure_network_interface" {
   title = "Network Interface"
-  href  = "/azure_insights.dashboard.azure_network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
   icon  = "text:ENI"
   color = local.network_color
 }
@@ -68,7 +68,7 @@ category "azure_network_peering" {
 
 category "azure_network_security_group" {
   title = "Network Security Group"
-  href  = "/azure_insights.dashboard.azure_network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
   icon  = "lock-closed"
   color = local.network_color
 }
@@ -81,7 +81,7 @@ category "azure_network_watcher_flow_log" {
 
 category "azure_public_ip" {
   title = "Public IP"
-  href  = "/azure_insights.dashboard.azure_network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
   icon  = "text:EIP"
   color = local.network_color
 }
@@ -100,14 +100,14 @@ category "azure_route_table" {
 
 category "azure_subnet" {
   title = "Subnet"
-  href  = "/azure_insights.dashboard.azure_network_subnet_detail?input.subnet_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.network_subnet_detail?input.subnet_id={{.properties.'ID' | @uri}}"
   icon  = "share"
   color = local.network_color
 }
 
 category "azure_virtual_network" {
   title = "Virtual Network"
-  href  = "/azure_insights.dashboard.azure_virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
   icon  = "cloud"
   color = local.network_color
 }

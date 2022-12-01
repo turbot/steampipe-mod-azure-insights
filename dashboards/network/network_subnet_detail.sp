@@ -1,4 +1,4 @@
-dashboard "azure_network_subnet_detail" {
+dashboard "network_subnet_detail" {
 
   title         = "Azure Network Subnet Detail"
   documentation = file("./dashboards/network/docs/network_subnet_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_network_subnet_detail" {
 
   input "subnet_id" {
     title = "Select a subnet:"
-    query = query.azure_network_subnet_input
+    query = query.network_subnet_input
     width = 4
   }
 
@@ -17,58 +17,135 @@ dashboard "azure_network_subnet_detail" {
 
     card {
       width = 2
-      query = query.azure_network_subnet_num_ips
-      args  = {
+      query = query.network_subnet_num_ips
+      args = {
         id = self.input.subnet_id.value
       }
     }
 
     card {
       width = 2
-      query = query.azure_network_subnet_address_prefix
-      args  = {
+      query = query.network_subnet_address_prefix
+      args = {
         id = self.input.subnet_id.value
       }
     }
 
   }
 
-   container {
+  container {
 
     graph {
       title     = "Relationships"
       type      = "graph"
       direction = "TD"
 
+      with "virtual_networks" {
+        sql = <<-EOQ
+          select
+            lower(vn.id) as virtual_network_id
+          from
+            azure_subnet as s
+            left join azure_virtual_network as vn on vn.name = s.virtual_network_name
+          where
+            lower(s.subscription_id) = lower(vn.subscription_id)
+            and lower(s.resource_group) = lower(vn.resource_group)
+            and lower(s.id) = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "network_security_groups" {
+        sql = <<-EOQ
+          select
+            lower(nsg.id) as nsg_id
+          from
+            azure_network_security_group as nsg,
+            jsonb_array_elements(nsg.subnets) as sub
+          where
+            lower(sub ->> 'id') = $1
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "web_apps" {
+        sql = <<-EOQ
+          select
+            lower(id) as web_app_id
+          from
+            azure_app_service_web_app
+          where
+            lower(vnet_connection -> 'properties' ->> 'vnetResourceId') = $1
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "sql_servers" {
+        sql = <<-EOQ
+          select
+            lower(id) as sql_server_id
+          from
+            azure_sql_server,
+            jsonb_array_elements(virtual_network_rules) as r
+          where
+            lower(r -> 'properties' ->> 'virtualNetworkSubnetId') = $1
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "storage_accounts" {
+        sql = <<-EOQ
+          select
+            lower(id) as storage_account_id
+          from
+            azure_storage_account,
+            jsonb_array_elements(virtual_network_rules) as r
+          where
+            lower(r ->> 'id') = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
       nodes = [
-        node.azure_network_subnet_node,
-        node.azure_network_subnet_from_virtual_network_node,
-        node.azure_network_subnet_to_route_table_node,
-        node.azure_network_subnet_to_nat_gateway_node,
-        node.azure_network_subnet_to_network_security_group_node,
-        node.azure_network_subnet_to_app_service_web_app_node,
-        node.azure_network_subnet_to_sql_server_node,
-        node.azure_network_subnet_to_storage_account_node,
-        node.azure_network_subnet_to_cosmosdb_account_node,
-        node.azure_network_subnet_to_api_management_node,
-        node.azure_network_subnet_to_application_gateway_node
+        node.network_subnet,
+        node.network_virtual_network,
+        node.network_subnet_route_table,
+        node.network_subnet_nat_gateway,
+        node.network_network_security_group,
+        node.app_service_web_app,
+        node.sql_server,
+        node.storage_storage_account,
+        node.network_subnet_cosmosdb_account,
+        node.network_subnet_api_management,
+        node.network_subnet_application_gateway
       ]
 
       edges = [
-        edge.azure_network_subnet_from_virtual_network_edge,
-        edge.azure_network_subnet_to_route_table_edge,
-        edge.azure_network_subnet_to_nat_gateway_edge,
-        edge.azure_network_subnet_to_network_security_group_edge,
-        edge.azure_network_subnet_to_app_service_web_app_edge,
-        edge.azure_network_subnet_to_sql_server_edge,
-        edge.azure_network_subnet_to_storage_account_edge,
-        edge.azure_network_subnet_to_cosmosdb_account_edge,
-        edge.azure_network_subnet_to_api_management_edge,
-        edge.azure_network_subnet_to_application_gateway_edge
+        edge.network_virtual_network_to_network_subnet,
+        edge.network_subnet_to_network_route_table,
+        edge.network_subnet_to_network_nat_gateway,
+        edge.network_subnet_to_network_security_group,
+        edge.network_subnet_to_app_service_web_app,
+        edge.network_subnet_to_sql_server,
+        edge.network_subnet_to_storage_storage_account,
+        edge.network_subnet_to_cosmosdb_account,
+        edge.network_subnet_to_api_management,
+        edge.network_subnet_to_network_application_gateway
       ]
 
       args = {
-        id = self.input.subnet_id.value
+        network_subnet_ids         = [self.input.subnet_id.value]
+        virtual_network_ids        = with.virtual_networks.rows[*].virtual_network_id
+        network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+        web_app_ids                = with.web_apps.rows[*].web_app_id
+        id                         = self.input.subnet_id.value
+        sql_server_ids             = with.sql_servers.rows[*].sql_server_id
+        storage_account_ids        = with.storage_accounts.rows[*].storage_account_id
       }
     }
   }
@@ -82,7 +159,7 @@ dashboard "azure_network_subnet_detail" {
         title = "Overview"
         type  = "line"
         width = 12
-        query = query.azure_network_subnet_overview
+        query = query.network_subnet_overview
         args = {
           id = self.input.subnet_id.value
         }
@@ -95,7 +172,7 @@ dashboard "azure_network_subnet_detail" {
 
       table {
         title = "Launched Resources"
-        query = query.azure_network_subnet_association
+        query = query.network_subnet_association
         args = {
           id = self.input.subnet_id.value
         }
@@ -116,11 +193,11 @@ dashboard "azure_network_subnet_detail" {
 
 }
 
-query "azure_network_subnet_input" {
+query "network_subnet_input" {
   sql = <<-EOQ
     select
       g.title as label,
-      g.id as value,
+      lower(g.id) as value,
       json_build_object(
         'subscription', s.display_name,
         'virtual_network_name', g.virtual_network_name,
@@ -136,33 +213,33 @@ query "azure_network_subnet_input" {
   EOQ
 }
 
-query "azure_network_subnet_num_ips" {
+query "network_subnet_num_ips" {
   sql = <<-EOQ
     select
       power(2, 32 - masklen(address_prefix:: cidr)) as "IP Addresses"
     from
       azure_subnet
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_network_subnet_address_prefix" {
+query "network_subnet_address_prefix" {
   sql = <<-EOQ
     select
       address_prefix as "Address Prefix"
     from
       azure_subnet
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_network_subnet_overview" {
+query "network_subnet_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -176,13 +253,13 @@ query "azure_network_subnet_overview" {
     from
       azure_subnet
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_network_subnet_association" {
+query "network_subnet_association" {
   sql = <<-EOQ
 
     -- API Management
@@ -194,7 +271,7 @@ query "azure_network_subnet_association" {
     from
       azure_api_management
     where
-      virtual_network_configuration_subnet_resource_id = $1
+      lower(virtual_network_configuration_subnet_resource_id) = $1
 
     -- CosmosDB Account
     union all
@@ -207,7 +284,7 @@ query "azure_network_subnet_association" {
       azure_cosmosdb_account,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      r ->> 'id' = $1
+     lower(r ->> 'id') = $1
 
     -- Storage Account
     union all
@@ -220,7 +297,7 @@ query "azure_network_subnet_association" {
       azure_storage_account,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      r ->> 'id' = $1
+      lower(r ->> 'id') = $1
 
     -- SQL Server
     union all
@@ -233,7 +310,7 @@ query "azure_network_subnet_association" {
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      r -> 'properties' ->> 'virtualNetworkSubnetId' = $1
+      lower(r -> 'properties' ->> 'virtualNetworkSubnetId') = $1
 
     -- AppServcie Web App
     union all
@@ -245,7 +322,7 @@ query "azure_network_subnet_association" {
     from
       azure_app_service_web_app
     where
-      vnet_connection -> 'properties' ->> 'vnetResourceId' = $1
+      lower(vnet_connection -> 'properties' ->> 'vnetResourceId') = $1
 
     -- Application Gateway
     union all
@@ -258,7 +335,7 @@ query "azure_network_subnet_association" {
       azure_application_gateway,
       jsonb_array_elements(gateway_ip_configurations) as c
     where
-      c -> 'properties' -> 'subnet' ->> 'id' = $1
+      lower(c -> 'properties' -> 'subnet' ->> 'id') = $1
 
     -- Network Security Groups
     union all
@@ -271,7 +348,7 @@ query "azure_network_subnet_association" {
       azure_network_security_group as nsg,
       jsonb_array_elements(nsg.subnets) as sub
     where
-      sub ->> 'id' = $1
+      lower(sub ->> 'id') = $1
 
     -- Route Tables
     union all
@@ -284,18 +361,18 @@ query "azure_network_subnet_association" {
       azure_route_table as r,
       jsonb_array_elements(r.subnets) as sub
     where
-      sub ->> 'id' = $1;
+      lower(sub ->> 'id') = $1;
   EOQ
 
   param "id" {}
 }
 
-node "azure_network_subnet_node" {
+node "network_subnet" {
   category = category.azure_subnet
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'Name', name,
@@ -308,10 +385,10 @@ node "azure_network_subnet_node" {
     from
       azure_subnet
     where
-      id = $1;
+      lower(id) = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
 node "azure_network_subnet_from_virtual_network_node" {
@@ -336,7 +413,7 @@ node "azure_network_subnet_from_virtual_network_node" {
     where
       lower(s.subscription_id) = lower(vn.subscription_id)
       and lower(s.resource_group) = lower(vn.resource_group)
-      and s.id = $1;
+      and lower(s.id) = $1;
   EOQ
 
   param "id" {}
@@ -355,18 +432,18 @@ edge "azure_network_subnet_from_virtual_network_edge" {
     where
       lower(s.subscription_id) = lower(vn.subscription_id)
       and lower(s.resource_group) = lower(vn.resource_group)
-      and s.id = $1;
+      and lower(s.id) = $1;
   EOQ
 
   param "id" {}
 }
 
-node "azure_network_subnet_to_route_table_node" {
+node "network_subnet_route_table" {
   category = category.azure_route_table
 
   sql = <<-EOQ
     select
-      r.id as id,
+      lower(r.id) as id,
       r.title as title,
       jsonb_build_object(
         'Name', r.name,
@@ -379,27 +456,27 @@ node "azure_network_subnet_to_route_table_node" {
       azure_route_table as r,
       jsonb_array_elements(r.subnets) as sub
     where
-      sub ->> 'id' = $1;
+      lower(sub ->> 'id') = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
-edge "azure_network_subnet_to_route_table_edge" {
+edge "network_subnet_to_network_route_table" {
   title = "route table"
 
   sql = <<-EOQ
     select
-      sub ->> 'id' as from_id,
-      r.id as to_id
+      lower(sub ->> 'id') as from_id,
+      lower(r.id) as to_id
     from
       azure_route_table as r,
       jsonb_array_elements(r.subnets) as sub
     where
-      sub ->> 'id' = $1
+      lower(sub ->> 'id') = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
 node "azure_network_subnet_to_network_security_group_node" {
@@ -427,29 +504,28 @@ node "azure_network_subnet_to_network_security_group_node" {
 
 }
 
-edge "azure_network_subnet_to_network_security_group_edge" {
+edge "network_subnet_to_network_security_group" {
   title = "nsg"
 
   sql = <<-EOQ
     select
-      sub ->> 'id' as from_id,
-      nsg.id as to_id
+      subnet_id as from_id,
+      nsg_id as to_id
     from
-      azure_network_security_group as nsg,
-      jsonb_array_elements(nsg.subnets) as sub
-    where
-      sub ->> 'id' = $1
+      unnest($1::text[]) as subnet_id,
+      unnest($2::text[]) as nsg_id
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
+  param "network_security_group_ids" {}
 }
 
-node "azure_network_subnet_to_application_gateway_node" {
+node "network_subnet_application_gateway" {
   category = category.azure_application_gateway
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'ID', id,
@@ -462,35 +538,35 @@ node "azure_network_subnet_to_application_gateway_node" {
       azure_application_gateway,
       jsonb_array_elements(gateway_ip_configurations) as c
     where
-      c -> 'properties' -> 'subnet' ->> 'id' = $1
+      lower(c -> 'properties' -> 'subnet' ->> 'id') = any($1)
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
-edge "azure_network_subnet_to_application_gateway_edge" {
+edge "network_subnet_to_network_application_gateway" {
   title = "application gateway"
 
   sql = <<-EOQ
     select
-      $1 as from_id,
-      id as to_id
+      lower(c -> 'properties' -> 'subnet' ->> 'id') as from_id,
+      lower(id) as to_id
     from
       azure_application_gateway,
       jsonb_array_elements(gateway_ip_configurations) as c
     where
-      c -> 'properties' -> 'subnet' ->> 'id' = $1
+      lower(c -> 'properties' -> 'subnet' ->> 'id') = any($1)
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
-node "azure_network_subnet_to_nat_gateway_node" {
+node "network_subnet_nat_gateway" {
   category = category.azure_nat_gateway
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'ID', id,
@@ -503,27 +579,27 @@ node "azure_network_subnet_to_nat_gateway_node" {
       azure_nat_gateway,
       jsonb_array_elements(subnets) as s
     where
-      s ->> 'id' = $1;
+      lower(s ->> 'id') = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
-edge "azure_network_subnet_to_nat_gateway_edge" {
+edge "network_subnet_to_network_nat_gateway" {
   title = "nat gateway"
 
   sql = <<-EOQ
     select
-      $1 as from_id,
-      id as to_id
+      lower(s ->> 'id') as from_id,
+      lower(id) as to_id
     from
       azure_nat_gateway,
       jsonb_array_elements(subnets) as s
     where
-      s ->> 'id' = $1;
+      lower(s ->> 'id') = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
 node "azure_network_subnet_to_app_service_web_app_node" {
@@ -550,20 +626,20 @@ node "azure_network_subnet_to_app_service_web_app_node" {
   param "id" {}
 }
 
-edge "azure_network_subnet_to_app_service_web_app_edge" {
+edge "network_subnet_to_app_service_web_app" {
   title = "web app"
 
   sql = <<-EOQ
     select
-      $1 as from_id,
-      id as to_id
+      subnet_id as from_id,
+      web_app_id as to_id
     from
-      azure_app_service_web_app
-    where
-      vnet_connection -> 'properties' ->> 'vnetResourceId' = $1
+     unnest($1::text[]) as web_app_id,
+     unnest($2::text[]) as subnet_id
   EOQ
 
-  param "id" {}
+  param "web_app_ids" {}
+  param "network_subnet_ids" {}
 }
 
 node "azure_network_subnet_to_sql_server_node" {
@@ -592,21 +668,21 @@ node "azure_network_subnet_to_sql_server_node" {
   param "id" {}
 }
 
-edge "azure_network_subnet_to_sql_server_edge" {
+edge "network_subnet_to_sql_server" {
   title = "sql server"
 
   sql = <<-EOQ
     select
-      $1 as from_id,
-      id as to_id
+      lower(r -> 'properties' ->> 'virtualNetworkSubnetId') as from_id,
+      lower(id) as to_id
     from
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      r -> 'properties' ->> 'virtualNetworkSubnetId' = $1
+      lower(r -> 'properties' ->> 'virtualNetworkSubnetId') = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
 node "azure_network_subnet_to_storage_account_node" {
@@ -635,29 +711,29 @@ node "azure_network_subnet_to_storage_account_node" {
   param "id" {}
 }
 
-edge "azure_network_subnet_to_storage_account_edge" {
+edge "network_subnet_to_storage_storage_account" {
   title = "storage account"
 
   sql = <<-EOQ
     select
-      $1 as from_id,
-      id as to_id
+      lower(r ->> 'id') as from_id,
+      lower(id) as to_id
     from
       azure_storage_account,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      r ->> 'id' = $1;
+      lower(r ->> 'id') = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
-node "azure_network_subnet_to_cosmosdb_account_node" {
+node "network_subnet_cosmosdb_account" {
   category = category.azure_cosmosdb_account
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'Name', name,
@@ -670,35 +746,35 @@ node "azure_network_subnet_to_cosmosdb_account_node" {
       azure_cosmosdb_account,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      r ->> 'id' = $1;
+      lower(r ->> 'id') = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
-edge "azure_network_subnet_to_cosmosdb_account_edge" {
+edge "network_subnet_to_cosmosdb_account" {
   title = "cosmosdb"
 
   sql = <<-EOQ
     select
-      $1 as from_id,
-      id as to_id
+      lower(r ->> 'id') as from_id,
+      lower(id) as to_id
     from
       azure_cosmosdb_account,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      r ->> 'id' = $1;
+      lower(r ->> 'id') = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
-node "azure_network_subnet_to_api_management_node" {
+node "network_subnet_api_management" {
   category = category.azure_api_management
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'Name', name,
@@ -711,24 +787,24 @@ node "azure_network_subnet_to_api_management_node" {
     from
       azure_api_management
     where
-      virtual_network_configuration_subnet_resource_id = $1;
+      lower(virtual_network_configuration_subnet_resource_id) = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }
 
-edge "azure_network_subnet_to_api_management_edge" {
+edge "network_subnet_to_api_management" {
   title = "api management"
 
   sql = <<-EOQ
     select
-      $1 as from_id,
-      id as to_id
+      lower(virtual_network_configuration_subnet_resource_id) as from_id,
+      lower(id) as to_id
     from
       azure_api_management
     where
-      virtual_network_configuration_subnet_resource_id = $1;
+      lower(virtual_network_configuration_subnet_resource_id) = any($1);
   EOQ
 
-  param "id" {}
+  param "network_subnet_ids" {}
 }

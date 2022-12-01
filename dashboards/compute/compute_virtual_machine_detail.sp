@@ -63,11 +63,32 @@ dashboard "azure_compute_virtual_machine_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "network_interfaces" {
+        sql = <<-EOQ
+          with network_interface_id as (
+            select
+              id as vm_id,
+              jsonb_array_elements(network_interfaces)->>'id' as n_id
+            from
+              azure_compute_virtual_machine
+          )
+          select
+            lower(vn.n_id) as network_interface_id
+          from
+            network_interface_id as vn
+            left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
+          where
+            lower(vn.vm_id) = $1;
+          EOQ
+
+        args = [self.input.vm_id.value]
+      }
+
       nodes = [
-        node.azure_compute_virtual_machine_node,
+        node.compute_virtual_machine,
         node.azure_compute_virtual_machine_to_data_disk_node,
         node.azure_compute_virtual_machine_to_os_disk_node,
-        node.azure_compute_virtual_machine_to_network_interface_node,
+        node.network_network_interface,
         node.azure_compute_virtual_machine_network_interface_to_public_ip_node,
         node.azure_compute_virtual_machine_to_image_node,
         node.azure_compute_virtual_machine_network_interface_to_network_security_group_node,
@@ -82,7 +103,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       edges = [
         edge.azure_compute_virtual_machine_to_data_disk_edge,
         edge.azure_compute_virtual_machine_to_os_disk_edge,
-        edge.azure_compute_virtual_machine_to_network_interface_edge,
+        edge.compute_virtual_machine_to_network_network_interface,
         edge.azure_compute_virtual_machine_network_interface_to_public_ip_edge,
         edge.azure_compute_virtual_machine_to_image_edge,
         edge.azure_compute_virtual_machine_network_interface_to_network_security_group_edge,
@@ -95,7 +116,9 @@ dashboard "azure_compute_virtual_machine_detail" {
       ]
 
       args = {
-        id = self.input.vm_id.value
+        compute_virtual_machine_ids = [self.input.vm_id.value]
+        network_interface_ids       = with.network_interfaces.rows[*].network_interface_id
+        id                          = self.input.vm_id.value
       }
     }
   }
@@ -210,7 +233,7 @@ query "azure_compute_virtual_machine_input" {
   sql = <<-EOQ
     select
       v.title as label,
-      v.id as value,
+      lower(v.id) as value,
       json_build_object(
         'subscription', s.display_name,
         'resource_group', v.resource_group,
@@ -384,7 +407,7 @@ query "azure_compute_virtual_machine_vulnerability_assessment_solution" {
   param "id" {}
 }
 
-node "azure_compute_virtual_machine_node" {
+node "compute_virtual_machine" {
   category = category.azure_compute_virtual_machine
 
   sql = <<-EOQ
@@ -404,10 +427,10 @@ node "azure_compute_virtual_machine_node" {
     from
       azure_compute_virtual_machine
     where
-      id = $1;
+      lower(id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
 node "azure_compute_virtual_machine_to_data_disk_node" {
@@ -546,28 +569,20 @@ node "azure_compute_virtual_machine_to_network_interface_node" {
   param "id" {}
 }
 
-edge "azure_compute_virtual_machine_to_network_interface_edge" {
+edge "compute_virtual_machine_to_network_network_interface" {
   title = "network interface"
 
   sql = <<-EOQ
-    with network_interface_id as (
-      select
-        id,
-        jsonb_array_elements(network_interfaces)->>'id' as n_id
-      from
-        azure_compute_virtual_machine
-    )
     select
-      lower(n.id) as to_id,
-      lower(vn.id) as from_id
+      virtual_machine_id as from_id,
+      network_interface_id as to_id
     from
-      network_interface_id as vn
-      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
-    where
-      vn.id = $1;
+      unnest($1::text[]) as virtual_machine_id,
+      unnest($2::text[]) as network_interface_id
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
+  param "network_interface_ids" {}
 }
 
 node "azure_compute_virtual_machine_network_interface_to_network_security_group_node" {

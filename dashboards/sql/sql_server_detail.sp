@@ -68,12 +68,12 @@ dashboard "azure_sql_server_detail" {
 
   container {
     graph {
-      title = "Relationships"
-      type  = "graph"
+      title     = "Relationships"
+      type      = "graph"
       direction = "TD"
 
       nodes = [
-        node.azure_sql_server_node,
+        node.sql_server,
         node.azure_sql_server_to_subnet_node,
         node.azure_sql_server_to_private_endpoint_node,
         node.azure_sql_server_subnet_to_virtual_network_node,
@@ -94,7 +94,8 @@ dashboard "azure_sql_server_detail" {
       ]
 
       args = {
-        id = self.input.server_id.value
+        sql_server_ids = [self.input.server_id.value]
+        id             = self.input.server_id.value
       }
     }
   }
@@ -201,7 +202,7 @@ query "azure_sql_server_input" {
   sql = <<-EOQ
     select
       s.title as label,
-      s.id as value,
+      lower(s.id) as value,
       json_build_object(
         'subscription', sub.display_name,
         'resource_group', s.resource_group,
@@ -319,12 +320,12 @@ query "azure_sql_server_vulnerability_assessment_enabled" {
   param "id" {}
 }
 
-node "azure_sql_server_node" {
+node "sql_server" {
   category = category.azure_sql_server
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'ID', id,
@@ -338,10 +339,10 @@ node "azure_sql_server_node" {
     from
       azure_sql_server
     where
-      id = $1;
+      lower(id) = any($1);
   EOQ
 
-  param "id" {}
+  param "sql_server_ids" {}
 }
 
 node "azure_sql_server_to_subnet_node" {

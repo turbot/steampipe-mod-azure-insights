@@ -1,4 +1,4 @@
-dashboard "azure_network_security_group_detail" {
+dashboard "network_security_group_detail" {
 
   title         = "Azure Network Security Group Detail"
   documentation = file("./dashboards/network/docs/network_security_group_detail.md")
@@ -17,39 +17,7 @@ dashboard "azure_network_security_group_detail" {
 
     card {
       width = 2
-      query = query.azure_network_security_group_ingress_rules_count
-      args  = {
-        id = self.input.nsg_id.value
-      }
-    }
-
-    card {
-      width = 2
-      query = query.azure_network_security_group_egress_rules_count
-      args  = {
-        id = self.input.nsg_id.value
-      }
-    }
-
-    card {
-      width = 2
-      query = query.azure_network_security_group_attached_enis_count
-      args  = {
-        id = self.input.nsg_id.value
-      }
-    }
-
-    card {
-      width = 2
-      query = query.azure_network_security_group_attached_subnets_count
-      args  = {
-        id = self.input.nsg_id.value
-      }
-    }
-
-    card {
-      width = 2
-      query = query.azure_network_security_group_unrestricted_ingress_remote_access
+      query = query.network_security_group_ingress_rules_count
       args = {
         id = self.input.nsg_id.value
       }
@@ -57,7 +25,39 @@ dashboard "azure_network_security_group_detail" {
 
     card {
       width = 2
-      query = query.azure_network_security_group_unrestricted_egress_remote_access
+      query = query.network_security_group_egress_rules_count
+      args = {
+        id = self.input.nsg_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.network_security_group_attached_enis_count
+      args = {
+        id = self.input.nsg_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.network_security_group_attached_subnets_count
+      args = {
+        id = self.input.nsg_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.network_security_group_unrestricted_ingress_remote_access
+      args = {
+        id = self.input.nsg_id.value
+      }
+    }
+
+    card {
+      width = 2
+      query = query.network_security_group_unrestricted_egress_remote_access
       args = {
         id = self.input.nsg_id.value
       }
@@ -72,8 +72,9 @@ dashboard "azure_network_security_group_detail" {
       type      = "graph"
       direction = "TD"
 
+
       nodes = [
-        node.azure_network_security_group_node,
+        node.network_network_security_group,
         node.azure_network_security_group_to_network_interface_node,
         node.azure_network_security_group_from_network_subnet_node,
         node.azure_network_security_group_subnet_from_virtual_network_node,
@@ -90,7 +91,8 @@ dashboard "azure_network_security_group_detail" {
       ]
 
       args = {
-        id = self.input.nsg_id.value
+        network_security_group_ids = [self.input.nsg_id.value]
+        id                         = self.input.nsg_id.value
       }
     }
   }
@@ -127,7 +129,7 @@ dashboard "azure_network_security_group_detail" {
       table {
         title = "Associated to"
         query = query.azure_network_security_group_assoc
-        args  = {
+        args = {
           id = self.input.nsg_id.value
         }
       }
@@ -149,10 +151,10 @@ dashboard "azure_network_security_group_detail" {
     width = 6
 
     flow {
-      base = flow.network_security_group_rules_sankey
+      base  = flow.network_security_group_rules_sankey
       title = "Ingress Analysis"
       query = query.azure_network_security_group_ingress_rule_sankey
-      args  = {
+      args = {
         id = self.input.nsg_id.value
       }
     }
@@ -161,7 +163,7 @@ dashboard "azure_network_security_group_detail" {
     table {
       title = "Ingress Rules"
       query = query.azure_network_security_group_ingress_rules
-      args  = {
+      args = {
         id = self.input.nsg_id.value
       }
     }
@@ -173,10 +175,10 @@ dashboard "azure_network_security_group_detail" {
     width = 6
 
     flow {
-      base = flow.network_security_group_rules_sankey
+      base  = flow.network_security_group_rules_sankey
       title = "Egress Analysis"
       query = query.azure_network_security_group_egress_rule_sankey
-      args  = {
+      args = {
         id = self.input.nsg_id.value
       }
     }
@@ -194,7 +196,7 @@ dashboard "azure_network_security_group_detail" {
 }
 
 flow "network_security_group_rules_sankey" {
-  type  = "sankey"
+  type = "sankey"
 
   category "alert" {
     color = "alert"
@@ -210,7 +212,7 @@ query "azure_network_security_group_input" {
   sql = <<-EOQ
     select
       g.title as label,
-      g.id as value,
+      lower(g.id) as value,
       json_build_object(
         'subscription', s.display_name,
         'resource_group', g.resource_group,
@@ -226,7 +228,7 @@ query "azure_network_security_group_input" {
   EOQ
 }
 
-query "azure_network_security_group_ingress_rules_count" {
+query "network_security_group_ingress_rules_count" {
   sql = <<-EOQ
     select
       'Ingress Rules' as label,
@@ -242,7 +244,7 @@ query "azure_network_security_group_ingress_rules_count" {
   param "id" {}
 }
 
-query "azure_network_security_group_egress_rules_count" {
+query "network_security_group_egress_rules_count" {
   sql = <<-EOQ
     select
       'Egress Rules' as label,
@@ -258,7 +260,7 @@ query "azure_network_security_group_egress_rules_count" {
   param "id" {}
 }
 
-query "azure_network_security_group_attached_enis_count" {
+query "network_security_group_attached_enis_count" {
   sql = <<-EOQ
     select
       'Attached Network Interfaces' as label,
@@ -273,7 +275,7 @@ query "azure_network_security_group_attached_enis_count" {
   param "id" {}
 }
 
-query "azure_network_security_group_attached_subnets_count" {
+query "network_security_group_attached_subnets_count" {
   sql = <<-EOQ
     select
       'Attached Subnets' as label,
@@ -288,7 +290,7 @@ query "azure_network_security_group_attached_subnets_count" {
   param "id" {}
 }
 
-query "azure_network_security_group_unrestricted_ingress_remote_access" {
+query "network_security_group_unrestricted_ingress_remote_access" {
   sql = <<-EOQ
     with unrestricted_inbound as (
       select
@@ -326,7 +328,7 @@ query "azure_network_security_group_unrestricted_ingress_remote_access" {
   param "id" {}
 }
 
-query "azure_network_security_group_unrestricted_egress_remote_access" {
+query "network_security_group_unrestricted_egress_remote_access" {
   sql = <<-EOQ
     with unrestricted_outbound as (
       select
@@ -766,12 +768,12 @@ query "azure_network_security_group_egress_rule_sankey" {
   param "id" {}
 }
 
-node "azure_network_security_group_node" {
+node "network_network_security_group" {
   category = category.azure_network_security_group
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'Name', name,
@@ -783,10 +785,10 @@ node "azure_network_security_group_node" {
     from
       azure_network_security_group
     where
-      id = $1;
+      lower(id) = any($1);
   EOQ
 
-  param "id" {}
+  param "network_security_group_ids" {}
 }
 
 node "azure_network_security_group_to_network_interface_node" {
