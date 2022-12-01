@@ -121,7 +121,7 @@ dashboard "network_load_balancer_detail" {
               left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
             where
               p.backend_ip_configurations is not null
-              and lb.id = $1
+              and lower(lb.id) = $1
           ),
           backend_ip_configurations as (
             select
@@ -147,10 +147,11 @@ dashboard "network_load_balancer_detail" {
               c ->> 'id' = b.backend_ip_configuration_id
           )
           select
-            lower(vm.id) as virtual_machine_id
+            lower(id) as virtual_machine_id
           from
-            azure_compute_virtual_machine as vm
-            right join network_interface as nic on lower(nic.virtual_machine_id) = lower(vm.id)
+            azure_compute_virtual_machine
+          where
+            lower(id) in (select lower(virtual_machine_id) from network_interface)
         EOQ
 
         args = [self.input.lb_id.value]
@@ -169,7 +170,7 @@ dashboard "network_load_balancer_detail" {
               left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
             where
               p.backend_ip_configurations is not null
-              and lb.id = $1
+              and lower(lb.id) = $1
           ),
           backend_ip_configurations as (
             select
@@ -192,13 +193,14 @@ dashboard "network_load_balancer_detail" {
               jsonb_array_elements(ip_configurations) as c,
               backend_ip_configurations as b
             where
-              c ->> 'id' = b.backend_ip_configuration_id
+              lower(c ->> 'id') = lower(b.backend_ip_configuration_id)
           )
         select
-          lower(vm.id) as virtual_machine_scale_set_vm_id
+          lower(id) as virtual_machine_scale_set_vm_id
         from
           azure_compute_virtual_machine_scale_set_vm as vm
-          right join network_interface as nic on lower(nic.virtual_machine_id) = lower(vm.id)
+        where
+          lower(id) in (select lower(virtual_machine_id) from network_interface )
         EOQ
 
         args = [self.input.lb_id.value]
@@ -217,23 +219,23 @@ dashboard "network_load_balancer_detail" {
               left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
             where
               p.load_balancer_backend_addresses is not null
-              and lb.id = $1
+              and lower(lb.id) = $1
           ),load_balancer_backend_addresses_list as (
-        select
-          lb_id,
-          a -> 'properties' -> 'virtualNetwork' ->> 'id' as vn_id
-        from
-          backend_address_pools,
-          jsonb_array_elements(load_balancer_backend_addresses) as a
-        where
-          a -> 'properties' -> 'virtualNetwork' ->> 'id' is not null
-        )
-        select
-          lower(vn.id) as virtual_network_id
-        from
-          azure_virtual_network as vn
-          right join load_balancer_backend_addresses_list as b on lower(b.vn_id) = lower(vn.id)
-        EOQ
+          select
+            lb_id,
+            a -> 'properties' -> 'virtualNetwork' ->> 'id' as vn_id
+          from
+            backend_address_pools,
+            jsonb_array_elements(load_balancer_backend_addresses) as a
+          where
+            a -> 'properties' -> 'virtualNetwork' ->> 'id' is not null
+          )
+          select
+            lower(vn.id) as virtual_network_id
+          from
+            azure_virtual_network as vn
+            right join load_balancer_backend_addresses_list as b on lower(b.vn_id) = lower(vn.id)
+          EOQ
 
         args = [self.input.lb_id.value]
       }
@@ -248,7 +250,7 @@ dashboard "network_load_balancer_detail" {
             jsonb_array_elements(p -> 'properties' -> 'ipConfigurations') as c,
             jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools') as b
           where
-            split_part( b ->> 'id', '/backendAddressPools' , 1) = $1
+            lower(split_part( b ->> 'id', '/backendAddressPools' , 1)) = $1
         EOQ
 
         args = [self.input.lb_id.value]
@@ -264,7 +266,7 @@ dashboard "network_load_balancer_detail" {
             left join azure_public_ip as ip on lower(ip.id) = lower(f -> 'properties' -> 'publicIPAddress' ->> 'id')
           where
             (f -> 'properties' -> 'publicIPAddress' ->> 'id') is not null
-            and lower(lb.id) = $1;
+            and lower(lb.id) = $1
         EOQ
 
         args = [self.input.lb_id.value]
@@ -1015,7 +1017,7 @@ edge "network_network_interface_to_compute_virtual_machine" {
         select
           lb_id,
           backend_address_id,
-          lower(c ->> 'id) as backend_ip_configuration_id
+          lower(c ->> 'id') as backend_ip_configuration_id
         from
           backend_address_pools,
           jsonb_array_elements(backend_ip_configurations) as c
@@ -1038,7 +1040,7 @@ edge "network_network_interface_to_compute_virtual_machine" {
       lower(vm.id) as to_id
     from
       azure_compute_virtual_machine as vm
-      right join network_interface as nic on lower(nic.virtual_machine_id) = lower(vm.id)
+      left join network_interface as nic on lower(nic.virtual_machine_id) = lower(vm.id)
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -1099,8 +1101,8 @@ edge "network_backend_address_pool_to_virtual_network" {
   sql = <<-EOQ
     with backend_address_pools as (
       select
-        lower(lb.id) as lb_id,
-        lower(p.id) as backend_address_id,
+        lb.id as lb_id,
+        p.id as backend_address_id,
         p.load_balancer_backend_addresses as load_balancer_backend_addresses
       from
         azure_lb as lb,
@@ -1113,7 +1115,7 @@ edge "network_backend_address_pool_to_virtual_network" {
         select
           lb_id,
           backend_address_id,
-          lower(a -> 'properties' -> 'virtualNetwork' ->> 'id') as vn_id
+          a -> 'properties' -> 'virtualNetwork' ->> 'id' as vn_id
         from
           backend_address_pools,
           jsonb_array_elements(load_balancer_backend_addresses) as a
