@@ -643,7 +643,7 @@ edge "network_subnet_to_app_service_web_app" {
 }
 
 node "azure_network_subnet_to_sql_server_node" {
-  category = category.azure_sql_server
+  category = category.sql_server
 
   sql = <<-EOQ
     select

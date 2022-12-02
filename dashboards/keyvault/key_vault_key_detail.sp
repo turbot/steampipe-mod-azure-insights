@@ -268,8 +268,29 @@ node "azure_key_vault_key_version_node" {
   param "id" {}
 }
 
+node "key_vault_key" {
+  category = category.key_vault_key
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      name as title,
+      jsonb_build_object(
+        'Key Name', name,
+        'Key ID', id,
+        'Vault Name', vault_name
+      ) as properties
+    from
+      azure_key_vault_key
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "key_vault_key_id" {}
+}
+
 node "azure_key_vault_key_version_to_key_node" {
-  category = category.azure_key_vault_key
+  category = category.key_vault_key
 
   sql = <<-EOQ
     select
@@ -307,7 +328,7 @@ edge "azure_key_vault_key_version_to_key_edge" {
 }
 
 node "azure_key_vault_key_to_key_vault_node" {
-  category = category.azure_key_vault
+  category = category.key_vault
 
   sql = <<-EOQ
     select
@@ -436,7 +457,7 @@ edge "azure_key_vault_key_version_from_container_registry_edge" {
 }
 
 node "azure_key_vault_key_version_from_sql_server_node" {
-  category = category.azure_sql_server
+  category = category.sql_server
 
   sql = <<-EOQ
     with sql_server as (

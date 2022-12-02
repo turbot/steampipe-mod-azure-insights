@@ -1328,7 +1328,7 @@ edge "azure_network_subnets_to_application_gateway_edge" {
 }
 
 node "azure_virtual_network_subnet_to_sql_server_node" {
-  category = category.azure_sql_server
+  category = category.sql_server
 
   sql = <<-EOQ
     with subnet_list as (

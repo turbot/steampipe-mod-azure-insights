@@ -58,7 +58,7 @@ dashboard "azure_key_vault_detail" {
       direction = "TD"
 
       nodes = [
-        node.azure_key_vault_node,
+        node.key_vault,
         node.azure_key_vault_to_subnet_node,
         node.azure_key_vault_subnet_to_vpc_node,
         node.azure_key_vault_to_key_node,
@@ -338,12 +338,12 @@ query "azure_key_vault_usage" {
   param "id" {}
 }
 
-node "azure_key_vault_node" {
-  category = category.azure_key_vault
+node "key_vault" {
+  category = category.key_vault
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       jsonb_build_object(
         'Vault Name', name,
@@ -352,10 +352,10 @@ node "azure_key_vault_node" {
     from
       azure_key_vault
     where
-      id = $1;
+      lower(id) = any($1);
   EOQ
 
-  param "id" {}
+  param "key_vault_ids" {}
 }
 
 node "azure_key_vault_to_subnet_node" {
@@ -462,7 +462,7 @@ edge "azure_key_vault_subnet_to_vpc_edge" {
 }
 
 node "azure_key_vault_to_key_node" {
-  category = category.azure_key_vault_key
+  category = category.key_vault_key
 
   sql = <<-EOQ
     select

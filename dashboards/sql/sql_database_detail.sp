@@ -73,7 +73,7 @@ dashboard "azure_sql_database_detail" {
       direction = "TD"
 
       nodes = [
-        node.azure_sql_database_node,
+        node.sql_database,
         node.azure_sql_database_from_sql_server_node,
         node.azure_sql_databaset_from_mssql_elasticpool_node
       ]
@@ -143,7 +143,7 @@ query "azure_sql_database_input" {
   sql = <<-EOQ
     select
       d.title as label,
-      d.id as value,
+      lower(d.id) as value,
       json_build_object(
         'subscription', sub.display_name,
         'resource_group', d.resource_group,
@@ -153,7 +153,7 @@ query "azure_sql_database_input" {
       azure_sql_database as d,
       azure_subscription as sub
     where
-      d.subscription_id = sub.subscription_id
+      lower(d.subscription_id) = lower(sub.subscription_id)
       and name <> 'master'
     order by
       d.title;
@@ -169,7 +169,7 @@ query "azure_sql_database_server" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = lower($1);
   EOQ
 
   param "id" {}
@@ -185,7 +185,7 @@ query "azure_sql_database_zone_redundant" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = lower($1);
   EOQ
 
   param "id" {}
@@ -201,7 +201,7 @@ query "azure_sql_database_status" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = lower($1);
   EOQ
 
   param "id" {}
@@ -217,7 +217,7 @@ query "azure_sql_database_edition" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = lower($1);
   EOQ
 
   param "id" {}
@@ -233,7 +233,7 @@ query "azure_sql_database_transparent_data_encryption" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = lower($1);
   EOQ
 
   param "id" {}
@@ -258,7 +258,7 @@ query "azure_sql_database_vulnerability_assessment_enabled" {
      azure_sql_database as d left join sql_database_va as v on lower(v.id) = lower(d.id)
     where
       d.name <> 'master'
-      and d.id = $1;
+      and lower(d.id) = lower($1);
   EOQ
 
   param "id" {}
@@ -282,18 +282,18 @@ query "azure_sql_database_geo_redundant_backup_enabled" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = lower($1);
   EOQ
 
   param "id" {}
 }
 
-node "azure_sql_database_node" {
-  category = category.azure_sql_database
+node "sql_database" {
+  category = category.sql_database
 
   sql = <<-EOQ
     select
-      id as id,
+      lower(id) as id,
       title as title,
       json_build_object(
         'Location', location,
@@ -309,14 +309,14 @@ node "azure_sql_database_node" {
     from
       azure_sql_database
     where
-      id = $1;
+      lower(id) = any($1);
   EOQ
 
-  param "id" {}
+  param "sql_database_id" {}
 }
 
 node "azure_sql_database_from_sql_server_node" {
-  category = category.azure_sql_server
+  category = category.sql_server
 
   sql = <<-EOQ
     with sql_servers as (
@@ -385,7 +385,7 @@ edge "azure_sql_database_from_sql_server_edge" {
 }
 
 node "azure_sql_databaset_from_mssql_elasticpool_node" {
-  category = category.azure_mssql_elasticpool
+  category = category.mssql_elasticpool
 
   sql = <<-EOQ
     with sql_pools as (

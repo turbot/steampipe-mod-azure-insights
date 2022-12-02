@@ -412,7 +412,7 @@ edge "azure_compute_disk_to_compute_disk_encryption_set_edge" {
 }
 
 node "azure_compute_disk_compute_disk_encryption_set_to_key_vault_node" {
-  category = category.azure_key_vault
+  category = category.key_vault
 
   sql = <<-EOQ
     select
@@ -455,7 +455,7 @@ edge "azure_compute_disk_compute_disk_encryption_set_to_key_vault_edge" {
 }
 
 node "azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_node" {
-  category = category.azure_key_vault_key
+  category = category.key_vault_key
 
   sql = <<-EOQ
     select

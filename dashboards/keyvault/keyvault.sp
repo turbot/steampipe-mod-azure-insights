@@ -4,14 +4,14 @@ locals {
   }
 }
 
-category "azure_key_vault" {
+category "key_vault" {
   title = "Key Vault"
   href  = "/azure_insights.dashboard.azure_key_vault_detail?input.key_vault_id={{.properties.'ID' | @uri}}"
   icon  = "text:KV"
   color = local.security_color
 }
 
-category "azure_key_vault_key" {
+category "key_vault_key" {
    href  = "/azure_insights.dashboard.azure_key_vault_key_detail?input.key_vault_key_id={{.properties.'Key ID' | @uri}}"
   title = "Key Vault Key"
   icon  = "key"

@@ -86,7 +86,7 @@ category "azure_public_ip" {
   color = local.network_color
 }
 
-category "azure_private_endpoint_connection" {
+category "private_endpoint_connection" {
   title = "Private Endpoint Connection"
   icon  = "text:PEC"
   color = local.network_color
