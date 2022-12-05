@@ -4,38 +4,32 @@ locals {
   }
 }
 
-category "azure_storage_account" {
+category "storage_storage_account" {
   title = "Storage Account"
-  href  = "/azure_insights.dashboard.azure_storage_account_detail?input.storage_account_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.storage_account_detail?input.storage_account_id={{.properties.'ID' | @uri}}"
   icon  = "archive-box"
   color = local.storage_color
 }
 
-category "azure_storage_blob" {
-  title = "Storage Blob"
-  icon  = "text:StorageBlob"
-  color = local.storage_color
-}
-
-category "azure_storage_container" {
+category "storage_container" {
   title = "Storage Container"
   icon  = "text:StorageContainer"
   color = local.storage_color
 }
 
-category "azure_storage_queue" {
+category "storage_queue" {
   title = "Storage Queue"
   icon  = "text:StorageQueue"
   color = local.storage_color
 }
 
-category "azure_storage_share_file" {
+category "storage_share_file" {
   title = "Storage Share File"
   icon  = "text:StorageShareFile"
   color = local.storage_color
 }
 
-category "azure_storage_table" {
+category "storage_table" {
   title = "Storage Table"
   icon  = "text:StorageTable"
   color = local.storage_color

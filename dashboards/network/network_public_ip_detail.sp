@@ -1,4 +1,4 @@
-dashboard "azure_network_public_ip_detail" {
+dashboard "network_public_ip_detail" {
 
   title         = "Azure Network Public IP Detail"
   documentation = file("./dashboards/network/docs/network_public_ip_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_network_public_ip_detail" {
 
   input "public_ip_id" {
     title = "Select a public IP:"
-    query = query.azure_network_public_ip_input
+    query = query.network_public_ip_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_network_public_ip_detail" {
 
     card {
       width = 2
-      query = query.azure_network_public_association
+      query = query.network_public_association
       args = {
         id = self.input.public_ip_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_network_public_ip_detail" {
 
     card {
       width = 2
-      query = query.azure_network_public_ip_address
+      query = query.network_public_ip_address
       args = {
         id = self.input.public_ip_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_network_public_ip_detail" {
 
     card {
       width = 2
-      query = query.azure_network_public_ip_sku_name
+      query = query.network_public_ip_sku_name
       args = {
         id = self.input.public_ip_id.value
       }
@@ -47,21 +47,72 @@ dashboard "azure_network_public_ip_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "network_interfaces" {
+        sql = <<-EOQ
+          with network_interface_public_ip as (
+            select
+              id,
+              jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+            from
+              azure_network_interface
+          )
+          select
+            lower(n.id) as nic_id
+          from
+            network_interface_public_ip as n
+            left join azure_public_ip as p on lower(n.pid) = lower(p.id)
+          where
+            lower(p.id) = $1;
+        EOQ
+
+        args = [self.input.public_ip_id.value]
+      }
+
+      with "virtual_machines" {
+        sql = <<-EOQ
+          with vm_network_interface as (
+            select
+              id,
+              jsonb_array_elements(network_interfaces)->>'id' as n_id
+            from
+              azure_compute_virtual_machine
+          ), ni_public_ip as (
+              select
+                id,
+                jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+              from
+                azure_network_interface
+          )
+          select
+            lower(v.id) as virtual_machine_id
+          from
+            vm_network_interface as v
+            left join ni_public_ip as n on lower(v.n_id) = lower(n.id)
+            left join azure_public_ip as p on lower(n.pid) = lower(p.id)
+          where
+            lower(p.id) = $1;
+          EOQ
+
+        args = [self.input.public_ip_id.value]
+      }
+
       nodes = [
-        node.azure_network_public_ip_node,
-        node.azure_network_public_ip_from_network_interface_node,
-        node.azure_network_public_ip_network_interface_from_compute_virtual_machine_node,
-        node.azure_network_public_ip_from_api_management_node
+        node.compute_virtual_machine,
+        node.network_network_interface,
+        node.network_public_ip_api_management,
+        node.network_public_ip,
       ]
 
       edges = [
-        edge.azure_network_public_ip_from_network_interface_edge,
-        edge.azure_network_public_ip_network_interface_from_compute_virtual_machine_edge,
-        edge.azure_network_public_ip_from_api_management_edge
+        edge.compute_virtual_machine_to_network_network_interface,
+        edge.network_network_interface_to_network_public_ip,
+        edge.network_public_ip_to_api_management,
       ]
 
       args = {
-        id = self.input.public_ip_id.value
+        compute_virtual_machine_ids = with.virtual_machines.rows[*].virtual_machine_id
+        network_interface_ids       = with.network_interfaces.rows[*].nic_id
+        network_public_ip_ids       = [self.input.public_ip_id.value]
       }
     }
   }
@@ -107,11 +158,11 @@ dashboard "azure_network_public_ip_detail" {
   }
 }
 
-query "azure_network_public_ip_input" {
+query "network_public_ip_input" {
   sql = <<-EOQ
     select
       p.title as label,
-      p.id as value,
+      lower(p.id) as value,
       json_build_object(
         'subscription', s.display_name,
         'resource_group', p.resource_group,
@@ -127,7 +178,7 @@ query "azure_network_public_ip_input" {
   EOQ
 }
 
-query "azure_network_public_association" {
+query "network_public_association" {
   sql = <<-EOQ
     select
       'Association' as label,
@@ -136,247 +187,13 @@ query "azure_network_public_association" {
     from
       azure_public_ip
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-node "azure_network_public_ip_node" {
-  category = category.azure_public_ip
-
-  sql = <<-EOQ
-    select
-      id as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Region', region
-      ) as properties
-    from
-      azure_public_ip
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_network_public_ip_from_network_interface_node" {
-  category = category.azure_network_interface
-
-  sql = <<-EOQ
-    with network_interface_public_ip as (
-      select
-        id,
-        title,
-        name,
-        provisioning_state,
-        subscription_id,
-        resource_group,
-        region,
-        jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-      from
-        azure_network_interface
-    )
-    select
-      n.id as id,
-      n.title as title,
-      jsonb_build_object(
-        'Name', n.name,
-        'Provisioning State', n.provisioning_state,
-        'ID', n.id,
-        'Subscription ID', n.subscription_id,
-        'Resource Group', n.resource_group,
-        'Region', n.region
-      ) as properties
-    from
-      network_interface_public_ip as n
-      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
-    where
-      p.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_network_public_ip_from_network_interface_edge" {
-  title = "public ip"
-
-  sql = <<-EOQ
-    with network_interface_public_ip as (
-      select
-        id,
-        jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-      from
-        azure_network_interface
-    )
-    select
-      n.id as from_id,
-      p.id as to_id
-    from
-      network_interface_public_ip as n
-      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
-    where
-      p.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_network_public_ip_network_interface_from_compute_virtual_machine_node" {
-  category = category.azure_compute_virtual_machine
-
-  sql = <<-EOQ
-    with vm_network_interface as (
-      select
-        id,
-        title,
-        name,
-        provisioning_state,
-        subscription_id,
-        resource_group,
-        region,
-        jsonb_array_elements(network_interfaces)->>'id' as n_id
-      from
-        azure_compute_virtual_machine
-    ), ni_public_ip as (
-        select
-          id,
-          jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-        from
-          azure_network_interface
-    )
-    select
-      v.id as id,
-      v.title as title,
-      jsonb_build_object(
-        'Name', v.name,
-        'ID', v.id,
-        'Provisioning State', v.provisioning_state,
-        'Subscription ID', v.subscription_id,
-        'Resource Group', v.resource_group,
-        'Region', v.region
-      ) as properties
-    from
-      vm_network_interface as v
-      left join ni_public_ip as n on lower(v.n_id) = lower(n.id)
-      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
-    where
-      p.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_network_public_ip_network_interface_from_compute_virtual_machine_edge" {
-  title = "network interface"
-
-  sql = <<-EOQ
-    with vm_network_interface as (
-      select
-        id,
-        title,
-        provisioning_state,
-        subscription_id,
-        resource_group,
-        region,
-        jsonb_array_elements(network_interfaces)->>'id' as n_id
-      from
-        azure_compute_virtual_machine
-    ),
-    ni_public_ip as (
-      select
-        id,
-        jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-      from
-        azure_network_interface
-    )
-    select
-      v.id as from_id,
-      n.id as to_id
-    from
-      vm_network_interface as v
-      left join ni_public_ip as n on lower(v.n_id) = lower(n.id)
-      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
-    where
-      p.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_network_public_ip_from_api_management_node" {
-  category = category.azure_api_management
-
-  sql = <<-EOQ
-    with public_ip_api_management as (
-      select
-        id,
-        title,
-        name,
-        provisioning_state,
-        subscription_id,
-        resource_group,
-        region,
-        jsonb_array_elements_text(public_ip_addresses) as pid
-      from
-        azure_api_management
-    )
-    select
-      a.id as id,
-      a.title as title,
-      jsonb_build_object(
-        'Name', a.name,
-        'ID', a.id,
-        'Provisioning State', a.provisioning_state,
-        'Subscription ID', a.subscription_id,
-        'Resource Group', a.resource_group,
-        'Region', a.region
-      ) as properties
-    from
-      public_ip_api_management as a
-      left join azure_public_ip as p on (a.pid)::inet = p.ip_address
-    where
-      p.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_network_public_ip_from_api_management_edge" {
-  title = "public ip"
-
-  sql = <<-EOQ
-   with public_ip_api_management as (
-      select
-        id,
-        title,
-        provisioning_state,
-        subscription_id,
-        resource_group,
-        region,
-        jsonb_array_elements_text(public_ip_addresses) as pid
-      from
-        azure_api_management
-    )
-    select
-      a.id as from_id,
-      p.id as to_id
-    from
-      public_ip_api_management as a
-      left join azure_public_ip as p on (a.pid)::inet = p.ip_address
-    where
-      p.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-query "azure_network_public_ip_address" {
+query "network_public_ip_address" {
   sql = <<-EOQ
     select
       'Public IP Address' as label,
@@ -384,13 +201,13 @@ query "azure_network_public_ip_address" {
     from
       azure_public_ip
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_network_public_ip_sku_name" {
+query "network_public_ip_sku_name" {
   sql = <<-EOQ
     select
       'SKU Name' as label,
@@ -398,7 +215,7 @@ query "azure_network_public_ip_sku_name" {
     from
       azure_public_ip
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -412,7 +229,7 @@ query "azure_network_public_ip_ddos_settings_protected_ip" {
     from
       azure_public_ip
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -433,7 +250,7 @@ query "azure_network_public_ip_overview" {
     from
       azure_public_ip
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -447,7 +264,7 @@ query "azure_network_public_ip_tags" {
     from
       azure_public_ip
     where
-      id = $1
+      lower(id) = $1
     order by
       tags ->> 'Key';
   EOQ
@@ -485,7 +302,7 @@ query "azure_network_public_ip_association_details" {
       network_interface_public_ip as n
       left join azure_public_ip as p on lower(n.pid) = lower(p.id)
     where
-      p.id = $1
+      lower(p.id) = $1
 
     -- API Management
     union all
@@ -498,7 +315,7 @@ query "azure_network_public_ip_association_details" {
       public_ip_api_management as a
       left join azure_public_ip as p on (a.pid)::inet = p.ip_address
     where
-      p.id = $1
+      lower(p.id) = $1
   EOQ
 
   param "id" {}

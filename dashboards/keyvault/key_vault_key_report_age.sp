@@ -1,6 +1,6 @@
-dashboard "azure_key_vault_key_age_report" {
+dashboard "key_vault_key_age_report" {
 
-  title = "Azure Key Vault Key Age Report"
+  title         = "Azure Key Vault Key Age Report"
   documentation = file("./dashboards/keyvault/docs/key_vault_key_report_age.md")
 
 
@@ -13,37 +13,37 @@ dashboard "azure_key_vault_key_age_report" {
 
     card {
       width = 2
-      query = query.azure_key_vault_key_count
+      query = query.key_vault_key_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_key_vault_key_24_hours_count
+      query = query.key_vault_key_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_key_vault_key_30_days_count
+      query = query.key_vault_key_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_key_vault_key_30_90_days_count
+      query = query.key_vault_key_30_90_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_key_vault_key_90_365_days_count
+      query = query.key_vault_key_90_365_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_key_vault_key_1_year_count
+      query = query.key_vault_key_1_year_count
     }
 
   }
@@ -57,12 +57,12 @@ dashboard "azure_key_vault_key_age_report" {
       display = "none"
     }
 
-    query = query.azure_key_vault_key_age_table
+    query = query.key_vault_key_age_table
   }
 
 }
 
-query "azure_key_vault_key_24_hours_count" {
+query "key_vault_key_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -74,7 +74,7 @@ query "azure_key_vault_key_24_hours_count" {
   EOQ
 }
 
-query "azure_key_vault_key_30_days_count" {
+query "key_vault_key_30_days_count" {
   sql = <<-EOQ
      select
       count(*) as value,
@@ -86,7 +86,7 @@ query "azure_key_vault_key_30_days_count" {
   EOQ
 }
 
-query "azure_key_vault_key_30_90_days_count" {
+query "key_vault_key_30_90_days_count" {
   sql = <<-EOQ
      select
       count(*) as value,
@@ -98,7 +98,7 @@ query "azure_key_vault_key_30_90_days_count" {
   EOQ
 }
 
-query "azure_key_vault_key_90_365_days_count" {
+query "key_vault_key_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -110,7 +110,7 @@ query "azure_key_vault_key_90_365_days_count" {
   EOQ
 }
 
-query "azure_key_vault_key_1_year_count" {
+query "key_vault_key_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -122,7 +122,7 @@ query "azure_key_vault_key_1_year_count" {
   EOQ
 }
 
-query "azure_key_vault_key_age_table" {
+query "key_vault_key_age_table" {
   sql = <<-EOQ
     select
       k.name as "Name",

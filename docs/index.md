@@ -6,7 +6,7 @@ repository: "https://github.com/turbot/steampipe-mod-azure-insights"
 
 Create dashboards and reports for your Azure resources using Steampipe.
 
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_dashboard.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/storage_account_dashboard.png" width="50%" type="thumbnail"/>
 <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_age.png" width="50%" type="thumbnail"/>
 <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_compute_virtual_machine_detail.png" width="50%" type="thumbnail"/>
 

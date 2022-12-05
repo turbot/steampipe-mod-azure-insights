@@ -1,4 +1,4 @@
-dashboard "azure_compute_disk_detail" {
+dashboard "compute_disk_detail" {
 
   title         = "Azure Compute Disk Detail"
   documentation = file("./dashboards/compute/docs/compute_disk_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_compute_disk_detail" {
 
   input "disk_id" {
     title = "Select a disk:"
-    query = query.azure_compute_disk_input
+    query = query.compute_disk_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_compute_disk_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_disk_size
+      query = query.compute_disk_size
       args = {
         id = self.input.disk_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_compute_disk_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_disk_os_type
+      query = query.compute_disk_os_type
       args = {
         id = self.input.disk_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_compute_disk_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_disk_sku_name
+      query = query.compute_disk_sku_name
       args = {
         id = self.input.disk_id.value
       }
@@ -41,7 +41,7 @@ dashboard "azure_compute_disk_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_disk_status
+      query = query.compute_disk_status
       args = {
         id = self.input.disk_id.value
       }
@@ -49,7 +49,7 @@ dashboard "azure_compute_disk_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_disk_network_access_policy
+      query = query.compute_disk_network_access_policy
       args = {
         id = self.input.disk_id.value
       }
@@ -64,33 +64,122 @@ dashboard "azure_compute_disk_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "virtual_machines" {
+        sql = <<-EOQ
+          select
+            lower(m.id) as virtual_machine_id
+          from
+            azure_compute_virtual_machine as m,
+            jsonb_array_elements(data_disks) as data_disk
+          where
+            lower(data_disk -> 'managedDisk' ->> 'id') = lower($1)
+            or lower(m.managed_disk_id) = $1;
+          EOQ
+
+        args = [self.input.disk_id.value]
+      }
+
+      with "key_vaults" {
+        sql = <<-EOQ
+          select
+            lower(k.id) as key_vault_id
+          from
+            azure_compute_disk_encryption_set as e
+            left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
+            left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
+          where
+            lower(d.id) = $1;
+          EOQ
+
+        args = [self.input.disk_id.value]
+      }
+
+      with "key_vault_keys" {
+        sql = <<-EOQ
+          select
+            lower(k.id) as key_vault_key_id
+          from
+            azure_compute_disk_encryption_set as e
+            left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
+            left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
+            left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
+          where
+            lower(d.id) = $1;
+          EOQ
+
+        args = [self.input.disk_id.value]
+      }
+
+      with "compute_snapshots" {
+        sql = <<-EOQ
+          select
+            lower(s.id) as compute_snapshot_id
+          from
+            azure_compute_disk as d
+            left join azure_compute_snapshot as s on lower(s.source_resource_id) = lower(d.id)
+          where
+            s.id is not null
+            and lower(d.id) = $1
+          union
+          select
+            lower(s.id) as compute_snapshot_id
+          from
+            azure_compute_disk as d
+            left join azure_compute_snapshot as s on lower(s.id) = lower(d.creation_data_source_resource_id)
+          where
+            s.id is not null
+            and lower(d.id) = $1
+          EOQ
+
+        args = [self.input.disk_id.value]
+      }
+
+      with "storage_accounts" {
+        sql = <<-EOQ
+          select
+            lower(a.id) as storage_account_id
+          from
+            azure_compute_disk as d
+            left join azure_storage_account as a on lower(a.id) = lower(d.creation_data_storage_account_id)
+          where
+            d.creation_data_storage_account_id is not null
+            and lower(d.id) = $1
+          EOQ
+
+        args = [self.input.disk_id.value]
+      }
+
       nodes = [
-        node.azure_compute_disk_node,
-        node.azure_compute_disk_from_compute_virtual_machine_node,
-        node.azure_compute_disk_to_compute_disk_access_node,
-        node.azure_compute_disk_to_compute_disk_encryption_set_node,
-        node.azure_compute_disk_compute_disk_encryption_set_to_key_vault_node,
-        node.azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_node,
-        node.azure_compute_disk_from_compute_snapshot_node,
-        node.azure_compute_disk_to_compute_snapshot_node,
-        node.azure_compute_disk_to_compute_disk_node,
-        node.azure_compute_disk_to_storage_account_node
+        node.compute_disk_compute_disk_access,
+        node.compute_disk_compute_disk_encryption_set,
+        node.compute_disk_to_compute_disk,
+        node.compute_disk,
+        node.compute_snapshot,
+        node.compute_virtual_machine,
+        node.key_vault_key,
+        node.key_vault,
+        node.storage_storage_account,
       ]
 
       edges = [
-        edge.azure_compute_disk_from_compute_virtual_machine_edge,
-        edge.azure_compute_disk_to_compute_disk_access_edge,
-        edge.azure_compute_disk_to_compute_disk_encryption_set_edge,
-        edge.azure_compute_disk_compute_disk_encryption_set_to_key_vault_edge,
-        edge.azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_edge,
-        edge.azure_compute_disk_from_compute_snapshot_edge,
-        edge.azure_compute_disk_to_compute_snapshot_edge,
-        edge.azure_compute_disk_to_compute_disk_edge,
-        edge.azure_compute_disk_to_storage_account_edge
+        edge.compute_disk_compute_to_key_vault,
+        edge.compute_disk_to_compute_disk_access,
+        edge.compute_disk_to_compute_disk_encryption_set,
+        edge.compute_disk_to_compute_disk,
+        edge.compute_disk_to_compute_snapshot,
+        edge.compute_disk_to_key,
+        edge.compute_disk_to_storage_account,
+        edge.compute_snapshot_to_compute_disk,
+        edge.compute_virtual_machine_to_compute_disk,
       ]
 
       args = {
-        id = self.input.disk_id.value
+        compute_disk_ids            = [self.input.disk_id.value]
+        compute_snapshot_ids        = with.compute_snapshots.rows[*].compute_snapshot_id
+        compute_virtual_machine_ids = with.virtual_machines.rows[*].virtual_machine_id
+        key_vault_ids               = with.key_vaults.rows[*].key_vault_id
+        key_vault_key_ids           = with.key_vault_keys.rows[*].key_vault_key_id
+        storage_account_ids         = with.storage_accounts.rows[*].storage_account_id
       }
     }
   }
@@ -104,7 +193,7 @@ dashboard "azure_compute_disk_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_compute_disk_overview
+        query = query.compute_disk_overview
         args = {
           id = self.input.disk_id.value
         }
@@ -113,7 +202,7 @@ dashboard "azure_compute_disk_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_compute_virtual_machine_tags
+        query = query.compute_disk_tags
         args = {
           id = self.input.disk_id.value
         }
@@ -126,19 +215,19 @@ dashboard "azure_compute_disk_detail" {
 
       table {
         title = "Attached To"
-        query = query.azure_compute_disk_associated_virtual_machine_details
+        query = query.compute_disk_associated_virtual_machine_details
         args = {
           id = self.input.disk_id.value
         }
 
         column "Name" {
-          href = "${dashboard.azure_compute_virtual_machine_detail.url_path}?input.vm_id={{.ID | @uri}}"
+          href = "${dashboard.compute_virtual_machine_detail.url_path}?input.vm_id={{.ID | @uri}}"
         }
       }
 
       table {
         title = "Disk Encryption Set"
-        query = query.azure_compute_disk_encryption_set_details
+        query = query.compute_disk_encryption_set_details
         args = {
           id = self.input.disk_id.value
         }
@@ -152,11 +241,11 @@ dashboard "azure_compute_disk_detail" {
         }
 
         column "Key Vault Name" {
-          href = "${dashboard.azure_key_vault_detail.url_path}?input.key_vault_id={{.'Key Vault ID' | @uri}}"
+          href = "${dashboard.key_vault_detail.url_path}?input.key_vault_id={{.'Key Vault ID' | @uri}}"
         }
 
         column "Key Name" {
-          href = "${dashboard.azure_key_vault_key_detail.url_path}?input.key_vault_key_id={{.'Key ID' | @uri}}"
+          href = "${dashboard.key_vault_key_detail.url_path}?input.key_vault_key_id={{.'Key ID' | @uri}}"
         }
       }
     }
@@ -165,11 +254,11 @@ dashboard "azure_compute_disk_detail" {
 
 }
 
-query "azure_compute_disk_input" {
+query "compute_disk_input" {
   sql = <<-EOQ
     select
       d.title as label,
-      d.id as value,
+      lower(d.id) as value,
       json_build_object(
         'subscription', s.display_name,
         'resource_group', d.resource_group,
@@ -185,7 +274,7 @@ query "azure_compute_disk_input" {
   EOQ
 }
 
-query "azure_compute_disk_status" {
+query "compute_disk_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -194,14 +283,14 @@ query "azure_compute_disk_status" {
     from
       azure_compute_disk
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 
 }
 
-query "azure_compute_disk_network_access_policy" {
+query "compute_disk_network_access_policy" {
   sql = <<-EOQ
     select
       'Network Access Policy' as label,
@@ -210,14 +299,14 @@ query "azure_compute_disk_network_access_policy" {
     from
       azure_compute_disk
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 
 }
 
-query "azure_compute_disk_size" {
+query "compute_disk_size" {
   sql = <<-EOQ
     select
       'Size (GB)' as label,
@@ -225,13 +314,13 @@ query "azure_compute_disk_size" {
     from
       azure_compute_disk
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_disk_os_type" {
+query "compute_disk_os_type" {
   sql = <<-EOQ
     select
       'OS Type' as label,
@@ -239,13 +328,13 @@ query "azure_compute_disk_os_type" {
     from
       azure_compute_disk
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_disk_sku_name" {
+query "compute_disk_sku_name" {
   sql = <<-EOQ
     select
       'SKU Name' as label,
@@ -253,14 +342,14 @@ query "azure_compute_disk_sku_name" {
     from
       azure_compute_disk
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-node "azure_compute_disk_node" {
-  category = category.azure_compute_disk
+node "compute_disk" {
+  category = category.compute_disk
 
   sql = <<-EOQ
     select
@@ -278,14 +367,14 @@ node "azure_compute_disk_node" {
     from
       azure_compute_disk
     where
-      id = $1;
+      lower(id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
 node "azure_compute_disk_from_compute_virtual_machine_node" {
-  category = category.azure_compute_virtual_machine
+  category = category.compute_virtual_machine
 
   sql = <<-EOQ
     select
@@ -309,26 +398,26 @@ node "azure_compute_disk_from_compute_virtual_machine_node" {
   param "id" {}
 }
 
-edge "azure_compute_disk_from_compute_virtual_machine_edge" {
+edge "compute_virtual_machine_to_compute_disk" {
   title = "disk"
 
   sql = <<-EOQ
     select
       lower(m.id) as from_id,
-      lower($1) as to_id
+      case when lower(data_disk -> 'managedDisk' ->> 'id') = any($1) then lower(data_disk -> 'managedDisk' ->> 'id') else lower(m.managed_disk_id) end as to_id
     from
       azure_compute_virtual_machine as m,
       jsonb_array_elements(data_disks) as data_disk
     where
-      lower(data_disk -> 'managedDisk' ->> 'id') = lower($1)
-      or lower(m.managed_disk_id) = lower($1);
+      lower(data_disk -> 'managedDisk' ->> 'id') = any($1)
+      or lower(m.managed_disk_id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
-node "azure_compute_disk_to_compute_disk_access_node" {
-  category = category.azure_compute_disk_access
+node "compute_disk_compute_disk_access" {
+  category = category.compute_disk_access
 
   sql = <<-EOQ
     select
@@ -347,13 +436,13 @@ node "azure_compute_disk_to_compute_disk_access_node" {
       azure_compute_disk_access as a
       left join azure_compute_disk as d on lower(d.disk_access_id) = lower(a.id)
     where
-      d.id = $1;
+      lower(d.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
-edge "azure_compute_disk_to_compute_disk_access_edge" {
+edge "compute_disk_to_compute_disk_access" {
   title = "disk access"
 
   sql = <<-EOQ
@@ -364,14 +453,14 @@ edge "azure_compute_disk_to_compute_disk_access_edge" {
       azure_compute_disk_access as a
       left join azure_compute_disk as d on lower(d.disk_access_id) = lower(a.id)
     where
-      d.id = $1;
+      lower(d.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
-node "azure_compute_disk_to_compute_disk_encryption_set_node" {
-  category = category.azure_compute_disk_encryption_set
+node "compute_disk_compute_disk_encryption_set" {
+  category = category.compute_disk_encryption_set
 
   sql = <<-EOQ
     select
@@ -388,13 +477,13 @@ node "azure_compute_disk_to_compute_disk_encryption_set_node" {
       azure_compute_disk_encryption_set as e
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
     where
-      d.id = $1;
+      lower(d.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
-edge "azure_compute_disk_to_compute_disk_encryption_set_edge" {
+edge "compute_disk_to_compute_disk_encryption_set" {
   title = "disk encryption set"
 
   sql = <<-EOQ
@@ -405,14 +494,14 @@ edge "azure_compute_disk_to_compute_disk_encryption_set_edge" {
       azure_compute_disk_encryption_set as e
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
     where
-      d.id = $1;
+      lower(d.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
 node "azure_compute_disk_compute_disk_encryption_set_to_key_vault_node" {
-  category = category.azure_key_vault
+  category = category.key_vault
 
   sql = <<-EOQ
     select
@@ -436,7 +525,7 @@ node "azure_compute_disk_compute_disk_encryption_set_to_key_vault_node" {
   param "id" {}
 }
 
-edge "azure_compute_disk_compute_disk_encryption_set_to_key_vault_edge" {
+edge "compute_disk_compute_to_key_vault" {
   title = "key vault"
 
   sql = <<-EOQ
@@ -448,14 +537,14 @@ edge "azure_compute_disk_compute_disk_encryption_set_to_key_vault_edge" {
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
     where
-      d.id = $1;
+      lower(d.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
 node "azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_node" {
-  category = category.azure_key_vault_key
+  category = category.key_vault_key
 
   sql = <<-EOQ
     select
@@ -480,7 +569,7 @@ node "azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_node" {
   param "id" {}
 }
 
-edge "azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_edge" {
+edge "compute_disk_to_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -493,14 +582,14 @@ edge "azure_compute_disk_compute_disk_encryption_set_key_vault_to_key_edge" {
       left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
       left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
     where
-      lower(d.id) = lower($1);
+      lower(d.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
 node "azure_compute_disk_from_compute_snapshot_node" {
-  category = category.azure_compute_snapshot
+  category = category.compute_snapshot
 
   sql = <<-EOQ
     select
@@ -523,7 +612,7 @@ node "azure_compute_disk_from_compute_snapshot_node" {
   param "id" {}
 }
 
-edge "azure_compute_disk_from_compute_snapshot_edge" {
+edge "compute_snapshot_to_compute_disk" {
   title = "disk"
 
   sql = <<-EOQ
@@ -534,14 +623,14 @@ edge "azure_compute_disk_from_compute_snapshot_edge" {
       azure_compute_snapshot as s
       left join azure_compute_disk as d on s.source_resource_id = d.id
     where
-      d.id = $1;
+      lower(d.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
 node "azure_compute_disk_to_compute_snapshot_node" {
-  category = category.azure_compute_snapshot
+  category = category.compute_snapshot
 
   sql = <<-EOQ
     select
@@ -566,7 +655,7 @@ node "azure_compute_disk_to_compute_snapshot_node" {
   param "id" {}
 }
 
-edge "azure_compute_disk_to_compute_snapshot_edge" {
+edge "compute_disk_to_compute_snapshot" {
   title = "snapshot source for disk"
 
   sql = <<-EOQ
@@ -577,14 +666,14 @@ edge "azure_compute_disk_to_compute_snapshot_edge" {
       azure_compute_disk as d
       left join azure_compute_snapshot as s on lower(s.id) = lower(d.creation_data_source_resource_id)
     where
-      d.id = $1;
+      lower(d.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
-node "azure_compute_disk_to_compute_disk_node" {
-  category = category.azure_compute_disk
+node "compute_disk_to_compute_disk" {
+  category = category.compute_disk
 
   sql = <<-EOQ
     select
@@ -603,13 +692,13 @@ node "azure_compute_disk_to_compute_disk_node" {
       azure_compute_disk as d1
       left join azure_compute_disk d2 on d1.creation_data_source_resource_id = d2.id
     where
-      d1.id = $1;
+      lower(d1.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
-edge "azure_compute_disk_to_compute_disk_edge" {
+edge "compute_disk_to_compute_disk" {
   title = "disk source for disk"
 
   sql = <<-EOQ
@@ -620,14 +709,14 @@ edge "azure_compute_disk_to_compute_disk_edge" {
       azure_compute_disk as d1
       left join azure_compute_disk d2 on d1.creation_data_source_resource_id = d2.id
     where
-      d1.id = $1;
+      lower(d1.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
 node "azure_compute_disk_to_storage_account_node" {
-  category = category.azure_storage_account
+  category = category.storage_storage_account
 
   sql = <<-EOQ
    select
@@ -651,7 +740,7 @@ node "azure_compute_disk_to_storage_account_node" {
   param "id" {}
 }
 
-edge "azure_compute_disk_to_storage_account_edge" {
+edge "compute_disk_to_storage_account" {
   title = "blob source for disk"
 
   sql = <<-EOQ
@@ -662,13 +751,13 @@ edge "azure_compute_disk_to_storage_account_edge" {
       azure_compute_disk as d
       left join azure_storage_account as a on lower(a.id) = lower(d.creation_data_storage_account_id)
     where
-      d.id = $1;
+      lower(d.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_disk_ids" {}
 }
 
-query "azure_compute_disk_overview" {
+query "compute_disk_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -683,13 +772,13 @@ query "azure_compute_disk_overview" {
     from
       azure_compute_disk
     where
-      id = $1
+      lower(id) = $1
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_disk_tags" {
+query "compute_disk_tags" {
   sql = <<-EOQ
     select
       tags ->> 'Key' as "Key",
@@ -697,7 +786,7 @@ query "azure_compute_disk_tags" {
     from
       azure_compute_disk
     where
-      id = $1
+      lower(id) = $1
     order by
       tags ->> 'Key';
     EOQ
@@ -705,7 +794,7 @@ query "azure_compute_disk_tags" {
   param "id" {}
 }
 
-query "azure_compute_disk_associated_virtual_machine_details" {
+query "compute_disk_associated_virtual_machine_details" {
   sql = <<-EOQ
     (
       select
@@ -716,7 +805,7 @@ query "azure_compute_disk_associated_virtual_machine_details" {
         azure_compute_virtual_machine,
         jsonb_array_elements(data_disks)  as data_disk
       where
-        lower(data_disk -> 'managedDisk' ->> 'id' ) = lower($1)
+        lower(data_disk -> 'managedDisk' ->> 'id' ) = $1
     )
     union
     (
@@ -727,14 +816,14 @@ query "azure_compute_disk_associated_virtual_machine_details" {
       from
         azure_compute_virtual_machine
       where
-        lower(managed_disk_id) = lower($1)
+        lower(managed_disk_id) = $1
     )
 EOQ
 
   param "id" {}
 }
 
-query "azure_compute_disk_encryption_set_details" {
+query "compute_disk_encryption_set_details" {
   sql = <<-EOQ
     select
       e.name as "Name",
@@ -750,7 +839,7 @@ query "azure_compute_disk_encryption_set_details" {
       left join azure_key_vault as v on v.id = e.active_key_source_vault_id
       left join azure_key_vault_key as k on k.key_uri_with_version = e.active_key_url
     where
-      d.id = $1;
+      lower(d.id) = $1;
   EOQ
 
   param "id" {}

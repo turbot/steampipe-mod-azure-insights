@@ -1,6 +1,6 @@
-dashboard "azure_storage_account_detail" {
+dashboard "storage_account_detail" {
 
-  title          = "Azure Storage Account Detail"
+  title         = "Azure Storage Account Detail"
   documentation = file("./dashboards/storage/docs/storage_account_detail.md")
 
   tags = merge(local.storage_common_tags, {
@@ -9,7 +9,7 @@ dashboard "azure_storage_account_detail" {
 
   input "storage_account_id" {
     title = "Select a storage account:"
-    query = query.azure_storage_account_input
+    query = query.storage_account_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_kind
+      query = query.storage_account_kind
       args = {
         id = self.input.storage_account_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_access_tier
+      query = query.storage_account_access_tier
       args = {
         id = self.input.storage_account_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_blob_soft_delete
+      query = query.storage_account_blob_soft_delete
       args = {
         id = self.input.storage_account_id.value
       }
@@ -41,7 +41,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_blob_public_access
+      query = query.storage_account_blob_public_access
       args = {
         id = self.input.storage_account_id.value
       }
@@ -49,7 +49,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_https_traffic
+      query = query.storage_account_https_traffic
       args = {
         id = self.input.storage_account_id.value
       }
@@ -65,7 +65,7 @@ dashboard "azure_storage_account_detail" {
       direction = "TD"
 
       nodes = [
-        node.azure_storage_account_node,
+        node.storage_storage_account,
         node.azure_storage_account_from_log_profile_node,
         node.azure_storage_account_from_compute_snapshot_node,
         node.azure_storage_account_from_diagnostic_setting_node,
@@ -98,7 +98,8 @@ dashboard "azure_storage_account_detail" {
       ]
 
       args = {
-        id = self.input.storage_account_id.value
+        storage_account_ids = [self.input.storage_account_id.value]
+        id                  = self.input.storage_account_id.value
       }
     }
   }
@@ -112,7 +113,7 @@ dashboard "azure_storage_account_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_storage_account_overview
+        query = query.storage_account_overview
         args = {
           id = self.input.storage_account_id.value
         }
@@ -122,7 +123,7 @@ dashboard "azure_storage_account_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_storage_account_tags
+        query = query.storage_account_tags
         args = {
           id = self.input.storage_account_id.value
         }
@@ -134,7 +135,7 @@ dashboard "azure_storage_account_detail" {
 
       table {
         title = "Blob Encryption Service"
-        query = query.azure_storage_account_blob_encryption_service
+        query = query.storage_account_blob_encryption_service
         args = {
           id = self.input.storage_account_id.value
         }
@@ -142,7 +143,7 @@ dashboard "azure_storage_account_detail" {
 
       table {
         title = "File Encryption Service"
-        query = query.azure_storage_account_file_encryption_service
+        query = query.storage_account_file_encryption_service
         args = {
           id = self.input.storage_account_id.value
         }
@@ -150,7 +151,7 @@ dashboard "azure_storage_account_detail" {
 
       table {
         title = "SKU Details"
-        query = query.azure_storage_account_sku
+        query = query.storage_account_sku
         args = {
           id = self.input.storage_account_id.value
         }
@@ -164,7 +165,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Vitual Network Rules"
-      query = query.azure_storage_account_virtual_network_rules
+      query = query.storage_account_virtual_network_rules
       args = {
         id = self.input.storage_account_id.value
       }
@@ -177,7 +178,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Blob Configurations"
-      query = query.azure_storage_account_blob_configurations
+      query = query.storage_account_blob_configurations
       args = {
         id = self.input.storage_account_id.value
       }
@@ -190,7 +191,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Queue Logging"
-      query = query.azure_storage_account_queue_logging
+      query = query.storage_account_queue_logging
       args = {
         id = self.input.storage_account_id.value
       }
@@ -198,12 +199,12 @@ dashboard "azure_storage_account_detail" {
 
   }
 
-   container {
+  container {
     width = 12
 
     table {
       title = "Blob Service Logging"
-      query = query.azure_storage_account_blob_logging
+      query = query.storage_account_blob_logging
       args = {
         id = self.input.storage_account_id.value
       }
@@ -213,11 +214,11 @@ dashboard "azure_storage_account_detail" {
 
 }
 
-query "azure_storage_account_input" {
+query "storage_account_input" {
   sql = <<-EOQ
     select
       sa.title as label,
-      sa.id as value,
+      lower(sa.id) as value,
       json_build_object(
         'subscription', s.display_name,
         'resource_group', sa.resource_group,
@@ -233,7 +234,7 @@ query "azure_storage_account_input" {
   EOQ
 }
 
-query "azure_storage_account_kind" {
+query "storage_account_kind" {
   sql = <<-EOQ
     select
       'Kind' as label,
@@ -241,13 +242,13 @@ query "azure_storage_account_kind" {
     from
       azure_storage_account
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_access_tier" {
+query "storage_account_access_tier" {
   sql = <<-EOQ
     select
       'Access Tier' as label,
@@ -255,13 +256,13 @@ query "azure_storage_account_access_tier" {
     from
       azure_storage_account
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_blob_soft_delete" {
+query "storage_account_blob_soft_delete" {
   sql = <<-EOQ
     select
       'Blob Soft Delete' as label,
@@ -270,13 +271,13 @@ query "azure_storage_account_blob_soft_delete" {
     from
       azure_storage_account
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_blob_public_access" {
+query "storage_account_blob_public_access" {
   sql = <<-EOQ
     select
       'Blob Public Access' as label,
@@ -285,13 +286,13 @@ query "azure_storage_account_blob_public_access" {
     from
       azure_storage_account
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_https_traffic" {
+query "storage_account_https_traffic" {
   sql = <<-EOQ
     select
       'HTTPS' as label,
@@ -300,7 +301,7 @@ query "azure_storage_account_https_traffic" {
     from
       azure_storage_account
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -315,7 +316,7 @@ query "azure_storage_account_unrestricted_network_access" {
     from
       azure_storage_account
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -330,13 +331,13 @@ query "azure_storage_account_infrastructure_encryption" {
     from
       azure_storage_account
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_overview" {
+query "storage_account_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -349,13 +350,13 @@ query "azure_storage_account_overview" {
     from
       azure_storage_account
     where
-      id = $1
+      lower(id) = $1
   EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_tags" {
+query "storage_account_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -364,7 +365,7 @@ query "azure_storage_account_tags" {
       azure_storage_account,
       jsonb_each_text(tags) as tag
     where
-      id = $1
+      lower(id) = $1
     order by
       tag.key;
     EOQ
@@ -372,7 +373,7 @@ query "azure_storage_account_tags" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_encryption_service" {
+query "storage_account_blob_encryption_service" {
   sql = <<-EOQ
     select
       encryption_services -> 'blob' ->> 'enabled' as "Enabled",
@@ -380,13 +381,13 @@ query "azure_storage_account_blob_encryption_service" {
     from
       azure_storage_account
     where
-      id = $1
+      lower(id) = $1
     EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_file_encryption_service" {
+query "storage_account_file_encryption_service" {
   sql = <<-EOQ
     select
       encryption_services -> 'file' ->> 'enabled' as "Enabled",
@@ -394,13 +395,13 @@ query "azure_storage_account_file_encryption_service" {
     from
       azure_storage_account
     where
-      id = $1
+      lower(id) = $1
     EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_sku" {
+query "storage_account_sku" {
   sql = <<-EOQ
     select
       sku_name as "SKU Name",
@@ -414,7 +415,7 @@ query "azure_storage_account_sku" {
   param "id" {}
 }
 
-query "azure_storage_account_virtual_network_rules" {
+query "storage_account_virtual_network_rules" {
   sql = <<-EOQ
     select
       vnr ->> 'action' as "Action",
@@ -424,13 +425,13 @@ query "azure_storage_account_virtual_network_rules" {
       azure_storage_account,
       jsonb_array_elements(virtual_network_rules) as vnr
     where
-      id = $1
+      lower(id) = $1
     EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_blob_configurations" {
+query "storage_account_blob_configurations" {
   sql = <<-EOQ
     select
       blob_container_soft_delete_enabled  as "Blob Container Soft Delete Enabled",
@@ -443,13 +444,13 @@ query "azure_storage_account_blob_configurations" {
     from
       azure_storage_account
     where
-      id = $1
+      lower(id) = $1
     EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_queue_logging" {
+query "storage_account_queue_logging" {
   sql = <<-EOQ
     select
       queue_logging_delete  as "Queue Logging Delete",
@@ -461,13 +462,13 @@ query "azure_storage_account_queue_logging" {
     from
       azure_storage_account
     where
-      id = $1
+      lower(id) = $1
     EOQ
 
   param "id" {}
 }
 
-query "azure_storage_account_blob_logging" {
+query "storage_account_blob_logging" {
   sql = <<-EOQ
     select
       blob_service_logging ->> 'Delete' as "Delete",
@@ -478,14 +479,14 @@ query "azure_storage_account_blob_logging" {
     from
       azure_storage_account
     where
-      id = $1
+      lower(id) = $1
     EOQ
 
   param "id" {}
 }
 
-node "azure_storage_account_node" {
-  category = category.azure_storage_account
+node "storage_storage_account" {
+  category = category.storage_storage_account
 
   sql = <<-EOQ
     select
@@ -502,14 +503,14 @@ node "azure_storage_account_node" {
     from
       azure_storage_account
     where
-      lower(id) = lower($1);
+      lower(id) = any($1);
   EOQ
 
-  param "id" {}
+  param "storage_account_ids" {}
 }
 
 node "azure_storage_account_from_log_profile_node" {
-  category = category.azure_log_profile
+  category = category.log_profile
 
   sql = <<-EOQ
     select
@@ -549,7 +550,7 @@ edge "azure_storage_account_from_log_profile_edge" {
 }
 
 node "azure_storage_account_from_compute_snapshot_node" {
-  category = category.azure_compute_snapshot
+  category = category.compute_snapshot
 
   sql = <<-EOQ
     select
@@ -583,14 +584,14 @@ edge "azure_storage_account_from_compute_snapshot_edge" {
     from
       azure_compute_snapshot
     where
-      lower(storage_account_id) = lower($1);
+      lower(storage_account_id) = $1;
   EOQ
 
   param "id" {}
 }
 
 node "azure_storage_account_from_compute_disk_node" {
-  category = category.azure_compute_disk
+  category = category.compute_disk
 
   sql = <<-EOQ
     select
@@ -609,7 +610,7 @@ node "azure_storage_account_from_compute_disk_node" {
     from
       azure_compute_disk
     where
-      lower(creation_data_storage_account_id) = lower($1);
+      lower(creation_data_storage_account_id) = $1;
   EOQ
 
   param "id" {}
@@ -625,14 +626,14 @@ edge "azure_storage_account_from_compute_disk_edge" {
     from
       azure_compute_disk
     where
-      lower(creation_data_storage_account_id) = lower($1);
+      lower(creation_data_storage_account_id) = $1;
   EOQ
 
   param "id" {}
 }
 
 node "azure_storage_account_from_diagnostic_setting_node" {
-  category = category.azure_diagnostic_setting
+  category = category.diagnostic_setting
 
   sql = <<-EOQ
     select
@@ -648,7 +649,7 @@ node "azure_storage_account_from_diagnostic_setting_node" {
     from
       azure_diagnostic_setting
     where
-      lower(storage_account_id) = lower($1);
+      lower(storage_account_id) = $1;
   EOQ
 
   param "id" {}
@@ -671,7 +672,7 @@ edge "azure_storage_account_from_diagnostic_setting_edge" {
 }
 
 node "azure_storage_account_to_subnet_node" {
-  category = category.azure_subnet
+  category = category.network_subnet
 
   sql = <<-EOQ
     with subnet_list as (
@@ -727,7 +728,7 @@ edge "azure_storage_account_to_subnet_edge" {
 }
 
 node "azure_storage_account_subnet_to_vpc_node" {
-  category = category.azure_virtual_network
+  category = category.network_virtual_network
 
   sql = <<-EOQ
     with vn_list as (
@@ -783,7 +784,7 @@ edge "azure_storage_account_subnet_to_vpc_edge" {
 }
 
 node "azure_storage_account_to_storage_table_node" {
-  category = category.azure_storage_table
+  category = category.storage_table
 
   sql = <<-EOQ
     select
@@ -825,7 +826,7 @@ edge "azure_storage_account_to_storage_table_edge" {
 }
 
 node "azure_storage_account_to_storage_queue_node" {
-  category = category.azure_storage_queue
+  category = category.storage_queue
 
   sql = <<-EOQ
     select
@@ -867,7 +868,7 @@ edge "azure_storage_account_to_storage_queue_edge" {
 }
 
 node "azure_storage_account_to_storage_container_node" {
-  category = category.azure_storage_container
+  category = category.storage_container
 
   sql = <<-EOQ
     select
@@ -910,7 +911,7 @@ edge "azure_storage_account_to_storage_container_edge" {
 }
 
 node "azure_storage_account_to_storage_share_file_node" {
-  category = category.azure_storage_share_file
+  category = category.storage_share_file
 
   sql = <<-EOQ
     select
@@ -953,7 +954,7 @@ edge "azure_storage_account_to_storage_share_file_edge" {
 }
 
 node "azure_storage_account_to_key_vault_node" {
-  category = category.azure_key_vault
+  category = category.key_vault
 
   sql = <<-EOQ
     select
@@ -995,7 +996,7 @@ edge "azure_storage_account_to_key_vault_edge" {
 }
 
 node "azure_storage_account_key_vault_to_key_vault_key_node" {
-  category = category.azure_key_vault_key
+  category = category.key_vault_key
 
   sql = <<-EOQ
     select
@@ -1040,7 +1041,7 @@ edge "azure_storage_account_key_vault_to_key_vault_key_edge" {
 }
 
 node "azure_storage_account_from_batch_account_node" {
-  category = category.azure_batch_account
+  category = category.batch_account
 
   sql = <<-EOQ
     select

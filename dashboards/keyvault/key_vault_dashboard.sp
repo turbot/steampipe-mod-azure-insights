@@ -1,6 +1,6 @@
-dashboard "azure_key_vault_dashboard" {
+dashboard "key_vault_dashboard" {
 
-  title = "Azure Key Vault Dashboard"
+  title         = "Azure Key Vault Dashboard"
   documentation = file("./dashboards/keyvault/docs/key_vault_dashboard.md")
 
   tags = merge(local.keyvault_common_tags, {
@@ -10,22 +10,22 @@ dashboard "azure_key_vault_dashboard" {
   container {
 
     card {
-      query = query.azure_key_vault_count
+      query = query.key_vault_count
       width = 2
     }
 
     card {
-      query = query.azure_key_vault_purge_protection_enabled_count
+      query = query.key_vault_purge_protection_enabled_count
       width = 2
     }
 
     card {
-      query = query.azure_key_vault_soft_delete_enabled_count
+      query = query.key_vault_soft_delete_enabled_count
       width = 2
     }
 
     card {
-      query = query.azure_key_vault_public_network_access_enabled_count
+      query = query.key_vault_public_network_access_enabled_count
       width = 2
     }
   }
@@ -35,7 +35,7 @@ dashboard "azure_key_vault_dashboard" {
 
     chart {
       title = "Purge Protection Status"
-      query = query.azure_key_vault_by_purge_protection_status
+      query = query.key_vault_by_purge_protection_status
       type  = "donut"
       width = 2
 
@@ -51,7 +51,7 @@ dashboard "azure_key_vault_dashboard" {
 
     chart {
       title = "Soft-Delete Status"
-      query = query.azure_key_vault_by_soft_delete_status
+      query = query.key_vault_by_soft_delete_status
       type  = "donut"
       width = 2
 
@@ -67,7 +67,7 @@ dashboard "azure_key_vault_dashboard" {
 
     chart {
       title = "Public Network Access Status"
-      query = query.azure_key_vault_by_public_network_access_status
+      query = query.key_vault_by_public_network_access_status
       type  = "donut"
       width = 2
 
@@ -88,28 +88,28 @@ dashboard "azure_key_vault_dashboard" {
 
     chart {
       title = "Vaults by Subscription"
-      query = query.azure_key_vault_by_subscription
+      query = query.key_vault_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Vaults by Resource Group"
-      query = query.azure_key_vault_by_resource_group
+      query = query.key_vault_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Vaults by Region"
-      query = query.azure_key_vault_by_region
+      query = query.key_vault_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Vaults by SKU"
-      query = query.azure_key_vault_by_sku
+      query = query.key_vault_by_sku
       type  = "column"
       width = 3
     }
@@ -120,13 +120,13 @@ dashboard "azure_key_vault_dashboard" {
 
 # Card Queries
 
-query "azure_key_vault_count" {
+query "key_vault_count" {
   sql = <<-EOQ
     select count(*) as "Vaults" from azure_key_vault;
   EOQ
 }
 
-query "azure_key_vault_purge_protection_enabled_count" {
+query "key_vault_purge_protection_enabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -139,7 +139,7 @@ query "azure_key_vault_purge_protection_enabled_count" {
   EOQ
 }
 
-query "azure_key_vault_soft_delete_enabled_count" {
+query "key_vault_soft_delete_enabled_count" {
   sql = <<-EOQ
      select
       count(*) as value,
@@ -152,7 +152,7 @@ query "azure_key_vault_soft_delete_enabled_count" {
   EOQ
 }
 
-query "azure_key_vault_public_network_access_enabled_count" {
+query "key_vault_public_network_access_enabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -182,7 +182,7 @@ query "azure_key_vault_private_link_enabled_count" {
 
 # Assessment Queries
 
-query "azure_key_vault_by_purge_protection_status" {
+query "key_vault_by_purge_protection_status" {
   sql = <<-EOQ
     select
       status,
@@ -201,7 +201,7 @@ query "azure_key_vault_by_purge_protection_status" {
   EOQ
 }
 
-query "azure_key_vault_by_soft_delete_status" {
+query "key_vault_by_soft_delete_status" {
   sql = <<-EOQ
     select
       status,
@@ -220,7 +220,7 @@ query "azure_key_vault_by_soft_delete_status" {
   EOQ
 }
 
-query "azure_key_vault_by_public_network_access_status" {
+query "key_vault_by_public_network_access_status" {
   sql = <<-EOQ
     select
       status,
@@ -241,7 +241,7 @@ query "azure_key_vault_by_public_network_access_status" {
 
 # Analysis Queries
 
-query "azure_key_vault_by_subscription" {
+query "key_vault_by_subscription" {
   sql = <<-EOQ
     select
       a.title as "Subscription",
@@ -258,7 +258,7 @@ query "azure_key_vault_by_subscription" {
   EOQ
 }
 
-query "azure_key_vault_by_resource_group" {
+query "key_vault_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -275,13 +275,13 @@ query "azure_key_vault_by_resource_group" {
   EOQ
 }
 
-query "azure_key_vault_by_region" {
+query "key_vault_by_region" {
   sql = <<-EOQ
     select region as "Region", count(*) as "Vaults" from azure_key_vault group by region order by region;
   EOQ
 }
 
-query "azure_key_vault_by_sku" {
+query "key_vault_by_sku" {
   sql = <<-EOQ
     select
       sku_name as "SKU",

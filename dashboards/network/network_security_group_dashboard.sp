@@ -1,4 +1,4 @@
-dashboard "azure_network_security_group_dashboard" {
+dashboard "network_security_group_dashboard" {
 
   title         = "Azure Network Security Group Dashboard"
   documentation = file("./dashboards/network/docs/network_security_group_dashboard.md")
@@ -10,27 +10,27 @@ dashboard "azure_network_security_group_dashboard" {
   container {
 
     card {
-      query = query.azure_network_security_group_count
+      query = query.network_security_group_count
       width = 2
     }
 
     card {
-      query = query.azure_network_security_group_unassociated_count
+      query = query.network_security_group_unassociated_count
       width = 2
     }
 
     card {
-      query = query.azure_network_security_group_flow_logs_disabled_count
+      query = query.network_security_group_flow_logs_disabled_count
       width = 2
     }
 
     card {
-      query = query.azure_network_security_group_unrestricted_ingress_count
+      query = query.network_security_group_unrestricted_ingress_count
       width = 2
     }
 
     card {
-      query = query.azure_network_security_group_unrestricted_egress_count
+      query = query.network_security_group_unrestricted_egress_count
       width = 2
     }
 
@@ -42,7 +42,7 @@ dashboard "azure_network_security_group_dashboard" {
 
     chart {
       title = "Association Status"
-      query = query.azure_network_security_group_unused_status
+      query = query.network_security_group_unused_status
       type  = "donut"
       width = 3
 
@@ -58,7 +58,7 @@ dashboard "azure_network_security_group_dashboard" {
 
     chart {
       title = "Network Security Group Flow Logs"
-      query = query.azure_network_security_group_flow_logs_status
+      query = query.network_security_group_flow_logs_status
       type  = "donut"
       width = 3
 
@@ -74,7 +74,7 @@ dashboard "azure_network_security_group_dashboard" {
 
     chart {
       title = "With Unrestricted Ingress (Excludes ICMP)"
-      query = query.azure_network_security_group_unrestricted_ingress
+      query = query.network_security_group_unrestricted_ingress
 
       type  = "donut"
       width = 3
@@ -92,7 +92,7 @@ dashboard "azure_network_security_group_dashboard" {
 
     chart {
       title = "With Unrestricted Egress (Excludes ICMP)"
-      query = query.azure_network_security_group_unrestricted_egress
+      query = query.network_security_group_unrestricted_egress
 
       type  = "donut"
       width = 3
@@ -115,28 +115,28 @@ dashboard "azure_network_security_group_dashboard" {
 
     chart {
       title = "Network Security Groups by Subscription"
-      query = query.azure_network_security_group_by_subscription
+      query = query.network_security_group_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Network Security Groups by Resource Group"
-      query = query.azure_network_security_group_by_resource_group
+      query = query.network_security_group_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Network Security Groups by Region"
-      query = query.azure_network_security_group_by_region
+      query = query.network_security_group_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Network Security Groups by Provisioning State"
-      query = query.azure_network_security_group_by_provisioning_state
+      query = query.network_security_group_by_provisioning_state
       type  = "column"
       width = 3
     }
@@ -147,13 +147,13 @@ dashboard "azure_network_security_group_dashboard" {
 
 # Card Queries
 
-query "azure_network_security_group_count" {
+query "network_security_group_count" {
   sql = <<-EOQ
     select count(*) as "Network Security Groups" from azure_network_security_group;
   EOQ
 }
 
-query "azure_network_security_group_unassociated_count" {
+query "network_security_group_unassociated_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -166,7 +166,7 @@ query "azure_network_security_group_unassociated_count" {
   EOQ
 }
 
-query "azure_network_security_group_flow_logs_disabled_count" {
+query "network_security_group_flow_logs_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -179,7 +179,7 @@ query "azure_network_security_group_flow_logs_disabled_count" {
   EOQ
 }
 
-query "azure_network_security_group_unrestricted_ingress_count" {
+query "network_security_group_unrestricted_ingress_count" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -215,7 +215,7 @@ query "azure_network_security_group_unrestricted_ingress_count" {
   EOQ
 }
 
-query "azure_network_security_group_unrestricted_egress_count" {
+query "network_security_group_unrestricted_egress_count" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -253,7 +253,7 @@ query "azure_network_security_group_unrestricted_egress_count" {
 
 # Assessment Queries
 
-query "azure_network_security_group_unused_status" {
+query "network_security_group_unused_status" {
   sql = <<-EOQ
     select
       status,
@@ -272,7 +272,7 @@ query "azure_network_security_group_unused_status" {
   EOQ
 }
 
-query "azure_network_security_group_flow_logs_status" {
+query "network_security_group_flow_logs_status" {
   sql = <<-EOQ
     select
       status,
@@ -291,7 +291,7 @@ query "azure_network_security_group_flow_logs_status" {
   EOQ
 }
 
-query "azure_network_security_group_unrestricted_ingress" {
+query "network_security_group_unrestricted_ingress" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -329,7 +329,7 @@ query "azure_network_security_group_unrestricted_ingress" {
   EOQ
 }
 
-query "azure_network_security_group_unrestricted_egress" {
+query "network_security_group_unrestricted_egress" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -369,7 +369,7 @@ query "azure_network_security_group_unrestricted_egress" {
 
 # Analysis Queries
 
-query "azure_network_security_group_by_subscription" {
+query "network_security_group_by_subscription" {
   sql = <<-EOQ
     select
       sub.title as "Subscription",
@@ -386,7 +386,7 @@ query "azure_network_security_group_by_subscription" {
   EOQ
 }
 
-query "azure_network_security_group_by_resource_group" {
+query "network_security_group_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -403,7 +403,7 @@ query "azure_network_security_group_by_resource_group" {
   EOQ
 }
 
-query "azure_network_security_group_by_region" {
+query "network_security_group_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -417,7 +417,7 @@ query "azure_network_security_group_by_region" {
   EOQ
 }
 
-query "azure_network_security_group_by_provisioning_state" {
+query "network_security_group_by_provisioning_state" {
   sql = <<-EOQ
     select
       provisioning_state as "Provisioning State",

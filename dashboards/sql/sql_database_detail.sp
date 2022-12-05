@@ -1,4 +1,4 @@
-dashboard "azure_sql_database_detail" {
+dashboard "sql_database_detail" {
 
   title         = "Azure SQL Database Detail"
   documentation = file("./dashboards/sql/docs/sql_database_detail.md")
@@ -7,9 +7,9 @@ dashboard "azure_sql_database_detail" {
     type = "Detail"
   })
 
-  input "database_id" {
+  input "sql_database_id" {
     title = "Select a database:"
-    query = query.azure_sql_database_input
+    query = query.sql_database_input
     width = 4
   }
 
@@ -18,49 +18,49 @@ dashboard "azure_sql_database_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_database_server
+      query = query.sql_database_server
       args = {
-        id = self.input.database_id.value
+        id = self.input.sql_database_id.value
       }
     }
 
     card {
       width = 2
-      query = query.azure_sql_database_status
+      query = query.sql_database_status
       args = {
-        id = self.input.database_id.value
+        id = self.input.sql_database_id.value
       }
     }
 
     card {
       width = 2
-      query = query.azure_sql_database_zone_redundant
+      query = query.sql_database_zone_redundant
       args = {
-        id = self.input.database_id.value
+        id = self.input.sql_database_id.value
       }
     }
 
     card {
       width = 2
-      query = query.azure_sql_database_transparent_data_encryption
+      query = query.sql_database_transparent_data_encryption
       args = {
-        id = self.input.database_id.value
+        id = self.input.sql_database_id.value
       }
     }
 
     card {
       width = 2
-      query = query.azure_sql_database_vulnerability_assessment_enabled
+      query = query.sql_database_vulnerability_assessment_enabled
       args = {
-        id = self.input.database_id.value
+        id = self.input.sql_database_id.value
       }
     }
 
     card {
       width = 2
-      query = query.azure_sql_database_geo_redundant_backup_enabled
+      query = query.sql_database_geo_redundant_backup_enabled
       args = {
-        id = self.input.database_id.value
+        id = self.input.sql_database_id.value
       }
     }
 
@@ -68,23 +68,67 @@ dashboard "azure_sql_database_detail" {
 
   container {
     graph {
-      title = "Relationships"
-      type = "graph"
+      title     = "Relationships"
+      type      = "graph"
       direction = "TD"
 
+      with "sql_servers" {
+        sql = <<-EOQ
+          with sql_servers as (
+            select
+              id,
+              name,
+              kind,
+              location,
+              public_network_access,
+              resource_group,
+              subscription_id,
+              version,
+              type,
+              title
+            from
+              azure_sql_server
+          )
+          select
+            lower(sv.id) as sql_server_id,
+            sv.title as title,
+            json_build_object(
+              'Name', sv.name,
+              'Kind', sv.kind,
+              'Location', sv.location,
+              'Public Network Access', sv.public_network_access,
+              'Resource Group', sv.resource_group,
+              'Subscription ID', sv.subscription_id,
+              'Version', sv.version,
+              'Type', sv.type,
+              'ID', sv.id
+            ) as properties
+          from
+            azure_sql_database as db,
+            sql_servers as sv
+          where
+            lower(db.id) = lower($1)
+            and db.server_name = sv.name;
+        EOQ
+
+        args = [self.input.sql_database_id.value]
+      }
+
       nodes = [
-        node.azure_sql_database_node,
-        node.azure_sql_database_from_sql_server_node,
-        node.azure_sql_databaset_from_mssql_elasticpool_node
+        node.sql_database_mssql_elasticpool,
+        node.sql_database,
+        node.sql_server
       ]
 
       edges = [
-        edge.azure_sql_database_from_sql_server_edge,
-        edge.azure_sql_databaset_from_mssql_elasticpool_edge
+        edge.sql_database_to_mssql_elasticpool,
+        edge.sql_server_to_sql_database
       ]
 
       args = {
-        id = self.input.database_id.value
+        id               = self.input.sql_database_id.value
+        sql_database_ids = [self.input.sql_database_id.value]
+        sql_server_ids   = with.sql_servers.rows[*].sql_server_id
       }
     }
   }
@@ -98,18 +142,18 @@ dashboard "azure_sql_database_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_sql_database_overview
+        query = query.sql_database_overview
         args = {
-          id = self.input.database_id.value
+          id = self.input.sql_database_id.value
         }
       }
 
       table {
         title = "Tags"
         width = 6
-        query = query.azure_sql_database_tags
+        query = query.sql_database_tags
         args = {
-          id = self.input.database_id.value
+          id = self.input.sql_database_id.value
         }
       }
 
@@ -120,17 +164,17 @@ dashboard "azure_sql_database_detail" {
 
       table {
         title = "Retention Policy"
-        query = query.azure_sql_database_retention
+        query = query.sql_database_retention
         args = {
-          id = self.input.database_id.value
+          id = self.input.sql_database_id.value
         }
       }
 
       table {
         title = "Vulnerability Assessment"
-        query = query.azure_sql_database_vulnerability_assessment
+        query = query.sql_database_vulnerability_assessment
         args = {
-          id = self.input.database_id.value
+          id = self.input.sql_database_id.value
         }
       }
 
@@ -139,11 +183,11 @@ dashboard "azure_sql_database_detail" {
 
 }
 
-query "azure_sql_database_input" {
+query "sql_database_input" {
   sql = <<-EOQ
     select
       d.title as label,
-      d.id as value,
+      lower(d.id) as value,
       json_build_object(
         'subscription', sub.display_name,
         'resource_group', d.resource_group,
@@ -153,14 +197,14 @@ query "azure_sql_database_input" {
       azure_sql_database as d,
       azure_subscription as sub
     where
-      d.subscription_id = sub.subscription_id
+      lower(d.subscription_id) = lower(sub.subscription_id)
       and name <> 'master'
     order by
       d.title;
   EOQ
 }
 
-query "azure_sql_database_server" {
+query "sql_database_server" {
   sql = <<-EOQ
     select
       'Server Name' as label,
@@ -169,14 +213,14 @@ query "azure_sql_database_server" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 
 }
 
-query "azure_sql_database_zone_redundant" {
+query "sql_database_zone_redundant" {
   sql = <<-EOQ
     select
       'Zone Redundancy' as label,
@@ -185,14 +229,14 @@ query "azure_sql_database_zone_redundant" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 
 }
 
-query "azure_sql_database_status" {
+query "sql_database_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -201,7 +245,7 @@ query "azure_sql_database_status" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -217,13 +261,13 @@ query "azure_sql_database_edition" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_sql_database_transparent_data_encryption" {
+query "sql_database_transparent_data_encryption" {
   sql = <<-EOQ
     select
       'TDE' as label,
@@ -233,13 +277,13 @@ query "azure_sql_database_transparent_data_encryption" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_sql_database_vulnerability_assessment_enabled" {
+query "sql_database_vulnerability_assessment_enabled" {
   sql = <<-EOQ
     with sql_database_va as (
       select
@@ -258,13 +302,13 @@ query "azure_sql_database_vulnerability_assessment_enabled" {
      azure_sql_database as d left join sql_database_va as v on lower(v.id) = lower(d.id)
     where
       d.name <> 'master'
-      and d.id = $1;
+      and lower(d.id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_sql_database_geo_redundant_backup_enabled" {
+query "sql_database_geo_redundant_backup_enabled" {
   sql = <<-EOQ
     select
       'Geo-Redundant Backup' as label,
@@ -282,110 +326,14 @@ query "azure_sql_database_geo_redundant_backup_enabled" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-node "azure_sql_database_node" {
-  category = category.azure_sql_database
-
-  sql = <<-EOQ
-    select
-      id as id,
-      title as title,
-      json_build_object(
-        'Location', location,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id,
-        'Database ID', database_id,
-        'status', status,
-        'Kind', kind,
-        'Type', type,
-        'Zone Redundant', zone_redundant,
-        'Default Secondary Location', default_secondary_location
-      ) as properties
-    from
-      azure_sql_database
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_sql_database_from_sql_server_node" {
-  category = category.azure_sql_server
-
-  sql = <<-EOQ
-    with sql_servers as (
-      select
-        id,
-        name,
-        kind,
-        location,
-        public_network_access,
-        resource_group,
-        subscription_id,
-        version,
-        type,
-        title
-      from
-        azure_sql_server
-    )
-    select
-      sv.id as id,
-      sv.title as title,
-      json_build_object(
-        'Name', sv.name,
-        'Kind', sv.kind,
-        'Location', sv.location,
-        'Public Network Access', sv.public_network_access,
-        'Resource Group', sv.resource_group,
-        'Subscription ID', sv.subscription_id,
-        'Version', sv.version,
-        'Type', sv.type,
-        'ID', sv.id
-      ) as properties
-    from
-      azure_sql_database as db,
-      sql_servers as sv
-    where
-      db.id = $1
-      and db.server_name = sv.name;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_sql_database_from_sql_server_edge" {
-  title = "manages"
-
-  sql = <<-EOQ
-    with sql_servers as (
-      select
-        id,
-        name
-      from
-        azure_sql_server
-    )
-    select
-      sv.id as from_id,
-      db.id as to_id
-    from
-      azure_sql_database as db,
-      sql_servers as sv
-    where
-      db.id = $1
-      and lower(db.server_name) = lower(sv.name);
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_sql_databaset_from_mssql_elasticpool_node" {
-  category = category.azure_mssql_elasticpool
+node "sql_database_mssql_elasticpool" {
+  category = category.mssql_elasticpool
 
   sql = <<-EOQ
     with sql_pools as (
@@ -403,7 +351,7 @@ node "azure_sql_databaset_from_mssql_elasticpool_node" {
         azure_mssql_elasticpool
     )
     select
-      sp.id as id,
+      lower(sp.id) as id,
       sp.title as title,
       json_build_object(
         'Edition', sp.edition,
@@ -416,16 +364,16 @@ node "azure_sql_databaset_from_mssql_elasticpool_node" {
       azure_sql_database as db,
       sql_pools as sp
     where
-      db.id = $1
+      lower(db.id) = any($1)
       and lower(sp.name) = lower(db.elastic_pool_name);
   EOQ
 
-  param "id" {}
+  param "sql_database_ids" {}
 }
 
-edge "azure_sql_databaset_from_mssql_elasticpool_edge" {
-  title = "database"
-  sql = <<-EOQ
+edge "sql_database_to_mssql_elasticpool" {
+  title = "elasticpool"
+  sql   = <<-EOQ
     with sql_pools as (
       select
         id,
@@ -434,19 +382,19 @@ edge "azure_sql_databaset_from_mssql_elasticpool_edge" {
         azure_mssql_elasticpool
     )
     select
-      sp.id as from_id,
-      db.id as to_id
+      lower(sp.id) as to_id,
+      lower(db.id) as from_id
     from
       azure_sql_database as db,
       sql_pools as sp
     where
-      db.id = $1
+      lower(db.id) = any($1)
       and lower(sp.name) = lower(db.elastic_pool_name);
   EOQ
-  param "id" {}
+  param "sql_database_ids" {}
 }
 
-query "azure_sql_database_overview" {
+query "sql_database_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -460,13 +408,13 @@ query "azure_sql_database_overview" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_sql_database_tags" {
+query "sql_database_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -476,7 +424,7 @@ query "azure_sql_database_tags" {
       jsonb_each_text(tags) as tag
     where
       name <> 'master'
-      and id = $1
+      and lower(id) = $1
     order by
       tag.key;
     EOQ
@@ -484,7 +432,7 @@ query "azure_sql_database_tags" {
   param "id" {}
 }
 
-query "azure_sql_database_retention" {
+query "sql_database_retention" {
   sql = <<-EOQ
     select
       retention_policy_name as "Retention Policy Name",
@@ -497,13 +445,13 @@ query "azure_sql_database_retention" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_sql_database_vulnerability_assessment" {
+query "sql_database_vulnerability_assessment" {
   sql = <<-EOQ
     select
       a ->> 'name' as "Name",
@@ -516,7 +464,7 @@ query "azure_sql_database_vulnerability_assessment" {
       jsonb_array_elements(vulnerability_assessments) as a
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
