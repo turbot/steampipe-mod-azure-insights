@@ -165,7 +165,7 @@ node "key_vault_key_version_container_registry" {
 }
 
 node "key_vault_key_version_sql_server" {
-  category = category.azure_sql_server
+  category = category.sql_server
 
   sql = <<-EOQ
     with sql_server as (

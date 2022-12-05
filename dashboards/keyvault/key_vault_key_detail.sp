@@ -305,4 +305,3 @@ query "key_vault_key_age" {
 
   param "id" {}
 }
-
