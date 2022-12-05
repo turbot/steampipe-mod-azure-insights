@@ -207,34 +207,34 @@ dashboard "azure_sql_server_detail" {
       }
 
       nodes = [
-        node.sql_server,
-        node.network_subnet,
-        node.network_private_endpoint,
-        node.network_virtual_network,
-        node.key_vault,
         node.key_vault_key,
+        node.key_vault,
+        node.network_private_endpoint,
+        node.network_subnet,
+        node.network_virtual_network,
         node.sql_database,
-        node.mssql_elasticpool
+        node.sql_server_mssql_elasticpool,
+        node.sql_server
       ]
 
       edges = [
-        edge.sql_server_to_subnet,
-        edge.sql_server_to_private_endpoint,
+        edge.sql_server_key_vault_to_key_vault_key,
         edge.sql_server_subnet_to_virtual_network,
         edge.sql_server_to_key_vault,
-        edge.sql_server_key_vault_to_key_vault_key,
+        edge.sql_server_to_mssql_elasticpool,
+        edge.sql_server_to_private_endpoint,
         edge.sql_server_to_sql_database,
-        edge.sql_server_to_mssql_elasticpool
+        edge.sql_server_to_subnet
       ]
 
       args = {
-        sql_server_ids      = [self.input.sql_server_id.value]
-        network_subnet_ids  = with.network_subnets.rows[*].subnet_id
-        virtual_network_ids = with.virtual_networks.rows[*].virtual_networks_id
+        id                  = self.input.sql_server_id.value
         key_vault_ids       = with.key_vaults.rows[*].key_vault_id
         key_vault_key_id    = with.key_vault_keys.rows[*].key_vault_key_id
+        network_subnet_ids  = with.network_subnets.rows[*].subnet_id
         sql_database_id     = with.sql_databases.rows[*].sql_database_id
-        id                  = self.input.sql_server_id.value
+        sql_server_ids      = [self.input.sql_server_id.value]
+        virtual_network_ids = with.virtual_networks.rows[*].virtual_networks_id
       }
     }
   }
@@ -459,7 +459,7 @@ query "azure_sql_server_vulnerability_assessment_enabled" {
   param "id" {}
 }
 
-node "mssql_elasticpool" {
+node "sql_server_mssql_elasticpool" {
   category = category.mssql_elasticpool
 
   sql = <<-EOQ

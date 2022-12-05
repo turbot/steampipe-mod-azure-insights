@@ -113,25 +113,25 @@ dashboard "azure_app_service_web_app_detail" {
       }
 
       nodes = [
+        node.app_service_web_app_from_application_gateway,
+        node.app_service_web_app_to_app_service_plan,
         node.app_service_web_app,
         node.network_subnet,
-        node.network_virtual_network,
-        node.app_service_web_app_to_app_service_plan,
-        node.app_service_web_app_from_application_gateway
+        node.network_virtual_network
       ]
 
       edges = [
-        edge.app_service_web_app_to_subnet,
+        edge.app_service_web_app_from_application_gateway,
         edge.app_service_web_app_subnet_to_virtual_network,
         edge.app_service_web_app_to_app_service_plan,
-        edge.app_service_web_app_from_application_gateway
+        edge.app_service_web_app_to_subnet
       ]
 
       args = {
-        web_app_ids         = [self.input.web_app_id.value]
+        id                  = self.input.web_app_id.value
         network_subnet_ids  = with.subnets.rows[*].subnet_id
         virtual_network_ids = with.virtual_networks.rows[*].virtual_network_id
-        id                  = self.input.web_app_id.value
+        web_app_ids         = [self.input.web_app_id.value]
 
       }
     }
