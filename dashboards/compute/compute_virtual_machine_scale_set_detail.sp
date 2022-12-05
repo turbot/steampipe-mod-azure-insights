@@ -210,14 +210,14 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
       ]
 
       args = {
-        compute_virtual_machine_scale_set_ids = [self.input.vm_scale_set_id.value]
+        compute_virtual_machine_scale_set_ids    = [self.input.vm_scale_set_id.value]
         compute_virtual_machine_scale_set_vm_ids = with.scale_set_vms.rows[*].scale_set_vm_id
-        network_load_balancer_ids =  with.load_balancers.rows[*].lb_id
-        network_security_group_ids = with.network_security_groups.rows[*].nsg_id
-        network_subnet_ids = with.subnets.rows[*].subnet_id
-        virtual_network_ids = with.virtual_networks.rows[*].network_id
-        kubernetes_cluster_ids = with.kubernetes_clusters.rows[*].cluster_id
-        id = self.input.vm_scale_set_id.value
+        network_load_balancer_ids                = with.load_balancers.rows[*].lb_id
+        network_security_group_ids               = with.network_security_groups.rows[*].nsg_id
+        network_subnet_ids                       = with.subnets.rows[*].subnet_id
+        virtual_network_ids                      = with.virtual_networks.rows[*].network_id
+        kubernetes_cluster_ids                   = with.kubernetes_clusters.rows[*].cluster_id
+        id                                       = self.input.vm_scale_set_id.value
       }
     }
   }
@@ -556,7 +556,7 @@ query "azure_compute_virtual_machine_scale_set_data_disks" {
 }
 
 node "compute_virtual_machine_scale_set" {
-  category = category.azure_compute_virtual_machine_scale_set
+  category = category.compute_virtual_machine_scale_set
 
   sql = <<-EOQ
     select
@@ -582,7 +582,7 @@ node "compute_virtual_machine_scale_set" {
 }
 
 node "azure_compute_virtual_machine_scale_set_to_scale_set_vm_node" {
-  category = category.azure_compute_virtual_machine_scale_set_vm
+  category = category.compute_virtual_machine_scale_set_vm
 
   sql = <<-EOQ
     select
@@ -628,7 +628,7 @@ edge "compute_virtual_machine_scale_set_to_scale_set_vm" {
 }
 
 node "compute_virtual_machine_scale_set_backend_address_pool" {
-  category = category.azure_lb_backend_address_pool
+  category = category.network_load_balancer_backend_address_pool
 
   sql = <<-EOQ
     select
@@ -676,7 +676,7 @@ edge "compute_virtual_machine_scale_set_to_backend_address_pool" {
 }
 
 node "azure_compute_virtual_machine_scale_set_backend_address_pool_to_load_balancer_node" {
-  category = category.azure_lb
+  category = category.network_load_balancer
 
   sql = <<-EOQ
     with lb_backend_address_pool as (
@@ -740,7 +740,7 @@ edge "compute_virtual_machine_scale_set_to_load_balancer" {
 }
 
 node "compute_virtual_machine_scale_set_application_gateway" {
-  category = category.azure_application_gateway
+  category = category.network_application_gateway
 
   sql = <<-EOQ
     with application_gateway_backend_address_pool as (
@@ -804,7 +804,7 @@ edge "compute_virtual_machine_scale_set_to_application_gateway" {
 }
 
 node "compute_virtual_machine_scale_set_to_scale_set_network_interface" {
-  category = category.azure_compute_virtual_machine_scale_set_network_interface
+  category = category.compute_virtual_machine_scale_set_network_interface
 
   sql = <<-EOQ
     with nic_list as (
@@ -863,7 +863,7 @@ edge "compute_virtual_machine_scale_set_to_scale_set_network_interface" {
 }
 
 node "azure_compute_virtual_machine_scale_set_network_interface_to_nsg_node" {
-  category = category.azure_network_security_group
+  category = category.network_security_group
 
   sql = <<-EOQ
     with nic_list as (
@@ -923,7 +923,7 @@ edge "compute_virtual_machine_scale_set_to_network_security_group" {
 }
 
 node "azure_compute_virtual_machine_scale_set_network_interface_to_subnet_node" {
-  category = category.azure_subnet
+  category = category.network_subnet
 
   sql = <<-EOQ
     with subnet_list as (
@@ -987,7 +987,7 @@ edge "compute_virtual_machine_scale_set_to_subnet" {
 }
 
 node "azure_compute_virtual_machine_scale_set_network_interface_subnet_to_virtual_network_node" {
-  category = category.azure_virtual_network
+  category = category.network_virtual_network
 
   sql = <<-EOQ
     with subnet_list as (
@@ -1052,7 +1052,7 @@ edge "compute_virtual_machine_scale_set_to_virtual_network" {
 }
 
 node "azure_compute_virtual_machine_scale_set_from_kubernetes_cluster_node" {
-  category = category.azure_kubernetes_cluster
+  category = category.kubernetes_cluster
 
   sql = <<-EOQ
     select

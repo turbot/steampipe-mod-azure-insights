@@ -24,7 +24,7 @@ node "sql_server" {
 }
 
 node "network_private_endpoint" {
-  category = category.private_endpoint_connection
+  category = category.network_private_endpoint_connection
 
   sql = <<-EOQ
     select

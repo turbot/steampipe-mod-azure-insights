@@ -194,44 +194,6 @@ query "network_public_association" {
   param "id" {}
 }
 
-node "network_public_ip_api_management" {
-  category = category.azure_api_management
-
-  sql = <<-EOQ
-    with public_ip_api_management as (
-      select
-        id,
-        title,
-        name,
-        provisioning_state,
-        subscription_id,
-        resource_group,
-        region,
-        jsonb_array_elements_text(public_ip_addresses) as pid
-      from
-        azure_api_management
-    )
-    select
-      lower(a.id) as id,
-      a.title as title,
-      jsonb_build_object(
-        'Name', a.name,
-        'ID', a.id,
-        'Provisioning State', a.provisioning_state,
-        'Subscription ID', a.subscription_id,
-        'Resource Group', a.resource_group,
-        'Region', a.region
-      ) as properties
-    from
-      public_ip_api_management as a
-      left join azure_public_ip as p on (a.pid)::inet = p.ip_address
-    where
-      lower(p.id) = any($1);
-  EOQ
-
-  param "network_public_ip_ids" {}
-}
-
 query "network_public_ip_address" {
   sql = <<-EOQ
     select

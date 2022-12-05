@@ -444,7 +444,7 @@ query "azure_compute_virtual_machine_scale_set_vm_network_interface" {
 }
 
 node "compute_virtual_machine_scale_set_vm" {
-  category = category.azure_compute_virtual_machine_scale_set_vm
+  category = category.compute_virtual_machine_scale_set_vm
 
   sql = <<-EOQ
     select
@@ -470,7 +470,7 @@ node "compute_virtual_machine_scale_set_vm" {
 }
 
 node "compute_virtual_machine_scale_set_vm_to_scale_set_network_interface" {
-  category = category.azure_compute_virtual_machine_scale_set_network_interface
+  category = category.compute_virtual_machine_scale_set_network_interface
 
   sql = <<-EOQ
     select
@@ -513,7 +513,7 @@ edge "compute_virtual_machine_scale_set_vm_to_scale_set_network_interface" {
 }
 
 node "azure_compute_virtual_machine_scale_set_vm_network_interface_to_network_security_group_node" {
-  category = category.azure_network_security_group
+  category = category.network_security_group
 
   sql = <<-EOQ
     select
@@ -556,7 +556,7 @@ edge "compute_virtual_machine_scale_set_vm_to_network_security_group" {
 }
 
 node "compute_virtual_machine_scale_set_vm_to_backend_address_pool" {
-  category = category.azure_lb_backend_address_pool
+  category = category.network_load_balancer_backend_address_pool
 
   sql = <<-EOQ
     with compute_virtual_machine_scale_set_network_interface as (
@@ -618,7 +618,7 @@ edge "compute_virtual_machine_scale_set_vm_to_backend_address_pool" {
 
 
 node "azure_compute_virtual_machine_scale_set_vm_network_interface_backend_address_pool_to_lb_node" {
-  category = category.azure_lb
+  category = category.network_load_balancer
 
   sql = <<-EOQ
     with compute_virtual_machine_scale_set_network_interface as (
@@ -696,7 +696,7 @@ edge "compute_virtual_machine_scale_set_vm_to_load_balaner" {
 }
 
 node "azure_compute_virtual_machine_scale_set_vm_network_interface_to_subnet_node" {
-  category = category.azure_subnet
+  category = category.network_subnet
 
   sql = <<-EOQ
     with ip_configs as (
@@ -760,7 +760,7 @@ edge "compute_virtual_machine_scale_set_vm_to_subnet" {
 }
 
 node "azure_compute_virtual_machine_scale_set_vm_network_interface_subnet_to_virtual_network_node" {
-  category = category.azure_virtual_network
+  category = category.network_virtual_network
 
   sql = <<-EOQ
     with ip_configs as (
@@ -835,7 +835,7 @@ edge "compute_virtual_machine_scale_set_vm_to_virtual_network" {
 }
 
 node "azure_compute_virtual_machine_scale_set_vm_to_compute_disk_node" {
-  category = category.azure_compute_disk
+  category = category.compute_disk
 
   sql = <<-EOQ
     select
@@ -883,7 +883,7 @@ edge "compute_virtual_machine_scale_set_vm_to_compute_disk" {
 }
 
 node "azure_compute_virtual_machine_scale_set_vm_from_vm_scale_set_node" {
-  category = category.azure_compute_virtual_machine_scale_set
+  category = category.compute_virtual_machine_scale_set
 
   sql = <<-EOQ
     select

@@ -73,7 +73,7 @@ dashboard "azure_kubernetes_cluster_detail" {
 
       args = {
         kubernetes_cluster_ids = [self.input.cluster_id.value]
-        id = self.input.cluster_id.value
+        id                     = self.input.cluster_id.value
       }
     }
   }
@@ -210,7 +210,7 @@ query "azure_kubernetes_cluster_disk_encryption_status" {
 }
 
 node "kubernetes_cluster" {
-  category = category.azure_kubernetes_cluster
+  category = category.kubernetes_cluster
 
   sql = <<-EOQ
     select
@@ -235,7 +235,7 @@ node "kubernetes_cluster" {
 }
 
 node "azure_kubernetes_cluster_to_node_pool_node" {
-  category = category.azure_kubernetes_node_pool
+  category = category.kubernetes_node_pool
 
   sql = <<-EOQ
     select
@@ -280,7 +280,7 @@ edge "azure_kubernetes_cluster_to_node_pool_edge" {
 }
 
 node "azure_kubernetes_cluster_to_compute_disk_encryption_set_node" {
-  category = category.azure_compute_disk_encryption_set
+  category = category.compute_disk_encryption_set
 
   sql = <<-EOQ
     select
@@ -323,7 +323,7 @@ edge "azure_kubernetes_cluster_to_compute_disk_encryption_set_edge" {
 }
 
 node "azure_kubernetes_cluster_to_virtual_machine_scale_set_node" {
-  category = category.azure_compute_virtual_machine_scale_set
+  category = category.compute_virtual_machine_scale_set
 
   sql = <<-EOQ
     select
@@ -366,7 +366,7 @@ edge "azure_kubernetes_cluster_to_virtual_machine_scale_set_edge" {
 }
 
 node "azure_kubernetes_cluster_virtual_machine_scale_set_to_vm_node" {
-  category = category.azure_compute_virtual_machine_scale_set_vm
+  category = category.compute_virtual_machine_scale_set_vm
 
   sql = <<-EOQ
     select

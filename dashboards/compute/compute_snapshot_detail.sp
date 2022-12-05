@@ -289,7 +289,7 @@ query "compute_snapshot_network_access_policy" {
 }
 
 node "compute_snapshot" {
-  category = category.azure_compute_snapshot
+  category = category.compute_snapshot
 
   sql = <<-EOQ
     select
@@ -331,7 +331,7 @@ edge "compute_snapshot_from_compute_snapshot" {
 }
 
 node "compute_snapshot_to_compute_snapshot" {
-  category = category.azure_compute_snapshot
+  category = category.compute_snapshot
 
   sql = <<-EOQ
     with self as (
@@ -396,7 +396,7 @@ edge "compute_snapshot_to_compute_snapshot" {
 }
 
 node "compute_snapshot_to_compute_disk_encryption_set" {
-  category = category.azure_compute_disk_encryption_set
+  category = category.compute_disk_encryption_set
 
   sql = <<-EOQ
     select
@@ -474,7 +474,7 @@ edge "compute_snapshot_to_key_vault_key" {
 }
 
 node "compute_snapshot_compute_disk_access" {
-  category = category.azure_compute_disk_access
+  category = category.compute_disk_access
 
   sql = <<-EOQ
     select

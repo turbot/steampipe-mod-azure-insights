@@ -305,7 +305,7 @@ query "app_service_web_app_tls_version" {
 }
 
 node "app_service_web_app_to_app_service_plan" {
-  category = category.azure_app_service_plan
+  category = category.app_service_plan
 
   sql = <<-EOQ
     select
@@ -351,7 +351,7 @@ edge "app_service_web_app_to_app_service_plan" {
 }
 
 node "app_service_web_app_from_application_gateway" {
-  category = category.azure_application_gateway
+  category = category.network_application_gateway
 
   sql = <<-EOQ
     with application_gateway as (

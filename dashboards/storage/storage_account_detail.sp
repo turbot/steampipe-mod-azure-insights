@@ -486,7 +486,7 @@ query "azure_storage_account_blob_logging" {
 }
 
 node "storage_storage_account" {
-  category = category.azure_storage_account
+  category = category.storage_storage_account
 
   sql = <<-EOQ
     select
@@ -510,7 +510,7 @@ node "storage_storage_account" {
 }
 
 node "azure_storage_account_from_log_profile_node" {
-  category = category.azure_log_profile
+  category = category.log_profile
 
   sql = <<-EOQ
     select
@@ -550,7 +550,7 @@ edge "azure_storage_account_from_log_profile_edge" {
 }
 
 node "azure_storage_account_from_compute_snapshot_node" {
-  category = category.azure_compute_snapshot
+  category = category.compute_snapshot
 
   sql = <<-EOQ
     select
@@ -591,7 +591,7 @@ edge "azure_storage_account_from_compute_snapshot_edge" {
 }
 
 node "azure_storage_account_from_compute_disk_node" {
-  category = category.azure_compute_disk
+  category = category.compute_disk
 
   sql = <<-EOQ
     select
@@ -633,7 +633,7 @@ edge "azure_storage_account_from_compute_disk_edge" {
 }
 
 node "azure_storage_account_from_diagnostic_setting_node" {
-  category = category.azure_diagnostic_setting
+  category = category.diagnostic_setting
 
   sql = <<-EOQ
     select
@@ -672,7 +672,7 @@ edge "azure_storage_account_from_diagnostic_setting_edge" {
 }
 
 node "azure_storage_account_to_subnet_node" {
-  category = category.azure_subnet
+  category = category.network_subnet
 
   sql = <<-EOQ
     with subnet_list as (
@@ -728,7 +728,7 @@ edge "azure_storage_account_to_subnet_edge" {
 }
 
 node "azure_storage_account_subnet_to_vpc_node" {
-  category = category.azure_virtual_network
+  category = category.network_virtual_network
 
   sql = <<-EOQ
     with vn_list as (
@@ -784,7 +784,7 @@ edge "azure_storage_account_subnet_to_vpc_edge" {
 }
 
 node "azure_storage_account_to_storage_table_node" {
-  category = category.azure_storage_table
+  category = category.storage_table
 
   sql = <<-EOQ
     select
@@ -826,7 +826,7 @@ edge "azure_storage_account_to_storage_table_edge" {
 }
 
 node "azure_storage_account_to_storage_queue_node" {
-  category = category.azure_storage_queue
+  category = category.storage_queue
 
   sql = <<-EOQ
     select
@@ -868,7 +868,7 @@ edge "azure_storage_account_to_storage_queue_edge" {
 }
 
 node "azure_storage_account_to_storage_container_node" {
-  category = category.azure_storage_container
+  category = category.storage_container
 
   sql = <<-EOQ
     select
@@ -911,7 +911,7 @@ edge "azure_storage_account_to_storage_container_edge" {
 }
 
 node "azure_storage_account_to_storage_share_file_node" {
-  category = category.azure_storage_share_file
+  category = category.storage_share_file
 
   sql = <<-EOQ
     select
@@ -954,7 +954,7 @@ edge "azure_storage_account_to_storage_share_file_edge" {
 }
 
 node "azure_storage_account_to_key_vault_node" {
-  category = category.azure_key_vault
+  category = category.key_vault
 
   sql = <<-EOQ
     select
@@ -996,7 +996,7 @@ edge "azure_storage_account_to_key_vault_edge" {
 }
 
 node "azure_storage_account_key_vault_to_key_vault_key_node" {
-  category = category.azure_key_vault_key
+  category = category.key_vault_key
 
   sql = <<-EOQ
     select
@@ -1041,7 +1041,7 @@ edge "azure_storage_account_key_vault_to_key_vault_key_edge" {
 }
 
 node "azure_storage_account_from_batch_account_node" {
-  category = category.azure_batch_account
+  category = category.batch_account
 
   sql = <<-EOQ
     select

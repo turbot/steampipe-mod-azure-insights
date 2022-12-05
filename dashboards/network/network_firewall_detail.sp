@@ -1,4 +1,4 @@
-dashboard "azure_network_firewall_detail" {
+dashboard "network_firewall_detail" {
 
   title         = "Azure Network Firewall Detail"
   documentation = file("./dashboards/network/docs/network_firewall_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_network_firewall_detail" {
 
   input "firewall_id" {
     title = "Select a firewall:"
-    query = query.azure_network_firewall_input
+    query = query.network_firewall_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_network_firewall_detail" {
 
     card {
       width = 2
-      query = query.azure_network_firewall_sku_name
+      query = query.network_firewall_sku_name
       args = {
         id = self.input.firewall_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_network_firewall_detail" {
 
     card {
       width = 2
-      query = query.azure_network_firewall_sku_tier
+      query = query.network_firewall_sku_tier
       args = {
         id = self.input.firewall_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_network_firewall_detail" {
 
     card {
       width = 2
-      query = query.azure_network_firewall_threat_intel_mode
+      query = query.network_firewall_threat_intel_mode
       args = {
         id = self.input.firewall_id.value
       }
@@ -48,21 +48,80 @@ dashboard "azure_network_firewall_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "public_ips" {
+        sql = <<-EOQ
+          select
+            lower(ip.id) as public_ip_id
+          from
+            azure_firewall as f,
+            jsonb_array_elements(ip_configurations) as c
+            left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
+          where
+            lower(f.id) = $1;
+        EOQ
+
+        args = [self.input.firewall_id.value]
+      }
+
+      with "subnets" {
+        sql = <<-EOQ
+          select
+            lower(s.id) as subnet_id
+          from
+            azure_firewall as f,
+            jsonb_array_elements(ip_configurations) as c
+            left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
+          where
+            lower(f.id) = $1;
+        EOQ
+
+        args = [self.input.firewall_id.value]
+      }
+
+      with "virtual_networks" {
+        sql = <<-EOQ
+          with subnet_list as (
+            select
+              f.id as firewall_id,
+              s.id as subnet_id
+          from
+            azure_firewall as f,
+            jsonb_array_elements(ip_configurations) as c
+            left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
+          where
+            lower(f.id) = $1
+          )
+          select
+            lower(vn.id) as network_id
+          from
+            azure_virtual_network as vn,
+            jsonb_array_elements(subnets) as s,
+            subnet_list as sub
+          where
+            lower(s ->> 'id') = lower(sub.subnet_id)
+        EOQ
+
+        args = [self.input.firewall_id.value]
+      }
+
       nodes = [
-        node.azure_network_firewall_node,
-        node.azure_network_firewall_to_public_ip_node,
-        node.azure_network_firewall_to_subnet_node,
-        node.azure_network_firewall_subnet_to_virtual_network_node
+        node.network_firewall,
+        node.network_public_ip,
+        node.network_subnet,
+        node.network_virtual_network
       ]
 
       edges = [
-        edge.azure_network_firewall_to_public_ip_edge,
-        edge.azure_network_firewall_to_subnet_edge,
-        edge.azure_network_firewall_subnet_to_virtual_network_edge
+        edge.network_firewall_to_public_ip,
+        edge.network_firewall_to_subnet,
+        edge.network_subnet_to_network_virtual_network
       ]
 
       args = {
-        id = self.input.firewall_id.value
+        network_firewall_ids  = [self.input.firewall_id.value]
+        network_public_ip_ids = with.public_ips.rows[*].public_ip_id
+        network_subnet_ids    = with.subnets.rows[*].subnet_id
+        virtual_network_ids   = with.virtual_networks.rows[*].network_id
       }
     }
   }
@@ -76,7 +135,7 @@ dashboard "azure_network_firewall_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_network_firewall_overview
+        query = query.network_firewall_overview
         args = {
           id = self.input.firewall_id.value
         }
@@ -85,7 +144,7 @@ dashboard "azure_network_firewall_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_network_firewall_tags
+        query = query.network_firewall_tags
         args = {
           id = self.input.firewall_id.value
         }
@@ -97,7 +156,7 @@ dashboard "azure_network_firewall_detail" {
 
       table {
         title = "IP Configurations"
-        query = query.azure_network_firewall_ip_configurations
+        query = query.network_firewall_ip_configurations
         args = {
           id = self.input.firewall_id.value
         }
@@ -108,11 +167,11 @@ dashboard "azure_network_firewall_detail" {
 
 }
 
-query "azure_network_firewall_input" {
+query "network_firewall_input" {
   sql = <<-EOQ
     select
       f.title as label,
-      f.id as value,
+      lower(f.id) as value,
       json_build_object(
         'subscription', s.display_name,
         'resource_group', f.resource_group,
@@ -128,7 +187,7 @@ query "azure_network_firewall_input" {
   EOQ
 }
 
-query "azure_network_firewall_sku_name" {
+query "network_firewall_sku_name" {
   sql = <<-EOQ
     select
       'SKU Name' as label,
@@ -142,7 +201,7 @@ query "azure_network_firewall_sku_name" {
   param "id" {}
 }
 
-query "azure_network_firewall_sku_tier" {
+query "network_firewall_sku_tier" {
   sql = <<-EOQ
     select
       'SKU Tier' as label,
@@ -156,7 +215,7 @@ query "azure_network_firewall_sku_tier" {
   param "id" {}
 }
 
-query "azure_network_firewall_threat_intel_mode" {
+query "network_firewall_threat_intel_mode" {
   sql = <<-EOQ
     select
       'Threat Intel Mode' as label,
@@ -170,7 +229,7 @@ query "azure_network_firewall_threat_intel_mode" {
   param "id" {}
 }
 
-query "azure_network_firewall_overview" {
+query "network_firewall_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -190,7 +249,7 @@ query "azure_network_firewall_overview" {
   param "id" {}
 }
 
-query "azure_network_firewall_tags" {
+query "network_firewall_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -207,7 +266,7 @@ query "azure_network_firewall_tags" {
   param "id" {}
 }
 
-query "azure_network_firewall_ip_configurations" {
+query "network_firewall_ip_configurations" {
   sql = <<-EOQ
     select
       c ->> 'privateIPAddress' as "Private IP Address",
@@ -220,183 +279,6 @@ query "azure_network_firewall_ip_configurations" {
     where
       id = $1;
     EOQ
-
-  param "id" {}
-}
-
-node "azure_network_firewall_node" {
-  category = category.azure_firewall
-
-  sql = <<-EOQ
-    select
-      id as id,
-      title as title,
-      jsonb_build_object(
-        'ID',  id,
-        'Name', name,
-        'Etag', etag,
-        'Type', type,
-        'Region', region,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
-    from
-      azure_firewall
-    where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_network_firewall_to_public_ip_node" {
-  category = category.azure_public_ip
-
-  sql = <<-EOQ
-    select
-      ip.id as id,
-      ip.title as title,
-      jsonb_build_object(
-        'ID', ip.id,
-        'Name', ip.name,
-        'Type', ip.type,
-        'Region', ip.region,
-        'Resource Group', ip.resource_group,
-        'Subscription ID', ip.subscription_id
-      ) as properties
-    from
-      azure_firewall as f,
-      jsonb_array_elements(ip_configurations) as c
-      left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
-    where
-      f.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_network_firewall_to_public_ip_edge" {
-  title = "public ip"
-
-  sql = <<-EOQ
-    select
-      f.id as from_id,
-      ip.id as to_id
-    from
-      azure_firewall as f,
-      jsonb_array_elements(ip_configurations) as c
-      left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
-    where
-      f.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_network_firewall_to_subnet_node" {
-  category = category.azure_subnet
-
-  sql = <<-EOQ
-    select
-      s.id as id,
-      s.title as title,
-      jsonb_build_object(
-        'ID', s.id,
-        'Name', s.name,
-        'Type', s.type,
-        'Resource Group', s.resource_group,
-        'Subscription ID', s.subscription_id
-      ) as properties
-    from
-      azure_firewall as f,
-      jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
-    where
-      f.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_network_firewall_to_subnet_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      f.id as from_id,
-      s.id as to_id
-    from
-      azure_firewall as f,
-      jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
-    where
-      f.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_network_firewall_subnet_to_virtual_network_node" {
-  category = category.azure_virtual_network
-
-  sql = <<-EOQ
-    with subnet_list as (
-      select
-        f.id as firewall_id,
-        s.id as subnet_id
-    from
-      azure_firewall as f,
-      jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
-    where
-      f.id = $1
-    )
-    select
-      vn.id as id,
-      vn.title as title,
-      jsonb_build_object(
-        'ID', vn.id,
-        'Name', vn.name,
-        'Type', vn.type,
-        'Resource Group', vn.resource_group,
-        'Subscription ID', vn.subscription_id
-      ) as properties
-    from
-      azure_virtual_network as vn,
-      jsonb_array_elements(subnets) as s,
-      subnet_list as sub
-    where
-      lower(s ->> 'id') = lower(sub.subnet_id)
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_network_firewall_subnet_to_virtual_network_edge" {
-  title = "virtual network"
-
-  sql = <<-EOQ
-    with subnet_list as (
-      select
-        f.id as firewall_id,
-        s.id as subnet_id
-    from
-      azure_firewall as f,
-      jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
-    where
-      f.id = $1
-    )
-    select
-      sub.subnet_id as from_id,
-      vn.id as to_id
-    from
-      azure_virtual_network as vn,
-      jsonb_array_elements(subnets) as s,
-      subnet_list as sub
-    where
-      lower(s ->> 'id') = lower(sub.subnet_id)
-  EOQ
 
   param "id" {}
 }

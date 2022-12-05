@@ -351,7 +351,7 @@ query "compute_disk_sku_name" {
 }
 
 node "compute_disk" {
-  category = category.azure_compute_disk
+  category = category.compute_disk
 
   sql = <<-EOQ
     select
@@ -376,7 +376,7 @@ node "compute_disk" {
 }
 
 node "azure_compute_disk_from_compute_virtual_machine_node" {
-  category = category.azure_compute_virtual_machine
+  category = category.compute_virtual_machine
 
   sql = <<-EOQ
     select
@@ -419,7 +419,7 @@ edge "compute_virtual_machine_to_compute_disk" {
 }
 
 node "compute_disk_compute_disk_access" {
-  category = category.azure_compute_disk_access
+  category = category.compute_disk_access
 
   sql = <<-EOQ
     select
@@ -462,7 +462,7 @@ edge "compute_disk_to_compute_disk_access" {
 }
 
 node "compute_disk_compute_disk_encryption_set" {
-  category = category.azure_compute_disk_encryption_set
+  category = category.compute_disk_encryption_set
 
   sql = <<-EOQ
     select
@@ -591,7 +591,7 @@ edge "compute_disk_to_key" {
 }
 
 node "azure_compute_disk_from_compute_snapshot_node" {
-  category = category.azure_compute_snapshot
+  category = category.compute_snapshot
 
   sql = <<-EOQ
     select
@@ -632,7 +632,7 @@ edge "compute_snapshot_to_compute_disk" {
 }
 
 node "azure_compute_disk_to_compute_snapshot_node" {
-  category = category.azure_compute_snapshot
+  category = category.compute_snapshot
 
   sql = <<-EOQ
     select
@@ -675,7 +675,7 @@ edge "compute_disk_to_compute_snapshot" {
 }
 
 node "compute_disk_to_compute_disk" {
-  category = category.azure_compute_disk
+  category = category.compute_disk
 
   sql = <<-EOQ
     select
@@ -718,7 +718,7 @@ edge "compute_disk_to_compute_disk" {
 }
 
 node "azure_compute_disk_to_storage_account_node" {
-  category = category.azure_storage_account
+  category = category.storage_storage_account
 
   sql = <<-EOQ
    select

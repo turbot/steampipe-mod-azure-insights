@@ -111,7 +111,7 @@ node "key_vault_key_to_key_vault" {
 }
 
 node "key_vault_key_version_compute_disk_encryption_set" {
-  category = category.azure_compute_disk_encryption_set
+  category = category.compute_disk_encryption_set
 
   sql = <<-EOQ
     select
@@ -138,7 +138,7 @@ node "key_vault_key_version_compute_disk_encryption_set" {
 }
 
 node "key_vault_key_version_container_registry" {
-  category = category.azure_container_registry
+  category = category.container_registry
 
   sql = <<-EOQ
     select
@@ -206,7 +206,7 @@ node "key_vault_key_version_sql_server" {
 }
 
 node "key_vault_key_version_eventhub_namespace" {
-  category = category.azure_eventhub_namespace
+  category = category.eventhub_namespace
 
   sql = <<-EOQ
     select
@@ -236,7 +236,7 @@ node "key_vault_key_version_eventhub_namespace" {
 }
 
 node "azure_key_vault_key_version_from_storage_account_node" {
-  category = category.azure_storage_account
+  category = category.storage_storage_account
 
   sql = <<-EOQ
     select
@@ -260,7 +260,7 @@ node "azure_key_vault_key_version_from_storage_account_node" {
 }
 
 node "key_vault_key_version_servicebus_namespace" {
-  category = category.azure_servicebus_namespace
+  category = category.servicebus_namespace
 
   sql = <<-EOQ
     select
@@ -291,7 +291,7 @@ node "key_vault_key_version_servicebus_namespace" {
 }
 
 node "key_vault_key_version_postgresql_server" {
-  category = category.azure_postgresql_server
+  category = category.postgresql_server
 
   sql = <<-EOQ
     select

@@ -570,7 +570,7 @@ query "compute_virtual_machine_vulnerability_assessment_solution" {
 }
 
 node "compute_virtual_machine" {
-  category = category.azure_compute_virtual_machine
+  category = category.compute_virtual_machine
 
   sql = <<-EOQ
     select
@@ -781,7 +781,7 @@ edge "compute_virtual_machine_to_public_ip" {
 }
 
 node "compute_virtual_machine_compute_image" {
-  category = category.azure_compute_image
+  category = category.compute_image
 
   sql = <<-EOQ
     select
@@ -822,7 +822,7 @@ edge "compute_virtual_machine_to_compute_image" {
 }
 
 node "compute_virtual_machine_lb_backend_address_pool" {
-  category = category.azure_lb_backend_address_pool
+  category = category.network_load_balancer_backend_address_pool
 
   sql = <<-EOQ
     with network_interface as (
@@ -937,7 +937,7 @@ edge "load_balancer_to_compute_virtual_machine" {
 }
 
 node "compute_virtual_machine_application_gateway_backend_address_pool" {
-  category = category.azure_lb_backend_address_pool
+  category = category.network_load_balancer_backend_address_pool
 
   sql = <<-EOQ
     with network_interface as (
@@ -1020,7 +1020,7 @@ edge "application_gateway_backend_address_pool_to_compute_virtual_machine" {
 }
 
 node "compute_virtual_machine_application_gateway" {
-  category = category.azure_application_gateway
+  category = category.network_application_gateway
 
   sql = <<-EOQ
     with network_interface as (
