@@ -770,7 +770,8 @@ query "virtual_network_num_ips" {
       from
         azure_virtual_network,
         jsonb_array_elements(address_prefixes) as a
-      where lower(id) = lower($1)
+      where
+        lower(id) = $1
     )
     select
       sum(num_ips) as "IP Addresses"
@@ -790,7 +791,7 @@ query "virtual_network_route_tables" {
         azure_virtual_network,
         jsonb_array_elements(subnets) as s
       where
-        lower(id) = lower($1)
+        lower(id) = $1
         and (s -> 'properties' -> 'routeTable' ->> 'id') is not null
       order by
         s -> 'properties' -> 'routeTable' ->> 'id'
@@ -816,7 +817,7 @@ query "virtual_network_routes" {
       azure_virtual_network,
       jsonb_array_elements(subnets) as s
     where
-      lower(id) = lower($1)
+      lower(id) = $1
   ),
    data as (
     select
@@ -848,7 +849,7 @@ query "virtual_network_nsg" {
         jsonb_array_elements(subnets) as s
       where
       (s -> 'properties' -> 'networkSecurityGroup' -> 'id') is not null
-      and lower(id) = lower($1)
+      and lower(id) = $1
     )
     select
       nsg.name as "Name",
@@ -879,7 +880,7 @@ query "virtual_network_peering_connection" {
       azure_virtual_network,
       jsonb_array_elements(network_peerings) as np
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
 
   param "id" {}
