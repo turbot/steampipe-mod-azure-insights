@@ -1,4 +1,4 @@
-dashboard "azure_sql_database_detail" {
+dashboard "sql_database_detail" {
 
   title         = "Azure SQL Database Detail"
   documentation = file("./dashboards/sql/docs/sql_database_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_sql_database_detail" {
 
   input "sql_database_id" {
     title = "Select a database:"
-    query = query.azure_sql_database_input
+    query = query.sql_database_input
     width = 4
   }
 
@@ -18,7 +18,7 @@ dashboard "azure_sql_database_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_database_server
+      query = query.sql_database_server
       args = {
         id = self.input.sql_database_id.value
       }
@@ -26,7 +26,7 @@ dashboard "azure_sql_database_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_database_status
+      query = query.sql_database_status
       args = {
         id = self.input.sql_database_id.value
       }
@@ -34,7 +34,7 @@ dashboard "azure_sql_database_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_database_zone_redundant
+      query = query.sql_database_zone_redundant
       args = {
         id = self.input.sql_database_id.value
       }
@@ -42,7 +42,7 @@ dashboard "azure_sql_database_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_database_transparent_data_encryption
+      query = query.sql_database_transparent_data_encryption
       args = {
         id = self.input.sql_database_id.value
       }
@@ -50,7 +50,7 @@ dashboard "azure_sql_database_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_database_vulnerability_assessment_enabled
+      query = query.sql_database_vulnerability_assessment_enabled
       args = {
         id = self.input.sql_database_id.value
       }
@@ -58,7 +58,7 @@ dashboard "azure_sql_database_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_database_geo_redundant_backup_enabled
+      query = query.sql_database_geo_redundant_backup_enabled
       args = {
         id = self.input.sql_database_id.value
       }
@@ -142,7 +142,7 @@ dashboard "azure_sql_database_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_sql_database_overview
+        query = query.sql_database_overview
         args = {
           id = self.input.sql_database_id.value
         }
@@ -151,7 +151,7 @@ dashboard "azure_sql_database_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_sql_database_tags
+        query = query.sql_database_tags
         args = {
           id = self.input.sql_database_id.value
         }
@@ -164,7 +164,7 @@ dashboard "azure_sql_database_detail" {
 
       table {
         title = "Retention Policy"
-        query = query.azure_sql_database_retention
+        query = query.sql_database_retention
         args = {
           id = self.input.sql_database_id.value
         }
@@ -172,7 +172,7 @@ dashboard "azure_sql_database_detail" {
 
       table {
         title = "Vulnerability Assessment"
-        query = query.azure_sql_database_vulnerability_assessment
+        query = query.sql_database_vulnerability_assessment
         args = {
           id = self.input.sql_database_id.value
         }
@@ -183,7 +183,7 @@ dashboard "azure_sql_database_detail" {
 
 }
 
-query "azure_sql_database_input" {
+query "sql_database_input" {
   sql = <<-EOQ
     select
       d.title as label,
@@ -204,7 +204,7 @@ query "azure_sql_database_input" {
   EOQ
 }
 
-query "azure_sql_database_server" {
+query "sql_database_server" {
   sql = <<-EOQ
     select
       'Server Name' as label,
@@ -213,14 +213,14 @@ query "azure_sql_database_server" {
       azure_sql_database
     where
       name <> 'master'
-      and lower(id) = lower($1);
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 
 }
 
-query "azure_sql_database_zone_redundant" {
+query "sql_database_zone_redundant" {
   sql = <<-EOQ
     select
       'Zone Redundancy' as label,
@@ -229,14 +229,14 @@ query "azure_sql_database_zone_redundant" {
       azure_sql_database
     where
       name <> 'master'
-      and lower(id) = lower($1);
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 
 }
 
-query "azure_sql_database_status" {
+query "sql_database_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -245,7 +245,7 @@ query "azure_sql_database_status" {
       azure_sql_database
     where
       name <> 'master'
-      and lower(id) = lower($1);
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -261,13 +261,13 @@ query "azure_sql_database_edition" {
       azure_sql_database
     where
       name <> 'master'
-      and lower(id) = lower($1);
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_sql_database_transparent_data_encryption" {
+query "sql_database_transparent_data_encryption" {
   sql = <<-EOQ
     select
       'TDE' as label,
@@ -277,13 +277,13 @@ query "azure_sql_database_transparent_data_encryption" {
       azure_sql_database
     where
       name <> 'master'
-      and lower(id) = lower($1);
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_sql_database_vulnerability_assessment_enabled" {
+query "sql_database_vulnerability_assessment_enabled" {
   sql = <<-EOQ
     with sql_database_va as (
       select
@@ -302,13 +302,13 @@ query "azure_sql_database_vulnerability_assessment_enabled" {
      azure_sql_database as d left join sql_database_va as v on lower(v.id) = lower(d.id)
     where
       d.name <> 'master'
-      and lower(d.id) = lower($1);
+      and lower(d.id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_sql_database_geo_redundant_backup_enabled" {
+query "sql_database_geo_redundant_backup_enabled" {
   sql = <<-EOQ
     select
       'Geo-Redundant Backup' as label,
@@ -326,7 +326,7 @@ query "azure_sql_database_geo_redundant_backup_enabled" {
       azure_sql_database
     where
       name <> 'master'
-      and lower(id) = lower($1);
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -394,7 +394,7 @@ edge "sql_database_to_mssql_elasticpool" {
   param "sql_database_ids" {}
 }
 
-query "azure_sql_database_overview" {
+query "sql_database_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -408,13 +408,13 @@ query "azure_sql_database_overview" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_sql_database_tags" {
+query "sql_database_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -424,7 +424,7 @@ query "azure_sql_database_tags" {
       jsonb_each_text(tags) as tag
     where
       name <> 'master'
-      and id = $1
+      and lower(id) = $1
     order by
       tag.key;
     EOQ
@@ -432,7 +432,7 @@ query "azure_sql_database_tags" {
   param "id" {}
 }
 
-query "azure_sql_database_retention" {
+query "sql_database_retention" {
   sql = <<-EOQ
     select
       retention_policy_name as "Retention Policy Name",
@@ -445,13 +445,13 @@ query "azure_sql_database_retention" {
       azure_sql_database
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_sql_database_vulnerability_assessment" {
+query "sql_database_vulnerability_assessment" {
   sql = <<-EOQ
     select
       a ->> 'name' as "Name",
@@ -464,7 +464,7 @@ query "azure_sql_database_vulnerability_assessment" {
       jsonb_array_elements(vulnerability_assessments) as a
     where
       name <> 'master'
-      and id = $1;
+      and lower(id) = $1;
   EOQ
 
   param "id" {}

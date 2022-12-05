@@ -6,7 +6,7 @@ locals {
 
 category "storage_storage_account" {
   title = "Storage Account"
-  href  = "/azure_insights.dashboard.azure_storage_account_detail?input.storage_account_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.storage_account_detail?input.storage_account_id={{.properties.'ID' | @uri}}"
   icon  = "archive-box"
   color = local.storage_color
 }

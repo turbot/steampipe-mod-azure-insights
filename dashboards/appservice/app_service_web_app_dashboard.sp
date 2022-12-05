@@ -1,4 +1,4 @@
-dashboard "azure_app_service_web_app_dashboard" {
+dashboard "app_service_web_app_dashboard" {
 
   title         = "Azure App Service Web App Dashboard"
   documentation = file("./dashboards/appservice/docs/app_service_web_app_dashboard.md")
@@ -11,22 +11,22 @@ dashboard "azure_app_service_web_app_dashboard" {
 
     # Analysis
     card {
-      query = query.azure_app_service_web_app_count
+      query = query.app_service_web_app_count
       width = 2
     }
 
     card {
-      query = query.azure_app_service_web_app_offline_count
+      query = query.app_service_web_app_offline_count
       width = 2
     }
 
     card {
-      query = query.azure_app_service_web_app_https_disabled_count
+      query = query.app_service_web_app_https_disabled_count
       width = 2
     }
 
     card {
-      query = query.azure_app_service_web_app_http_logging_count
+      query = query.app_service_web_app_http_logging_count
       width = 2
     }
 
@@ -38,7 +38,7 @@ dashboard "azure_app_service_web_app_dashboard" {
 
     chart {
       title = "Online/Offline"
-      query = query.azure_app_service_web_app_by_status
+      query = query.app_service_web_app_by_status
       type  = "donut"
       width = 2
 
@@ -54,7 +54,7 @@ dashboard "azure_app_service_web_app_dashboard" {
 
     chart {
       title = "HTTPS Status"
-      query = query.azure_app_service_web_app_by_network_traffic_protocol
+      query = query.app_service_web_app_by_network_traffic_protocol
       type  = "donut"
       width = 2
 
@@ -70,7 +70,7 @@ dashboard "azure_app_service_web_app_dashboard" {
 
     chart {
       title = "HTTP Logging Status"
-      query = query.azure_app_service_web_app_by_http_logging
+      query = query.app_service_web_app_by_http_logging
       type  = "donut"
       width = 2
 
@@ -91,42 +91,42 @@ dashboard "azure_app_service_web_app_dashboard" {
 
     chart {
       title = "Web Apps by Subscription"
-      query = query.azure_app_service_web_app_by_subscription
+      query = query.app_service_web_app_by_subscription
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Web Apps by Resource Group"
-      query = query.azure_app_service_web_app_by_resource_group
+      query = query.app_service_web_app_by_resource_group
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Web Apps by Region"
-      query = query.azure_app_service_web_app_by_region
+      query = query.app_service_web_app_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Web Apps by Kind"
-      query = query.azure_app_service_web_app_by_kind
+      query = query.app_service_web_app_by_kind
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Web Apps by State"
-      query = query.azure_app_service_web_app_by_state
+      query = query.app_service_web_app_by_state
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Web Apps by FTP State"
-      query = query.azure_app_service_web_app_by_ftp_state
+      query = query.app_service_web_app_by_ftp_state
       type  = "column"
       width = 4
     }
@@ -136,13 +136,13 @@ dashboard "azure_app_service_web_app_dashboard" {
 
 # Card Queries
 
-query "azure_app_service_web_app_count" {
+query "app_service_web_app_count" {
   sql = <<-EOQ
     select count(*) as "Web Apps" from azure_app_service_web_app;
   EOQ
 }
 
-query "azure_app_service_web_app_offline_count" {
+query "app_service_web_app_offline_count" {
   sql = <<-EOQ
     select
       count(*) as  value,
@@ -155,7 +155,7 @@ query "azure_app_service_web_app_offline_count" {
   EOQ
 }
 
-query "azure_app_service_web_app_https_disabled_count" {
+query "app_service_web_app_https_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as  value,
@@ -168,7 +168,7 @@ query "azure_app_service_web_app_https_disabled_count" {
   EOQ
 }
 
-query "azure_app_service_web_app_http_logging_count" {
+query "app_service_web_app_http_logging_count" {
   sql = <<-EOQ
     select
       count(*) as  value,
@@ -183,7 +183,7 @@ query "azure_app_service_web_app_http_logging_count" {
 
 # Assessment Queries
 
-query "azure_app_service_web_app_by_status" {
+query "app_service_web_app_by_status" {
   sql = <<-EOQ
     select
       status,
@@ -201,7 +201,7 @@ query "azure_app_service_web_app_by_status" {
   EOQ
 }
 
-query "azure_app_service_web_app_by_network_traffic_protocol" {
+query "app_service_web_app_by_network_traffic_protocol" {
   sql = <<-EOQ
     select
       protocol,
@@ -219,7 +219,7 @@ query "azure_app_service_web_app_by_network_traffic_protocol" {
   EOQ
 }
 
-query "azure_app_service_web_app_by_http_logging" {
+query "app_service_web_app_by_http_logging" {
   sql = <<-EOQ
     select
       http_logging,
@@ -239,7 +239,7 @@ query "azure_app_service_web_app_by_http_logging" {
 
 # Analysis Queries
 
-query "azure_app_service_web_app_by_subscription" {
+query "app_service_web_app_by_subscription" {
   sql = <<-EOQ
     select
       sub.title as "Subscription",
@@ -256,7 +256,7 @@ query "azure_app_service_web_app_by_subscription" {
   EOQ
 }
 
-query "azure_app_service_web_app_by_resource_group" {
+query "app_service_web_app_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -273,7 +273,7 @@ query "azure_app_service_web_app_by_resource_group" {
   EOQ
 }
 
-query "azure_app_service_web_app_by_region" {
+query "app_service_web_app_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -287,7 +287,7 @@ query "azure_app_service_web_app_by_region" {
   EOQ
 }
 
-query "azure_app_service_web_app_by_kind" {
+query "app_service_web_app_by_kind" {
   sql = <<-EOQ
     select
       kind as "App Kind",
@@ -301,7 +301,7 @@ query "azure_app_service_web_app_by_kind" {
   EOQ
 }
 
-query "azure_app_service_web_app_by_state" {
+query "app_service_web_app_by_state" {
   sql = <<-EOQ
     select
       state as "State",
@@ -315,7 +315,7 @@ query "azure_app_service_web_app_by_state" {
   EOQ
 }
 
-query "azure_app_service_web_app_by_ftp_state" {
+query "app_service_web_app_by_ftp_state" {
   sql = <<-EOQ
     select
       configuration -> 'properties' ->> 'ftpsState' as "FTP State",

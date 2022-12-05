@@ -174,38 +174,37 @@ dashboard "azure_compute_virtual_machine_scale_set_vm_detail" {
 
 
       nodes = [
-        node.compute_virtual_machine_scale_set_vm,
-        node.compute_virtual_machine_scale_set_vm_to_scale_set_network_interface,
+        node.compute_disk,
         node.compute_virtual_machine_scale_set_vm_to_backend_address_pool,
+        node.compute_virtual_machine_scale_set_vm_to_scale_set_network_interface,
+        node.compute_virtual_machine_scale_set_vm,
+        node.compute_virtual_machine_scale_set,
         node.network_load_balancer,
         node.network_network_security_group,
         node.network_subnet,
         node.network_virtual_network,
-        node.compute_disk,
-        node.compute_virtual_machine_scale_set
       ]
 
       edges = [
-        edge.compute_virtual_machine_scale_set_vm_to_scale_set_network_interface,
+        edge.azure_compute_virtual_machine_scale_set_to_virtual_machine_scale_set_vm,
         edge.compute_virtual_machine_scale_set_vm_to_backend_address_pool,
+        edge.compute_virtual_machine_scale_set_vm_to_compute_disk,
         edge.compute_virtual_machine_scale_set_vm_to_load_balaner,
         edge.compute_virtual_machine_scale_set_vm_to_network_security_group,
+        edge.compute_virtual_machine_scale_set_vm_to_scale_set_network_interface,
         edge.compute_virtual_machine_scale_set_vm_to_subnet,
         edge.compute_virtual_machine_scale_set_vm_to_virtual_network,
-        edge.compute_virtual_machine_scale_set_vm_to_compute_disk,
-        edge.azure_compute_virtual_machine_scale_set_to_virtual_machine_scale_set_vm
 
       ]
 
       args = {
+        compute_disk_ids                         = with.compute_disks.rows[*].disk_id
+        compute_virtual_machine_scale_set_ids    = with.virtual_machine_scale_sets.rows[*].scale_set_id
         compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
         network_load_balancer_ids                = with.network_load_balancers.rows[*].lb_id
         network_security_group_ids               = with.network_security_groups.rows[*].nsg_id
         network_subnet_ids                       = with.subnets.rows[*].subnet_id
         virtual_network_ids                      = with.virtual_networks.rows[*].network_id
-        compute_disk_ids                         = with.compute_disks.rows[*].disk_id
-        compute_virtual_machine_scale_set_ids    = with.virtual_machine_scale_sets.rows[*].scale_set_id
-        id                                       = self.input.scale_set_vm_id.value
 
       }
     }

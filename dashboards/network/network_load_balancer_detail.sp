@@ -273,42 +273,41 @@ dashboard "network_load_balancer_detail" {
       }
 
       nodes = [
-        node.network_load_balancer,
-        node.network_load_balancer_backend_address_pool,
-        node.network_network_interface,
-        node.network_load_balancer_virtual_machine_scale_set_network_interface,
-        node.compute_virtual_machine,
         node.compute_virtual_machine_scale_set_vm,
-        node.network_virtual_network,
-        node.network_load_balancer_rule,
-        node.network_load_balancer_probe,
-        node.network_load_balancer_nat_rule,
         node.compute_virtual_machine_scale_set,
-        node.network_public_ip
+        node.compute_virtual_machine,
+        node.network_load_balancer_backend_address_pool,
+        node.network_load_balancer_nat_rule,
+        node.network_load_balancer_probe,
+        node.network_load_balancer_rule,
+        node.network_load_balancer_virtual_machine_scale_set_network_interface,
+        node.network_load_balancer,
+        node.network_network_interface,
+        node.network_public_ip,
+        node.network_virtual_network,
       ]
 
       edges = [
-        edge.network_load_balancer_to_backend_address_pool,
         edge.network_backend_address_pool_to_network_interface_edge,
-        edge.network_network_interface_to_compute_virtual_machine,
-        edge.network_network_interface_to_compute_scale_set_vm,
         edge.network_backend_address_pool_to_virtual_network,
-        edge.network_load_balancer_to_load_balancer_rule,
-        edge.network_load_balancer_to_lb_probe,
-        edge.network_load_balancer_to_lb_nat_rule,
         edge.network_load_balancer_from_virtual_machine_scale_set,
-        edge.network_load_balancer_to_network_public_ip
+        edge.network_load_balancer_to_backend_address_pool,
+        edge.network_load_balancer_to_lb_nat_rule,
+        edge.network_load_balancer_to_lb_probe,
+        edge.network_load_balancer_to_load_balancer_rule,
+        edge.network_load_balancer_to_network_public_ip,
+        edge.network_network_interface_to_compute_scale_set_vm,
+        edge.network_network_interface_to_compute_virtual_machine,
       ]
 
       args = {
-        network_load_balancer_ids                = [self.input.lb_id.value]
-        network_interface_ids                    = with.network_interfaces.rows[*].network_interface_id
         compute_virtual_machine_ids              = with.virtual_machines.rows[*].virtual_machine_id
-        compute_virtual_machine_scale_set_vm_ids = with.virtual_machine_scale_set_vms.rows[*].virtual_machine_scale_set_vm_id
-        virtual_network_ids                      = with.virtual_networks.rows[*].virtual_network_id
         compute_virtual_machine_scale_set_ids    = with.compute_virtual_machine_scale_sets.rows[*].compute_virtual_machine_scale_set_id
+        compute_virtual_machine_scale_set_vm_ids = with.virtual_machine_scale_set_vms.rows[*].virtual_machine_scale_set_vm_id
+        network_interface_ids                    = with.network_interfaces.rows[*].network_interface_id
+        network_load_balancer_ids                = [self.input.lb_id.value]
         network_public_ip_ids                    = with.public_ips.rows[*].public_ip_id
-        id                                       = self.input.lb_id.value
+        virtual_network_ids                      = with.virtual_networks.rows[*].virtual_network_id
       }
     }
   }

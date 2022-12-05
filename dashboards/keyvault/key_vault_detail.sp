@@ -110,25 +110,25 @@ dashboard "key_vault_detail" {
       }
 
       nodes = [
+        node.key_vault_key,
+        node.key_vault_secret,
         node.key_vault,
         node.network_subnet,
         node.network_virtual_network,
-        node.key_vault_key,
-        node.key_vault_secret
       ]
 
       edges = [
+        edge.key_vault_to_key,
+        edge.key_vault_to_secret,
         edge.key_vault_to_subnet,
         edge.network_subnet_to_network_virtual_network,
-        edge.key_vault_to_key,
-        edge.key_vault_to_secret
       ]
 
       args = {
         key_vault_ids       = [self.input.key_vault_id.value]
+        key_vault_key_ids   = with.key_vault_keys.rows[*].key_id
         network_subnet_ids  = with.subnets.rows[*].subnet_id
         virtual_network_ids = with.virtual_networks.rows[*].virtual_network_id
-        key_vault_key_ids   = with.key_vault_keys.rows[*].key_id
       }
     }
   }

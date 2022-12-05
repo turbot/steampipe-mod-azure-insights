@@ -12,7 +12,7 @@ category "app_service_plan" {
 
 category "app_service_web_app" {
   title = "App Service Web App"
-  href  = "/azure_insights.dashboard.azure_app_service_web_app_detail?input.web_app_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.app_service_web_app_detail?input.web_app_id={{.properties.'ID' | @uri}}"
   icon  = "text:WA"
   color = local.storage_color
 }

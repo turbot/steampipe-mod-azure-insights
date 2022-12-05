@@ -185,39 +185,38 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
 
       nodes = [
-        node.compute_virtual_machine_scale_set,
-        node.compute_virtual_machine_scale_set_vm,
-        node.compute_virtual_machine_scale_set_backend_address_pool,
-        node.network_load_balancer,
         node.compute_virtual_machine_scale_set_application_gateway,
+        node.compute_virtual_machine_scale_set_backend_address_pool,
         node.compute_virtual_machine_scale_set_to_scale_set_network_interface,
+        node.compute_virtual_machine_scale_set_vm,
+        node.compute_virtual_machine_scale_set,
+        node.kubernetes_cluster,
+        node.network_load_balancer,
         node.network_network_security_group,
         node.network_subnet,
         node.network_virtual_network,
-        node.kubernetes_cluster
       ]
 
       edges = [
-        edge.compute_virtual_machine_scale_set_to_scale_set_vm,
+        edge.compute_virtual_machine_scale_set_to_application_gateway,
         edge.compute_virtual_machine_scale_set_to_backend_address_pool,
         edge.compute_virtual_machine_scale_set_to_load_balancer,
-        edge.compute_virtual_machine_scale_set_to_application_gateway,
-        edge.compute_virtual_machine_scale_set_to_scale_set_network_interface,
         edge.compute_virtual_machine_scale_set_to_network_security_group,
+        edge.compute_virtual_machine_scale_set_to_scale_set_network_interface,
+        edge.compute_virtual_machine_scale_set_to_scale_set_vm,
         edge.compute_virtual_machine_scale_set_to_subnet,
         edge.compute_virtual_machine_scale_set_to_virtual_network,
-        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set
+        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set,
       ]
 
       args = {
         compute_virtual_machine_scale_set_ids    = [self.input.vm_scale_set_id.value]
         compute_virtual_machine_scale_set_vm_ids = with.scale_set_vms.rows[*].scale_set_vm_id
+        kubernetes_cluster_ids                   = with.kubernetes_clusters.rows[*].cluster_id
         network_load_balancer_ids                = with.load_balancers.rows[*].lb_id
         network_security_group_ids               = with.network_security_groups.rows[*].nsg_id
         network_subnet_ids                       = with.subnets.rows[*].subnet_id
         virtual_network_ids                      = with.virtual_networks.rows[*].network_id
-        kubernetes_cluster_ids                   = with.kubernetes_clusters.rows[*].cluster_id
-        id                                       = self.input.vm_scale_set_id.value
       }
     }
   }

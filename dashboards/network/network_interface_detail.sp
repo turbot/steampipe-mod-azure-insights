@@ -162,20 +162,20 @@ dashboard "network_interface_detail" {
       }
 
       nodes = [
+        node.compute_virtual_machine,
         node.network_network_interface,
         node.network_network_security_group,
-        node.compute_virtual_machine,
         node.network_public_ip,
         node.network_subnet,
-        node.network_virtual_network
+        node.network_virtual_network,
       ]
 
       edges = [
-        edge.network_network_interface_to_network_security_group,
         edge.compute_virtual_machine_to_network_network_interface,
         edge.network_network_interface_to_network_public_ip,
+        edge.network_network_interface_to_network_security_group,
         edge.network_network_interface_to_network_subnet,
-        edge.network_subnet_to_network_virtual_network
+        edge.network_subnet_to_network_virtual_network,
       ]
 
       args = {

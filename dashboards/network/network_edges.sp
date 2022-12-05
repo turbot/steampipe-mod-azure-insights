@@ -233,7 +233,7 @@ edge "network_subnet_to_app_service_web_app" {
   sql = <<-EOQ
     select
       lower(vnet_connection -> 'properties' ->> 'vnetResourceId') as from_id,
-      id as to_id
+      lower(id) as to_id
     from
       azure_app_service_web_app
     where

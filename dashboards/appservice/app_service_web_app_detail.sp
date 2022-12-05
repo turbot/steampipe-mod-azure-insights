@@ -1,4 +1,4 @@
-dashboard "azure_app_service_web_app_detail" {
+dashboard "app_service_web_app_detail" {
 
   title         = "Azure App Service Web App Detail"
   documentation = file("./dashboards/appservice/docs/app_service_web_app_detail.md")
@@ -84,7 +84,7 @@ dashboard "azure_app_service_web_app_detail" {
               from
                 azure_app_service_web_app
               where
-                lower(id) = lower($1)
+                lower(id) = $1
             )
         EOQ
 
@@ -105,7 +105,7 @@ dashboard "azure_app_service_web_app_detail" {
               from
                 azure_app_service_web_app
               where
-                lower(id) = lower($1)
+                lower(id) = $1
             );
         EOQ
 
@@ -113,26 +113,24 @@ dashboard "azure_app_service_web_app_detail" {
       }
 
       nodes = [
-        node.app_service_web_app_from_application_gateway,
-        node.app_service_web_app_to_app_service_plan,
+        node.app_service_web_app_app_service_plan,
+        node.app_service_web_app_network_application_gateway,
         node.app_service_web_app,
         node.network_subnet,
         node.network_virtual_network
       ]
 
       edges = [
-        edge.app_service_web_app_from_application_gateway,
-        edge.app_service_web_app_subnet_to_virtual_network,
         edge.app_service_web_app_to_app_service_plan,
-        edge.app_service_web_app_to_subnet
+        edge.app_service_web_app_to_network_subnet,
+        edge.network_application_gateway_to_app_service_web_app,
+        edge.network_subnet_to_network_virtual_network,
       ]
 
       args = {
-        id                  = self.input.web_app_id.value
         network_subnet_ids  = with.subnets.rows[*].subnet_id
         virtual_network_ids = with.virtual_networks.rows[*].virtual_network_id
         web_app_ids         = [self.input.web_app_id.value]
-
       }
     }
   }
@@ -224,7 +222,7 @@ query "app_service_web_app_state" {
     from
       azure_app_service_web_app
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -238,7 +236,7 @@ query "app_service_web_app_kind" {
     from
       azure_app_service_web_app
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -253,7 +251,7 @@ query "app_service_web_app_ftps_state" {
     from
       azure_app_service_web_app
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -268,7 +266,7 @@ query "app_service_web_app_https" {
     from
       azure_app_service_web_app
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -283,7 +281,7 @@ query "app_service_web_app_http_logging" {
     from
       azure_app_service_web_app
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -298,129 +296,10 @@ query "app_service_web_app_tls_version" {
     from
       azure_app_service_web_app
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
 
   param "id" {}
-}
-
-node "app_service_web_app_to_app_service_plan" {
-  category = category.app_service_plan
-
-  sql = <<-EOQ
-    select
-      lower(id) as id,
-      title as title,
-      json_build_object(
-        'Name', name,
-        'ID', id,
-        'Type', type,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id,
-        'Kind', kind,
-        'SKU Name', sku_name,
-        'SKU Size', sku_size,
-        'SKU Tier', sku_tier,
-        'SKU Capacity', sku_capacity
-      ) as properties
-    from
-      azure_app_service_plan,
-      jsonb_array_elements(apps) as app
-    where
-      lower(app ->> 'ID') = any($1);
-  EOQ
-
-  param "web_app_ids" {}
-}
-
-edge "app_service_web_app_to_app_service_plan" {
-  title = "app service plan"
-
-  sql = <<-EOQ
-    select
-      lower(id) as to_id,
-      lower(app ->> 'ID') as from_id
-    from
-      azure_app_service_plan,
-      jsonb_array_elements(apps) as app
-    where
-      lower(app ->> 'ID') = any($1);
-  EOQ
-
-  param "web_app_ids" {}
-}
-
-node "app_service_web_app_from_application_gateway" {
-  category = category.network_application_gateway
-
-  sql = <<-EOQ
-    with application_gateway as (
-      select
-        g.id as id,
-        g.name as name,
-        g.subscription_id,
-        g.resource_group,
-        g.title,
-        g.region,
-        backend_address ->> 'fqdn' as app_host_name
-      from
-        azure_application_gateway as g,
-        jsonb_array_elements(backend_address_pools) as pool,
-        jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
-    )
-    select
-      lower(g.id) as id,
-      g.title as title,
-      jsonb_build_object(
-        'Name', g.name,
-        'ID', g.id,
-        'Subscription ID', g.subscription_id,
-        'Resource Group', g.resource_group,
-        'Region', g.region
-      ) as properties
-    from
-      azure_app_service_web_app as a,
-      jsonb_array_elements(a.host_names) as host_name,
-      application_gateway as g
-    where
-      lower(g.app_host_name) = lower(trim((host_name::text), '""'))
-      and lower(a.id) = any($1);
-  EOQ
-
-  param "web_app_ids" {}
-}
-
-edge "app_service_web_app_from_application_gateway" {
-  title = "web app"
-
-  sql = <<-EOQ
-    with application_gateway as (
-      select
-        g.id as id,
-        g.name as name,
-        g.subscription_id,
-        g.resource_group,
-        g.title,
-        g.region,
-        backend_address ->> 'fqdn' as app_host_name
-      from
-        azure_application_gateway as g,
-        jsonb_array_elements(backend_address_pools) as pool,
-        jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
-    )
-    select
-      lower(g.id) as from_id,
-      lower(a.id) as to_id
-    from
-      azure_app_service_web_app as a,
-      jsonb_array_elements(a.host_names) as host_name,
-      application_gateway as g
-    where
-      lower(g.app_host_name) = lower(trim((host_name::text), '""'))
-      and lower(a.id) = any($1);
-  EOQ
-
-  param "web_app_ids" {}
 }
 
 query "app_service_web_app_overview" {
@@ -521,4 +400,37 @@ query "app_service_web_app_configuration" {
       lower(id) = $1;
   EOQ
   param "id" {}
+}
+
+edge "network_application_gateway_to_app_service_web_app" {
+  title = "web app"
+
+  sql = <<-EOQ
+    with application_gateway as (
+      select
+        g.id as id,
+        g.name as name,
+        g.subscription_id,
+        g.resource_group,
+        g.title,
+        g.region,
+        backend_address ->> 'fqdn' as app_host_name
+      from
+        azure_application_gateway as g,
+        jsonb_array_elements(backend_address_pools) as pool,
+        jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
+    )
+    select
+      lower(g.id) as from_id,
+      lower(a.id) as to_id
+    from
+      azure_app_service_web_app as a,
+      jsonb_array_elements(a.host_names) as host_name,
+      application_gateway as g
+    where
+      lower(g.app_host_name) = lower(trim((host_name::text), '""'))
+      and lower(a.id) = any($1);
+  EOQ
+
+  param "web_app_ids" {}
 }

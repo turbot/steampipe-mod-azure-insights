@@ -1,4 +1,4 @@
-dashboard "azure_virtual_network_dashboard" {
+dashboard "virtual_network_dashboard" {
 
   title         = "Azure Virtual Network Dashboard"
   documentation = file("./dashboards/network/docs/virtual_network_dashboard.md")
@@ -10,7 +10,7 @@ dashboard "azure_virtual_network_dashboard" {
   container {
 
     card {
-      query = query.azure_virtual_network_count
+      query = query.virtual_network_count
       width = 2
     }
 
@@ -49,28 +49,28 @@ dashboard "azure_virtual_network_dashboard" {
 
     chart {
       title = "Virtual Networks by Subscription"
-      query = query.azure_virtual_network_by_subscription
+      query = query.virtual_network_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Virtual Networks by Resource Group"
-      query = query.azure_virtual_network_by_resource_group
+      query = query.virtual_network_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Virtual Networks by Region"
-      query = query.azure_virtual_network_by_region
+      query = query.virtual_network_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Virtual Networks by Provisioning State"
-      query = query.azure_virtual_network_by_provisioning_state
+      query = query.virtual_network_by_provisioning_state
       type  = "column"
       width = 3
     }
@@ -81,7 +81,7 @@ dashboard "azure_virtual_network_dashboard" {
 
 # Card Queries
 
-query "azure_virtual_network_count" {
+query "virtual_network_count" {
   sql = <<-EOQ
     select count(*) as "Virtual Networks" from azure_virtual_network;
   EOQ
@@ -123,7 +123,7 @@ query "virtual_network_ddos_protection_status" {
 
 # Analysis Queries
 
-query "azure_virtual_network_by_subscription" {
+query "virtual_network_by_subscription" {
   sql = <<-EOQ
     select
       sub.title as "Subscription",
@@ -140,7 +140,7 @@ query "azure_virtual_network_by_subscription" {
   EOQ
 }
 
-query "azure_virtual_network_by_resource_group" {
+query "virtual_network_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -157,7 +157,7 @@ query "azure_virtual_network_by_resource_group" {
   EOQ
 }
 
-query "azure_virtual_network_by_region" {
+query "virtual_network_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -171,7 +171,7 @@ query "azure_virtual_network_by_region" {
   EOQ
 }
 
-query "azure_virtual_network_by_provisioning_state" {
+query "virtual_network_by_provisioning_state" {
   sql = <<-EOQ
     select
       provisioning_state as "Provisioning State",

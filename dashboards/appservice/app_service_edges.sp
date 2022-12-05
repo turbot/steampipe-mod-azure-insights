@@ -1,4 +1,4 @@
-edge "app_service_web_app_to_subnet" {
+edge "app_service_web_app_to_network_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -16,7 +16,6 @@ edge "app_service_web_app_to_subnet" {
 
   param "web_app_ids" {}
 }
-
 
 edge "app_service_web_app_subnet_to_virtual_network" {
   title = "virtual network"
@@ -41,3 +40,21 @@ edge "app_service_web_app_subnet_to_virtual_network" {
 
   param "web_app_ids" {}
 }
+
+edge "app_service_web_app_to_app_service_plan" {
+  title = "app service plan"
+
+  sql = <<-EOQ
+    select
+      lower(id) as to_id,
+      lower(app ->> 'ID') as from_id
+    from
+      azure_app_service_plan,
+      jsonb_array_elements(apps) as app
+    where
+      lower(app ->> 'ID') = any($1);
+  EOQ
+
+  param "web_app_ids" {}
+}
+

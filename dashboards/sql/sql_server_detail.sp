@@ -1,4 +1,4 @@
-dashboard "azure_sql_server_detail" {
+dashboard "sql_server_detail" {
 
   title         = "Azure SQL Server Detail"
   documentation = file("./dashboards/sql/docs/sql_server_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_sql_server_detail" {
 
   input "sql_server_id" {
     title = "Select a server:"
-    query = query.azure_sql_server_input
+    query = query.sql_server_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_sql_server_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_server_state
+      query = query.sql_server_state
       args = {
         id = self.input.sql_server_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_sql_server_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_server_version
+      query = query.sql_server_version
       args = {
         id = self.input.sql_server_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_sql_server_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_server_auditing_enabled
+      query = query.sql_server_auditing_enabled
       args = {
         id = self.input.sql_server_id.value
       }
@@ -41,7 +41,7 @@ dashboard "azure_sql_server_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_server_public_network_access
+      query = query.sql_server_public_network_access
       args = {
         id = self.input.sql_server_id.value
       }
@@ -49,7 +49,7 @@ dashboard "azure_sql_server_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_server_ad_authentication_enabled
+      query = query.sql_server_ad_authentication_enabled
       args = {
         id = self.input.sql_server_id.value
       }
@@ -57,12 +57,11 @@ dashboard "azure_sql_server_detail" {
 
     card {
       width = 2
-      query = query.azure_sql_server_vulnerability_assessment_enabled
+      query = query.sql_server_vulnerability_assessment_enabled
       args = {
         id = self.input.sql_server_id.value
       }
     }
-
 
   }
 
@@ -85,7 +84,7 @@ dashboard "azure_sql_server_detail" {
               from
                 azure_sql_server
               where
-                lower(id) = lower($1)
+                lower(id) = $1
             )
         EOQ
 
@@ -117,7 +116,7 @@ dashboard "azure_sql_server_detail" {
                 azure_sql_server,
                 jsonb_array_elements(virtual_network_rules) as vnr
               where
-                lower(id) = lower($1)
+                lower(id) = $1
             );
         EOQ
 
@@ -138,7 +137,7 @@ dashboard "azure_sql_server_detail" {
                 azure_sql_server,
                 jsonb_array_elements(encryption_protector) as ep
               where
-                lower(id) = lower($1)
+                lower(id) = $1
                 and ep ->> 'kind' = 'azurekeyvault'
             );
         EOQ
@@ -156,7 +155,7 @@ dashboard "azure_sql_server_detail" {
               azure_sql_server,
               jsonb_array_elements(encryption_protector) as ep
             where
-              lower(id) = lower($1)
+              lower(id) = $1
               and ep ->> 'kind' = 'azurekeyvault'
           )
           select
@@ -200,7 +199,7 @@ dashboard "azure_sql_server_detail" {
           from
             azure_sql_database
           where
-            lower(server_name) = lower(split_part(lower($1), '/', 9));
+            lower(server_name) = lower(split_part($1, '/', 9));
         EOQ
 
         args = [self.input.sql_server_id.value]
@@ -248,7 +247,7 @@ dashboard "azure_sql_server_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_sql_server_overview
+        query = query.sql_server_overview
         args = {
           id = self.input.sql_server_id.value
         }
@@ -257,7 +256,7 @@ dashboard "azure_sql_server_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_sql_server_tags
+        query = query.sql_server_tags
         args = {
           id = self.input.sql_server_id.value
         }
@@ -270,7 +269,7 @@ dashboard "azure_sql_server_detail" {
 
       table {
         title = "Encryption"
-        query = query.azure_sql_server_encryption
+        query = query.sql_server_encryption
         args = {
           id = self.input.sql_server_id.value
         }
@@ -278,7 +277,7 @@ dashboard "azure_sql_server_detail" {
 
       table {
         title = "Virtual Network Rules"
-        query = query.azure_sql_server_virtual_network_rules
+        query = query.sql_server_virtual_network_rules
         args = {
           id = self.input.sql_server_id.value
         }
@@ -286,7 +285,7 @@ dashboard "azure_sql_server_detail" {
 
       table {
         title = "Firewall Rule"
-        query = query.azure_sql_server_firewall_rule
+        query = query.sql_server_firewall_rule
         args = {
           id = self.input.sql_server_id.value
         }
@@ -301,7 +300,7 @@ dashboard "azure_sql_server_detail" {
 
     table {
       title = "Audit Policy"
-      query = query.azure_sql_server_audit_policy
+      query = query.sql_server_audit_policy
       args = {
         id = self.input.sql_server_id.value
       }
@@ -314,7 +313,7 @@ dashboard "azure_sql_server_detail" {
 
     table {
       title = "Vulnerability Assessment"
-      query = query.azure_sql_server_vulnerability_assessment
+      query = query.sql_server_vulnerability_assessment
       args = {
         id = self.input.sql_server_id.value
       }
@@ -327,7 +326,7 @@ dashboard "azure_sql_server_detail" {
 
     table {
       title = "Private Endpoint Details"
-      query = query.azure_sql_server_private_endpoint_connection
+      query = query.sql_server_private_endpoint_connection
       args = {
         id = self.input.sql_server_id.value
       }
@@ -337,7 +336,7 @@ dashboard "azure_sql_server_detail" {
 
 }
 
-query "azure_sql_server_input" {
+query "sql_server_input" {
   sql = <<-EOQ
     select
       s.title as label,
@@ -357,7 +356,7 @@ query "azure_sql_server_input" {
   EOQ
 }
 
-query "azure_sql_server_state" {
+query "sql_server_state" {
   sql = <<-EOQ
     select
       'State' as label,
@@ -372,7 +371,7 @@ query "azure_sql_server_state" {
 
 }
 
-query "azure_sql_server_version" {
+query "sql_server_version" {
   sql = <<-EOQ
     select
       'Version' as label,
@@ -386,7 +385,7 @@ query "azure_sql_server_version" {
   param "id" {}
 }
 
-query "azure_sql_server_auditing_enabled" {
+query "sql_server_auditing_enabled" {
   sql = <<-EOQ
     with sql_server_audit_enabled as (
       select
@@ -406,7 +405,7 @@ query "azure_sql_server_auditing_enabled" {
   EOQ
 }
 
-query "azure_sql_server_public_network_access" {
+query "sql_server_public_network_access" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -421,7 +420,7 @@ query "azure_sql_server_public_network_access" {
   param "id" {}
 }
 
-query "azure_sql_server_ad_authentication_enabled" {
+query "sql_server_ad_authentication_enabled" {
   sql = <<-EOQ
     select
       'Azure AD Authentication' as label,
@@ -436,7 +435,7 @@ query "azure_sql_server_ad_authentication_enabled" {
   param "id" {}
 }
 
-query "azure_sql_server_vulnerability_assessment_enabled" {
+query "sql_server_vulnerability_assessment_enabled" {
   sql = <<-EOQ
     with sql_server_va as (
       select
@@ -501,7 +500,7 @@ edge "sql_server_to_mssql_elasticpool" {
   param "sql_server_ids" {}
 }
 
-query "azure_sql_server_overview" {
+query "sql_server_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -520,7 +519,7 @@ query "azure_sql_server_overview" {
   param "id" {}
 }
 
-query "azure_sql_server_tags" {
+query "sql_server_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -537,7 +536,7 @@ query "azure_sql_server_tags" {
   param "id" {}
 }
 
-query "azure_sql_server_encryption" {
+query "sql_server_encryption" {
   sql = <<-EOQ
     select
       ep ->> 'name' as "Name",
@@ -556,7 +555,7 @@ query "azure_sql_server_encryption" {
   param "id" {}
 }
 
-query "azure_sql_server_virtual_network_rules" {
+query "sql_server_virtual_network_rules" {
   sql = <<-EOQ
     select
       r ->> 'name' as "Name",
@@ -574,7 +573,7 @@ query "azure_sql_server_virtual_network_rules" {
   param "id" {}
 }
 
-query "azure_sql_server_firewall_rule" {
+query "sql_server_firewall_rule" {
   sql = <<-EOQ
     select
       r ->> 'name' as "Name",
@@ -591,7 +590,7 @@ query "azure_sql_server_firewall_rule" {
   param "id" {}
 }
 
-query "azure_sql_server_audit_policy" {
+query "sql_server_audit_policy" {
   sql = <<-EOQ
     select
       p ->> 'name' as "Name",
@@ -613,7 +612,7 @@ query "azure_sql_server_audit_policy" {
   param "id" {}
 }
 
-query "azure_sql_server_vulnerability_assessment" {
+query "sql_server_vulnerability_assessment" {
   sql = <<-EOQ
     select
       a ->> 'name' as "Name",
@@ -631,7 +630,7 @@ query "azure_sql_server_vulnerability_assessment" {
   param "id" {}
 }
 
-query "azure_sql_server_private_endpoint_connection" {
+query "sql_server_private_endpoint_connection" {
   sql = <<-EOQ
     select
       c ->> 'PrivateEndpointConnectionName' as "Private Endpoint Connection Name",

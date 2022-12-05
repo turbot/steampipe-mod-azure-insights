@@ -110,25 +110,24 @@ dashboard "compute_snapshot_detail" {
       }
 
       nodes = [
-        node.compute_snapshot,
         node.compute_disk,
-        node.compute_snapshot_to_compute_disk_encryption_set,
-        node.key_vault,
-        node.key_vault_key,
         node.compute_snapshot_compute_disk_access,
-
-        node.compute_snapshot_to_compute_snapshot
+        node.compute_snapshot_to_compute_disk_encryption_set,
+        node.compute_snapshot_to_compute_snapshot,
+        node.compute_snapshot,
+        node.key_vault_key,
+        node.key_vault,
       ]
 
       edges = [
+        edge.compute_disk_to_compute_snapshot,
+        edge.compute_snapshot_from_compute_snapshot,
+        edge.compute_snapshot_to_compute_disk_access,
+        edge.compute_snapshot_to_compute_disk_encryption_set,
         edge.compute_snapshot_to_compute_disk,
         edge.compute_snapshot_to_compute_snapshot,
-        edge.compute_snapshot_to_compute_disk_encryption_set,
-        edge.compute_snapshot_to_key_vault,
         edge.compute_snapshot_to_key_vault_key,
-        edge.compute_snapshot_from_compute_snapshot,
-        edge.compute_disk_to_compute_snapshot,
-        edge.compute_snapshot_to_compute_disk_access
+        edge.compute_snapshot_to_key_vault,
       ]
 
       args = {
@@ -136,7 +135,6 @@ dashboard "compute_snapshot_detail" {
         compute_snapshot_ids = [self.input.id.value]
         key_vault_ids        = with.key_vault.rows[*].key_vault_id
         key_vault_key_ids    = with.key_vault_keys.rows[*].key_id
-        id                   = self.input.id.value
       }
     }
   }

@@ -150,38 +150,36 @@ dashboard "compute_disk_detail" {
       }
 
       nodes = [
-        node.compute_disk,
-        node.compute_virtual_machine,
         node.compute_disk_compute_disk_access,
         node.compute_disk_compute_disk_encryption_set,
+        node.compute_disk_to_compute_disk,
+        node.compute_disk,
         node.compute_snapshot,
-        node.key_vault,
+        node.compute_virtual_machine,
         node.key_vault_key,
+        node.key_vault,
         node.storage_storage_account,
-        node.compute_disk_to_compute_disk
       ]
 
       edges = [
-        edge.compute_virtual_machine_to_compute_disk,
+        edge.compute_disk_compute_to_key_vault,
         edge.compute_disk_to_compute_disk_access,
         edge.compute_disk_to_compute_disk_encryption_set,
-        edge.compute_disk_compute_to_key_vault,
-        edge.compute_disk_to_key,
-        edge.compute_snapshot_to_compute_disk,
-        edge.compute_disk_to_compute_snapshot,
         edge.compute_disk_to_compute_disk,
-        edge.compute_disk_to_storage_account
+        edge.compute_disk_to_compute_snapshot,
+        edge.compute_disk_to_key,
+        edge.compute_disk_to_storage_account,
+        edge.compute_snapshot_to_compute_disk,
+        edge.compute_virtual_machine_to_compute_disk,
       ]
 
       args = {
         compute_disk_ids            = [self.input.disk_id.value]
+        compute_snapshot_ids        = with.compute_snapshots.rows[*].compute_snapshot_id
         compute_virtual_machine_ids = with.virtual_machines.rows[*].virtual_machine_id
         key_vault_ids               = with.key_vaults.rows[*].key_vault_id
         key_vault_key_ids           = with.key_vault_keys.rows[*].key_vault_key_id
-        compute_snapshot_ids        = with.compute_snapshots.rows[*].compute_snapshot_id
         storage_account_ids         = with.storage_accounts.rows[*].storage_account_id
-
-        id = self.input.disk_id.value
       }
     }
   }

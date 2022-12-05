@@ -1,4 +1,4 @@
-dashboard "azure_storage_account_dashboard" {
+dashboard "storage_account_dashboard" {
 
   title         = "Azure Storage Account Dashboard"
   documentation = file("./dashboards/storage/docs/storage_account_dashboard.md")
@@ -11,34 +11,34 @@ dashboard "azure_storage_account_dashboard" {
 
     # Analysis
     card {
-      query = query.azure_storage_account_count
+      query = query.storage_account_count
       width = 2
     }
 
     # Assessments
 
     card {
-      query = query.azure_storage_account_blob_soft_delete_disabled_count
+      query = query.storage_account_blob_soft_delete_disabled_count
       width = 2
     }
 
     card {
-      query = query.azure_storage_account_blob_public_access_enabled_count
+      query = query.storage_account_blob_public_access_enabled_count
       width = 2
     }
 
     card {
-      query = query.azure_storage_account_https_traffic_disabled_count
+      query = query.storage_account_https_traffic_disabled_count
       width = 2
     }
 
     card {
-      query = query.azure_storage_account_unrestricted_network_access_count
+      query = query.storage_account_unrestricted_network_access_count
       width = 2
     }
 
     card {
-      query = query.azure_storage_account_infrastructure_encryption_disabled_count
+      query = query.storage_account_infrastructure_encryption_disabled_count
       width = 2
     }
 
@@ -50,7 +50,7 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "Blob Soft Delete Status"
-      query = query.azure_storage_account_blob_soft_delete_status
+      query = query.storage_account_blob_soft_delete_status
       type  = "donut"
       width = 2
 
@@ -66,7 +66,7 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "Blob Public Access Status"
-      query = query.azure_storage_account_blob_public_access_status
+      query = query.storage_account_blob_public_access_status
       type  = "donut"
       width = 2
 
@@ -82,7 +82,7 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "HTTPS Status"
-      query = query.azure_storage_account_https_traffic_status
+      query = query.storage_account_https_traffic_status
       type  = "donut"
       width = 2
 
@@ -98,7 +98,7 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "Network Access Status"
-      query = query.azure_storage_account_network_access_status
+      query = query.storage_account_network_access_status
       type  = "donut"
       width = 2
 
@@ -114,7 +114,7 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "Infrastructure Encryption Status"
-      query = query.azure_storage_account_infrastructure_encryption_status
+      query = query.storage_account_infrastructure_encryption_status
       type  = "donut"
       width = 2
 
@@ -136,28 +136,28 @@ dashboard "azure_storage_account_dashboard" {
 
     chart {
       title = "Storage Accounts by Subscription"
-      query = query.azure_storage_account_by_subscription
+      query = query.torage_account_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Storage Accounts by Resource Group"
-      query = query.azure_storage_account_by_resource_group
+      query = query.storage_account_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Storage Accounts by Region"
-      query = query.azure_storage_account_by_region
+      query = query.storage_account_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Storage Accounts by Access Tier"
-      query = query.azure_storage_account_by_access_tier
+      query = query.storage_account_by_access_tier
       type  = "column"
       width = 3
     }
@@ -167,13 +167,13 @@ dashboard "azure_storage_account_dashboard" {
 
 # Card Queries
 
-query "azure_storage_account_count" {
+query "storage_account_count" {
   sql = <<-EOQ
     select count(*) as "Storage Accounts" from azure_storage_account;
   EOQ
 }
 
-query "azure_storage_account_blob_soft_delete_disabled_count" {
+query "storage_account_blob_soft_delete_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -186,7 +186,7 @@ query "azure_storage_account_blob_soft_delete_disabled_count" {
   EOQ
 }
 
-query "azure_storage_account_blob_public_access_enabled_count" {
+query "storage_account_blob_public_access_enabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -199,7 +199,7 @@ query "azure_storage_account_blob_public_access_enabled_count" {
   EOQ
 }
 
-query "azure_storage_account_https_traffic_disabled_count" {
+query "storage_account_https_traffic_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -212,7 +212,7 @@ query "azure_storage_account_https_traffic_disabled_count" {
   EOQ
 }
 
-query "azure_storage_account_unrestricted_network_access_count" {
+query "storage_account_unrestricted_network_access_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -225,7 +225,7 @@ query "azure_storage_account_unrestricted_network_access_count" {
   EOQ
 }
 
-query "azure_storage_account_infrastructure_encryption_disabled_count" {
+query "storage_account_infrastructure_encryption_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -238,7 +238,7 @@ query "azure_storage_account_infrastructure_encryption_disabled_count" {
   EOQ
 }
 
-query "azure_storage_account_blob_soft_delete_status" {
+query "storage_account_blob_soft_delete_status" {
   sql = <<-EOQ
     select
       blob_soft_delete,
@@ -259,7 +259,7 @@ query "azure_storage_account_blob_soft_delete_status" {
   EOQ
 }
 
-query "azure_storage_account_blob_public_access_status" {
+query "storage_account_blob_public_access_status" {
   sql = <<-EOQ
     select
       public_access,
@@ -278,7 +278,7 @@ query "azure_storage_account_blob_public_access_status" {
   EOQ
 }
 
-query "azure_storage_account_https_traffic_status" {
+query "storage_account_https_traffic_status" {
   sql = <<-EOQ
     select
       https_traffic,
@@ -297,7 +297,7 @@ query "azure_storage_account_https_traffic_status" {
   EOQ
 }
 
-query "azure_storage_account_network_access_status" {
+query "storage_account_network_access_status" {
   sql = <<-EOQ
     select
       network_rule,
@@ -316,7 +316,7 @@ query "azure_storage_account_network_access_status" {
   EOQ
 }
 
-query "azure_storage_account_infrastructure_encryption_status" {
+query "storage_account_infrastructure_encryption_status" {
   sql = <<-EOQ
     select
       infrastructure_encryption,
@@ -337,7 +337,7 @@ query "azure_storage_account_infrastructure_encryption_status" {
 
 # Analysis Queries
 
-query "azure_storage_account_by_subscription" {
+query "torage_account_by_subscription" {
   sql = <<-EOQ
     select
       a.title as "Subscription",
@@ -354,7 +354,7 @@ query "azure_storage_account_by_subscription" {
   EOQ
 }
 
-query "azure_storage_account_by_resource_group" {
+query "storage_account_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -371,7 +371,7 @@ query "azure_storage_account_by_resource_group" {
   EOQ
 }
 
-query "azure_storage_account_by_region" {
+query "storage_account_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -385,7 +385,7 @@ query "azure_storage_account_by_region" {
   EOQ
 }
 
-query "azure_storage_account_by_access_tier" {
+query "storage_account_by_access_tier" {
   sql = <<-EOQ
     select
       access_tier as "Access Tier",

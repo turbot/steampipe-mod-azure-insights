@@ -108,13 +108,13 @@ dashboard "network_firewall_detail" {
         node.network_firewall,
         node.network_public_ip,
         node.network_subnet,
-        node.network_virtual_network
+        node.network_virtual_network,
       ]
 
       edges = [
         edge.network_firewall_to_public_ip,
         edge.network_firewall_to_subnet,
-        edge.network_subnet_to_network_virtual_network
+        edge.network_subnet_to_network_virtual_network,
       ]
 
       args = {

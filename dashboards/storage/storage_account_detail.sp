@@ -1,4 +1,4 @@
-dashboard "azure_storage_account_detail" {
+dashboard "storage_account_detail" {
 
   title         = "Azure Storage Account Detail"
   documentation = file("./dashboards/storage/docs/storage_account_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_storage_account_detail" {
 
   input "storage_account_id" {
     title = "Select a storage account:"
-    query = query.azure_storage_account_input
+    query = query.storage_account_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_kind
+      query = query.storage_account_kind
       args = {
         id = self.input.storage_account_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_access_tier
+      query = query.storage_account_access_tier
       args = {
         id = self.input.storage_account_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_blob_soft_delete
+      query = query.storage_account_blob_soft_delete
       args = {
         id = self.input.storage_account_id.value
       }
@@ -41,7 +41,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_blob_public_access
+      query = query.storage_account_blob_public_access
       args = {
         id = self.input.storage_account_id.value
       }
@@ -49,7 +49,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_https_traffic
+      query = query.storage_account_https_traffic
       args = {
         id = self.input.storage_account_id.value
       }
@@ -113,7 +113,7 @@ dashboard "azure_storage_account_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_storage_account_overview
+        query = query.storage_account_overview
         args = {
           id = self.input.storage_account_id.value
         }
@@ -123,7 +123,7 @@ dashboard "azure_storage_account_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_storage_account_tags
+        query = query.storage_account_tags
         args = {
           id = self.input.storage_account_id.value
         }
@@ -135,7 +135,7 @@ dashboard "azure_storage_account_detail" {
 
       table {
         title = "Blob Encryption Service"
-        query = query.azure_storage_account_blob_encryption_service
+        query = query.storage_account_blob_encryption_service
         args = {
           id = self.input.storage_account_id.value
         }
@@ -143,7 +143,7 @@ dashboard "azure_storage_account_detail" {
 
       table {
         title = "File Encryption Service"
-        query = query.azure_storage_account_file_encryption_service
+        query = query.storage_account_file_encryption_service
         args = {
           id = self.input.storage_account_id.value
         }
@@ -151,7 +151,7 @@ dashboard "azure_storage_account_detail" {
 
       table {
         title = "SKU Details"
-        query = query.azure_storage_account_sku
+        query = query.storage_account_sku
         args = {
           id = self.input.storage_account_id.value
         }
@@ -165,7 +165,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Vitual Network Rules"
-      query = query.azure_storage_account_virtual_network_rules
+      query = query.storage_account_virtual_network_rules
       args = {
         id = self.input.storage_account_id.value
       }
@@ -178,7 +178,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Blob Configurations"
-      query = query.azure_storage_account_blob_configurations
+      query = query.storage_account_blob_configurations
       args = {
         id = self.input.storage_account_id.value
       }
@@ -191,7 +191,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Queue Logging"
-      query = query.azure_storage_account_queue_logging
+      query = query.storage_account_queue_logging
       args = {
         id = self.input.storage_account_id.value
       }
@@ -204,7 +204,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Blob Service Logging"
-      query = query.azure_storage_account_blob_logging
+      query = query.storage_account_blob_logging
       args = {
         id = self.input.storage_account_id.value
       }
@@ -214,7 +214,7 @@ dashboard "azure_storage_account_detail" {
 
 }
 
-query "azure_storage_account_input" {
+query "storage_account_input" {
   sql = <<-EOQ
     select
       sa.title as label,
@@ -234,7 +234,7 @@ query "azure_storage_account_input" {
   EOQ
 }
 
-query "azure_storage_account_kind" {
+query "storage_account_kind" {
   sql = <<-EOQ
     select
       'Kind' as label,
@@ -248,7 +248,7 @@ query "azure_storage_account_kind" {
   param "id" {}
 }
 
-query "azure_storage_account_access_tier" {
+query "storage_account_access_tier" {
   sql = <<-EOQ
     select
       'Access Tier' as label,
@@ -262,7 +262,7 @@ query "azure_storage_account_access_tier" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_soft_delete" {
+query "storage_account_blob_soft_delete" {
   sql = <<-EOQ
     select
       'Blob Soft Delete' as label,
@@ -277,7 +277,7 @@ query "azure_storage_account_blob_soft_delete" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_public_access" {
+query "storage_account_blob_public_access" {
   sql = <<-EOQ
     select
       'Blob Public Access' as label,
@@ -292,7 +292,7 @@ query "azure_storage_account_blob_public_access" {
   param "id" {}
 }
 
-query "azure_storage_account_https_traffic" {
+query "storage_account_https_traffic" {
   sql = <<-EOQ
     select
       'HTTPS' as label,
@@ -337,7 +337,7 @@ query "azure_storage_account_infrastructure_encryption" {
   param "id" {}
 }
 
-query "azure_storage_account_overview" {
+query "storage_account_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -356,7 +356,7 @@ query "azure_storage_account_overview" {
   param "id" {}
 }
 
-query "azure_storage_account_tags" {
+query "storage_account_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -373,7 +373,7 @@ query "azure_storage_account_tags" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_encryption_service" {
+query "storage_account_blob_encryption_service" {
   sql = <<-EOQ
     select
       encryption_services -> 'blob' ->> 'enabled' as "Enabled",
@@ -387,7 +387,7 @@ query "azure_storage_account_blob_encryption_service" {
   param "id" {}
 }
 
-query "azure_storage_account_file_encryption_service" {
+query "storage_account_file_encryption_service" {
   sql = <<-EOQ
     select
       encryption_services -> 'file' ->> 'enabled' as "Enabled",
@@ -401,7 +401,7 @@ query "azure_storage_account_file_encryption_service" {
   param "id" {}
 }
 
-query "azure_storage_account_sku" {
+query "storage_account_sku" {
   sql = <<-EOQ
     select
       sku_name as "SKU Name",
@@ -415,7 +415,7 @@ query "azure_storage_account_sku" {
   param "id" {}
 }
 
-query "azure_storage_account_virtual_network_rules" {
+query "storage_account_virtual_network_rules" {
   sql = <<-EOQ
     select
       vnr ->> 'action' as "Action",
@@ -431,7 +431,7 @@ query "azure_storage_account_virtual_network_rules" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_configurations" {
+query "storage_account_blob_configurations" {
   sql = <<-EOQ
     select
       blob_container_soft_delete_enabled  as "Blob Container Soft Delete Enabled",
@@ -450,7 +450,7 @@ query "azure_storage_account_blob_configurations" {
   param "id" {}
 }
 
-query "azure_storage_account_queue_logging" {
+query "storage_account_queue_logging" {
   sql = <<-EOQ
     select
       queue_logging_delete  as "Queue Logging Delete",
@@ -468,7 +468,7 @@ query "azure_storage_account_queue_logging" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_logging" {
+query "storage_account_blob_logging" {
   sql = <<-EOQ
     select
       blob_service_logging ->> 'Delete' as "Delete",

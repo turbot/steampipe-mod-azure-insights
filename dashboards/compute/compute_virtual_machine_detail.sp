@@ -245,39 +245,38 @@ dashboard "compute_virtual_machine_detail" {
       }
 
       nodes = [
-        node.compute_virtual_machine,
         node.compute_disk,
-        node.network_network_interface,
-        node.network_public_ip,
+        node.compute_virtual_machine_application_gateway_backend_address_pool,
+        node.compute_virtual_machine_application_gateway,
         node.compute_virtual_machine_compute_image,
+        node.compute_virtual_machine_lb_backend_address_pool,
+        node.compute_virtual_machine,
+        node.network_load_balancer,
+        node.network_network_interface,
         node.network_network_security_group,
+        node.network_public_ip,
         node.network_subnet,
         node.network_virtual_network,
-        node.compute_virtual_machine_lb_backend_address_pool,
-        node.network_load_balancer,
-        node.compute_virtual_machine_application_gateway_backend_address_pool,
-        node.compute_virtual_machine_application_gateway
       ]
 
       edges = [
-        edge.compute_virtual_machine_to_data_disk,
-        edge.compute_virtual_machine_to_os_disk,
-        edge.compute_virtual_machine_to_network_network_interface,
-        edge.compute_virtual_machine_to_public_ip,
+        edge.application_gateway_backend_address_pool_to_compute_virtual_machine,
+        edge.application_gateway_to_compute_virtual_machine,
         edge.compute_virtual_machine_to_compute_image,
+        edge.compute_virtual_machine_to_data_disk,
+        edge.compute_virtual_machine_to_network_network_interface,
         edge.compute_virtual_machine_to_network_security_group,
         edge.compute_virtual_machine_to_network_subnet,
+        edge.compute_virtual_machine_to_os_disk,
+        edge.compute_virtual_machine_to_public_ip,
         edge.compute_virtual_machine_to_virtual_network,
         edge.lb_backend_address_pool_to_compute_virtual_machine,
         edge.load_balancer_to_compute_virtual_machine,
-        edge.application_gateway_backend_address_pool_to_compute_virtual_machine,
-        edge.application_gateway_to_compute_virtual_machine
       ]
 
       args = {
         compute_disk_ids            = with.compute_disks.rows[*].disk_id
         compute_virtual_machine_ids = [self.input.vm_id.value]
-        id                          = self.input.vm_id.value
         network_interface_ids       = with.network_interfaces.rows[*].network_interface_id
         network_load_balancer_ids   = with.load_balancers.rows[*].load_balancer_id
         network_public_ip_ids       = with.public_ips.rows[*].public_ip_id

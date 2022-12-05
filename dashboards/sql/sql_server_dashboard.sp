@@ -1,4 +1,4 @@
-dashboard "azure_sql_server_dashboard" {
+dashboard "sql_server_dashboard" {
 
   title         = "Azure SQL Server Dashboard"
   documentation = file("./dashboards/sql/docs/sql_server_dashboard.md")
@@ -10,27 +10,27 @@ dashboard "azure_sql_server_dashboard" {
   container {
 
     card {
-      query = query.azure_sql_server_count
+      query = query.sql_server_count
       width = 2
     }
 
     card {
-      query = query.azure_sql_server_public_count
+      query = query.sql_server_public_count
       width = 2
     }
 
     card {
-      query = query.azure_sql_server_auditing_disabled_count
+      query = query.sql_server_auditing_disabled_count
       width = 2
     }
 
     card {
-      query = query.azure_sql_server_vulnerability_assessment_disabled_count
+      query = query.sql_server_vulnerability_assessment_disabled_count
       width = 2
     }
 
     card {
-      query = query.azure_sql_server_azure_ad_authentication_disabled_count
+      query = query.sql_server_azure_ad_authentication_disabled_count
       width = 2
     }
 
@@ -42,7 +42,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Public/Private Status"
-      query = query.azure_sql_server_public_status
+      query = query.sql_server_public_status
       type  = "donut"
       width = 2
 
@@ -58,7 +58,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Auditing Status"
-      query = query.azure_sql_server_auditing_status
+      query = query.sql_server_auditing_status
       type  = "donut"
       width = 2
 
@@ -74,7 +74,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Vulnerability Assessment Status"
-      query = query.azure_sql_server_vulnerability_assessment_status
+      query = query.sql_server_vulnerability_assessment_status
       type  = "donut"
       width = 2
 
@@ -90,7 +90,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Azure AD Authentication Status"
-      query = query.azure_sql_server_ad_authentication_status
+      query = query.sql_server_ad_authentication_status
       type  = "donut"
       width = 2
 
@@ -106,7 +106,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Private Link Status"
-      query = query.azure_sql_server_private_link_status
+      query = query.sql_server_private_link_status
       type  = "donut"
       width = 2
 
@@ -128,28 +128,28 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Servers by Subscription"
-      query = query.azure_sql_server_by_subscription
+      query = query.sql_server_by_subscription
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Servers by Resource Group"
-      query = query.azure_sql_server_by_resource_group
+      query = query.sql_server_by_resource_group
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Servers by Region"
-      query = query.azure_sql_server_by_region
+      query = query.sql_server_by_region
       type  = "column"
       width = 4
     }
 
-     chart {
+    chart {
       title = "Servers by Encryption Type"
-      query = query.azure_sql_server_by_encryption_type
+      query = query.sql_server_by_encryption_type
       type  = "column"
       width = 4
     }
@@ -163,7 +163,7 @@ dashboard "azure_sql_server_dashboard" {
 
     chart {
       title = "Servers by State"
-      query = query.azure_sql_server_by_state
+      query = query.sql_server_by_state
       type  = "column"
       width = 4
     }
@@ -174,13 +174,13 @@ dashboard "azure_sql_server_dashboard" {
 
 # Card Queries
 
-query "azure_sql_server_count" {
+query "sql_server_count" {
   sql = <<-EOQ
     select count(*) as "Servers" from azure_sql_server;
   EOQ
 }
 
-query "azure_sql_server_public_count" {
+query "sql_server_public_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -193,7 +193,7 @@ query "azure_sql_server_public_count" {
   EOQ
 }
 
-query "azure_sql_server_vulnerability_assessment_disabled_count" {
+query "sql_server_vulnerability_assessment_disabled_count" {
   sql = <<-EOQ
     with sql_server_va as (
       select
@@ -213,7 +213,7 @@ query "azure_sql_server_vulnerability_assessment_disabled_count" {
   EOQ
 }
 
-query "azure_sql_server_auditing_disabled_count" {
+query "sql_server_auditing_disabled_count" {
   sql = <<-EOQ
     with sql_server_audit_enabled as (
       select
@@ -233,7 +233,7 @@ query "azure_sql_server_auditing_disabled_count" {
   EOQ
 }
 
-query "azure_sql_server_azure_ad_authentication_disabled_count" {
+query "sql_server_azure_ad_authentication_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -248,7 +248,7 @@ query "azure_sql_server_azure_ad_authentication_disabled_count" {
 
 # Assessment Queries
 
-query "azure_sql_server_public_status" {
+query "sql_server_public_status" {
   sql = <<-EOQ
     select
       public_network,
@@ -267,7 +267,7 @@ query "azure_sql_server_public_status" {
   EOQ
 }
 
-query "azure_sql_server_vulnerability_assessment_status" {
+query "sql_server_vulnerability_assessment_status" {
   sql = <<-EOQ
     with vulnerability_assessment_enabled as (
       select
@@ -297,7 +297,7 @@ query "azure_sql_server_vulnerability_assessment_status" {
   EOQ
 }
 
-query "azure_sql_server_auditing_status" {
+query "sql_server_auditing_status" {
   sql = <<-EOQ
     with auditing_enabled as (
       select
@@ -327,7 +327,7 @@ query "azure_sql_server_auditing_status" {
   EOQ
 }
 
-query "azure_sql_server_ad_authentication_status" {
+query "sql_server_ad_authentication_status" {
   sql = <<-EOQ
     select
       ad_authentication,
@@ -346,7 +346,7 @@ query "azure_sql_server_ad_authentication_status" {
   EOQ
 }
 
-query "azure_sql_server_private_link_status" {
+query "sql_server_private_link_status" {
   sql = <<-EOQ
     with private_link_enabled as (
       select
@@ -378,7 +378,7 @@ query "azure_sql_server_private_link_status" {
 
 # Analysis Queries
 
-query "azure_sql_server_by_subscription" {
+query "sql_server_by_subscription" {
   sql = <<-EOQ
     select
       sub.title as "Subscription",
@@ -395,7 +395,7 @@ query "azure_sql_server_by_subscription" {
   EOQ
 }
 
-query "azure_sql_server_by_resource_group" {
+query "sql_server_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -412,7 +412,7 @@ query "azure_sql_server_by_resource_group" {
   EOQ
 }
 
-query "azure_sql_server_by_region" {
+query "sql_server_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -426,7 +426,7 @@ query "azure_sql_server_by_region" {
   EOQ
 }
 
-query "azure_sql_server_by_encryption_type" {
+query "sql_server_by_encryption_type" {
   sql = <<-EOQ
     with encryption_type as (
       select
@@ -462,7 +462,7 @@ query "azure_sql_server_by_kind" {
   EOQ
 }
 
-query "azure_sql_server_by_state" {
+query "sql_server_by_state" {
   sql = <<-EOQ
     select
       state as "State",

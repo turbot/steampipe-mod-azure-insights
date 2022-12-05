@@ -1,4 +1,4 @@
-dashboard "azure_kubernetes_cluster_detail" {
+dashboard "kubernetes_cluster_detail" {
 
   title         = "Azure Kubernetes Cluster Detail"
   documentation = file("./dashboards/kubernetes/docs/kubernetes_cluster_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_kubernetes_cluster_detail" {
 
   input "cluster_id" {
     title = "Select a cluster:"
-    query = query.azure_kubernetes_cluster_input
+    query = query.kubernetes_cluster_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_kubernetes_cluster_detail" {
 
     card {
       width = 2
-      query = query.azure_kubernetes_cluster_status
+      query = query.kubernetes_cluster_status
       args = {
         id = self.input.cluster_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_kubernetes_cluster_detail" {
 
     card {
       width = 2
-      query = query.azure_kubernetes_cluster_version
+      query = query.kubernetes_cluster_version
       args = {
         id = self.input.cluster_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_kubernetes_cluster_detail" {
 
     card {
       width = 2
-      query = query.azure_kubernetes_cluster_node_pool_count
+      query = query.kubernetes_cluster_node_pool_count
       args = {
         id = self.input.cluster_id.value
       }
@@ -41,7 +41,7 @@ dashboard "azure_kubernetes_cluster_detail" {
 
     card {
       width = 2
-      query = query.azure_kubernetes_cluster_disk_encryption_status
+      query = query.kubernetes_cluster_disk_encryption_status
       args = {
         id = self.input.cluster_id.value
       }
@@ -87,7 +87,7 @@ dashboard "azure_kubernetes_cluster_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_kubernetes_cluster_overview
+        query = query.kubernetes_cluster_overview
         args = {
           id = self.input.cluster_id.value
         }
@@ -97,7 +97,7 @@ dashboard "azure_kubernetes_cluster_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_kubernetes_cluster_tags
+        query = query.kubernetes_cluster_tags
         args = {
           id = self.input.cluster_id.value
         }
@@ -109,7 +109,7 @@ dashboard "azure_kubernetes_cluster_detail" {
 
       table {
         title = "Node Pool Details"
-        query = query.azure_kubernetes_cluster_agent_pools
+        query = query.kubernetes_cluster_agent_pools
         args = {
           id = self.input.cluster_id.value
         }
@@ -117,7 +117,7 @@ dashboard "azure_kubernetes_cluster_detail" {
 
       table {
         title = "Disk Encryption Set Details"
-        query = query.azure_kubernetes_cluster_disk_encryption_details
+        query = query.kubernetes_cluster_disk_encryption_details
         args = {
           id = self.input.cluster_id.value
         }
@@ -128,7 +128,7 @@ dashboard "azure_kubernetes_cluster_detail" {
 
 }
 
-query "azure_kubernetes_cluster_input" {
+query "kubernetes_cluster_input" {
   sql = <<-EOQ
     select
       c.title as label,
@@ -149,7 +149,7 @@ query "azure_kubernetes_cluster_input" {
   EOQ
 }
 
-query "azure_kubernetes_cluster_status" {
+query "kubernetes_cluster_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -164,7 +164,7 @@ query "azure_kubernetes_cluster_status" {
 
 }
 
-query "azure_kubernetes_cluster_version" {
+query "kubernetes_cluster_version" {
   sql = <<-EOQ
     select
       'Kubernetes Version' as label,
@@ -179,7 +179,7 @@ query "azure_kubernetes_cluster_version" {
 
 }
 
-query "azure_kubernetes_cluster_node_pool_count" {
+query "kubernetes_cluster_node_pool_count" {
   sql = <<-EOQ
     select
       'Node Pools' as label,
@@ -194,7 +194,7 @@ query "azure_kubernetes_cluster_node_pool_count" {
 
 }
 
-query "azure_kubernetes_cluster_disk_encryption_status" {
+query "kubernetes_cluster_disk_encryption_status" {
   sql = <<-EOQ
     select
       'Disk Encryption' as label,
@@ -419,7 +419,7 @@ edge "azure_kubernetes_cluster_virtual_machine_scale_set_to_vm_edge" {
   param "id" {}
 }
 
-query "azure_kubernetes_cluster_overview" {
+query "kubernetes_cluster_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -441,7 +441,7 @@ query "azure_kubernetes_cluster_overview" {
   param "id" {}
 }
 
-query "azure_kubernetes_cluster_tags" {
+query "kubernetes_cluster_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -458,7 +458,7 @@ query "azure_kubernetes_cluster_tags" {
   param "id" {}
 }
 
-query "azure_kubernetes_cluster_agent_pools" {
+query "kubernetes_cluster_agent_pools" {
   sql = <<-EOQ
     select
       p ->> 'name' as "Name",
@@ -480,7 +480,7 @@ query "azure_kubernetes_cluster_agent_pools" {
   param "id" {}
 }
 
-query "azure_kubernetes_cluster_disk_encryption_details" {
+query "kubernetes_cluster_disk_encryption_details" {
   sql = <<-EOQ
     select
       e.name as "Name",

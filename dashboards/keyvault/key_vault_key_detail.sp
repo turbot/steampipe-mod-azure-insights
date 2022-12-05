@@ -108,36 +108,35 @@ dashboard "key_vault_key_detail" {
       }
 
       nodes = [
-        node.key_vault_key,
-        node.key_vault_key_version,
-        node.key_vault,
         node.key_vault_key_version_compute_disk_encryption_set,
         node.key_vault_key_version_container_registry,
-        node.sql_server,
         node.key_vault_key_version_eventhub_namespace,
-        node.storage_storage_account,
+        node.key_vault_key_version_postgresql_server,
         node.key_vault_key_version_servicebus_namespace,
-        node.key_vault_key_version_postgresql_server
+        node.key_vault_key_version,
+        node.key_vault_key,
+        node.key_vault,
+        node.sql_server,
+        node.storage_storage_account,
       ]
 
       edges = [
-        edge.key_vault_key_version_to_key,
-        edge.key_vault_key_to_key_vault,
         edge.compute_disk_encryption_set_to_key_vault_key_version,
         edge.container_registry_to_key_vault_key_version,
-        edge.sql_server_to_key_vault_key_version,
         edge.eventhub_namespace_to_key_vault_key_version,
-        edge.storage_account_to_key_vault_key_version,
+        edge.key_vault_key_to_key_vault,
+        edge.key_vault_key_version_to_key,
+        edge.postgresql_server_to_key_vault_key_version,
         edge.servicebus_namespace_to_key_vault_key,
-        edge.postgresql_server_to_key_vault_key_version
+        edge.sql_server_to_key_vault_key_version,
+        edge.storage_account_to_key_vault_key_version,
       ]
 
       args = {
-        key_vault_key_ids   = [self.input.key_vault_key_id.value]
         key_vault_ids       = with.key_vaults.rows[*].vault_id
+        key_vault_key_ids   = [self.input.key_vault_key_id.value]
         sql_server_ids      = with.sql_servers.rows[*].sql_server_id
         storage_account_ids = with.storage_accounts.rows[*].account_id
-        id                  = self.input.key_vault_key_id.value
       }
     }
   }

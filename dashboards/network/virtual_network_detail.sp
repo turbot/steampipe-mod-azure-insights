@@ -191,40 +191,39 @@ dashboard "virtual_network_detail" {
 
 
       nodes = [
-        node.network_virtual_network,
-        node.network_subnet,
-        node.network_virtual_network_route_table,
-        node.network_network_security_group,
-        node.network_virtual_network_network_peering,
         node.compute_virtual_machine,
-        node.network_virtual_network_nat_gateway,
+        node.network_load_balancer,
+        node.network_network_security_group,
+        node.network_subnet,
         node.network_virtual_network_application_gateway,
-        node.sql_server,
         node.network_virtual_network_backend_address_pool,
-        node.network_load_balancer
+        node.network_virtual_network_nat_gateway,
+        node.network_virtual_network_network_peering,
+        node.network_virtual_network_route_table,
+        node.network_virtual_network,
+        node.sql_server,
       ]
 
       edges = [
-        edge.network_virtual_network_to_network_subnet,
+        edge.network_subnet_to_network_application_gateway,
+        edge.network_subnet_to_network_nat_gateway,
         edge.network_subnet_to_network_route_table,
         edge.network_subnet_to_network_security_group,
-        edge.network_virtual_network_to_network_peering,
-        edge.network_virtual_network_to_compute_virtual_machine,
-        edge.network_subnet_to_network_nat_gateway,
-        edge.network_subnet_to_network_application_gateway,
         edge.network_subnet_to_sql_server,
         edge.network_virtual_network_to_backend_address_pool,
-        edge.network_virtual_network_to_network_load_balancer
+        edge.network_virtual_network_to_compute_virtual_machine,
+        edge.network_virtual_network_to_network_load_balancer,
+        edge.network_virtual_network_to_network_peering,
+        edge.network_virtual_network_to_network_subnet,
       ]
 
       args = {
-        virtual_network_ids         = [self.input.vn_id.value]
-        network_subnet_ids          = with.subnets.rows[*].subnet_id
-        network_security_group_ids  = with.network_security_groups.rows[*].nsg_id
-        network_load_balancer_ids   = with.network_load_balancers.rows[*].network_load_balancer_id
         compute_virtual_machine_ids = with.virtual_machines.rows[*].virtual_machine_id
+        network_load_balancer_ids   = with.network_load_balancers.rows[*].network_load_balancer_id
+        network_security_group_ids  = with.network_security_groups.rows[*].nsg_id
+        network_subnet_ids          = with.subnets.rows[*].subnet_id
         sql_server_ids              = with.sql_servers.rows[*].sql_server_id
-        id                          = self.input.vn_id.value
+        virtual_network_ids         = [self.input.vn_id.value]
       }
     }
   }

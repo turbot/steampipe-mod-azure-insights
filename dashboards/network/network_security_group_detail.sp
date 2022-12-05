@@ -154,20 +154,20 @@ dashboard "network_security_group_detail" {
       }
 
       nodes = [
-        node.network_network_security_group,
+        node.compute_virtual_machine,
         node.network_network_interface,
+        node.network_network_security_group,
+        node.network_security_group_network_watcher_flow_log,
         node.network_subnet,
         node.network_virtual_network,
-        node.network_security_group_network_watcher_flow_log,
-        node.compute_virtual_machine
       ]
 
       edges = [
+        edge.network_security_group_to_compute_virtual_machine,
         edge.network_security_group_to_network_interface,
+        edge.network_security_group_to_network_watcher_flow_log,
         edge.network_subnet_to_network_security_group,
         edge.network_virtual_network_to_network_subnet,
-        edge.network_security_group_to_network_watcher_flow_log,
-        edge.network_security_group_to_compute_virtual_machine
       ]
 
       args = {

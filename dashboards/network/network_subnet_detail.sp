@@ -112,41 +112,39 @@ dashboard "network_subnet_detail" {
       }
 
       nodes = [
+        node.app_service_web_app,
+        node.network_network_security_group,
+        node.network_subnet_api_management,
+        node.network_subnet_application_gateway,
+        node.network_subnet_cosmosdb_account,
+        node.network_subnet_nat_gateway,
+        node.network_subnet_route_table,
         node.network_subnet,
         node.network_virtual_network,
-        node.network_subnet_route_table,
-        node.network_subnet_nat_gateway,
-        node.network_network_security_group,
-        node.app_service_web_app,
         node.sql_server,
-        node.compute_virtual_machine,
         node.storage_storage_account,
-        node.network_subnet_cosmosdb_account,
-        node.network_subnet_api_management,
-        node.network_subnet_application_gateway
       ]
 
       edges = [
-        edge.network_virtual_network_to_network_subnet,
-        edge.network_subnet_to_network_route_table,
-        edge.network_subnet_to_network_nat_gateway,
-        edge.network_subnet_to_network_security_group,
+        edge.network_subnet_to_api_management,
         edge.network_subnet_to_app_service_web_app,
+        edge.network_subnet_to_cosmosdb_account,
+        edge.network_subnet_to_network_application_gateway,
+        edge.network_subnet_to_network_nat_gateway,
+        edge.network_subnet_to_network_route_table,
+        edge.network_subnet_to_network_security_group,
         edge.network_subnet_to_sql_server,
         edge.network_subnet_to_storage_storage_account,
-        edge.network_subnet_to_cosmosdb_account,
-        edge.network_subnet_to_api_management,
-        edge.network_subnet_to_network_application_gateway
+        edge.network_virtual_network_to_network_subnet,
       ]
 
       args = {
-        network_subnet_ids          = [self.input.subnet_id.value]
-        virtual_network_ids         = with.virtual_networks.rows[*].virtual_network_id
-        network_security_group_ids  = with.network_security_groups.rows[*].nsg_id
-        web_app_ids                 = with.web_apps.rows[*].web_app_id
-        id                          = self.input.subnet_id.value
-        sql_server_ids              = with.sql_servers.rows[*].sql_server_id
-        storage_account_ids         = with.storage_accounts.rows[*].storage_account_id
+        network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+        network_subnet_ids         = [self.input.subnet_id.value]
+        sql_server_ids             = with.sql_servers.rows[*].sql_server_id
+        storage_account_ids        = with.storage_accounts.rows[*].storage_account_id
+        virtual_network_ids        = with.virtual_networks.rows[*].virtual_network_id
+        web_app_ids                = with.web_apps.rows[*].web_app_id
       }
     }
   }
@@ -293,7 +291,7 @@ query "azure_network_subnet_association" {
       title as "Title",
       type as "Type",
       id as "ID",
-      '${dashboard.azure_storage_account_detail.url_path}?input.storage_account_id=' || id as link
+      '${dashboard.storage_account_detail.url_path}?input.storage_account_id=' || id as link
     from
       azure_storage_account,
       jsonb_array_elements(virtual_network_rules) as r
@@ -306,7 +304,7 @@ query "azure_network_subnet_association" {
       title as "Title",
       type as "Type",
       id as "ID",
-      '${dashboard.azure_sql_server_detail.url_path}?input.server_id=' || id as link
+      '${dashboard.sql_server_detail.url_path}?input.server_id=' || id as link
     from
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as r
