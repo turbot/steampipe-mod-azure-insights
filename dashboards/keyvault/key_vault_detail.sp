@@ -392,4 +392,3 @@ query "key_vault_usage" {
 
   param "id" {}
 }
-

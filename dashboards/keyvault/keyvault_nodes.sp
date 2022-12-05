@@ -1,5 +1,5 @@
 node "key_vault" {
-  category = category.azure_key_vault
+  category = category.key_vault
 
   sql = <<-EOQ
     select
@@ -19,7 +19,7 @@ node "key_vault" {
 }
 
 node "key_vault_secret" {
-  category = category.azure_key_vault_secret
+  category = category.key_vault_secret
 
   sql = <<-EOQ
     select
@@ -43,7 +43,7 @@ node "key_vault_secret" {
 }
 
 node "key_vault_key_version" {
-  category = category.azure_key_vault_key_verison
+  category = category.key_vault_key_verison
 
   sql = <<-EOQ
     select
@@ -67,7 +67,7 @@ node "key_vault_key_version" {
 }
 
 node "key_vault_key" {
-  category = category.azure_key_vault_key
+  category = category.key_vault_key
 
   sql = <<-EOQ
     select
@@ -88,7 +88,7 @@ node "key_vault_key" {
 }
 
 node "key_vault_key_to_key_vault" {
-  category = category.azure_key_vault
+  category = category.key_vault
 
   sql = <<-EOQ
     select
@@ -165,7 +165,7 @@ node "key_vault_key_version_container_registry" {
 }
 
 node "key_vault_key_version_sql_server" {
-  category = category.azure_sql_server
+  category = category.sql_server
 
   sql = <<-EOQ
     with sql_server as (

@@ -231,4 +231,3 @@ edge "postgresql_server_to_key_vault_key_version" {
 
   param "key_vault_key_ids" {}
 }
-
