@@ -1,4 +1,4 @@
-dashboard "azure_key_vault_detail" {
+dashboard "key_vault_detail" {
 
   title         = "Azure Key Vault Detail"
   documentation = file("./dashboards/keyvault/docs/key_vault_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_key_vault_detail" {
 
   input "key_vault_id" {
     title = "Select a key vault:"
-    query = query.azure_key_vault_input
+    query = query.key_vault_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_key_vault_detail" {
 
     card {
       width = 2
-      query = query.azure_key_vault_soft_delete_retention_in_days
+      query = query.key_vault_soft_delete_retention_in_days
       args = {
         id = self.input.key_vault_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_key_vault_detail" {
 
     card {
       width = 2
-      query = query.azure_key_vault_public_network_access_enabled
+      query = query.key_vault_public_network_access_enabled
       args = {
         id = self.input.key_vault_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_key_vault_detail" {
 
     card {
       width = 2
-      query = query.azure_key_vault_purge_protection_status
+      query = query.key_vault_purge_protection_status
       args = {
         id = self.input.key_vault_id.value
       }
@@ -41,12 +41,11 @@ dashboard "azure_key_vault_detail" {
 
     card {
       width = 2
-      query = query.azure_key_vault_soft_delete_status
+      query = query.key_vault_soft_delete_status
       args = {
         id = self.input.key_vault_id.value
       }
     }
-
 
   }
 
@@ -57,23 +56,79 @@ dashboard "azure_key_vault_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "subnets" {
+        sql = <<-EOQ
+          select
+            lower(s.id) as subnet_id
+            from
+              azure_key_vault as v,
+              jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
+              left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
+            where
+              lower(v.id) = $1;
+        EOQ
+
+        args = [self.input.key_vault_id.value]
+      }
+
+      with "virtual_networks" {
+        sql = <<-EOQ
+          with subnet as (
+            select
+              lower(s.id) as id
+            from
+              azure_key_vault as v,
+              jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
+              left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
+            where
+              lower(v.id) = $1
+          )
+          select
+            lower(n.id) as virtual_network_id
+            from
+              azure_virtual_network as n,
+              jsonb_array_elements(subnets) as s
+            where
+              lower(s ->> 'id') in (select id from subnet)
+        EOQ
+
+        args = [self.input.key_vault_id.value]
+      }
+
+      with "key_vault_keys" {
+        sql = <<-EOQ
+          select
+            lower(k.id) as key_id
+          from
+            azure_key_vault_key as k
+            left join azure_key_vault as v on v.name = k.vault_name
+          where
+            lower(v.id) = $1;
+        EOQ
+
+        args = [self.input.key_vault_id.value]
+      }
+
       nodes = [
         node.key_vault,
-        node.azure_key_vault_to_subnet_node,
-        node.azure_key_vault_subnet_to_vpc_node,
-        node.azure_key_vault_to_key_node,
-        node.azure_key_vault_to_secret_node
+        node.network_subnet,
+        node.network_virtual_network,
+        node.key_vault_key,
+        node.key_vault_secret
       ]
 
       edges = [
-        edge.azure_key_vault_to_subnet_edge,
-        edge.azure_key_vault_subnet_to_vpc_edge,
-        edge.azure_key_vault_to_key_edge,
-        edge.azure_key_vault_to_secret_edge
+        edge.key_vault_to_subnet,
+        edge.network_subnet_to_network_virtual_network,
+        edge.key_vault_to_key,
+        edge.key_vault_to_secret
       ]
 
       args = {
-        id = self.input.key_vault_id.value
+        key_vault_ids       = [self.input.key_vault_id.value]
+        network_subnet_ids  = with.subnets.rows[*].subnet_id
+        virtual_network_ids = with.virtual_networks.rows[*].virtual_network_id
+        key_vault_key_ids   = with.key_vault_keys.rows[*].key_id
       }
     }
   }
@@ -87,7 +142,7 @@ dashboard "azure_key_vault_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_key_vault_overview
+        query = query.key_vault_overview
         args = {
           id = self.input.key_vault_id.value
         }
@@ -97,7 +152,7 @@ dashboard "azure_key_vault_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_key_vault_tags
+        query = query.key_vault_tags
         args = {
           id = self.input.key_vault_id.value
         }
@@ -109,7 +164,7 @@ dashboard "azure_key_vault_detail" {
 
       table {
         title = "SKU Details"
-        query = query.azure_key_vault_sku
+        query = query.key_vault_sku
         args = {
           id = self.input.key_vault_id.value
         }
@@ -117,7 +172,7 @@ dashboard "azure_key_vault_detail" {
 
       table {
         title = "Vault Usages"
-        query = query.azure_key_vault_usage
+        query = query.key_vault_usage
         args = {
           id = self.input.key_vault_id.value
         }
@@ -132,7 +187,7 @@ dashboard "azure_key_vault_detail" {
 
     table {
       title = "Access Policies"
-      query = query.azure_key_vault_access_policies
+      query = query.key_vault_access_policies
       args = {
         id = self.input.key_vault_id.value
       }
@@ -145,7 +200,7 @@ dashboard "azure_key_vault_detail" {
 
     table {
       title = "Network Access Details"
-      query = query.azure_key_vault_network_acls
+      query = query.key_vault_network_acls
       args = {
         id = self.input.key_vault_id.value
       }
@@ -155,11 +210,11 @@ dashboard "azure_key_vault_detail" {
 
 }
 
-query "azure_key_vault_input" {
+query "key_vault_input" {
   sql = <<-EOQ
     select
       v.title as label,
-      v.id as value,
+      lower(v.id) as value,
       json_build_object(
         'subscription', s.display_name,
         'resource_group', v.resource_group,
@@ -175,7 +230,7 @@ query "azure_key_vault_input" {
   EOQ
 }
 
-query "azure_key_vault_purge_protection_status" {
+query "key_vault_purge_protection_status" {
   sql = <<-EOQ
     select
       'Purge Protection' as label,
@@ -184,14 +239,14 @@ query "azure_key_vault_purge_protection_status" {
     from
       azure_key_vault
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 
 }
 
-query "azure_key_vault_public_network_access_enabled" {
+query "key_vault_public_network_access_enabled" {
   sql = <<-EOQ
     select
       'Public Access' as label,
@@ -200,14 +255,14 @@ query "azure_key_vault_public_network_access_enabled" {
     from
       azure_key_vault
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 
 }
 
-query "azure_key_vault_soft_delete_status" {
+query "key_vault_soft_delete_status" {
   sql = <<-EOQ
     select
       'Soft Delete' as label,
@@ -216,13 +271,13 @@ query "azure_key_vault_soft_delete_status" {
     from
       azure_key_vault
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_key_vault_soft_delete_retention_in_days" {
+query "key_vault_soft_delete_retention_in_days" {
   sql = <<-EOQ
     select
       'Soft Delete Retention Days' as label,
@@ -230,13 +285,13 @@ query "azure_key_vault_soft_delete_retention_in_days" {
     from
       azure_key_vault
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_key_vault_overview" {
+query "key_vault_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -251,13 +306,13 @@ query "azure_key_vault_overview" {
     from
       azure_key_vault
     where
-      id = $1
+      lower(id) = $1
   EOQ
 
   param "id" {}
 }
 
-query "azure_key_vault_tags" {
+query "key_vault_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -266,7 +321,7 @@ query "azure_key_vault_tags" {
       azure_key_vault,
       jsonb_each_text(tags) as tag
     where
-      id = $1
+      lower(id) = $1
     order by
       tag.key;
     EOQ
@@ -274,7 +329,7 @@ query "azure_key_vault_tags" {
   param "id" {}
 }
 
-query "azure_key_vault_access_policies" {
+query "key_vault_access_policies" {
   sql = <<-EOQ
     select
       p ->> 'objectId' as "User Object ID",
@@ -287,13 +342,13 @@ query "azure_key_vault_access_policies" {
       azure_key_vault,
       jsonb_array_elements(access_policies) as p
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_key_vault_sku" {
+query "key_vault_sku" {
   sql = <<-EOQ
     select
       sku_family as "SKU Family",
@@ -301,13 +356,13 @@ query "azure_key_vault_sku" {
     from
       azure_key_vault
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_key_vault_network_acls" {
+query "key_vault_network_acls" {
   sql = <<-EOQ
     select
       network_acls ->> 'bypass' as "Bypass",
@@ -317,13 +372,13 @@ query "azure_key_vault_network_acls" {
     from
       azure_key_vault
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_key_vault_usage" {
+query "key_vault_usage" {
   sql = <<-EOQ
     select
       enabled_for_deployment as "Enabled For Deployment",
@@ -332,218 +387,7 @@ query "azure_key_vault_usage" {
     from
       azure_key_vault
     where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "key_vault" {
-  category = category.key_vault
-
-  sql = <<-EOQ
-    select
-      lower(id) as id,
-      title as title,
-      jsonb_build_object(
-        'Vault Name', name,
-        'Vault Id', id
-      ) as properties
-    from
-      azure_key_vault
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "key_vault_ids" {}
-}
-
-node "azure_key_vault_to_subnet_node" {
-  category = category.azure_subnet
-
-  sql = <<-EOQ
-    select
-      lower(s.id) as id,
-      s.title as title,
-      jsonb_build_object(
-        'Name', s.name,
-        'ID', s.id,
-        'Address Prefix', s.address_prefix,
-        'Subscription ID', s.subscription_id,
-        'Resource Group', s.resource_group
-      ) as properties
-      from
-        azure_key_vault as v,
-        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
-        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
-      where
-        v.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_key_vault_to_subnet_edge" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      v.id as from_id,
-      lower(s.id) as to_id
-      from
-        azure_key_vault as v,
-        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
-        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
-      where
-        v.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_key_vault_subnet_to_vpc_node" {
-  category = category.azure_virtual_network
-
-  sql = <<-EOQ
-    with subnet as (
-      select
-        lower(s.id) as id
-      from
-        azure_key_vault as v,
-        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
-        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
-      where
-        v.id = $1
-    )
-    select
-      lower(n.id) as id,
-      n.title as title,
-      jsonb_build_object(
-        'Name', n.name,
-        'ID', n.id,
-        'Subscription ID', n.subscription_id,
-        'Resource Group', n.resource_group
-      ) as properties
-      from
-        azure_virtual_network as n,
-        jsonb_array_elements(subnets) as s
-      where
-        lower(s ->> 'id') in (select id from subnet)
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_key_vault_subnet_to_vpc_edge" {
-  title = "vpc"
-
-  sql = <<-EOQ
-    with subnet as (
-      select
-        lower(s.id) as id
-      from
-        azure_key_vault as v,
-        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
-        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
-      where
-        v.id = $1
-    )
-    select
-      lower(s ->> 'id') as from_id,
-      lower(n.id) as to_id
-    from
-      azure_virtual_network as n,
-      jsonb_array_elements(subnets) as s
-    where
-      lower(s ->> 'id') in (select id from subnet)
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_key_vault_to_key_node" {
-  category = category.key_vault_key
-
-  sql = <<-EOQ
-    select
-      k.title as title,
-      k.id as id,
-      jsonb_build_object(
-        'Key Name', k.name,
-        'Key ID',  k.id,
-        'Key Type', k.key_type,
-        'Key Size', k.key_size,
-        'Created At', k.created_at,
-        'Expires At', k.expires_at,
-        'Vault Name', k.vault_name
-      ) as properties
-    from
-      azure_key_vault_key as k
-      left join azure_key_vault as v on v.name = k.vault_name
-    where
-      v.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_key_vault_to_key_edge" {
-  title = "key"
-
-  sql = <<-EOQ
-    select
-      v.id as from_id,
-      k.id as to_id
-    from
-      azure_key_vault as v,
-      azure_key_vault_key as k
-    where
-      v.name = k.vault_name
-    and
-      v.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_key_vault_to_secret_node" {
-  category = category.azure_key_vault_secret
-
-  sql = <<-EOQ
-    select
-      s.title as title,
-      s.id as id,
-      jsonb_build_object(
-        'Secret Name', s.name,
-        'Secret Id', s.id,
-        'Created At', s.created_at,
-        'Expires At', s.expires_at,
-        'Vault Name', s.vault_name
-      ) as properties
-    from
-      azure_key_vault_secret as s
-      left join azure_key_vault as v on v.name = s.vault_name
-    where
-      v.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_key_vault_to_secret_edge" {
-  title = "secret"
-
-  sql = <<-EOQ
-    select
-      v.id as from_id,
-      s.id as to_id
-    from
-      azure_key_vault as v,
-      azure_key_vault_secret as s
-    where
-      v.name = s.vault_name
-    and
-      v.id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}

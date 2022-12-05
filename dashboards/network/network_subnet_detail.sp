@@ -25,7 +25,7 @@ dashboard "network_subnet_detail" {
 
     card {
       width = 2
-      query = query.network_subnet_address_prefix
+      query = query.azure_network_subnet_address_prefix
       args = {
         id = self.input.subnet_id.value
       }
@@ -119,6 +119,7 @@ dashboard "network_subnet_detail" {
         node.network_network_security_group,
         node.app_service_web_app,
         node.sql_server,
+        node.compute_virtual_machine,
         node.storage_storage_account,
         node.network_subnet_cosmosdb_account,
         node.network_subnet_api_management,
@@ -139,13 +140,13 @@ dashboard "network_subnet_detail" {
       ]
 
       args = {
-        network_subnet_ids         = [self.input.subnet_id.value]
-        virtual_network_ids        = with.virtual_networks.rows[*].virtual_network_id
-        network_security_group_ids = with.network_security_groups.rows[*].nsg_id
-        web_app_ids                = with.web_apps.rows[*].web_app_id
-        id                         = self.input.subnet_id.value
-        sql_server_ids             = with.sql_servers.rows[*].sql_server_id
-        storage_account_ids        = with.storage_accounts.rows[*].storage_account_id
+        network_subnet_ids          = [self.input.subnet_id.value]
+        virtual_network_ids         = with.virtual_networks.rows[*].virtual_network_id
+        network_security_group_ids  = with.network_security_groups.rows[*].nsg_id
+        web_app_ids                 = with.web_apps.rows[*].web_app_id
+        id                          = self.input.subnet_id.value
+        sql_server_ids              = with.sql_servers.rows[*].sql_server_id
+        storage_account_ids         = with.storage_accounts.rows[*].storage_account_id
       }
     }
   }
@@ -159,7 +160,7 @@ dashboard "network_subnet_detail" {
         title = "Overview"
         type  = "line"
         width = 12
-        query = query.network_subnet_overview
+        query = query.azure_network_subnet_overview
         args = {
           id = self.input.subnet_id.value
         }
@@ -172,7 +173,7 @@ dashboard "network_subnet_detail" {
 
       table {
         title = "Launched Resources"
-        query = query.network_subnet_association
+        query = query.azure_network_subnet_association
         args = {
           id = self.input.subnet_id.value
         }
@@ -226,7 +227,7 @@ query "network_subnet_num_ips" {
   param "id" {}
 }
 
-query "network_subnet_address_prefix" {
+query "azure_network_subnet_address_prefix" {
   sql = <<-EOQ
     select
       address_prefix as "Address Prefix"
@@ -239,7 +240,7 @@ query "network_subnet_address_prefix" {
   param "id" {}
 }
 
-query "network_subnet_overview" {
+query "azure_network_subnet_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -259,7 +260,7 @@ query "network_subnet_overview" {
   param "id" {}
 }
 
-query "network_subnet_association" {
+query "azure_network_subnet_association" {
   sql = <<-EOQ
 
     -- API Management
