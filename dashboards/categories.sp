@@ -28,7 +28,7 @@ category "azure_eventhub_namespace" {
   color = local.analytics_color
 }
 
-category "azure_log_profile" {
+category "log_profile" {
   title = "Log Profile"
   icon  = "text:LP"
   color = local.management_governance_color
