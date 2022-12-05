@@ -45,7 +45,7 @@ category "compute_virtual_machine" {
 
 category "compute_virtual_machine_scale_set" {
   title = "Compute Virtual Machine Scale Set"
-  href  = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_detail?input.vm_scale_set_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.compute_virtual_machine_scale_set_detail?input.vm_scale_set_id={{.properties.'ID' | @uri}}"
   icon  = "square-2-stack"
   color = local.compute_color
 }

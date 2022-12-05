@@ -60,7 +60,7 @@ dashboard "sql_database_age_report" {
       href = "${dashboard.sql_database_detail.url_path}?input.database_id={{.'Database ID' | @uri}}"
     }
 
-    query = query.azure_sql_database_age_table
+    query = query.sql_database_age_table
   }
 
 }
@@ -130,7 +130,7 @@ query "sql_database_1_year_count" {
   EOQ
 }
 
-query "azure_sql_database_age_table" {
+query "sql_database_age_table" {
   sql = <<-EOQ
     select
       d.name as "Name",

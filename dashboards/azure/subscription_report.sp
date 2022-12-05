@@ -1,7 +1,7 @@
-dashboard "azure_subscription_report" {
+dashboard "subscription_report" {
 
   title         = "Azure Subscription Report"
-  documentation = file("./dashboards/azure/docs/azure_subscription_report.md")
+  documentation = file("./dashboards/azure/docs/subscription_report.md")
 
   tags = merge(local.azure_common_tags, {
     type     = "Report"
@@ -11,7 +11,7 @@ dashboard "azure_subscription_report" {
   container {
 
     card {
-      query = query.azure_subscription_count
+      query = query.subscription_count
       width = 2
     }
 
@@ -22,12 +22,12 @@ dashboard "azure_subscription_report" {
       display = "none"
     }
 
-    query = query.azure_subscription_table
+    query = query.subscription_table
   }
 
 }
 
-query "azure_subscription_count" {
+query "subscription_count" {
   sql = <<-EOQ
     select
       count(*) as "Subscriptions"
@@ -36,7 +36,7 @@ query "azure_subscription_count" {
   EOQ
 }
 
-query "azure_subscription_table" {
+query "subscription_table" {
   sql = <<-EOQ
     select
       display_name as "Display Name",

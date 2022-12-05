@@ -349,7 +349,7 @@ dashboard "network_load_balancer_detail" {
         }
 
         column "Name" {
-          href = "${dashboard.azure_compute_virtual_machine_scale_set_detail.url_path}?input.vm_scale_set_id={{.'Scale Set ID' | @uri}}"
+          href = "${dashboard.compute_virtual_machine_scale_set_detail.url_path}?input.vm_scale_set_id={{.'Scale Set ID' | @uri}}"
         }
       }
 
