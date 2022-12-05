@@ -57,7 +57,7 @@ dashboard "azure_kubernetes_cluster_detail" {
       direction = "TD"
 
       nodes = [
-        node.azure_kubernetes_cluster_node,
+        node.kubernetes_cluster,
         node.azure_kubernetes_cluster_to_node_pool_node,
         node.azure_kubernetes_cluster_to_compute_disk_encryption_set_node,
         node.azure_kubernetes_cluster_to_virtual_machine_scale_set_node,
@@ -72,6 +72,7 @@ dashboard "azure_kubernetes_cluster_detail" {
       ]
 
       args = {
+        kubernetes_cluster_ids = [self.input.cluster_id.value]
         id = self.input.cluster_id.value
       }
     }
@@ -208,12 +209,12 @@ query "azure_kubernetes_cluster_disk_encryption_status" {
   param "id" {}
 }
 
-node "azure_kubernetes_cluster_node" {
+node "kubernetes_cluster" {
   category = category.azure_kubernetes_cluster
 
   sql = <<-EOQ
     select
-      id,
+      lower(id),
       title,
       jsonb_build_object(
         'ID', ID,
@@ -227,10 +228,10 @@ node "azure_kubernetes_cluster_node" {
     from
       azure_kubernetes_cluster
     where
-      id = $1;
+      lower(id) = any($1);
   EOQ
 
-  param "id" {}
+  param "kubernetes_cluster_ids" {}
 }
 
 node "azure_kubernetes_cluster_to_node_pool_node" {

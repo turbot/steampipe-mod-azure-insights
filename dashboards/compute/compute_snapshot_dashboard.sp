@@ -26,7 +26,7 @@ dashboard "azure_compute_snapshot_dashboard" {
     }
 
     card {
-      query = query.azure_compute_snapshot_incremental_disabled_count
+      query = query.compute_snapshot_incremental_disabled_count
       width = 2
     }
 
@@ -59,7 +59,7 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     chart {
       title = "Incremental Status"
-      query = query.azure_compute_snapshot_incremental_status
+      query = query.compute_snapshot_incremental_status
       type  = "donut"
       width = 2
 
@@ -163,7 +163,7 @@ query "azure_compute_snapshot_storage_total" {
   EOQ
 }
 
-query "azure_compute_snapshot_incremental_disabled_count" {
+query "compute_snapshot_incremental_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -213,7 +213,7 @@ query "azure_compute_snapshot_by_network_access_policy_status" {
   EOQ
 }
 
-query "azure_compute_snapshot_incremental_status" {
+query "compute_snapshot_incremental_status" {
   sql = <<-EOQ
     select
       status,

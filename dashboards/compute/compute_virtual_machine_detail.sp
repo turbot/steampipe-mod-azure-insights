@@ -1,4 +1,4 @@
-dashboard "azure_compute_virtual_machine_detail" {
+dashboard "compute_virtual_machine_detail" {
 
   title         = "Azure Compute Virtual Machine Detail"
   documentation = file("./dashboards/compute/docs/compute_virtual_machine_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
   input "vm_id" {
     title = "Select a virtual machine:"
-    query = query.azure_compute_virtual_machine_input
+    query = query.compute_virtual_machine_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_virtual_machine_status
+      query = query.compute_virtual_machine_status
       args = {
         id = self.input.vm_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_virtual_machine_encryption_status
+      query = query.compute_virtual_machine_encryption_status
       args = {
         id = self.input.vm_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_virtual_machine_disaster_recovery_status
+      query = query.compute_virtual_machine_disaster_recovery_status
       args = {
         id = self.input.vm_id.value
       }
@@ -41,7 +41,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_virtual_machine_ingress_access
+      query = query.compute_virtual_machine_ingress_access
       args = {
         id = self.input.vm_id.value
       }
@@ -49,7 +49,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_virtual_machine_vulnerability_assessment_solution
+      query = query.compute_virtual_machine_vulnerability_assessment_solution
       args = {
         id = self.input.vm_id.value
       }
@@ -71,54 +71,219 @@ dashboard "azure_compute_virtual_machine_detail" {
               jsonb_array_elements(network_interfaces)->>'id' as n_id
             from
               azure_compute_virtual_machine
+            where
+              lower(id) = $1
           )
           select
             lower(vn.n_id) as network_interface_id
           from
             network_interface_id as vn
             left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
-          where
-            lower(vn.vm_id) = $1;
           EOQ
+
+        args = [self.input.vm_id.value]
+      }
+
+      with "compute_disks" {
+        sql = <<-EOQ
+          select
+            lower(jsonb_array_elements(data_disks)->'managedDisk'->>'id') as disk_id
+          from
+            azure_compute_virtual_machine
+          where
+            lower(id) = $1
+          union
+          select
+            lower(d.id) as disk_id
+          from
+            azure_compute_virtual_machine as vm
+            left join azure_compute_disk as d on lower(d.managed_by) = lower(vm.id)
+          where
+            lower(vm.id) = $1;
+          EOQ
+
+        args = [self.input.vm_id.value]
+      }
+
+      with "public_ips" {
+        sql = <<-EOQ
+          with network_interfaces as (
+            select
+              vm.id as vm_id,
+              nic.id as nic_id,
+              nic.ip_configurations as ip_configuration
+            from
+              azure_compute_virtual_machine as vm,
+              jsonb_array_elements(network_interfaces) as n
+              left join azure_network_interface as nic on lower(nic.id) = lower(n ->> 'id')
+            where
+              lower(vm.id) = $1
+          )
+          select
+            lower(p.id) as public_ip_id
+          from
+            network_interfaces as n,
+            jsonb_array_elements(ip_configuration) as ip_config
+            left join azure_public_ip as p on lower(p.id) = lower(ip_config -> 'properties' -> 'publicIPAddress' ->> 'id');
+        EOQ
+
+        args = [self.input.vm_id.value]
+      }
+
+      with "network_security_groups" {
+        sql = <<-EOQ
+          with network_interface_id as (
+            select
+              id as vm_id,
+              jsonb_array_elements(network_interfaces)->>'id' as n_id
+            from
+              azure_compute_virtual_machine
+            where
+              lower(id) = $1
+          )
+          select
+            lower(s.id) as nsg_id
+          from
+            network_interface_id as vn
+            left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
+            left join azure_network_security_group as s on lower(n.network_security_group_id) = lower(s.id)
+        EOQ
+
+        args = [self.input.vm_id.value]
+      }
+
+      with "subnets" {
+        sql = <<-EOQ
+          with network_interface_id as (
+            select
+              id,
+              jsonb_array_elements(network_interfaces) ->> 'id' as nic_id
+            from
+              azure_compute_virtual_machine
+            where
+              lower(id) = $1
+          )
+          select
+            lower(s.id) as subnet_id
+          from
+            azure_network_interface as nic,
+            jsonb_array_elements(ip_configurations) as c
+            left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+          where
+            lower(nic.id) in (select lower(nic_id) from network_interface_id);
+        EOQ
+
+        args = [self.input.vm_id.value]
+      }
+
+      with "virtual_networks" {
+        sql = <<-EOQ
+          with network_interface_id as (
+            select
+              id,
+              jsonb_array_elements(network_interfaces)->>'id' as nic_id
+            from
+              azure_compute_virtual_machine
+            where
+              lower(id) = $1
+          ), subnet_id as (
+              select
+                s.id as id,
+                s.virtual_network_name
+              from
+                azure_network_interface as nic,
+                jsonb_array_elements(ip_configurations) as c
+                left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+              where
+                lower(nic.id) in (select lower(nic_id) from network_interface_id)
+          )
+          select
+            lower(vn.id) as virtual_network_id
+          from
+            azure_virtual_network as vn,
+            jsonb_array_elements(subnets) as s
+            left join subnet_id as sub on lower(sub.id) = lower(s ->> 'id')
+          where
+            lower(s ->> 'id') in (select lower(id) from subnet_id);
+        EOQ
+
+        args = [self.input.vm_id.value]
+      }
+
+      with "load_balancers" {
+        sql = <<-EOQ
+          with network_interface as (
+            select
+              vm.id,
+              nic.id,
+              nic.ip_configurations as ip_configurations
+            from
+              azure_compute_virtual_machine as vm,
+              jsonb_array_elements(network_interfaces) as n
+              left join azure_network_interface as nic on nic.id = n ->> 'id'
+            where
+              lower(vm.id) = $1
+          ),
+          loadBalancerBackendAddressPools as (
+            select
+              p ->> 'id' as id
+            from
+              network_interface,
+              jsonb_array_elements(ip_configurations) as i,
+              jsonb_array_elements(i -> 'properties' -> 'loadBalancerBackendAddressPools') as p
+          )
+          select
+            lower(lb.id) as load_balancer_id
+          from
+            azure_lb as lb,
+            jsonb_array_elements(backend_address_pools) as pool
+          where
+            lower(pool ->> 'id') in (select lower(id) from loadBalancerBackendAddressPools);
+        EOQ
 
         args = [self.input.vm_id.value]
       }
 
       nodes = [
         node.compute_virtual_machine,
-        node.azure_compute_virtual_machine_to_data_disk_node,
-        node.azure_compute_virtual_machine_to_os_disk_node,
+        node.compute_disk,
         node.network_network_interface,
-        node.azure_compute_virtual_machine_network_interface_to_public_ip_node,
-        node.azure_compute_virtual_machine_to_image_node,
-        node.azure_compute_virtual_machine_network_interface_to_network_security_group_node,
-        node.azure_compute_virtual_machine_to_subnet_node,
-        node.azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_node,
-        node.azure_compute_virtual_machine_from_lb_backend_address_pool_node,
-        node.azure_compute_virtual_machine_from_lb_node,
-        node.azure_compute_virtual_machine_from_application_gateway_backend_address_pool_node,
-        node.azure_compute_virtual_machine_from_application_gateway_node
+        node.network_public_ip,
+        node.compute_virtual_machine_compute_image,
+        node.network_network_security_group,
+        node.network_subnet,
+        node.network_virtual_network,
+        node.compute_virtual_machine_lb_backend_address_pool,
+        node.network_load_balancer,
+        node.compute_virtual_machine_application_gateway_backend_address_pool,
+        node.compute_virtual_machine_application_gateway
       ]
 
       edges = [
-        edge.azure_compute_virtual_machine_to_data_disk_edge,
-        edge.azure_compute_virtual_machine_to_os_disk_edge,
+        edge.compute_virtual_machine_to_data_disk,
+        edge.compute_virtual_machine_to_os_disk,
         edge.compute_virtual_machine_to_network_network_interface,
-        edge.azure_compute_virtual_machine_network_interface_to_public_ip_edge,
-        edge.azure_compute_virtual_machine_to_image_edge,
-        edge.azure_compute_virtual_machine_network_interface_to_network_security_group_edge,
-        edge.azure_compute_virtual_machine_to_subnet_edge,
-        edge.azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_edge,
-        edge.azure_compute_virtual_machine_from_lb_backend_address_pool_edge,
-        edge.azure_compute_virtual_machine_from_lb_edge,
-        edge.azure_compute_virtual_machine_from_application_gateway_backend_address_pool_edge,
-        edge.azure_compute_virtual_machine_from_application_gateway_edge
+        edge.compute_virtual_machine_to_public_ip,
+        edge.compute_virtual_machine_to_compute_image,
+        edge.compute_virtual_machine_to_network_security_group,
+        edge.compute_virtual_machine_to_network_subnet,
+        edge.compute_virtual_machine_to_virtual_network,
+        edge.lb_backend_address_pool_to_compute_virtual_machine,
+        edge.load_balancer_to_compute_virtual_machine,
+        edge.application_gateway_backend_address_pool_to_compute_virtual_machine,
+        edge.application_gateway_to_compute_virtual_machine
       ]
 
       args = {
+        compute_disk_ids            = with.compute_disks.rows[*].disk_id
         compute_virtual_machine_ids = [self.input.vm_id.value]
-        network_interface_ids       = with.network_interfaces.rows[*].network_interface_id
         id                          = self.input.vm_id.value
+        network_interface_ids       = with.network_interfaces.rows[*].network_interface_id
+        network_load_balancer_ids   = with.load_balancers.rows[*].load_balancer_id
+        network_public_ip_ids       = with.public_ips.rows[*].public_ip_id
+        network_security_group_ids  = with.network_security_groups.rows[*].nsg_id
+        network_subnet_ids          = with.subnets.rows[*].subnet_id
+        virtual_network_ids         = with.virtual_networks.rows[*].virtual_network_id
       }
     }
   }
@@ -132,7 +297,7 @@ dashboard "azure_compute_virtual_machine_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_compute_virtual_machine_overview
+        query = query.compute_virtual_machine_overview
         args = {
           id = self.input.vm_id.value
         }
@@ -142,7 +307,7 @@ dashboard "azure_compute_virtual_machine_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_compute_virtual_machine_tags
+        query = query.compute_virtual_machine_tags
         args = {
           id = self.input.vm_id.value
         }
@@ -154,19 +319,19 @@ dashboard "azure_compute_virtual_machine_detail" {
 
       table {
         title = "Storage Profile"
-        query = query.azure_compute_virtual_machine_storage_profile
+        query = query.compute_virtual_machine_storage_profile
         args = {
           id = self.input.vm_id.value
         }
 
         column "Disk Name" {
-          href = "/azure_insights.dashboard.azure_compute_disk_detail?input.disk_id={{ .ID | @uri }}"
+          href = "/azure_insights.dashboard.compute_disk_detail?input.disk_id={{ .ID | @uri }}"
         }
       }
 
       table {
         title = "Image"
-        query = query.azure_compute_virtual_machine_image
+        query = query.compute_virtual_machine_image
         args = {
           id = self.input.vm_id.value
         }
@@ -180,7 +345,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
     table {
       title = "Security Groups"
-      query = query.azure_compute_virtual_machine_security_groups
+      query = query.compute_virtual_machine_security_groups
       args = {
         id = self.input.vm_id.value
       }
@@ -193,7 +358,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
     table {
       title = "Network Interfaces"
-      query = query.azure_compute_virtual_machine_network_interfaces
+      query = query.compute_virtual_machine_network_interfaces
       args = {
         id = self.input.vm_id.value
       }
@@ -206,7 +371,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
     table {
       title = "Guest Configuration"
-      query = query.azure_compute_virtual_machine_guest_configuration_assignments
+      query = query.compute_virtual_machine_guest_configuration_assignments
       args = {
         id = self.input.vm_id.value
       }
@@ -219,7 +384,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
     table {
       title = "Data Disks"
-      query = query.azure_compute_virtual_machine_data_disks
+      query = query.compute_virtual_machine_data_disks
       args = {
         id = self.input.vm_id.value
       }
@@ -229,7 +394,7 @@ dashboard "azure_compute_virtual_machine_detail" {
 
 }
 
-query "azure_compute_virtual_machine_input" {
+query "compute_virtual_machine_input" {
   sql = <<-EOQ
     select
       v.title as label,
@@ -250,7 +415,7 @@ query "azure_compute_virtual_machine_input" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_status" {
+query "compute_virtual_machine_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -258,14 +423,13 @@ query "azure_compute_virtual_machine_status" {
     from
       azure_compute_virtual_machine
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
-
 }
 
-query "azure_compute_virtual_machine_encryption_status" {
+query "compute_virtual_machine_encryption_status" {
   sql = <<-EOQ
     select
       'Host Encryption' as label,
@@ -274,13 +438,13 @@ query "azure_compute_virtual_machine_encryption_status" {
     from
       azure_compute_virtual_machine
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_disaster_recovery_status" {
+query "compute_virtual_machine_disaster_recovery_status" {
   sql = <<-EOQ
     with vm_dr_enabled as (
       select
@@ -299,13 +463,13 @@ query "azure_compute_virtual_machine_disaster_recovery_status" {
       azure_compute_virtual_machine as vm
       left join vm_dr_enabled as l on lower(vm.id) = lower(l.source_id)
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_ingress_access" {
+query "compute_virtual_machine_ingress_access" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -330,8 +494,7 @@ query "azure_compute_virtual_machine_ingress_access" {
       azure_compute_virtual_machine as vm
       left join network_sg as sg on sg.network_interfaces @> vm.network_interfaces
     where
-      id = $1;
-
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -362,14 +525,13 @@ query "azure_compute_virtual_machine_egress_access" {
       azure_compute_virtual_machine as vm
       left join network_sg as sg on sg.network_interfaces @> vm.network_interfaces
     where
-      id = $1;
-
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_vulnerability_assessment_solution" {
+query "compute_virtual_machine_vulnerability_assessment_solution" {
   sql = <<-EOQ
     with defender_enabled_vms as (
       select
@@ -401,7 +563,7 @@ query "azure_compute_virtual_machine_vulnerability_assessment_solution" {
       azure_compute_virtual_machine as a
       left join agent_installed_vm as b on lower(a.vm_id) = lower(b.vm_id)
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -433,42 +595,7 @@ node "compute_virtual_machine" {
   param "compute_virtual_machine_ids" {}
 }
 
-node "azure_compute_virtual_machine_to_data_disk_node" {
-  category = category.azure_compute_disk
-
-  sql = <<-EOQ
-    with vm_disk_id as (
-      select
-        id,
-        jsonb_array_elements(data_disks)->'managedDisk'->>'id' as d_id
-      from
-        azure_compute_virtual_machine
-    )
-    select
-      lower(d.id) as id,
-      d.title as title,
-      jsonb_build_object(
-        'Name', d.name,
-        'ID', d.id,
-        'Disk Size GB', d.disk_size_gb,
-        'Encryption Type' , d.encryption_type,
-        'SKU Name', d.sku_name,
-        'Type', d.type,
-        'Subscription ID', d.subscription_id,
-        'Resource Group', d.resource_group,
-        'Region', d.region
-      ) as properties
-    from
-      azure_compute_disk as d
-      left join vm_disk_id as v on lower(d.id) = lower(v.d_id)
-    where
-      v.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_compute_virtual_machine_to_data_disk_edge" {
+edge "compute_virtual_machine_to_data_disk" {
   title = "data disk"
 
   sql = <<-EOQ
@@ -486,41 +613,13 @@ edge "azure_compute_virtual_machine_to_data_disk_edge" {
       azure_compute_disk as d
       left join vm_disk_id as v on lower(d.id) = lower(v.d_id)
     where
-      v.id = $1;
+      lower(v.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-node "azure_compute_virtual_machine_to_os_disk_node" {
-  category = category.azure_compute_disk
-
-  sql = <<-EOQ
-    select
-      lower(d.id) as id,
-      d.title as title,
-      jsonb_build_object(
-        'Name', d.name,
-        'ID', d.id,
-        'Disk Size GB', d.disk_size_gb,
-        'Encryption Type' , d.encryption_type,
-        'SKU Name', d.sku_name,
-        'Type', d.type,
-        'Subscription ID', d.subscription_id,
-        'Resource Group', d.resource_group,
-        'Region', d.region
-      ) as properties
-    from
-      azure_compute_virtual_machine as vm
-      left join azure_compute_disk as d on lower(d.managed_by) = lower(vm.id)
-    where
-      vm.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_compute_virtual_machine_to_os_disk_edge" {
+edge "compute_virtual_machine_to_os_disk" {
   title = "os disk"
 
   sql = <<-EOQ
@@ -531,93 +630,37 @@ edge "azure_compute_virtual_machine_to_os_disk_edge" {
       azure_compute_virtual_machine as vm
       left join azure_compute_disk as d on lower(d.managed_by) = lower(vm.id)
     where
-      vm.id = $1;
+      lower(vm.id) = any($1);
   EOQ
 
-  param "id" {}
-}
-
-node "azure_compute_virtual_machine_to_network_interface_node" {
-  category = category.azure_network_interface
-
-  sql = <<-EOQ
-    with network_interface_id as (
-      select
-        id as vm_id,
-        jsonb_array_elements(network_interfaces)->>'id' as n_id
-      from
-        azure_compute_virtual_machine
-    )
-    select
-      lower(vn.n_id) as id,
-      n.title as title,
-      jsonb_build_object(
-        'Name', n.name,
-        'ID', n.id,
-        'Type', n.type,
-        'Subscription ID', n.subscription_id,
-        'Resource Group', n.resource_group,
-        'Region', n.region
-      ) as properties
-    from
-      network_interface_id as vn
-      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
-    where
-      vn.vm_id = $1;
-  EOQ
-
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
 edge "compute_virtual_machine_to_network_network_interface" {
   title = "network interface"
 
   sql = <<-EOQ
-    select
-      virtual_machine_id as from_id,
-      network_interface_id as to_id
-    from
-      unnest($1::text[]) as virtual_machine_id,
-      unnest($2::text[]) as network_interface_id
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-  param "network_interface_ids" {}
-}
-
-node "azure_compute_virtual_machine_network_interface_to_network_security_group_node" {
-  category = category.azure_network_security_group
-
-  sql = <<-EOQ
     with network_interface_id as (
       select
-        id as vm_id,
+        id,
         jsonb_array_elements(network_interfaces)->>'id' as n_id
       from
         azure_compute_virtual_machine
     )
     select
-      lower(s.id) as id,
-      s.title as title,
-      jsonb_build_object(
-        'Name', s.name,
-        'ID', s.id,
-        'Subscription ID', s.subscription_id,
-        'Resource Group', s.resource_group,
-        'Region', s.region
-      ) as properties
+      lower(n.id) as to_id,
+      lower(vn.id) as from_id
     from
       network_interface_id as vn
-      left join azure_network_interface as n on vn.n_id = n.id
-      left join azure_network_security_group as s on n.network_security_group_id = s.id
+      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
     where
-      vn.vm_id = $1;
+      lower(vn.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-edge "azure_compute_virtual_machine_network_interface_to_network_security_group_edge" {
+edge "compute_virtual_machine_to_network_security_group" {
   title = "nsg"
 
   sql = <<-EOQ
@@ -627,56 +670,22 @@ edge "azure_compute_virtual_machine_network_interface_to_network_security_group_
         jsonb_array_elements(network_interfaces)->>'id' as n_id
       from
         azure_compute_virtual_machine
+      where
+        lower(id) = any($1)
     )
     select
       lower(s.id) as to_id,
       lower(n.id) as from_id
     from
       network_interface_id as vn
-      left join azure_network_interface as n on vn.n_id = n.id
-      left join azure_network_security_group as s on n.network_security_group_id = s.id
-    where
-      vn.id = $1;
+      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
+      left join azure_network_security_group as s on lower(n.network_security_group_id) = lower(s.id)
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-node "azure_compute_virtual_machine_to_subnet_node" {
-  category = category.azure_subnet
-
-  sql = <<-EOQ
-    with network_interface_id as (
-      select
-        id,
-        jsonb_array_elements(network_interfaces)->>'id' as nic_id
-      from
-        azure_compute_virtual_machine
-      where
-        id = $1
-    )
-    select
-      lower(s.id) as id,
-      s.title as title,
-      jsonb_build_object(
-        'Name', s.name,
-        'ID', s.id,
-        'Address Prefix', s.address_prefix,
-        'Subscription ID', s.subscription_id,
-        'Resource Group', s.resource_group
-      ) as properties
-    from
-      azure_network_interface as nic,
-      jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
-    where
-      nic.id in (select nic_id from network_interface_id);
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_compute_virtual_machine_to_subnet_edge" {
+edge "compute_virtual_machine_to_network_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -687,7 +696,7 @@ edge "azure_compute_virtual_machine_to_subnet_edge" {
       from
         azure_compute_virtual_machine
       where
-        id = $1
+        lower(id) = any($1)
     )
     select
       coalesce(
@@ -703,53 +712,10 @@ edge "azure_compute_virtual_machine_to_subnet_edge" {
       nic.id in (select nic_id from network_interface_id);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-node "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_node" {
-  category = category.azure_virtual_network
-
-  sql = <<-EOQ
-    with network_interface_id as (
-      select
-        id,
-        jsonb_array_elements(network_interfaces)->>'id' as nic_id
-      from
-        azure_compute_virtual_machine
-      where
-        id = $1
-    ), subnet_id as (
-        select
-          s.id as id,
-          s.virtual_network_name
-        from
-          azure_network_interface as nic,
-          jsonb_array_elements(ip_configurations) as c
-          left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
-        where
-          nic.id in (select nic_id from network_interface_id)
-    )
-    select
-      lower(vn.id) as id,
-      vn.title as title,
-      jsonb_build_object(
-        'Name', vn.name,
-        'ID', vn.id,
-        'Subscription ID', vn.subscription_id,
-        'Resource Group', vn.resource_group
-      ) as properties
-    from
-      azure_virtual_network as vn,
-      jsonb_array_elements(subnets) as s
-      left join subnet_id as sub on lower(sub.id) = lower(s ->> 'id')
-    where
-      s ->> 'id' in (select id from subnet_id);
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_edge" {
+edge "compute_virtual_machine_to_virtual_network" {
   title = "virtual network"
 
   sql = <<-EOQ
@@ -760,7 +726,7 @@ edge "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_
       from
         azure_compute_virtual_machine
       where
-        id = $1
+        lower(id) = any($1)
     ), subnet_id as (
         select
           s.id as id,
@@ -770,7 +736,7 @@ edge "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_
           jsonb_array_elements(ip_configurations) as c
           left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
         where
-          nic.id in (select nic_id from network_interface_id)
+          lower(nic.id) in (select lower(nic_id) from network_interface_id)
     )
     select
       lower(vn.id) as to_id,
@@ -780,58 +746,13 @@ edge "azure_compute_virtual_machine_network_interface_subnet_to_virtual_network_
       jsonb_array_elements(subnets) as s
       left join subnet_id as sub on lower(sub.id) = lower(s ->> 'id')
     where
-      s ->> 'id' in (select id from subnet_id);
+      lower(s ->> 'id') in (select lower(id) from subnet_id);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-node "azure_compute_virtual_machine_network_interface_to_public_ip_node" {
-  category = category.azure_public_ip
-
-  sql = <<-EOQ
-    with network_interfaces as (
-      select
-        vm.id as vm_id,
-        nic.id as nic_id,
-        nic.ip_configurations as ip_configuration
-      from
-        azure_compute_virtual_machine as vm,
-        jsonb_array_elements(network_interfaces) as n
-        left join azure_network_interface as nic on lower(nic.id) = lower(n ->> 'id')
-      where
-        lower(vm.id) = lower($1)
-    ),
-     ip_address as (
-      select
-        id,
-        jsonb_array_elements_text(public_ips) as ip
-      from
-        azure_compute_virtual_machine
-      where
-        lower(id) = lower($1)
-    )
-    select
-      lower(p.id) as id,
-      p.title as title,
-      jsonb_build_object(
-        'Name', p.name,
-        'ID', p.id,
-        'IP Address', p.ip_address,
-        'Subscription ID', p.subscription_id,
-        'Resource Group', p.resource_group,
-        'Region', p.region
-      ) as properties
-    from
-      network_interfaces as n,
-      jsonb_array_elements(ip_configuration) as ip_config
-      left join azure_public_ip as p on lower(p.id) = lower(ip_config -> 'properties' -> 'publicIPAddress' ->> 'id');
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_compute_virtual_machine_network_interface_to_public_ip_edge" {
+edge "compute_virtual_machine_to_public_ip" {
   title = "public ip"
 
   sql = <<-EOQ
@@ -845,16 +766,7 @@ edge "azure_compute_virtual_machine_network_interface_to_public_ip_edge" {
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on lower(nic.id) = lower(n ->> 'id')
       where
-        lower(vm.id) = lower($1)
-    ),
-     ip_address as (
-      select
-        id,
-        jsonb_array_elements_text(public_ips) as ip
-      from
-        azure_compute_virtual_machine
-      where
-        lower(id) = lower($1)
+        lower(vm.id) = any($1)
     )
     select
       lower(n.nic_id) as from_id,
@@ -865,10 +777,10 @@ edge "azure_compute_virtual_machine_network_interface_to_public_ip_edge" {
       left join azure_public_ip as p on lower(p.id) = lower(ip_config -> 'properties' -> 'publicIPAddress' ->> 'id');
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-node "azure_compute_virtual_machine_to_image_node" {
+node "compute_virtual_machine_compute_image" {
   category = category.azure_compute_image
 
   sql = <<-EOQ
@@ -886,13 +798,13 @@ node "azure_compute_virtual_machine_to_image_node" {
       azure_compute_image as i
       left join azure_compute_virtual_machine as v on lower(i.id) = lower(v.image_id)
     where
-      v.id = $1;
+       lower(v.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-edge "azure_compute_virtual_machine_to_image_edge" {
+edge "compute_virtual_machine_to_compute_image" {
   title = "uses"
 
   sql = <<-EOQ
@@ -903,13 +815,13 @@ edge "azure_compute_virtual_machine_to_image_edge" {
       azure_compute_image as i
       left join azure_compute_virtual_machine as v on lower(i.id) = lower(v.image_id)
     where
-      v.id = $1;
+      lower(v.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-node "azure_compute_virtual_machine_from_lb_backend_address_pool_node" {
+node "compute_virtual_machine_lb_backend_address_pool" {
   category = category.azure_lb_backend_address_pool
 
   sql = <<-EOQ
@@ -923,7 +835,7 @@ node "azure_compute_virtual_machine_from_lb_backend_address_pool_node" {
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
       where
-        vm.id = $1
+        lower(vm.id) = any($1)
     ),
     loadBalancerBackendAddressPools as (
       select
@@ -948,16 +860,16 @@ node "azure_compute_virtual_machine_from_lb_backend_address_pool_node" {
       left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(p.id);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-edge "azure_compute_virtual_machine_from_lb_backend_address_pool_edge" {
+edge "lb_backend_address_pool_to_compute_virtual_machine" {
   title = "virtual machine"
 
   sql = <<-EOQ
     with network_interface as (
       select
-        vm.id,
+        vm.id as vm_id,
         nic.id,
         nic.ip_configurations as ip_configurations
       from
@@ -965,10 +877,11 @@ edge "azure_compute_virtual_machine_from_lb_backend_address_pool_edge" {
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
       where
-        vm.id = $1
+        lower(vm.id) = any($1)
     ),
     loadBalancerBackendAddressPools as (
       select
+        vm_id as vm_id,
         p ->> 'id' as id
       from
         network_interface,
@@ -977,17 +890,17 @@ edge "azure_compute_virtual_machine_from_lb_backend_address_pool_edge" {
     )
     select
       lower(p.id) as from_id,
-      lower($1) as to_id
+      lower(p.vm_id) as to_id
     from
       loadBalancerBackendAddressPools as p
       left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(p.id);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-node "azure_compute_virtual_machine_from_lb_node" {
-  category = category.azure_lb
+edge "load_balancer_to_compute_virtual_machine" {
+  title = "backend address pool"
 
   sql = <<-EOQ
     with network_interface as (
@@ -1000,52 +913,7 @@ node "azure_compute_virtual_machine_from_lb_node" {
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
       where
-        vm.id = $1
-    ),
-    loadBalancerBackendAddressPools as (
-      select
-        p ->> 'id' as id
-      from
-        network_interface,
-        jsonb_array_elements(ip_configurations) as i,
-        jsonb_array_elements(i -> 'properties' -> 'loadBalancerBackendAddressPools') as p
-    )
-    select
-      lower(lb.id) as id,
-      lb.title as title,
-      jsonb_build_object(
-        'Name', lb.name,
-        'ID', lb.id,
-        'SKU Name', lb.sku_name,
-        'Region', lb.region,
-        'Subscription ID', lb.subscription_id,
-        'Resource Group', lb.resource_group
-      ) as properties
-    from
-      azure_lb as lb,
-      jsonb_array_elements(backend_address_pools) as pool
-    where
-      lower(pool ->> 'id') in (select lower(id) from loadBalancerBackendAddressPools);
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_compute_virtual_machine_from_lb_edge" {
-  title = "lb backend address pool"
-
-  sql = <<-EOQ
-    with network_interface as (
-      select
-        vm.id,
-        nic.id,
-        nic.ip_configurations as ip_configurations
-      from
-        azure_compute_virtual_machine as vm,
-        jsonb_array_elements(network_interfaces) as n
-        left join azure_network_interface as nic on nic.id = n ->> 'id'
-      where
-        vm.id = $1
+        lower(vm.id) = any($1)
     ),
     loadBalancerBackendAddressPools as (
       select
@@ -1065,10 +933,10 @@ edge "azure_compute_virtual_machine_from_lb_edge" {
       lower(pool ->> 'id') in (select lower(id) from loadBalancerBackendAddressPools);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-node "azure_compute_virtual_machine_from_application_gateway_backend_address_pool_node" {
+node "compute_virtual_machine_application_gateway_backend_address_pool" {
   category = category.azure_lb_backend_address_pool
 
   sql = <<-EOQ
@@ -1082,7 +950,7 @@ node "azure_compute_virtual_machine_from_application_gateway_backend_address_poo
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
       where
-        vm.id = $1
+        lower(vm.id) = any($1)
     ),
     vm_application_gateway_backend_address_pool as (
       select
@@ -1110,16 +978,16 @@ node "azure_compute_virtual_machine_from_application_gateway_backend_address_poo
       lower(p ->> 'id') in (select lower(id) from vm_application_gateway_backend_address_pool);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-edge "azure_compute_virtual_machine_from_application_gateway_backend_address_pool_edge" {
+edge "application_gateway_backend_address_pool_to_compute_virtual_machine" {
   title = "virtual machine"
 
   sql = <<-EOQ
     with network_interface as (
       select
-        vm.id,
+        vm.id as vm_id,
         nic.id,
         nic.ip_configurations as ip_configurations
       from
@@ -1127,10 +995,11 @@ edge "azure_compute_virtual_machine_from_application_gateway_backend_address_poo
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
       where
-        vm.id = $1
+        lower(vm.id) = any($1)
     ),
     vm_application_gateway_backend_address_pool as (
       select
+        vm_id as vm_id,
         p ->> 'id' as id
       from
         network_interface,
@@ -1139,7 +1008,7 @@ edge "azure_compute_virtual_machine_from_application_gateway_backend_address_poo
     )
     select
       lower(p ->> 'id') as from_id,
-      lower($1) as to_id
+      lower(p.vm_id) as to_id
     from
       azure_application_gateway as g,
       jsonb_array_elements(backend_address_pools) as p
@@ -1147,10 +1016,10 @@ edge "azure_compute_virtual_machine_from_application_gateway_backend_address_poo
       lower(p ->> 'id') in (select lower(id) from vm_application_gateway_backend_address_pool);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-node "azure_compute_virtual_machine_from_application_gateway_node" {
+node "compute_virtual_machine_application_gateway" {
   category = category.azure_application_gateway
 
   sql = <<-EOQ
@@ -1164,7 +1033,7 @@ node "azure_compute_virtual_machine_from_application_gateway_node" {
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
       where
-        vm.id = $1
+        lower(vm.id) = any($1)
     ),
     vm_application_gateway_backend_address_pool as (
       select
@@ -1193,16 +1062,15 @@ node "azure_compute_virtual_machine_from_application_gateway_node" {
       lower(p ->> 'id') in (select lower(id) from vm_application_gateway_backend_address_pool);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-edge "azure_compute_virtual_machine_from_application_gateway_edge" {
+edge "application_gateway_to_compute_virtual_machine" {
   title = "lb backend address pool"
 
   sql = <<-EOQ
     with network_interface as (
       select
-        vm.id,
         nic.id,
         nic.ip_configurations as ip_configurations
       from
@@ -1210,7 +1078,7 @@ edge "azure_compute_virtual_machine_from_application_gateway_edge" {
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
       where
-        vm.id = $1
+        lower(vm.id) = any($1)
     ),
     vm_application_gateway_backend_address_pool as (
       select
@@ -1230,10 +1098,10 @@ edge "azure_compute_virtual_machine_from_application_gateway_edge" {
       lower(p ->> 'id') in (select lower(id) from vm_application_gateway_backend_address_pool);
   EOQ
 
-  param "id" {}
+  param "compute_virtual_machine_ids" {}
 }
 
-query "azure_compute_virtual_machine_overview" {
+query "compute_virtual_machine_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -1250,13 +1118,13 @@ query "azure_compute_virtual_machine_overview" {
     from
       azure_compute_virtual_machine
     where
-      id = $1
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_tags" {
+query "compute_virtual_machine_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -1265,7 +1133,7 @@ query "azure_compute_virtual_machine_tags" {
       azure_compute_virtual_machine,
       jsonb_each_text(tags) as tag
     where
-      id = $1
+      lower(id) = $1
     order by
       tag.key;
     EOQ
@@ -1273,7 +1141,7 @@ query "azure_compute_virtual_machine_tags" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_storage_profile" {
+query "compute_virtual_machine_storage_profile" {
   sql = <<-EOQ
     select
       os_disk_name as "Disk Name",
@@ -1285,13 +1153,13 @@ query "azure_compute_virtual_machine_storage_profile" {
       azure_compute_virtual_machine as vm
       left join azure_compute_disk as d on  vm.os_disk_name = d.name  and lower(vm.id)= lower(d.managed_by)
     where
-      vm.id = $1;
+      lower(vm.id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_image" {
+query "compute_virtual_machine_image" {
   sql = <<-EOQ
     select
       image_sku as "SKU",
@@ -1303,13 +1171,13 @@ query "azure_compute_virtual_machine_image" {
     from
       azure_compute_virtual_machine
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_security_groups" {
+query "compute_virtual_machine_security_groups" {
   sql = <<-EOQ
     select
       nsg.name as "Name",
@@ -1321,13 +1189,13 @@ query "azure_compute_virtual_machine_security_groups" {
       azure_network_security_group as nsg
       left join azure_compute_virtual_machine as vm on vm.network_interfaces @> nsg.network_interfaces
     where
-      vm.id = $1;
+      lower(vm.id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_data_disks" {
+query "compute_virtual_machine_data_disks" {
   sql = <<-EOQ
     select
       disk ->> 'name' as "Name",
@@ -1340,13 +1208,13 @@ query "azure_compute_virtual_machine_data_disks" {
       azure_compute_virtual_machine,
       jsonb_array_elements(data_disks) as disk
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_network_interfaces" {
+query "compute_virtual_machine_network_interfaces" {
   sql = <<-EOQ
     with vm_interface as (
       select
@@ -1357,7 +1225,7 @@ query "azure_compute_virtual_machine_network_interfaces" {
         azure_compute_virtual_machine as vm,
         jsonb_array_elements(network_interfaces) as n
       where
-        id = $1
+        lower(id) = $1
     )
     select
       i.name as "Name",
@@ -1376,7 +1244,7 @@ query "azure_compute_virtual_machine_network_interfaces" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_guest_configuration_assignments" {
+query "compute_virtual_machine_guest_configuration_assignments" {
   sql = <<-EOQ
     select
       g ->> 'name' as "Name",
@@ -1391,7 +1259,7 @@ query "azure_compute_virtual_machine_guest_configuration_assignments" {
       azure_compute_virtual_machine,
       jsonb_array_elements(guest_configuration_assignments) as g
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}

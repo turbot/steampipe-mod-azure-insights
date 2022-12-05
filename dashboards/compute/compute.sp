@@ -6,7 +6,7 @@ locals {
 
 category "azure_compute_disk" {
   title = "Compute Disk"
-  href  = "/azure_insights.dashboard.azure_compute_disk_detail?input.d_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.compute_disk_detail?input.d_id={{.properties.'ID' | @uri}}"
   icon  = "inbox-stack"
   color = local.storage_color
 }
@@ -31,14 +31,14 @@ category "azure_compute_image" {
 
 category "azure_compute_snapshot" {
   title = "Compute Snapshot"
-  href  = "/azure_insights.dashboard.azure_compute_snapshot_detail?input.id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.compute_snapshot_detail?input.id={{.properties.'ID' | @uri}}"
   icon  = "viewfinder-circle"
   color = local.storage_color
 }
 
 category "azure_compute_virtual_machine" {
   title = "Compute Virtual Machine"
-  href  = "/azure_insights.dashboard.azure_compute_virtual_machine_detail?input.vm_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.compute_virtual_machine_detail?input.vm_id={{.properties.'ID' | @uri}}"
   icon  = "cpu-chip"
   color = local.compute_color
 }
