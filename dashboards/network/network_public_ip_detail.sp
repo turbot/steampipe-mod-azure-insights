@@ -127,7 +127,7 @@ dashboard "network_public_ip_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_network_public_ip_overview
+        query = query.network_public_ip_overview
         args = {
           id = self.input.public_ip_id.value
         }
@@ -136,7 +136,7 @@ dashboard "network_public_ip_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_network_public_ip_tags
+        query = query.network_public_ip_tags
         args = {
           id = self.input.public_ip_id.value
         }
@@ -149,7 +149,7 @@ dashboard "network_public_ip_detail" {
 
       table {
         title = "Association"
-        query = query.azure_network_public_ip_association_details
+        query = query.network_public_ip_association_details
         args = {
           id = self.input.public_ip_id.value
         }
@@ -235,7 +235,7 @@ query "azure_network_public_ip_ddos_settings_protected_ip" {
   param "id" {}
 }
 
-query "azure_network_public_ip_overview" {
+query "network_public_ip_overview" {
   sql = <<-EOQ
     select
       ip_address as "IP Address",
@@ -256,7 +256,7 @@ query "azure_network_public_ip_overview" {
   param "id" {}
 }
 
-query "azure_network_public_ip_tags" {
+query "network_public_ip_tags" {
   sql = <<-EOQ
     select
       tags ->> 'Key' as "Key",
@@ -272,7 +272,7 @@ query "azure_network_public_ip_tags" {
   param "id" {}
 }
 
-query "azure_network_public_ip_association_details" {
+query "network_public_ip_association_details" {
   sql = <<-EOQ
 
     with network_interface_public_ip as (

@@ -60,7 +60,7 @@ dashboard "storage_account_age_report" {
       href = "${dashboard.storage_account_detail.url_path}?input.id={{.ID | @uri}}"
     }
 
-    query = query.azure_storage_account_age_table
+    query = query.storage_account_age_table
   }
 
 }
@@ -128,7 +128,7 @@ query "storage_account_1_year_count" {
   EOQ
 }
 
-query "azure_storage_account_age_table" {
+query "storage_account_age_table" {
   sql = <<-EOQ
     select
       a.name as "Name",

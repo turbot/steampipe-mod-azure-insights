@@ -156,7 +156,7 @@ dashboard "sql_server_dashboard" {
 
     chart {
       title = "Servers by Kind"
-      query = query.azure_sql_server_by_kind
+      query = query.sql_server_by_kind
       type  = "column"
       width = 4
     }
@@ -448,7 +448,7 @@ query "sql_server_by_encryption_type" {
   EOQ
 }
 
-query "azure_sql_server_by_kind" {
+query "sql_server_by_kind" {
   sql = <<-EOQ
     select
       kind as "Kind",

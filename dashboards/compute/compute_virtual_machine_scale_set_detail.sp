@@ -1,4 +1,4 @@
-dashboard "azure_compute_virtual_machine_scale_set_detail" {
+dashboard "compute_virtual_machine_scale_set_detail" {
 
   title         = "Azure Compute Virtual Machine Scale Set Detail"
   documentation = file("./dashboards/compute/docs/compute_virtual_machine_scale_set_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
   input "vm_scale_set_id" {
     title = "Select a virtual machine scale set:"
-    query = query.azure_compute_virtual_machine_scale_set_input
+    query = query.compute_virtual_machine_scale_set_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_virtual_machine_scale_set_status
+      query = query.compute_virtual_machine_scale_set_status
       args = {
         id = self.input.vm_scale_set_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_virtual_machine_scale_set_encryption_status
+      query = query.compute_virtual_machine_scale_set_encryption_status
       args = {
         id = self.input.vm_scale_set_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_virtual_machine_scale_set_logging_status
+      query = query.compute_virtual_machine_scale_set_logging_status
       args = {
         id = self.input.vm_scale_set_id.value
       }
@@ -41,7 +41,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
     card {
       width = 2
-      query = query.azure_compute_virtual_machine_scale_set_log_analytics_agent
+      query = query.compute_virtual_machine_scale_set_log_analytics_agent
       args = {
         id = self.input.vm_scale_set_id.value
       }
@@ -230,7 +230,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_compute_virtual_machine_scale_set_overview
+        query = query.compute_virtual_machine_scale_set_overview
         args = {
           id = self.input.vm_scale_set_id.value
         }
@@ -240,7 +240,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_compute_virtual_machine_scale_set_tags
+        query = query.compute_virtual_machine_scale_set_tags
         args = {
           id = self.input.vm_scale_set_id.value
         }
@@ -252,7 +252,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
       table {
         title = "SKU"
-        query = query.azure_compute_virtual_machine_scale_set_sku
+        query = query.compute_virtual_machine_scale_set_sku
         args = {
           id = self.input.vm_scale_set_id.value
         }
@@ -260,7 +260,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
       table {
         title = "Image Reference"
-        query = query.azure_compute_virtual_machine_scale_set_image_reference
+        query = query.compute_virtual_machine_scale_set_image_reference
         args = {
           id = self.input.vm_scale_set_id.value
         }
@@ -268,7 +268,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
       table {
         title = "OS Disks"
-        query = query.azure_compute_virtual_machine_scale_set_os_disks
+        query = query.compute_virtual_machine_scale_set_os_disks
         args = {
           id = self.input.vm_scale_set_id.value
         }
@@ -282,7 +282,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
     table {
       title = "Network Interface"
-      query = query.azure_compute_virtual_machine_scale_set_network_interface
+      query = query.compute_virtual_machine_scale_set_network_interface
       args = {
         id = self.input.vm_scale_set_id.value
       }
@@ -295,7 +295,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
     table {
       title = "Data Disks"
-      query = query.azure_compute_virtual_machine_scale_set_data_disks
+      query = query.compute_virtual_machine_scale_set_data_disks
       args = {
         id = self.input.vm_scale_set_id.value
       }
@@ -305,7 +305,7 @@ dashboard "azure_compute_virtual_machine_scale_set_detail" {
 
 }
 
-query "azure_compute_virtual_machine_scale_set_input" {
+query "compute_virtual_machine_scale_set_input" {
   sql = <<-EOQ
     select
       v.title as label,
@@ -326,7 +326,7 @@ query "azure_compute_virtual_machine_scale_set_input" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_scale_set_status" {
+query "compute_virtual_machine_scale_set_status" {
   sql = <<-EOQ
     select
       'Status' as label,
@@ -341,7 +341,7 @@ query "azure_compute_virtual_machine_scale_set_status" {
 
 }
 
-query "azure_compute_virtual_machine_scale_set_encryption_status" {
+query "compute_virtual_machine_scale_set_encryption_status" {
   sql = <<-EOQ
     select
       'Host Encryption' as label,
@@ -360,7 +360,7 @@ query "azure_compute_virtual_machine_scale_set_encryption_status" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_scale_set_logging_status" {
+query "compute_virtual_machine_scale_set_logging_status" {
   sql = <<-EOQ
      with logging_details as (
       select
@@ -395,7 +395,7 @@ query "azure_compute_virtual_machine_scale_set_logging_status" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_scale_set_log_analytics_agent" {
+query "compute_virtual_machine_scale_set_log_analytics_agent" {
   sql = <<-EOQ
     with agent_installed_vm_scale_set as (
       select
@@ -424,7 +424,7 @@ query "azure_compute_virtual_machine_scale_set_log_analytics_agent" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_scale_set_overview" {
+query "compute_virtual_machine_scale_set_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -445,7 +445,7 @@ query "azure_compute_virtual_machine_scale_set_overview" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_scale_set_tags" {
+query "compute_virtual_machine_scale_set_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -462,7 +462,7 @@ query "azure_compute_virtual_machine_scale_set_tags" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_scale_set_sku" {
+query "compute_virtual_machine_scale_set_sku" {
   sql = <<-EOQ
     select
       sku_name as "Name",
@@ -477,7 +477,7 @@ query "azure_compute_virtual_machine_scale_set_sku" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_scale_set_image_reference" {
+query "compute_virtual_machine_scale_set_image_reference" {
   sql = <<-EOQ
     select
       virtual_machine_storage_profile -> 'imageReference' ->> 'offer' as "Offer",
@@ -493,7 +493,7 @@ query "azure_compute_virtual_machine_scale_set_image_reference" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_scale_set_os_disks" {
+query "compute_virtual_machine_scale_set_os_disks" {
   sql = <<-EOQ
     select
       virtual_machine_storage_profile -> 'osDisk' ->> 'caching' as "Caching",
@@ -510,7 +510,7 @@ query "azure_compute_virtual_machine_scale_set_os_disks" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_scale_set_network_interface" {
+query "compute_virtual_machine_scale_set_network_interface" {
   sql = <<-EOQ
     select
       nic ->> 'name' as "Name",
@@ -535,7 +535,7 @@ query "azure_compute_virtual_machine_scale_set_network_interface" {
   param "id" {}
 }
 
-query "azure_compute_virtual_machine_scale_set_data_disks" {
+query "compute_virtual_machine_scale_set_data_disks" {
   sql = <<-EOQ
     select
       disk ->> 'caching' as "Caching",
@@ -827,7 +827,7 @@ node "compute_virtual_machine_scale_set_to_scale_set_network_interface" {
         'Region', nic.region
       ) as properties
     from
-      azure_compute_virtual_machine_scale_set_network_interface as nic
+      compute_virtual_machine_scale_set_network_interface as nic
     where
       nic.name = (select nic_name from nic_list ) limit 1
   EOQ
@@ -853,7 +853,7 @@ edge "compute_virtual_machine_scale_set_to_scale_set_network_interface" {
       (select lower(scale_set_id) from nic_list ) as from_id,
       nic.name as to_id
     from
-      azure_compute_virtual_machine_scale_set_network_interface as nic
+      compute_virtual_machine_scale_set_network_interface as nic
     where
       nic.name = (select nic_name from nic_list ) limit 1
   EOQ
@@ -861,7 +861,7 @@ edge "compute_virtual_machine_scale_set_to_scale_set_network_interface" {
   param "compute_virtual_machine_scale_set_ids" {}
 }
 
-node "azure_compute_virtual_machine_scale_set_network_interface_to_nsg_node" {
+node "compute_virtual_machine_scale_set_network_interface_to_nsg_node" {
   category = category.network_security_group
 
   sql = <<-EOQ
@@ -921,7 +921,7 @@ edge "compute_virtual_machine_scale_set_to_network_security_group" {
   param "compute_virtual_machine_scale_set_ids" {}
 }
 
-node "azure_compute_virtual_machine_scale_set_network_interface_to_subnet_node" {
+node "compute_virtual_machine_scale_set_network_interface_to_subnet_node" {
   category = category.network_subnet
 
   sql = <<-EOQ
@@ -985,7 +985,7 @@ edge "compute_virtual_machine_scale_set_to_subnet" {
   param "compute_virtual_machine_scale_set_ids" {}
 }
 
-node "azure_compute_virtual_machine_scale_set_network_interface_subnet_to_virtual_network_node" {
+node "compute_virtual_machine_scale_set_network_interface_subnet_to_virtual_network_node" {
   category = category.network_virtual_network
 
   sql = <<-EOQ

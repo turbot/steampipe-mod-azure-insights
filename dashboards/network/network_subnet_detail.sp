@@ -25,7 +25,7 @@ dashboard "network_subnet_detail" {
 
     card {
       width = 2
-      query = query.azure_network_subnet_address_prefix
+      query = query.network_subnet_address_prefix
       args = {
         id = self.input.subnet_id.value
       }
@@ -158,7 +158,7 @@ dashboard "network_subnet_detail" {
         title = "Overview"
         type  = "line"
         width = 12
-        query = query.azure_network_subnet_overview
+        query = query.network_subnet_overview
         args = {
           id = self.input.subnet_id.value
         }
@@ -171,7 +171,7 @@ dashboard "network_subnet_detail" {
 
       table {
         title = "Launched Resources"
-        query = query.azure_network_subnet_association
+        query = query.network_subnet_association
         args = {
           id = self.input.subnet_id.value
         }
@@ -225,7 +225,7 @@ query "network_subnet_num_ips" {
   param "id" {}
 }
 
-query "azure_network_subnet_address_prefix" {
+query "network_subnet_address_prefix" {
   sql = <<-EOQ
     select
       address_prefix as "Address Prefix"
@@ -238,7 +238,7 @@ query "azure_network_subnet_address_prefix" {
   param "id" {}
 }
 
-query "azure_network_subnet_overview" {
+query "network_subnet_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -258,7 +258,7 @@ query "azure_network_subnet_overview" {
   param "id" {}
 }
 
-query "azure_network_subnet_association" {
+query "network_subnet_association" {
   sql = <<-EOQ
 
     -- API Management

@@ -1,4 +1,4 @@
-dashboard "azure_compute_snapshot_age_report" {
+dashboard "compute_snapshot_age_report" {
 
   title         = "Azure Compute Snapshot Age Report"
   documentation = file("./dashboards/compute/docs/compute_snapshot_report_age.md")
@@ -11,38 +11,38 @@ dashboard "azure_compute_snapshot_age_report" {
   container {
 
     card {
-      query = query.azure_compute_snapshot_count
+      query = query.compute_snapshot_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_compute_snapshot_24_hours_count
+      query = query.compute_snapshot_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_compute_snapshot_30_days_count
+      query = query.compute_snapshot_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_compute_snapshot_30_90_days_count
+      query = query.compute_snapshot_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.azure_compute_snapshot_90_365_days_count
+      query = query.compute_snapshot_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.azure_compute_snapshot_1_year_count
+      query = query.compute_snapshot_1_year_count
     }
 
   }
@@ -56,12 +56,12 @@ dashboard "azure_compute_snapshot_age_report" {
       display = "none"
     }
 
-    query = query.azure_compute_snapshot_age_table
+    query = query.compute_snapshot_age_table
   }
 
 }
 
-query "azure_compute_snapshot_24_hours_count" {
+query "compute_snapshot_24_hours_count" {
   sql   = <<-EOQ
     select
       count(*) as value,
@@ -74,7 +74,7 @@ query "azure_compute_snapshot_24_hours_count" {
   EOQ
 }
 
-query "azure_compute_snapshot_30_days_count" {
+query "compute_snapshot_30_days_count" {
   sql   = <<-EOQ
     select
       count(*) as value,
@@ -87,7 +87,7 @@ query "azure_compute_snapshot_30_days_count" {
   EOQ
 }
 
-query "azure_compute_snapshot_30_90_days_count" {
+query "compute_snapshot_30_90_days_count" {
   sql   = <<-EOQ
     select
       count(*) as value,
@@ -100,7 +100,7 @@ query "azure_compute_snapshot_30_90_days_count" {
   EOQ
 }
 
-query "azure_compute_snapshot_90_365_days_count" {
+query "compute_snapshot_90_365_days_count" {
   sql   = <<-EOQ
     select
       count(*) as value,
@@ -113,7 +113,7 @@ query "azure_compute_snapshot_90_365_days_count" {
   EOQ
 }
 
-query "azure_compute_snapshot_1_year_count" {
+query "compute_snapshot_1_year_count" {
   sql   = <<-EOQ
     select
       count(*) as value,
@@ -126,7 +126,7 @@ query "azure_compute_snapshot_1_year_count" {
   EOQ
 }
 
-query "azure_compute_snapshot_age_table" {
+query "compute_snapshot_age_table" {
   sql = <<-EOQ
     select
       s.name as "Name",
