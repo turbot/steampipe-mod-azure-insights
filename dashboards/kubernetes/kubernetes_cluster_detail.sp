@@ -56,24 +56,58 @@ dashboard "kubernetes_cluster_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "compute_scale_sets" {
+        sql = <<-EOQ
+          select
+            lower(set.id) as scale_set_id
+          from
+            azure_kubernetes_cluster c,
+            azure_compute_virtual_machine_scale_set as set
+          where
+            lower(set.resource_group) = lower(c.node_resource_group)
+            and lower(c.id) = $1;
+        EOQ
+
+        args = [self.input.cluster_id.value]
+      }
+
+      with "compute_scale_sets_vms" {
+        sql = <<-EOQ
+          select
+            lower(vm.id) as vm_id
+          from
+            azure_kubernetes_cluster c,
+            azure_compute_virtual_machine_scale_set set,
+            azure_compute_virtual_machine_scale_set_vm vm
+          where
+            lower(set.resource_group) = lower(c.node_resource_group)
+            and set.name = vm.scale_set_name
+            and vm.resource_group = set.resource_group
+            and lower(c.id) = $1;
+        EOQ
+
+        args = [self.input.cluster_id.value]
+      }
+
       nodes = [
         node.kubernetes_cluster,
-        node.azure_kubernetes_cluster_to_node_pool_node,
-        node.azure_kubernetes_cluster_to_compute_disk_encryption_set_node,
-        node.azure_kubernetes_cluster_to_virtual_machine_scale_set_node,
-        node.azure_kubernetes_cluster_virtual_machine_scale_set_to_vm_node
+        node.kubernetes_cluster_kubernetes_node_pool,
+        node.kubernetes_cluster_compute_disk_encryption_set,
+        node.compute_virtual_machine_scale_set,
+        node.compute_virtual_machine_scale_set_vm
       ]
 
       edges = [
-        edge.azure_kubernetes_cluster_to_node_pool_edge,
-        edge.azure_kubernetes_cluster_to_compute_disk_encryption_set_edge,
-        edge.azure_kubernetes_cluster_to_virtual_machine_scale_set_edge,
-        edge.azure_kubernetes_cluster_virtual_machine_scale_set_to_vm_edge
+        edge.kubernetes_cluster_to_kubernetes_node_pool,
+        edge.kubernetes_cluster_to_compute_disk_encryption_set,
+        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set,
+        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set_to_vm
       ]
 
       args = {
-        kubernetes_cluster_ids = [self.input.cluster_id.value]
-        id                     = self.input.cluster_id.value
+        kubernetes_cluster_ids                   = [self.input.cluster_id.value]
+        compute_virtual_machine_scale_set_ids    = with.compute_scale_sets.rows[*].scale_set_id
+        compute_virtual_machine_scale_set_vm_ids = with.compute_scale_sets_vms.rows[*].vm_id
       }
     }
   }
@@ -209,144 +243,6 @@ query "kubernetes_cluster_disk_encryption_status" {
   param "id" {}
 }
 
-node "kubernetes_cluster" {
-  category = category.kubernetes_cluster
-
-  sql = <<-EOQ
-    select
-      lower(id),
-      title,
-      jsonb_build_object(
-        'ID', ID,
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Provisioning State', provisioning_state,
-        'Type', type,
-        'Kubernetes Version', kubernetes_version,
-        'Region', region
-      ) as properties
-    from
-      azure_kubernetes_cluster
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "kubernetes_cluster_ids" {}
-}
-
-node "azure_kubernetes_cluster_to_node_pool_node" {
-  category = category.kubernetes_node_pool
-
-  sql = <<-EOQ
-    select
-      p ->> 'name' as id,
-      p ->> 'name' as title,
-      jsonb_build_object(
-        'Name', p ->> 'name',
-        'Node Count', p ->> 'count',
-        'Autoscaling Enabled' , p ->> 'enableAutoScaling',
-        'Is Public', p ->> 'enableNodePublicIP',
-        'OS Disk Size(GB)', p ->> 'osDiskSizeGB',
-        'OS Disk Type', p ->> 'osDiskType',
-        'OS Disk Type', p ->> 'osDiskType',
-        'OS Type', p ->> 'osType',
-        'VM Size', p ->> 'vmSize'
-      ) as properties
-    from
-      azure_kubernetes_cluster c,
-      jsonb_array_elements(agent_pool_profiles) p
-    where
-      c.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_kubernetes_cluster_to_node_pool_edge" {
-  title = "node pool"
-
-  sql = <<-EOQ
-    select
-      c.id as from_id,
-      p ->> 'name' as to_id
-    from
-      azure_kubernetes_cluster c,
-      jsonb_array_elements(agent_pool_profiles) p
-    where
-      c.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_kubernetes_cluster_to_compute_disk_encryption_set_node" {
-  category = category.compute_disk_encryption_set
-
-  sql = <<-EOQ
-    select
-      e.id as id,
-      e.title as title,
-      jsonb_build_object(
-        'Name', e.name,
-        'ID', e.id,
-        'Subscription ID', e.subscription_id,
-        'Resource Group', e.resource_group,
-        'Region', e.region
-      ) as properties
-    from
-      azure_kubernetes_cluster c,
-      azure_compute_disk_encryption_set e
-    where
-      lower(c.disk_encryption_set_id) = lower(e.id)
-      and c.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_kubernetes_cluster_to_compute_disk_encryption_set_edge" {
-  title = "disk encryption set"
-
-  sql = <<-EOQ
-    select
-      c.id as from_id,
-      e.id as to_id
-    from
-      azure_kubernetes_cluster c,
-      azure_compute_disk_encryption_set e
-    where
-      lower(c.disk_encryption_set_id) = lower(e.id)
-      and c.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_kubernetes_cluster_to_virtual_machine_scale_set_node" {
-  category = category.compute_virtual_machine_scale_set
-
-  sql = <<-EOQ
-    select
-      set.id as id,
-      set.title as title,
-      jsonb_build_object(
-        'ID', set.id,
-        'Name', set.name,
-        'Type', set.type,
-        'Resource Group', set.resource_group,
-        'Subscription ID', set.subscription_id
-      ) as properties
-    from
-      azure_kubernetes_cluster c,
-      azure_compute_virtual_machine_scale_set as set
-    where
-      lower(set.resource_group) = lower(c.node_resource_group)
-      and c.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
 edge "azure_kubernetes_cluster_to_virtual_machine_scale_set_edge" {
   title = "vm scale set"
 
@@ -359,60 +255,6 @@ edge "azure_kubernetes_cluster_to_virtual_machine_scale_set_edge" {
       azure_compute_virtual_machine_scale_set set
     where
       lower(set.resource_group) = lower(c.node_resource_group)
-      and c.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_kubernetes_cluster_virtual_machine_scale_set_to_vm_node" {
-  category = category.compute_virtual_machine_scale_set_vm
-
-  sql = <<-EOQ
-    select
-      vm.id as id,
-      vm.title as title,
-      jsonb_build_object(
-        'Name', vm.name,
-        'ID', vm.id,
-        'Instance ID', vm.instance_id,
-        'SKU Name', vm.sku_name,
-        'Provisioning State', vm.provisioning_state,
-        'Type', vm.type,
-        'Subscription ID', vm.subscription_id,
-        'Resource Group', vm.resource_group,
-        'Provisioning State', vm.provisioning_state,
-        'Region', vm.region
-      ) as properties
-    from
-      azure_kubernetes_cluster c,
-      azure_compute_virtual_machine_scale_set set,
-      azure_compute_virtual_machine_scale_set_vm vm
-    where
-      lower(set.resource_group) = lower(c.node_resource_group)
-      and set.name = vm.scale_set_name
-      and vm.resource_group = set.resource_group
-      and c.id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_kubernetes_cluster_virtual_machine_scale_set_to_vm_edge" {
-  title = "instance"
-
-  sql = <<-EOQ
-    select
-      set.id as from_id,
-      vm.id as to_id
-    from
-      azure_kubernetes_cluster c,
-      azure_compute_virtual_machine_scale_set set,
-      azure_compute_virtual_machine_scale_set_vm vm
-    where
-      lower(set.resource_group) = lower(c.node_resource_group)
-      and set.name = vm.scale_set_name
-      and vm.resource_group = set.resource_group
       and c.id = $1;
   EOQ
 

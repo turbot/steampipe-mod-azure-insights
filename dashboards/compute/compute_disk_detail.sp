@@ -168,7 +168,7 @@ dashboard "compute_disk_detail" {
         edge.compute_disk_to_compute_disk,
         edge.compute_disk_to_compute_snapshot,
         edge.compute_disk_to_key,
-        edge.compute_disk_to_storage_account,
+        edge.compute_disk_to_storage_storage_account,
         edge.compute_snapshot_to_compute_disk,
         edge.compute_virtual_machine_to_compute_disk,
       ]
@@ -715,7 +715,7 @@ edge "compute_disk_to_compute_disk" {
   param "compute_disk_ids" {}
 }
 
-node "azure_compute_disk_to_storage_account_node" {
+node "azure_compute_disk_to_storage_storage_account_node" {
   category = category.storage_storage_account
 
   sql = <<-EOQ
@@ -740,7 +740,7 @@ node "azure_compute_disk_to_storage_account_node" {
   param "id" {}
 }
 
-edge "compute_disk_to_storage_account" {
+edge "compute_disk_to_storage_storage_account" {
   title = "blob source for disk"
 
   sql = <<-EOQ

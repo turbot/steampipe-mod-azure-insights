@@ -1,4 +1,4 @@
-dashboard "azure_storage_account_detail" {
+dashboard "storage_account_detail" {
 
   title         = "Azure Storage Account Detail"
   documentation = file("./dashboards/storage/docs/storage_account_detail.md")
@@ -9,7 +9,7 @@ dashboard "azure_storage_account_detail" {
 
   input "storage_account_id" {
     title = "Select a storage account:"
-    query = query.azure_storage_account_input
+    query = query.storage_account_input
     width = 4
   }
 
@@ -17,7 +17,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_kind
+      query = query.storage_account_kind
       args = {
         id = self.input.storage_account_id.value
       }
@@ -25,7 +25,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_access_tier
+      query = query.storage_account_access_tier
       args = {
         id = self.input.storage_account_id.value
       }
@@ -33,7 +33,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_blob_soft_delete
+      query = query.storage_account_blob_soft_delete
       args = {
         id = self.input.storage_account_id.value
       }
@@ -41,7 +41,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_blob_public_access
+      query = query.storage_account_blob_public_access
       args = {
         id = self.input.storage_account_id.value
       }
@@ -49,7 +49,7 @@ dashboard "azure_storage_account_detail" {
 
     card {
       width = 2
-      query = query.azure_storage_account_https_traffic
+      query = query.storage_account_https_traffic
       args = {
         id = self.input.storage_account_id.value
       }
@@ -71,7 +71,7 @@ dashboard "azure_storage_account_detail" {
           from
             azure_compute_snapshot
           where
-            lower(storage_account_id) = lower($1);
+            lower(storage_account_id) = $1;
         EOQ
 
         args = [self.input.storage_account_id.value]
@@ -84,7 +84,7 @@ dashboard "azure_storage_account_detail" {
           from
             azure_compute_disk
           where
-            lower(creation_data_storage_account_id) = lower($1);
+            lower(creation_data_storage_account_id) = $1;
         EOQ
 
         args = [self.input.storage_account_id.value]
@@ -94,62 +94,117 @@ dashboard "azure_storage_account_detail" {
         sql = <<-EOQ
           with subnet_list as (
             select
-              r ->> 'id' as subnet_id
+              distinct(r ->> 'id') as subnet_id
             from
               azure_storage_account,
               jsonb_array_elements(virtual_network_rules) as r
             where
-              lower(id) = lower($1)
+              lower(id) = $1
           )
           select
-            lower(id) as network_subnet_id
+            lower(id) as subnet_id
           from
             subnet_list as l
             left join azure_subnet as s on lower(l.subnet_id) = lower(s.id);
         EOQ
 
-        args = [self.input.subnet_id.value]
+        args = [self.input.storage_account_id.value]
+      }
+
+      with "virtual_networks" {
+        sql = <<-EOQ
+          with vn_list as (
+            select
+              distinct split_part(r ->> 'id', '/subnets', 1) as vn_id
+            from
+              azure_storage_account,
+              jsonb_array_elements(virtual_network_rules) as r
+            where
+              lower(id) = $1
+          )
+          select
+            lower(id) as network_id
+          from
+            vn_list as l
+            left join azure_virtual_network as n on lower(n.id) = lower(l.vn_id);
+        EOQ
+
+        args = [self.input.storage_account_id.value]
+      }
+
+      with "key_vaults" {
+        sql = <<-EOQ
+          select
+            lower(k.id) as vault_id
+          from
+            azure_storage_account as a,
+            azure_key_vault as k
+          where
+            a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
+            and lower(a.id) = $1;
+        EOQ
+
+        args = [self.input.storage_account_id.value]
+      }
+
+      with "key_vault_key" {
+        sql = <<-EOQ
+          select
+            lower(key.id) as key_id
+          from
+            azure_storage_account as a
+            left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
+            left join azure_key_vault_key_version as v on lower(v.key_uri_with_version) = lower(a.encryption_key_vault_properties_key_current_version_id)
+            left join azure_key_vault_key as key on lower(key.key_uri) = lower(v.key_uri)
+          where
+            key.id is not null
+            and lower(a.id) = $1;
+        EOQ
+
+        args = [self.input.storage_account_id.value]
       }
 
       nodes = [
         node.storage_storage_account,
-        node.log_profile,
+        node.monitor_log_profile,
         node.compute_snapshot,
-        node.diagnostic_setting,
+        node.monitor_diagnostic_setting,
         node.compute_disk,
         node.network_subnet,
         node.network_virtual_network,
         node.storage_storage_table,
         node.storage_storage_queue,
         node.storage_storage_container,
-        node.azure_storage_account_to_storage_share_file_node,
-        node.azure_storage_account_to_key_vault_node,
-        node.azure_storage_account_key_vault_to_key_vault_key_node,
-        node.azure_storage_account_from_batch_account_node
+        node.storage_share_file,
+        node.key_vault,
+        node.key_vault_key,
+        node.batch_account
       ]
 
       edges = [
-        edge.log_profile_to_storage_storage_account
+        edge.monitor_log_profile_to_storage_storage_account,
         edge.compute_snapshot_to_storage_storage_account,
-        edge.diagnostic_setting_to_storage_storage_account,
+        edge.monitor_diagnostic_setting_to_storage_storage_account,
         edge.compute_disk_to_storage_storage_account,
-        edge.network_subnet_to_storage_storage_account,
-        edge.storage_storage_account_subnet_to_virtual_network,
-        edge.storage_storage_account_to_storage_storage_table,
-        edge.azure_storage_account_to_storage_queue_edge,
-        edge.azure_storage_account_to_storage_container_edge,
-        edge.azure_storage_account_to_storage_share_file_edge,
-        edge.azure_storage_account_to_key_vault_edge,
-        edge.azure_storage_account_key_vault_to_key_vault_key_edge,
-        edge.azure_storage_account_from_batch_account_edge
+        edge.storage_storage_account_to_network_subnet,
+        edge.network_subnet_to_network_virtual_network,
+        edge.storage_storage_account_to_storage_table,
+        edge.storage_storage_account_to_storage_queue,
+        edge.storage_storage_account_to_storage_container,
+        edge.storage_storage_account_to_storage_share_file,
+        edge.storage_storage_account_to_key_vault,
+        edge.storage_storage_account_to_key_vault_key,
+        edge.batch_account_to_storage_storage_account
       ]
 
       args = {
-        storage_account_ids = [self.input.storage_account_id.value]
-        id                  = self.input.storage_account_id.value
+        storage_account_ids  = [self.input.storage_account_id.value]
         compute_snapshot_ids = with.compute_snapshots.rows[*].snapshot_id
-        compute_disk_ids = with.compute_disks.rows[*].disk_id
-        network_subnet_ids = with.network_subnets.rows[*].network_subnet_id
+        compute_disk_ids     = with.compute_disks.rows[*].disk_id
+        network_subnet_ids   = with.network_subnets.rows[*].subnet_id
+        virtual_network_ids  = with.virtual_networks.rows[*].network_id
+        key_vault_ids        = with.key_vaults.rows[*].vault_id
+        key_vault_key_ids    = with.key_vault_key.rows[*].key_id
       }
     }
   }
@@ -163,7 +218,7 @@ dashboard "azure_storage_account_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.azure_storage_account_overview
+        query = query.storage_account_overview
         args = {
           id = self.input.storage_account_id.value
         }
@@ -173,7 +228,7 @@ dashboard "azure_storage_account_detail" {
       table {
         title = "Tags"
         width = 6
-        query = query.azure_storage_account_tags
+        query = query.storage_account_tags
         args = {
           id = self.input.storage_account_id.value
         }
@@ -185,7 +240,7 @@ dashboard "azure_storage_account_detail" {
 
       table {
         title = "Blob Encryption Service"
-        query = query.azure_storage_account_blob_encryption_service
+        query = query.storage_account_blob_encryption_service
         args = {
           id = self.input.storage_account_id.value
         }
@@ -193,7 +248,7 @@ dashboard "azure_storage_account_detail" {
 
       table {
         title = "File Encryption Service"
-        query = query.azure_storage_account_file_encryption_service
+        query = query.storage_account_file_encryption_service
         args = {
           id = self.input.storage_account_id.value
         }
@@ -201,7 +256,7 @@ dashboard "azure_storage_account_detail" {
 
       table {
         title = "SKU Details"
-        query = query.azure_storage_account_sku
+        query = query.storage_account_sku
         args = {
           id = self.input.storage_account_id.value
         }
@@ -215,7 +270,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Vitual Network Rules"
-      query = query.azure_storage_account_virtual_network_rules
+      query = query.storage_account_virtual_network_rules
       args = {
         id = self.input.storage_account_id.value
       }
@@ -228,7 +283,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Blob Configurations"
-      query = query.azure_storage_account_blob_configurations
+      query = query.storage_account_blob_configurations
       args = {
         id = self.input.storage_account_id.value
       }
@@ -241,7 +296,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Queue Logging"
-      query = query.azure_storage_account_queue_logging
+      query = query.storage_account_queue_logging
       args = {
         id = self.input.storage_account_id.value
       }
@@ -254,7 +309,7 @@ dashboard "azure_storage_account_detail" {
 
     table {
       title = "Blob Service Logging"
-      query = query.azure_storage_account_blob_logging
+      query = query.storage_account_blob_logging
       args = {
         id = self.input.storage_account_id.value
       }
@@ -264,7 +319,7 @@ dashboard "azure_storage_account_detail" {
 
 }
 
-query "azure_storage_account_input" {
+query "storage_account_input" {
   sql = <<-EOQ
     select
       sa.title as label,
@@ -284,7 +339,7 @@ query "azure_storage_account_input" {
   EOQ
 }
 
-query "azure_storage_account_kind" {
+query "storage_account_kind" {
   sql = <<-EOQ
     select
       'Kind' as label,
@@ -298,7 +353,7 @@ query "azure_storage_account_kind" {
   param "id" {}
 }
 
-query "azure_storage_account_access_tier" {
+query "storage_account_access_tier" {
   sql = <<-EOQ
     select
       'Access Tier' as label,
@@ -312,7 +367,7 @@ query "azure_storage_account_access_tier" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_soft_delete" {
+query "storage_account_blob_soft_delete" {
   sql = <<-EOQ
     select
       'Blob Soft Delete' as label,
@@ -327,7 +382,7 @@ query "azure_storage_account_blob_soft_delete" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_public_access" {
+query "storage_account_blob_public_access" {
   sql = <<-EOQ
     select
       'Blob Public Access' as label,
@@ -342,7 +397,7 @@ query "azure_storage_account_blob_public_access" {
   param "id" {}
 }
 
-query "azure_storage_account_https_traffic" {
+query "storage_account_https_traffic" {
   sql = <<-EOQ
     select
       'HTTPS' as label,
@@ -387,7 +442,7 @@ query "azure_storage_account_infrastructure_encryption" {
   param "id" {}
 }
 
-query "azure_storage_account_overview" {
+query "storage_account_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -406,7 +461,7 @@ query "azure_storage_account_overview" {
   param "id" {}
 }
 
-query "azure_storage_account_tags" {
+query "storage_account_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -423,7 +478,7 @@ query "azure_storage_account_tags" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_encryption_service" {
+query "storage_account_blob_encryption_service" {
   sql = <<-EOQ
     select
       encryption_services -> 'blob' ->> 'enabled' as "Enabled",
@@ -437,7 +492,7 @@ query "azure_storage_account_blob_encryption_service" {
   param "id" {}
 }
 
-query "azure_storage_account_file_encryption_service" {
+query "storage_account_file_encryption_service" {
   sql = <<-EOQ
     select
       encryption_services -> 'file' ->> 'enabled' as "Enabled",
@@ -451,7 +506,7 @@ query "azure_storage_account_file_encryption_service" {
   param "id" {}
 }
 
-query "azure_storage_account_sku" {
+query "storage_account_sku" {
   sql = <<-EOQ
     select
       sku_name as "SKU Name",
@@ -465,7 +520,7 @@ query "azure_storage_account_sku" {
   param "id" {}
 }
 
-query "azure_storage_account_virtual_network_rules" {
+query "storage_account_virtual_network_rules" {
   sql = <<-EOQ
     select
       vnr ->> 'action' as "Action",
@@ -481,7 +536,7 @@ query "azure_storage_account_virtual_network_rules" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_configurations" {
+query "storage_account_blob_configurations" {
   sql = <<-EOQ
     select
       blob_container_soft_delete_enabled  as "Blob Container Soft Delete Enabled",
@@ -500,7 +555,7 @@ query "azure_storage_account_blob_configurations" {
   param "id" {}
 }
 
-query "azure_storage_account_queue_logging" {
+query "storage_account_queue_logging" {
   sql = <<-EOQ
     select
       queue_logging_delete  as "Queue Logging Delete",
@@ -518,7 +573,7 @@ query "azure_storage_account_queue_logging" {
   param "id" {}
 }
 
-query "azure_storage_account_blob_logging" {
+query "storage_account_blob_logging" {
   sql = <<-EOQ
     select
       blob_service_logging ->> 'Delete' as "Delete",
@@ -535,8 +590,8 @@ query "azure_storage_account_blob_logging" {
   param "id" {}
 }
 
-node "log_profile" {
-  category = category.log_profile
+node "monitor_log_profile" {
+  category = category.monitor_log_profile
 
   sql = <<-EOQ
     select
@@ -559,7 +614,7 @@ node "log_profile" {
   param "storage_account_ids" {}
 }
 
-edge "log_profile_to_storage_storage_account" {
+edge "monitor_log_profile_to_storage_storage_account" {
   title = "storage account"
 
   sql = <<-EOQ
@@ -591,8 +646,8 @@ edge "compute_snapshot_to_storage_storage_account" {
   param "storage_account_ids" {}
 }
 
-node "diagnostic_setting" {
-  category = category.azure_diagnostic_setting
+node "monitor_diagnostic_setting" {
+  category = category.monitor_diagnostic_setting
 
   sql = <<-EOQ
     select
@@ -614,7 +669,7 @@ node "diagnostic_setting" {
   param "storage_account_ids" {}
 }
 
-edge "diagnostic_setting_to_storage_storage_account" {
+edge "monitor_diagnostic_setting_to_storage_storage_account" {
   title = "storage account"
 
   sql = <<-EOQ
@@ -630,290 +685,8 @@ edge "diagnostic_setting_to_storage_storage_account" {
   param "storage_account_ids" {}
 }
 
-edge "storage_storage_account_subnet_to_virtual_network" {
-  title = "virtual network"
-
-  sql = <<-EOQ
-    with vn_list as (
-      select
-        r ->> 'id' as subnet_id,
-        split_part(r ->> 'id', '/subnets', 1) as vn_id
-      from
-        azure_storage_account,
-        jsonb_array_elements(virtual_network_rules) as r
-      where
-        id = any($1)
-    )
-    select
-      lower(l.subnet_id) as from_id,
-      lower(l.vn_id) as to_id
-    from
-      vn_list as l
-      left join azure_virtual_network as n on lower(n.id) = lower(l.vn_id);
-  EOQ
-
-  param "storage_account_ids" {}
-}
-
-node "storage_storage_table" {
-  category = category.azure_storage_table
-
-  sql = <<-EOQ
-    select
-      lower(t.id) as id,
-      t.title as title,
-      jsonb_build_object(
-        'Name', t.name,
-        'ID', t.id,
-        'Type', t.type,
-        'Region', t.region,
-        'Resource Group', t.resource_group,
-        'Subscription ID', t.subscription_id
-      ) as properties
-    from
-      azure_storage_account as a
-      left join azure_storage_table as t on t.storage_account_name = a.name
-    where
-      lower(a.id) = any($1);
-  EOQ
-
-  param "storage_account_ids" {}
-}
-
-edge "storage_storage_account_to_storage_storage_table" {
-  title = "storage table"
-
-  sql = <<-EOQ
-    select
-      lower(a.id) as from_id,
-      lower(t.id) as to_id
-    from
-      azure_storage_account as a
-      left join azure_storage_table as t on t.storage_account_name = a.name
-    where
-      lower(a.id) = any($1);
-  EOQ
-
-  param "storage_storage_table" {}
-}
-
-node "storage_storage_queue" {
-  category = category.azure_storage_queue
-
-  sql = <<-EOQ
-    select
-      lower(q.id) as id,
-      q.title as title,
-      jsonb_build_object(
-        'Name', q.name,
-        'ID', q.id,
-        'Region', q.region,
-        'Type', q.type,
-        'Resource Group', q.resource_group,
-        'Subscription ID', q.subscription_id
-      ) as properties
-    from
-      azure_storage_account as a
-      left join azure_storage_queue as q on q.storage_account_name = a.name
-    where
-      lower(a.id) = any($1);
-  EOQ
-
-  param "storage_storage_table" {}
-}
-
-edge "azure_storage_account_to_storage_queue_edge" {
-  title = "storage queue"
-
-  sql = <<-EOQ
-    select
-      lower(a.id) as from_id,
-      lower(q.id) as to_id
-    from
-      azure_storage_account as a
-      left join azure_storage_queue as q on q.storage_account_name = a.name
-    where
-      lower(a.id) = any($1);
-  EOQ
-
-  param "storage_storage_table" {}
-}
-
-node "storage_storage_container" {
-  category = category.azure_storage_container
-
-  sql = <<-EOQ
-    select
-      lower(c.id) as id,
-      c.title as title,
-      jsonb_build_object(
-        'Name', c.name,
-        'ID', c.id,
-        'Type', c.type,
-        'Resource Group', c.resource_group,
-        'Subscription ID', c.subscription_id
-      ) as properties
-    from
-      azure_storage_container as c
-      left join azure_storage_account as a on a.name = c.account_name
-      and a.resource_group = c.resource_group
-    where
-      lower(a.id) = any($1);
-  EOQ
-
-  param "storage_storage_table" {}
-}
-
-edge "azure_storage_account_to_storage_container_edge" {
-  title = "storage container"
-
-  sql = <<-EOQ
-    select
-      lower(a.id) as from_id,
-      lower(c.id) as to_id
-   from
-      azure_storage_container as c
-      left join azure_storage_account as a on a.name = c.account_name
-      and a.resource_group = c.resource_group
-    where
-      lower(a.id) = lower($1);
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_storage_account_to_storage_share_file_node" {
-  category = category.azure_storage_share_file
-
-  sql = <<-EOQ
-    select
-      lower(f.id) as id,
-      f.title as title,
-      jsonb_build_object(
-        'Name', f.name,
-        'ID', f.id,
-        'Type', f.type,
-        'Resource Group', f.resource_group,
-        'Subscription ID', f.subscription_id
-      ) as properties
-    from
-      azure_storage_share_file as f
-      left join azure_storage_account as a on a.name = f.storage_account_name
-      and a.resource_group = f.resource_group
-    where
-      lower(a.id) = lower($1);
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_storage_account_to_storage_share_file_edge" {
-  title = "storage share file"
-
-  sql = <<-EOQ
-    select
-      lower(a.id) as from_id,
-      lower(f.id) as to_id
-    from
-      azure_storage_share_file as f
-      left join azure_storage_account as a on a.name = f.storage_account_name
-      and a.resource_group = f.resource_group
-    where
-      lower(a.id) = lower($1);
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_storage_account_to_key_vault_node" {
-  category = category.key_vault
-
-  sql = <<-EOQ
-    select
-      lower(k.id) as id,
-      k.title as title,
-      jsonb_build_object(
-        'Name', k.name,
-        'ID', k.id,
-        'Type', k.type,
-        'Resource Group', k.resource_group,
-        'Subscription ID', k.subscription_id
-      ) as properties
-    from
-      azure_storage_account as a,
-      azure_key_vault as k
-    where
-      a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
-      and lower(a.id) = lower($1);
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_storage_account_to_key_vault_edge" {
-  title = "key vault"
-
-  sql = <<-EOQ
-    select
-      lower(a.id) as from_id,
-      lower(k.id) as to_id
-    from
-      azure_storage_account as a
-      left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
-    where
-      lower(a.id) = lower($1);
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_storage_account_key_vault_to_key_vault_key_node" {
-  category = category.key_vault_key
-
-  sql = <<-EOQ
-    select
-      lower(key.id) as id,
-      key.name as title,
-      jsonb_build_object(
-        'Name', key.name,
-        'Key ID', key.id,
-        'Type', key.type,
-        'Resource Group', key.resource_group,
-        'Subscription ID', key.subscription_id
-      ) as properties
-   from
-      azure_storage_account as a
-      left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
-      left join azure_key_vault_key_version as v on lower(v.key_uri_with_version) = lower(a.encryption_key_vault_properties_key_current_version_id)
-      left join azure_key_vault_key as key on lower(key.key_uri) = lower(v.key_uri)
-    where
-      lower(a.id) = lower($1);
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_storage_account_key_vault_to_key_vault_key_edge" {
-  title = "key"
-
-  sql = <<-EOQ
-    select
-      lower(k.id )as from_id,
-      lower(key.id) as to_id
-   from
-      azure_storage_account as a
-      left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
-      left join azure_key_vault_key_version as v on lower(v.key_uri_with_version) = lower(a.encryption_key_vault_properties_key_current_version_id)
-      left join azure_key_vault_key as key on lower(key.key_uri) = lower(v.key_uri)
-    where
-      lower(a.id) = lower($1);
-  EOQ
-
-  param "id" {}
-}
-
-node "azure_storage_account_from_batch_account_node" {
-  category = category.azure_batch_account
+node "batch_account" {
+  category = category.batch_account
 
   sql = <<-EOQ
     select
@@ -930,13 +703,13 @@ node "azure_storage_account_from_batch_account_node" {
       azure_batch_account as b
       left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
     where
-      lower(a.id) = lower($1);
+      lower(a.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "storage_account_ids" {}
 }
 
-edge "azure_storage_account_from_batch_account_edge" {
+edge "batch_account_to_storage_storage_account" {
   title = "storage account"
 
   sql = <<-EOQ
@@ -947,8 +720,8 @@ edge "azure_storage_account_from_batch_account_edge" {
       azure_batch_account as b
       left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
     where
-      lower(a.id) = lower($1);
+      lower(a.id) = any($1);
   EOQ
 
-  param "id" {}
+  param "storage_account_ids" {}
 }
