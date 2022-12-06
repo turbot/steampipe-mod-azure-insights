@@ -1076,21 +1076,3 @@ node "azure_compute_virtual_machine_scale_set_from_kubernetes_cluster_node" {
 
   param "id" {}
 }
-
-edge "kubernetes_cluster_to_compute_virtual_machine_scale_set" {
-  title = "vm scale set"
-
-  sql = <<-EOQ
-    select
-      lower(c.id) as from_id,
-      lower(set.id) as to_id
-    from
-      azure_kubernetes_cluster c,
-      azure_compute_virtual_machine_scale_set set
-    where
-      lower(set.resource_group) = lower(c.node_resource_group)
-      and lower(c.id) = any($1);
-  EOQ
-
-  param "compute_virtual_machine_scale_set_ids" {}
-}
