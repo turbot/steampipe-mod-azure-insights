@@ -1,3 +1,41 @@
+edge "network_application_gateway_backend_address_pool_to_compute_virtual_machine" {
+  title = "virtual machine"
+
+  sql = <<-EOQ
+    with network_interface as (
+      select
+        vm.id as vm_id,
+        nic.id,
+        nic.ip_configurations as ip_configurations
+      from
+        azure_compute_virtual_machine as vm,
+        jsonb_array_elements(network_interfaces) as n
+        left join azure_network_interface as nic on nic.id = n ->> 'id'
+      where
+        lower(vm.id) = any($1)
+    ),
+    vm_application_gateway_backend_address_pool as (
+      select
+        vm_id as vm_id,
+        p ->> 'id' as id
+      from
+        network_interface,
+        jsonb_array_elements(ip_configurations) as i,
+        jsonb_array_elements(i -> 'properties' -> 'applicationGatewayBackendAddressPools') as p
+    )
+    select
+      lower(p ->> 'id') as from_id,
+      lower(p.vm_id) as to_id
+    from
+      azure_application_gateway as g,
+      jsonb_array_elements(backend_address_pools) as p
+    where
+      lower(p ->> 'id') in (select lower(id) from vm_application_gateway_backend_address_pool);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
 edge "network_application_gateway_to_app_service_web_app" {
   title = "web app"
 
@@ -29,6 +67,42 @@ edge "network_application_gateway_to_app_service_web_app" {
   EOQ
 
   param "app_service_web_app_ids" {}
+}
+
+edge "network_application_gateway_to_compute_virtual_machine" {
+  title = "lb backend address pool"
+
+  sql = <<-EOQ
+    with network_interface as (
+      select
+        nic.id,
+        nic.ip_configurations as ip_configurations
+      from
+        azure_compute_virtual_machine as vm,
+        jsonb_array_elements(network_interfaces) as n
+        left join azure_network_interface as nic on nic.id = n ->> 'id'
+      where
+        lower(vm.id) = any($1)
+    ),
+    vm_application_gateway_backend_address_pool as (
+      select
+        p ->> 'id' as id
+      from
+        network_interface,
+        jsonb_array_elements(ip_configurations) as i,
+        jsonb_array_elements(i -> 'properties' -> 'applicationGatewayBackendAddressPools') as p
+    )
+    select
+      lower(g.id) as from_id,
+      lower(p ->> 'id') as to_id
+    from
+      azure_application_gateway as g,
+      jsonb_array_elements(backend_address_pools) as p
+    where
+      lower(p ->> 'id') in (select lower(id) from vm_application_gateway_backend_address_pool);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
 }
 
 edge "network_backend_address_pool_to_network_interface" {
@@ -840,3 +914,5 @@ edge "network_virtual_network_to_network_subnet" {
 
   param "network_virtual_network_ids" {}
 }
+
+

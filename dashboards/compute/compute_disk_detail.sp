@@ -348,31 +348,6 @@ query "compute_disk_sku_name" {
   param "id" {}
 }
 
-node "compute_disk" {
-  category = category.compute_disk
-
-  sql = <<-EOQ
-    select
-      lower(id) as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Provisioning State', provisioning_state,
-        'OS Type', os_type,
-        'Region', region
-      ) as properties
-    from
-      azure_compute_disk
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "compute_disk_ids" {}
-}
-
 node "azure_compute_disk_from_compute_virtual_machine_node" {
   category = category.compute_virtual_machine
 
