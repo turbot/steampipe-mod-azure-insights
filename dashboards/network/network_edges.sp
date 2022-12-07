@@ -824,3 +824,36 @@ edge "network_load_balancer_to_network_public_ip" {
 
   param "network_load_balancer_ids" {}
 }
+
+edge "network_application_gateway_to_app_service_web_app" {
+  title = "web app"
+
+  sql = <<-EOQ
+    with application_gateway as (
+      select
+        g.id as id,
+        g.name as name,
+        g.subscription_id,
+        g.resource_group,
+        g.title,
+        g.region,
+        backend_address ->> 'fqdn' as app_host_name
+      from
+        azure_application_gateway as g,
+        jsonb_array_elements(backend_address_pools) as pool,
+        jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
+    )
+    select
+      lower(g.id) as from_id,
+      lower(a.id) as to_id
+    from
+      azure_app_service_web_app as a,
+      jsonb_array_elements(a.host_names) as host_name,
+      application_gateway as g
+    where
+      lower(g.app_host_name) = lower(trim((host_name::text), '""'))
+      and lower(a.id) = any($1);
+  EOQ
+
+  param "app_service_web_app_ids" {}
+}

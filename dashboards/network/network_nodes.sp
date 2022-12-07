@@ -100,6 +100,7 @@ node "network_subnet" {
       lower(id) as id,
       title as title,
       jsonb_build_object(
+        'ID' ,id,
         'Name', name,
         'Etag', etag,
         'Type', type,
@@ -672,4 +673,27 @@ node "network_load_balancer_nat_rule" {
   EOQ
 
   param "network_load_balancer_ids" {}
+}
+
+node "network_application_gateway" {
+  category = category.network_application_gateway
+
+  sql = <<-EOQ
+    select
+      lower(g.id) as id,
+      g.title as title,
+      jsonb_build_object(
+        'Name', g.name,
+        'ID', g.id,
+        'Subscription ID', g.subscription_id,
+        'Resource Group', g.resource_group,
+        'Region', g.region
+      ) as properties
+    from
+      azure_application_gateway as g
+    where
+      lower(g.id) = any($1)
+  EOQ
+
+  param "network_application_gateway_ids" {}
 }

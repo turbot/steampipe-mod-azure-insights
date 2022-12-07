@@ -637,4 +637,3 @@ query "storage_account_blob_logging" {
 
 
 
-

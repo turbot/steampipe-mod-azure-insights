@@ -740,22 +740,7 @@ node "azure_compute_disk_to_storage_storage_account_node" {
   param "id" {}
 }
 
-edge "compute_disk_to_storage_storage_account" {
-  title = "blob source for disk"
 
-  sql = <<-EOQ
-    select
-      lower(a.id) as from_id,
-      lower(d.id) as to_id
-    from
-      azure_compute_disk as d
-      left join azure_storage_account as a on lower(a.id) = lower(d.creation_data_storage_account_id)
-    where
-      lower(d.id) = any($1);
-  EOQ
-
-  param "compute_disk_ids" {}
-}
 
 query "compute_disk_overview" {
   sql = <<-EOQ

@@ -144,7 +144,7 @@ dashboard "network_subnet_detail" {
         sql_server_ids             = with.sql_servers.rows[*].sql_server_id
         storage_account_ids        = with.storage_accounts.rows[*].storage_account_id
         virtual_network_ids        = with.virtual_networks.rows[*].virtual_network_id
-        web_app_ids                = with.web_apps.rows[*].web_app_id
+        app_service_web_app_ids                = with.web_apps.rows[*].web_app_id
       }
     }
   }
