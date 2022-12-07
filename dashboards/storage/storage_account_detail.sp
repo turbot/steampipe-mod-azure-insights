@@ -164,20 +164,13 @@ dashboard "storage_account_detail" {
 
       with "network_subnets" {
         sql = <<-EOQ
-          with subnet_list as (
-            select
-              distinct(r ->> 'id') as subnet_id
-            from
-              azure_storage_account,
-              jsonb_array_elements(virtual_network_rules) as r
-            where
-              lower(id) = $1
-          )
           select
-            lower(id) as subnet_id
+            distinct(lower(r ->> 'id')) as subnet_id
           from
-            subnet_list as l
-            left join azure_subnet as s on lower(l.subnet_id) = lower(s.id);
+            azure_storage_account,
+            jsonb_array_elements(virtual_network_rules) as r
+          where
+            lower(id) = $1
         EOQ
 
         args = [self.input.storage_account_id.value]
@@ -185,21 +178,14 @@ dashboard "storage_account_detail" {
 
       with "network_virtual_networks" {
         sql = <<-EOQ
-          with vn_list as (
             select
-              distinct split_part(r ->> 'id', '/subnets', 1) as vn_id
+              distinct lower(split_part(r ->> 'id', '/subnets', 1)) as network_id
             from
               azure_storage_account,
               jsonb_array_elements(virtual_network_rules) as r
             where
               lower(id) = $1
-          )
-          select
-            lower(id) as network_id
-          from
-            vn_list as l
-            left join azure_virtual_network as n on lower(n.id) = lower(l.vn_id);
-        EOQ
+          EOQ
 
         args = [self.input.storage_account_id.value]
       }

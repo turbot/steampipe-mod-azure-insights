@@ -145,3 +145,4 @@ edge "storage_storage_account_to_storage_table" {
 
   param "storage_account_ids" {}
 }
+

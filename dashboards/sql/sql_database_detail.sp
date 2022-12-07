@@ -74,41 +74,13 @@ dashboard "sql_database_detail" {
 
       with "sql_servers" {
         sql = <<-EOQ
-          with sql_servers as (
-            select
-              id,
-              name,
-              kind,
-              location,
-              public_network_access,
-              resource_group,
-              subscription_id,
-              version,
-              type,
-              title
-            from
-              azure_sql_server
-          )
           select
-            lower(sv.id) as sql_server_id,
-            sv.title as title,
-            json_build_object(
-              'Name', sv.name,
-              'Kind', sv.kind,
-              'Location', sv.location,
-              'Public Network Access', sv.public_network_access,
-              'Resource Group', sv.resource_group,
-              'Subscription ID', sv.subscription_id,
-              'Version', sv.version,
-              'Type', sv.type,
-              'ID', sv.id
-            ) as properties
+            lower(sv.id) as sql_server_id
           from
-            azure_sql_database as db,
-            sql_servers as sv
+            azure_sql_database as db
+            left join azure_sql_server as sv on db.server_name = sv.name
           where
-            lower(db.id) = lower($1)
-            and db.server_name = sv.name;
+            lower(db.id) = $1
         EOQ
 
         args = [self.input.sql_database_id.value]
@@ -126,7 +98,6 @@ dashboard "sql_database_detail" {
       ]
 
       args = {
-        id               = self.input.sql_database_id.value
         sql_database_ids = [self.input.sql_database_id.value]
         sql_server_ids   = with.sql_servers.rows[*].sql_server_id
       }
@@ -330,45 +301,6 @@ query "sql_database_geo_redundant_backup_enabled" {
   EOQ
 
   param "id" {}
-}
-
-node "sql_database_mssql_elasticpool" {
-  category = category.mssql_elasticpool
-
-  sql = <<-EOQ
-    with sql_pools as (
-      select
-        id,
-        title,
-        name,
-        type,
-        edition,
-        kind,
-        region,
-        state,
-        zone_redundant
-      from
-        azure_mssql_elasticpool
-    )
-    select
-      lower(sp.id) as id,
-      sp.title as title,
-      json_build_object(
-        'Edition', sp.edition,
-        'State', sp.state,
-        'Zone Redundant', sp.zone_redundant,
-        'Type', sp.type,
-        'ID', sp.id
-      ) as properties
-    from
-      azure_sql_database as db,
-      sql_pools as sp
-    where
-      lower(db.id) = any($1)
-      and lower(sp.name) = lower(db.elastic_pool_name);
-  EOQ
-
-  param "sql_database_ids" {}
 }
 
 edge "sql_database_to_mssql_elasticpool" {
