@@ -36,7 +36,7 @@ edge "network_network_interface_to_network_security_group" {
       left join network_security_group_id as nic on lower(nsg.id) = lower(nic.sid)
   EOQ
 
-  param "network_interface_ids" {}
+  param "network_network_interface_ids" {}
 }
 
 edge "network_network_interface_to_network_public_ip" {
@@ -60,7 +60,7 @@ edge "network_network_interface_to_network_public_ip" {
       lower(n.id) = any($1);
   EOQ
 
-  param "network_interface_ids" {}
+  param "network_network_interface_ids" {}
 }
 
 edge "network_network_interface_to_network_subnet" {
@@ -81,7 +81,7 @@ edge "network_network_interface_to_network_subnet" {
       lower(ni.id) = any($1);
   EOQ
 
-  param "network_interface_ids" {}
+  param "network_network_interface_ids" {}
 }
 
 edge "network_public_ip_to_api_management" {
@@ -342,7 +342,7 @@ edge "network_virtual_network_to_network_subnet" {
       lower(v.id) = any($1);
   EOQ
 
-  param "virtual_network_ids" {}
+  param "network_virtual_network_ids" {}
 }
 
 edge "network_virtual_network_to_network_peering" {
@@ -367,7 +367,7 @@ edge "network_virtual_network_to_network_peering" {
       right join peering_vn as p on p.peering_vn = v.id;
   EOQ
 
-  param "virtual_network_ids" {}
+  param "network_virtual_network_ids" {}
 }
 
 edge "network_virtual_network_to_compute_virtual_machine" {
@@ -404,7 +404,7 @@ edge "network_virtual_network_to_compute_virtual_machine" {
       lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select sub_id from subnet_list);
   EOQ
 
-  param "virtual_network_ids" {}
+  param "network_virtual_network_ids" {}
 }
 
 edge "network_virtual_network_to_backend_address_pool" {
@@ -443,7 +443,7 @@ edge "network_virtual_network_to_backend_address_pool" {
       lower(c ->> 'id') in (select ip_config_id from nic_subnet_list);
   EOQ
 
-  param "virtual_network_ids" {}
+  param "network_virtual_network_ids" {}
 }
 
 edge "network_virtual_network_to_network_load_balancer" {
@@ -491,7 +491,7 @@ edge "network_virtual_network_to_network_load_balancer" {
       lower(pool ->> 'id') in (select pool_id from azure_lb_backend_address_pool);
   EOQ
 
-  param "virtual_network_ids" {}
+  param "network_virtual_network_ids" {}
 }
 
 edge "network_firewall_to_public_ip" {

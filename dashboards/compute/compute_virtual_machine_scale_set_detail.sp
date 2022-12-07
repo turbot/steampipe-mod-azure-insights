@@ -216,7 +216,7 @@ dashboard "compute_virtual_machine_scale_set_detail" {
         network_load_balancer_ids                = with.load_balancers.rows[*].lb_id
         network_security_group_ids               = with.network_security_groups.rows[*].nsg_id
         network_subnet_ids                       = with.subnets.rows[*].subnet_id
-        virtual_network_ids                      = with.virtual_networks.rows[*].network_id
+        network_virtual_network_ids                      = with.virtual_networks.rows[*].network_id
       }
     }
   }

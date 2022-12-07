@@ -72,43 +72,7 @@ dashboard "network_load_balancer_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "network_interfaces" {
-        sql = <<-EOQ
-          with backend_address_pools as (
-            select
-              lb.id as lb_id,
-              p.id as backend_address_id,
-              p.backend_ip_configurations as backend_ip_configurations
-            from
-              azure_lb as lb,
-              jsonb_array_elements(backend_address_pools) as b
-              left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
-            where
-              p.backend_ip_configurations is not null
-              and lower(lb.id) = $1
-          ), backend_ip_configurations as (
-              select
-                lb_id,
-                backend_address_id,
-                c ->> 'id' as backend_ip_configuration_id
-              from
-                backend_address_pools,
-                jsonb_array_elements(backend_ip_configurations) as c
-          )
-          select
-            lower(nic.id) as network_interface_id
-          from
-            azure_network_interface as nic,
-            jsonb_array_elements(ip_configurations) as c,
-            backend_ip_configurations as b
-          where
-            lower(c ->> 'id') = lower(b.backend_ip_configuration_id)
-          EOQ
-
-        args = [self.input.lb_id.value]
-      }
-
-      with "virtual_machines" {
+      with "compute_virtual_machines" {
         sql = <<-EOQ
           with backend_address_pools as (
             select
@@ -157,7 +121,7 @@ dashboard "network_load_balancer_detail" {
         args = [self.input.lb_id.value]
       }
 
-      with "virtual_machine_scale_set_vms" {
+      with "compute_virtual_machine_scale_set_vms" {
         sql = <<-EOQ
           with backend_address_pools as (
             select
@@ -206,7 +170,90 @@ dashboard "network_load_balancer_detail" {
         args = [self.input.lb_id.value]
       }
 
-      with "virtual_networks" {
+      with "compute_virtual_machine_scale_sets" {
+        sql = <<-EOQ
+          select
+            lower(vm_scale_set.id) as compute_virtual_machine_scale_set_id
+          from
+            azure_compute_virtual_machine_scale_set as vm_scale_set,
+            jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') as p,
+            jsonb_array_elements(p -> 'properties' -> 'ipConfigurations') as c,
+            jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools') as b
+          where
+            lower(split_part( b ->> 'id', '/backendAddressPools' , 1)) = $1
+        EOQ
+
+        args = [self.input.lb_id.value]
+      }
+
+      with "network_load_balancer_backend_address_pools" {
+        sql = <<-EOQ
+          select
+            lower(p.id) as pool_id
+          from
+            azure_lb as lb,
+            jsonb_array_elements(backend_address_pools) as b
+            left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
+          where
+            lower(lb.id) = $1;
+        EOQ
+
+        args = [self.input.lb_id.value]
+      }
+
+      with "network_network_interfaces" {
+        sql = <<-EOQ
+          with backend_address_pools as (
+            select
+              lb.id as lb_id,
+              p.id as backend_address_id,
+              p.backend_ip_configurations as backend_ip_configurations
+            from
+              azure_lb as lb,
+              jsonb_array_elements(backend_address_pools) as b
+              left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
+            where
+              p.backend_ip_configurations is not null
+              and lower(lb.id) = $1
+          ), backend_ip_configurations as (
+              select
+                lb_id,
+                backend_address_id,
+                c ->> 'id' as backend_ip_configuration_id
+              from
+                backend_address_pools,
+                jsonb_array_elements(backend_ip_configurations) as c
+          )
+          select
+            lower(nic.id) as network_interface_id
+          from
+            azure_network_interface as nic,
+            jsonb_array_elements(ip_configurations) as c,
+            backend_ip_configurations as b
+          where
+            lower(c ->> 'id') = lower(b.backend_ip_configuration_id)
+          EOQ
+
+        args = [self.input.lb_id.value]
+      }
+
+      with "network_public_ips" {
+        sql = <<-EOQ
+          select
+            lower(ip.id) as public_ip_id
+          from
+            azure_lb as lb,
+            jsonb_array_elements(frontend_ip_configurations) as f
+            left join azure_public_ip as ip on lower(ip.id) = lower(f -> 'properties' -> 'publicIPAddress' ->> 'id')
+          where
+            (f -> 'properties' -> 'publicIPAddress' ->> 'id') is not null
+            and lower(lb.id) = $1
+        EOQ
+
+        args = [self.input.lb_id.value]
+      }
+
+      with "network_virtual_networks" {
         sql = <<-EOQ
           with backend_address_pools as (
             select
@@ -240,38 +287,6 @@ dashboard "network_load_balancer_detail" {
         args = [self.input.lb_id.value]
       }
 
-      with "compute_virtual_machine_scale_sets" {
-        sql = <<-EOQ
-          select
-            lower(vm_scale_set.id) as compute_virtual_machine_scale_set_id
-          from
-            azure_compute_virtual_machine_scale_set as vm_scale_set,
-            jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') as p,
-            jsonb_array_elements(p -> 'properties' -> 'ipConfigurations') as c,
-            jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools') as b
-          where
-            lower(split_part( b ->> 'id', '/backendAddressPools' , 1)) = $1
-        EOQ
-
-        args = [self.input.lb_id.value]
-      }
-
-      with "public_ips" {
-        sql = <<-EOQ
-          select
-            lower(ip.id) as public_ip_id
-          from
-            azure_lb as lb,
-            jsonb_array_elements(frontend_ip_configurations) as f
-            left join azure_public_ip as ip on lower(ip.id) = lower(f -> 'properties' -> 'publicIPAddress' ->> 'id')
-          where
-            (f -> 'properties' -> 'publicIPAddress' ->> 'id') is not null
-            and lower(lb.id) = $1
-        EOQ
-
-        args = [self.input.lb_id.value]
-      }
-
       nodes = [
         node.compute_virtual_machine_scale_set_vm,
         node.compute_virtual_machine_scale_set,
@@ -301,13 +316,14 @@ dashboard "network_load_balancer_detail" {
       ]
 
       args = {
-        compute_virtual_machine_ids              = with.virtual_machines.rows[*].virtual_machine_id
-        compute_virtual_machine_scale_set_ids    = with.compute_virtual_machine_scale_sets.rows[*].compute_virtual_machine_scale_set_id
-        compute_virtual_machine_scale_set_vm_ids = with.virtual_machine_scale_set_vms.rows[*].virtual_machine_scale_set_vm_id
-        network_interface_ids                    = with.network_interfaces.rows[*].network_interface_id
-        network_load_balancer_ids                = [self.input.lb_id.value]
-        network_public_ip_ids                    = with.public_ips.rows[*].public_ip_id
-        virtual_network_ids                      = with.virtual_networks.rows[*].virtual_network_id
+        compute_virtual_machine_ids                    = with.compute_virtual_machines.rows[*].virtual_machine_id
+        compute_virtual_machine_scale_set_ids          = with.compute_virtual_machine_scale_sets.rows[*].compute_virtual_machine_scale_set_id
+        compute_virtual_machine_scale_set_vm_ids       = with.compute_virtual_machine_scale_set_vms.rows[*].virtual_machine_scale_set_vm_id
+        network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
+        network_load_balancer_ids                      = [self.input.lb_id.value]
+        network_network_interface_ids                  = with.network_network_interfaces.rows[*].network_interface_id
+        network_public_ip_ids                          = with.network_public_ips.rows[*].public_ip_id
+        network_virtual_network_ids                            = with.network_virtual_networks.rows[*].virtual_network_id
       }
     }
   }

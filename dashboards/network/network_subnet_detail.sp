@@ -40,17 +40,28 @@ dashboard "network_subnet_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "virtual_networks" {
+      with "app_service_web_apps" {
         sql = <<-EOQ
           select
-            lower(vn.id) as virtual_network_id
+            lower(id) as web_app_id
           from
-            azure_subnet as s
-            left join azure_virtual_network as vn on vn.name = s.virtual_network_name
+            azure_app_service_web_app
           where
-            lower(s.subscription_id) = lower(vn.subscription_id)
-            and lower(s.resource_group) = lower(vn.resource_group)
-            and lower(s.id) = $1;
+            lower(vnet_connection -> 'properties' ->> 'vnetResourceId') = $1
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "network_nat_gateways" {
+        sql = <<-EOQ
+          select
+            lower(id) as nat_gateway_id
+          from
+            azure_nat_gateway,
+            jsonb_array_elements(subnets) as s
+          where
+            lower(s ->> 'id') = $1;
         EOQ
 
         args = [self.input.subnet_id.value]
@@ -70,14 +81,17 @@ dashboard "network_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
-      with "web_apps" {
+      with "network_virtual_networks" {
         sql = <<-EOQ
           select
-            lower(id) as web_app_id
+            lower(vn.id) as virtual_network_id
           from
-            azure_app_service_web_app
+            azure_subnet as s
+            left join azure_virtual_network as vn on vn.name = s.virtual_network_name
           where
-            lower(vnet_connection -> 'properties' ->> 'vnetResourceId') = $1
+            lower(s.subscription_id) = lower(vn.subscription_id)
+            and lower(s.resource_group) = lower(vn.resource_group)
+            and lower(s.id) = $1;
         EOQ
 
         args = [self.input.subnet_id.value]
@@ -97,7 +111,7 @@ dashboard "network_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
-      with "storage_accounts" {
+      with "storage_storage_accounts" {
         sql = <<-EOQ
           select
             lower(id) as storage_account_id
@@ -113,11 +127,11 @@ dashboard "network_subnet_detail" {
 
       nodes = [
         node.app_service_web_app,
+        node.network_nat_gateway,
         node.network_network_security_group,
         node.network_subnet_api_management,
         node.network_subnet_application_gateway,
         node.network_subnet_cosmosdb_account,
-        node.network_subnet_nat_gateway,
         node.network_subnet_route_table,
         node.network_subnet,
         node.network_virtual_network,
@@ -140,11 +154,12 @@ dashboard "network_subnet_detail" {
 
       args = {
         network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+        network_nat_gateway_ids    = with.network_nat_gateways.rows[*].nat_gateway_id
         network_subnet_ids         = [self.input.subnet_id.value]
         sql_server_ids             = with.sql_servers.rows[*].sql_server_id
-        storage_account_ids        = with.storage_accounts.rows[*].storage_account_id
-        virtual_network_ids        = with.virtual_networks.rows[*].virtual_network_id
-        app_service_web_app_ids                = with.web_apps.rows[*].web_app_id
+        storage_account_ids        = with.storage_storage_accounts.rows[*].storage_account_id
+        network_virtual_network_ids        = with.network_virtual_networks.rows[*].virtual_network_id
+        app_service_web_app_ids    = with.app_service_web_apps.rows[*].web_app_id
       }
     }
   }

@@ -47,3 +47,27 @@ edge "compute_snapshot_to_storage_storage_account" {
 
   param "storage_account_ids" {}
 }
+
+edge "compute_virtual_machine_to_network_network_interface" {
+  title = "network interface"
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as n_id
+      from
+        azure_compute_virtual_machine
+    )
+    select
+      lower(n.id) as to_id,
+      lower(vn.id) as from_id
+    from
+      network_interface_id as vn
+      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
+    where
+      lower(vn.id) = any($1);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}

@@ -47,28 +47,7 @@ dashboard "network_public_ip_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "network_interfaces" {
-        sql = <<-EOQ
-          with network_interface_public_ip as (
-            select
-              id,
-              jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-            from
-              azure_network_interface
-          )
-          select
-            lower(n.id) as nic_id
-          from
-            network_interface_public_ip as n
-            left join azure_public_ip as p on lower(n.pid) = lower(p.id)
-          where
-            lower(p.id) = $1;
-        EOQ
-
-        args = [self.input.public_ip_id.value]
-      }
-
-      with "virtual_machines" {
+      with "compute_virtual_machines" {
         sql = <<-EOQ
           with vm_network_interface as (
             select
@@ -96,6 +75,27 @@ dashboard "network_public_ip_detail" {
         args = [self.input.public_ip_id.value]
       }
 
+      with "network_network_interfaces" {
+        sql = <<-EOQ
+          with network_interface_public_ip as (
+            select
+              id,
+              jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+            from
+              azure_network_interface
+          )
+          select
+            lower(n.id) as nic_id
+          from
+            network_interface_public_ip as n
+            left join azure_public_ip as p on lower(n.pid) = lower(p.id)
+          where
+            lower(p.id) = $1;
+        EOQ
+
+        args = [self.input.public_ip_id.value]
+      }
+
       nodes = [
         node.compute_virtual_machine,
         node.network_network_interface,
@@ -110,9 +110,9 @@ dashboard "network_public_ip_detail" {
       ]
 
       args = {
-        compute_virtual_machine_ids = with.virtual_machines.rows[*].virtual_machine_id
-        network_interface_ids       = with.network_interfaces.rows[*].nic_id
-        network_public_ip_ids       = [self.input.public_ip_id.value]
+        compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].virtual_machine_id
+        network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+        network_public_ip_ids         = [self.input.public_ip_id.value]
       }
     }
   }

@@ -156,7 +156,7 @@ dashboard "app_service_web_app_detail" {
         app_service_web_app_ids         = [self.input.web_app_id.value]
         network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
         network_subnet_ids              = with.network_subnets.rows[*].subnet_id
-        virtual_network_ids             = with.network_virtual_networks.rows[*].virtual_network_id
+        network_virtual_network_ids             = with.network_virtual_networks.rows[*].virtual_network_id
       }
     }
   }

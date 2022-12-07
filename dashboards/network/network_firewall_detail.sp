@@ -48,7 +48,7 @@ dashboard "network_firewall_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "public_ips" {
+      with "network_public_ips" {
         sql = <<-EOQ
           select
             lower(ip.id) as public_ip_id
@@ -63,7 +63,7 @@ dashboard "network_firewall_detail" {
         args = [self.input.firewall_id.value]
       }
 
-      with "subnets" {
+      with "network_subnets" {
         sql = <<-EOQ
           select
             lower(s.id) as subnet_id
@@ -78,7 +78,7 @@ dashboard "network_firewall_detail" {
         args = [self.input.firewall_id.value]
       }
 
-      with "virtual_networks" {
+      with "network_virtual_networks" {
         sql = <<-EOQ
           with subnet_list as (
             select
@@ -104,6 +104,7 @@ dashboard "network_firewall_detail" {
         args = [self.input.firewall_id.value]
       }
 
+
       nodes = [
         node.network_firewall,
         node.network_public_ip,
@@ -119,9 +120,9 @@ dashboard "network_firewall_detail" {
 
       args = {
         network_firewall_ids  = [self.input.firewall_id.value]
-        network_public_ip_ids = with.public_ips.rows[*].public_ip_id
-        network_subnet_ids    = with.subnets.rows[*].subnet_id
-        virtual_network_ids   = with.virtual_networks.rows[*].network_id
+        network_public_ip_ids = with.network_public_ips.rows[*].public_ip_id
+        network_subnet_ids    = with.network_subnets.rows[*].subnet_id
+        network_virtual_network_ids   = with.network_virtual_networks.rows[*].network_id
       }
     }
   }

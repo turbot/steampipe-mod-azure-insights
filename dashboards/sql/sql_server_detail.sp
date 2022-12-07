@@ -192,7 +192,7 @@ dashboard "sql_server_detail" {
         network_subnet_ids  = with.network_subnets.rows[*].subnet_id
         sql_database_ids     = with.sql_databases.rows[*].sql_database_id
         sql_server_ids      = [self.input.sql_server_id.value]
-        virtual_network_ids = with.virtual_networks.rows[*].virtual_networks_id
+        network_virtual_network_ids = with.virtual_networks.rows[*].virtual_networks_id
       }
     }
   }

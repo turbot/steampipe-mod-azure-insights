@@ -172,10 +172,10 @@ dashboard "network_security_group_detail" {
 
       args = {
         compute_virtual_machine_ids = with.virtual_machines.rows[*].machine_id
-        network_interface_ids       = with.network_interfaces.rows[*].nic_id
+        network_network_interface_ids       = with.network_interfaces.rows[*].nic_id
         network_security_group_ids  = [self.input.nsg_id.value]
         network_subnet_ids          = with.subnets.rows[*].subnet_id
-        virtual_network_ids         = with.virtual_networks.rows[*].network_id
+        network_virtual_network_ids         = with.virtual_networks.rows[*].network_id
       }
     }
   }
