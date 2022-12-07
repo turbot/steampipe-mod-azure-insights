@@ -3,10 +3,10 @@ node "kubernetes_cluster" {
 
   sql = <<-EOQ
     select
-      lower(id),
-      title,
+      lower(id) as id,
+      title as title,
       jsonb_build_object(
-        'ID', ID,
+        'ID', lower(id),
         'Subscription ID', subscription_id,
         'Resource Group', resource_group,
         'Provisioning State', provisioning_state,
@@ -23,7 +23,7 @@ node "kubernetes_cluster" {
   param "kubernetes_cluster_ids" {}
 }
 
-node "kubernetes_cluster_kubernetes_node_pool" {
+node "kubernetes_node_pool" {
   category = category.kubernetes_node_pool
 
   sql = <<-EOQ
@@ -46,31 +46,6 @@ node "kubernetes_cluster_kubernetes_node_pool" {
       jsonb_array_elements(agent_pool_profiles) p
     where
       lower(c.id) = any($1);
-  EOQ
-
-  param "kubernetes_cluster_ids" {}
-}
-
-node "kubernetes_cluster_compute_disk_encryption_set" {
-  category = category.compute_disk_encryption_set
-
-  sql = <<-EOQ
-    select
-      lower(e.id) as id,
-      e.title as title,
-      jsonb_build_object(
-        'Name', e.name,
-        'ID', e.id,
-        'Subscription ID', e.subscription_id,
-        'Resource Group', e.resource_group,
-        'Region', e.region
-      ) as properties
-    from
-      azure_kubernetes_cluster c,
-      azure_compute_disk_encryption_set e
-    where
-      lower(c.disk_encryption_set_id) = lower(e.id)
-      and lower(c.id) = any($1);
   EOQ
 
   param "kubernetes_cluster_ids" {}

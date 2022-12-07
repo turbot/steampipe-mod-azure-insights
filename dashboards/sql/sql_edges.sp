@@ -144,3 +144,36 @@ edge "sql_server_to_sql_database" {
 
   param "sql_server_ids" {}
 }
+
+edge "sql_server_to_key_vault_key_version" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    with sql_server as (
+      select
+        ep ->> 'uri' as uri,
+        id,
+        title,
+        name,
+        type,
+        region,
+        resource_group,
+        subscription_id
+      from
+        azure_sql_server,
+        jsonb_array_elements(encryption_protector) as ep
+      where
+        ep ->> 'kind' = 'azurekeyvault'
+    )
+    select
+      s.id as from_id,
+      v.id as to_id
+    from
+      azure_key_vault_key_version as v
+      left join sql_server as s on v.key_uri_with_version = s.uri
+    where
+      lower(split_part(v.id, '/versions', 1)) = any($1);
+  EOQ
+
+  param "key_vault_key_ids" {}
+}

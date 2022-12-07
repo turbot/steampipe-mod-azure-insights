@@ -48,6 +48,55 @@ dashboard "key_vault_key_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "compute_disk_encryption_sets" {
+        sql = <<-EOQ
+          select
+            lower(s.id) as disk_encryption_set_id
+          from
+            azure_key_vault_key_version as v
+            left join azure_compute_disk_encryption_set as s on s.active_key_url = v.key_uri_with_version
+          where
+            s.id is not null
+            and lower(split_part(v.id, '/versions', 1)) = $1;
+        EOQ
+
+        args = [self.input.key_vault_key_id.value]
+      }
+
+      with "container_registries" {
+        sql = <<-EOQ
+          select
+            lower(r.id) as registry_id
+          from
+            azure_key_vault_key as k
+            left join azure_container_registry as r on r.encryption -> 'keyVaultProperties' ->> 'keyIdentifier' = k.key_uri
+            left join azure_key_vault_key_version as v on v.key_uri_with_version = k.key_uri_with_version
+          where
+            r.id is not null
+            and lower(k.id) = $1;
+        EOQ
+
+        args = [self.input.key_vault_key_id.value]
+      }
+
+      with "eventhub_namespaces" {
+        sql = <<-EOQ
+          select
+            lower(n.id) as eventhub_namespace_id
+          from
+            azure_eventhub_namespace as n,
+            jsonb_array_elements(encryption -> 'keyVaultProperties') as p
+            left join azure_key_vault_key as k on p ->> 'keyName' = k.name
+            left join azure_key_vault as v on v.name = k.vault_name
+          where
+            k.resource_group = v.resource_group
+            and k.resource_group = n.resource_group
+            and lower(k.id) = $1;
+        EOQ
+
+        args = [self.input.key_vault_key_id.value]
+      }
+
       with "key_vaults" {
         sql = <<-EOQ
           select
@@ -57,6 +106,40 @@ dashboard "key_vault_key_detail" {
             left join azure_key_vault as v on v.name = k.vault_name
           where
             lower(k.id) = $1;
+        EOQ
+
+        args = [self.input.key_vault_key_id.value]
+      }
+
+      with "postgresql_servers" {
+        sql = <<-EOQ
+          select
+            lower(s.id) as postgresql_server_id
+          from
+            azure_postgresql_server as s,
+            jsonb_array_elements(server_keys) as sk
+            left join azure_key_vault_key_version as v on lower(sk ->> 'ServerKeyUri') = lower(v.key_uri_with_version)
+          where
+            lower(split_part(v.id, '/versions', 1)) = $1;
+        EOQ
+
+        args = [self.input.key_vault_key_id.value]
+      }
+
+      with "servicebus_namespaces" {
+        sql = <<-EOQ
+          select
+            lower(n.id) as servicebus_namespace_id
+          from
+            azure_servicebus_namespace as n,
+            jsonb_array_elements(encryption -> 'keyVaultProperties') as p
+            left join azure_key_vault_key as k on p ->> 'keyName' = k.name
+            left join azure_key_vault as v on v.name = k.vault_name
+          where
+            n.id is not null
+            and lower(k.resource_group) = lower(v.resource_group)
+            and lower(k.resource_group) = lower(n.resource_group)
+            and lower(k.id) = $1;
         EOQ
 
         args = [self.input.key_vault_key_id.value]
@@ -93,7 +176,7 @@ dashboard "key_vault_key_detail" {
         args = [self.input.key_vault_key_id.value]
       }
 
-      with "storage_accounts" {
+      with "storage_storage_accounts" {
         sql = <<-EOQ
           select
             lower(s.id) as account_id
@@ -108,14 +191,14 @@ dashboard "key_vault_key_detail" {
       }
 
       nodes = [
-        node.key_vault_key_version_compute_disk_encryption_set,
-        node.key_vault_key_version_container_registry,
-        node.key_vault_key_version_eventhub_namespace,
-        node.key_vault_key_version_postgresql_server,
-        node.key_vault_key_version_servicebus_namespace,
+        node.compute_disk_encryption_set,
+        node.container_registry,
+        node.eventhub_namespace,
         node.key_vault_key_version,
         node.key_vault_key,
         node.key_vault,
+        node.postgresql_server,
+        node.servicebus_namespace,
         node.sql_server,
         node.storage_storage_account,
       ]
@@ -133,10 +216,15 @@ dashboard "key_vault_key_detail" {
       ]
 
       args = {
-        key_vault_ids       = with.key_vaults.rows[*].vault_id
-        key_vault_key_ids   = [self.input.key_vault_key_id.value]
-        sql_server_ids      = with.sql_servers.rows[*].sql_server_id
-        storage_account_ids = with.storage_accounts.rows[*].account_id
+        compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].disk_encryption_set_id
+        container_registry_ids          = with.container_registries.rows[*].registry_id
+        eventhub_namespace_ids          = with.eventhub_namespaces.rows[*].eventhub_namespace_id
+        key_vault_ids                   = with.key_vaults.rows[*].vault_id
+        key_vault_key_ids               = [self.input.key_vault_key_id.value]
+        postgresql_server_ids           = with.postgresql_servers.rows[*].postgresql_server_id
+        servicebus_namespace_ids        = with.servicebus_namespaces.rows[*].servicebus_namespace_id
+        sql_server_ids                  = with.sql_servers.rows[*].sql_server_id
+        storage_account_ids             = with.storage_storage_accounts.rows[*].account_id
       }
     }
   }
@@ -216,7 +304,7 @@ query "key_vault_key_status" {
     from
       azure_key_vault_key
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -231,7 +319,7 @@ query "key_vault_key_type" {
     from
       azure_key_vault_key
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -246,7 +334,7 @@ query "key_vault_key_size" {
     from
       azure_key_vault_key
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -268,7 +356,7 @@ query "key_vault_key_overview" {
     from
       azure_key_vault_key
     where
-      id = $1
+      lower(id) = $1
   EOQ
 
   param "id" {}
@@ -282,7 +370,7 @@ query "key_vault_key_tags" {
     from
       azure_key_vault_key
     where
-      id = $1
+      lower(id) = $1
     order by
       tags ->> 'Key';
     EOQ
@@ -299,7 +387,7 @@ query "key_vault_key_age" {
     from
       azure_key_vault_key
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}

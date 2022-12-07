@@ -1,72 +1,18 @@
-
-edge "storage_storage_account_to_storage_table" {
-  title = "storage table"
+edge "storage_account_to_key_vault_key_version" {
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
-      lower(a.id) as from_id,
-      lower(t.id) as to_id
+      lower(s.id) as from_id,
+      lower(v.id) as to_id
     from
-      azure_storage_account as a
-      left join azure_storage_table as t on t.storage_account_name = a.name
+      azure_storage_account as s
+      left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
     where
-      lower(a.id) = any($1);
+      lower(split_part(v.id, '/versions', 1)) = any($1);
   EOQ
 
-  param "storage_account_ids" {}
-}
-
-edge "storage_storage_account_to_storage_queue" {
-  title = "storage queue"
-
-  sql = <<-EOQ
-    select
-      lower(a.id) as from_id,
-      lower(q.id) as to_id
-    from
-      azure_storage_account as a
-      left join azure_storage_queue as q on q.storage_account_name = a.name
-    where
-      lower(a.id) = any($1);
-  EOQ
-
-  param "storage_account_ids" {}
-}
-
-edge "storage_storage_account_to_storage_container" {
-  title = "storage container"
-
-  sql = <<-EOQ
-    select
-      lower(a.id) as from_id,
-      lower(c.id) as to_id
-   from
-      azure_storage_container as c
-      left join azure_storage_account as a on a.name = c.account_name
-      and a.resource_group = c.resource_group
-    where
-      lower(a.id) = any($1);
-  EOQ
-
-  param "storage_account_ids" {}
-}
-
-edge "storage_storage_account_to_storage_share_file" {
-  title = "storage share file"
-
-  sql = <<-EOQ
-    select
-      lower(a.id) as from_id,
-      lower(f.id) as to_id
-    from
-      azure_storage_share_file as f
-      left join azure_storage_account as a on a.name = f.storage_account_name
-      and a.resource_group = f.resource_group
-    where
-      lower(a.id) = any($1);
-  EOQ
-
-  param "storage_account_ids" {}
+  param "key_vault_key_ids" {}
 }
 
 edge "storage_storage_account_to_key_vault" {
@@ -85,7 +31,6 @@ edge "storage_storage_account_to_key_vault" {
 
   param "storage_account_ids" {}
 }
-
 
 edge "storage_storage_account_to_key_vault_key" {
   title = "key"
@@ -126,6 +71,76 @@ edge "storage_storage_account_to_network_subnet" {
     from
       subnet_list as l
       left join azure_subnet as s on lower(l.subnet_id) = lower(s.id);
+  EOQ
+
+  param "storage_account_ids" {}
+}
+
+edge "storage_storage_account_to_storage_container" {
+  title = "storage container"
+
+  sql = <<-EOQ
+    select
+      lower(a.id) as from_id,
+      lower(c.id) as to_id
+   from
+      azure_storage_container as c
+      left join azure_storage_account as a on a.name = c.account_name
+      and a.resource_group = c.resource_group
+    where
+      lower(a.id) = any($1);
+  EOQ
+
+  param "storage_account_ids" {}
+}
+
+edge "storage_storage_account_to_storage_queue" {
+  title = "storage queue"
+
+  sql = <<-EOQ
+    select
+      lower(a.id) as from_id,
+      lower(q.id) as to_id
+    from
+      azure_storage_account as a
+      left join azure_storage_queue as q on q.storage_account_name = a.name
+    where
+      lower(a.id) = any($1);
+  EOQ
+
+  param "storage_account_ids" {}
+}
+
+edge "storage_storage_account_to_storage_share_file" {
+  title = "storage share file"
+
+  sql = <<-EOQ
+    select
+      lower(a.id) as from_id,
+      lower(f.id) as to_id
+    from
+      azure_storage_share_file as f
+      left join azure_storage_account as a on a.name = f.storage_account_name
+      and a.resource_group = f.resource_group
+    where
+      lower(a.id) = any($1);
+  EOQ
+
+  param "storage_account_ids" {}
+}
+
+edge "storage_storage_account_to_storage_table" {
+  title = "storage table"
+
+  sql = <<-EOQ
+    select
+      lower(a.id) as from_id,
+      lower(t.id) as to_id
+    from
+      azure_storage_account as a
+      left join azure_storage_table as t on t.storage_account_name = a.name
+    where
+      lower(a.id) = any($1);
   EOQ
 
   param "storage_account_ids" {}

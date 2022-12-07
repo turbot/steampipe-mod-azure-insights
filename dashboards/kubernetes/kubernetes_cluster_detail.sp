@@ -56,6 +56,21 @@ dashboard "kubernetes_cluster_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "compute_disk_encryption_sets" {
+        sql = <<-EOQ
+          select
+            lower(e.id) as encryption_set_id
+          from
+            azure_kubernetes_cluster c,
+            azure_compute_disk_encryption_set e
+          where
+            lower(c.disk_encryption_set_id) = lower(e.id)
+            and lower(c.id) = $1;
+        EOQ
+
+        args = [self.input.cluster_id.value]
+      }
+
       with "compute_scale_sets" {
         sql = <<-EOQ
           select
@@ -90,24 +105,25 @@ dashboard "kubernetes_cluster_detail" {
       }
 
       nodes = [
-        node.kubernetes_cluster,
-        node.kubernetes_cluster_kubernetes_node_pool,
-        node.kubernetes_cluster_compute_disk_encryption_set,
+        node.compute_disk_encryption_set,
+        node.compute_virtual_machine_scale_set_vm,
         node.compute_virtual_machine_scale_set,
-        node.compute_virtual_machine_scale_set_vm
+        node.kubernetes_cluster,
+        node.kubernetes_node_pool
       ]
 
       edges = [
-        edge.kubernetes_cluster_to_kubernetes_node_pool,
         edge.kubernetes_cluster_to_compute_disk_encryption_set,
+        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set_to_vm,
         edge.kubernetes_cluster_to_compute_virtual_machine_scale_set,
-        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set_to_vm
+        edge.kubernetes_cluster_to_kubernetes_node_pool
       ]
 
       args = {
-        kubernetes_cluster_ids                   = [self.input.cluster_id.value]
+        compute_disk_encryption_set_ids          = with.compute_disk_encryption_sets.rows[*].encryption_set_id
         compute_virtual_machine_scale_set_ids    = with.compute_scale_sets.rows[*].scale_set_id
         compute_virtual_machine_scale_set_vm_ids = with.compute_scale_sets_vms.rows[*].vm_id
+        kubernetes_cluster_ids                   = [self.input.cluster_id.value]
       }
     }
   }
@@ -166,7 +182,7 @@ query "kubernetes_cluster_input" {
   sql = <<-EOQ
     select
       c.title as label,
-      c.id as value,
+      lower(c.id) as value,
       json_build_object(
         'Subscription', s.display_name,
         'Resource Group', c.resource_group,
@@ -191,7 +207,7 @@ query "kubernetes_cluster_status" {
     from
       azure_kubernetes_cluster
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -206,7 +222,7 @@ query "kubernetes_cluster_version" {
     from
       azure_kubernetes_cluster
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -221,7 +237,7 @@ query "kubernetes_cluster_node_pool_count" {
     from
       azure_kubernetes_cluster
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -237,25 +253,7 @@ query "kubernetes_cluster_disk_encryption_status" {
     from
       azure_kubernetes_cluster
     where
-      id = $1;
-  EOQ
-
-  param "id" {}
-}
-
-edge "azure_kubernetes_cluster_to_virtual_machine_scale_set_edge" {
-  title = "vm scale set"
-
-  sql = <<-EOQ
-    select
-      c.id as from_id,
-      set.id as to_id
-    from
-      azure_kubernetes_cluster c,
-      azure_compute_virtual_machine_scale_set set
-    where
-      lower(set.resource_group) = lower(c.node_resource_group)
-      and c.id = $1;
+      lower(id) = $1;
   EOQ
 
   param "id" {}
@@ -277,7 +275,7 @@ query "kubernetes_cluster_overview" {
     from
       azure_kubernetes_cluster
     where
-      id = $1
+      lower(id) = $1
   EOQ
 
   param "id" {}
@@ -292,7 +290,7 @@ query "kubernetes_cluster_tags" {
       azure_kubernetes_cluster,
       jsonb_each_text(tags) as tag
     where
-      id = $1
+      lower(id) = $1
     order by
       tag.key;
     EOQ
@@ -316,7 +314,7 @@ query "kubernetes_cluster_agent_pools" {
       azure_kubernetes_cluster c,
       jsonb_array_elements(c.agent_pool_profiles) p
     where
-      id = $1
+      lower(id) = $1
   EOQ
 
   param "id" {}
@@ -337,7 +335,7 @@ query "kubernetes_cluster_disk_encryption_details" {
       azure_compute_disk_encryption_set e
     where
       lower(c.disk_encryption_set_id) = lower(e.id)
-      and c.id = $1;
+      and lower(c.id) = $1;
   EOQ
 
   param "id" {}
