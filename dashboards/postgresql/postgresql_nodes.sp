@@ -1,5 +1,5 @@
-node "compute_disk_encryption_set" {
-  category = category.compute_disk_encryption_set
+node "postgresql_server" {
+  category = category.postgresql_server
 
   sql = <<-EOQ
     select
@@ -8,15 +8,16 @@ node "compute_disk_encryption_set" {
       jsonb_build_object(
         'Name', name,
         'ID', id,
-        'Subscription ID', subscription_id,
+        'Type', type,
+        'Region', region,
         'Resource Group', resource_group,
-        'Region', region
+        'Subscription ID', subscription_id
       ) as properties
     from
-      azure_compute_disk_encryption_set
+      azure_postgresql_server
     where
       lower(id) = any($1);
   EOQ
 
-  param "compute_disk_encryption_set_ids" {}
+  param "postgresql_server_ids" {}
 }

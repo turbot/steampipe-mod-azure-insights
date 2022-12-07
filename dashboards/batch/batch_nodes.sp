@@ -1,5 +1,5 @@
-node "compute_disk_encryption_set" {
-  category = category.compute_disk_encryption_set
+node "batch_account" {
+  category = category.batch_account
 
   sql = <<-EOQ
     select
@@ -8,15 +8,15 @@ node "compute_disk_encryption_set" {
       jsonb_build_object(
         'Name', name,
         'ID', id,
-        'Subscription ID', subscription_id,
+        'Type', type,
         'Resource Group', resource_group,
-        'Region', region
+        'Subscription ID', subscription_id
       ) as properties
     from
-      azure_compute_disk_encryption_set
+      azure_batch_account
     where
       lower(id) = any($1);
   EOQ
 
-  param "compute_disk_encryption_set_ids" {}
+  param "batch_account_ids" {}
 }

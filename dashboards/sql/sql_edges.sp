@@ -1,62 +1,3 @@
-edge "sql_server_to_subnet" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      lower(id) as from_id,
-      lower(vnr -> 'properties' ->> 'virtualNetworkSubnetId') as to_id
-    from
-      azure_sql_server,
-      jsonb_array_elements(virtual_network_rules) as vnr
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "sql_server_ids" {}
-}
-
-edge "sql_server_to_private_endpoint" {
-  title = "private endpoint"
-
-  sql = <<-EOQ
-    select
-      lower(pec ->> 'PrivateEndpointConnectionId') as to_id,
-      lower(id) as from_id
-    from
-      azure_sql_server,
-      jsonb_array_elements(private_endpoint_connections) as pec
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "sql_server_ids" {}
-}
-
-edge "sql_server_subnet_to_virtual_network" {
-  title = "virtual network"
-
-  sql = <<-EOQ
-    select
-      lower(sub ->> 'id') as from_id,
-      lower(id) as to_id
-    from
-      azure_virtual_network,
-      jsonb_array_elements(subnets) as sub
-    where
-      lower(sub ->> 'id') in (
-        select
-          lower(vnr -> 'properties' ->> 'virtualNetworkSubnetId')
-        from
-          azure_sql_server,
-          jsonb_array_elements(virtual_network_rules) as vnr
-        where
-          lower(id) = any($1)
-      );
-  EOQ
-
-  param "sql_server_ids" {}
-}
-
 edge "sql_server_to_key_vault" {
   title = "key vault"
 
@@ -92,7 +33,7 @@ edge "sql_server_to_key_vault" {
   param "sql_server_ids" {}
 }
 
-edge "sql_server_key_vault_to_key_vault_key" {
+edge "sql_server_to_key_vault_key" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -122,6 +63,84 @@ edge "sql_server_key_vault_to_key_vault_key" {
     from
       attached_keys as a
       left join all_keys as b on lower(a.key_vault_key_name) = lower(b.key_vault_key_name);
+  EOQ
+
+  param "sql_server_ids" {}
+}
+
+edge "sql_server_to_key_vault_key_version" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    with sql_server as (
+      select
+        ep ->> 'uri' as uri,
+        id
+      from
+        azure_sql_server,
+        jsonb_array_elements(encryption_protector) as ep
+      where
+        ep ->> 'kind' = 'azurekeyvault'
+    )
+    select
+      lower(s.id) as from_id,
+      lower(v.id) as to_id
+    from
+      azure_key_vault_key_version as v
+      left join sql_server as s on lower(v.key_uri_with_version) = lower(s.uri)
+    where
+      lower(split_part(v.id, '/versions', 1)) = any($1);
+  EOQ
+
+  param "key_vault_key_ids" {}
+}
+
+edge "sql_server_to_mssql_elasticpool" {
+  title = "elastic pool"
+
+  sql = <<-EOQ
+    select
+      lower(s.id) as from_id,
+      lower(e.id) as to_id
+    from
+      azure_mssql_elasticpool as e
+      left join azure_sql_server as s on lower(e.server_name) = lower(s.name)
+    where
+      lower(s.id) = any($1);;
+  EOQ
+
+  param "sql_server_ids" {}
+}
+
+edge "sql_server_to_network_private_endpoint" {
+  title = "private endpoint"
+
+  sql = <<-EOQ
+    select
+      lower(pec ->> 'PrivateEndpointConnectionId') as to_id,
+      lower(id) as from_id
+    from
+      azure_sql_server,
+      jsonb_array_elements(private_endpoint_connections) as pec
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "sql_server_ids" {}
+}
+
+edge "sql_server_to_network_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      lower(id) as from_id,
+      lower(vnr -> 'properties' ->> 'virtualNetworkSubnetId') as to_id
+    from
+      azure_sql_server,
+      jsonb_array_elements(virtual_network_rules) as vnr
+    where
+      lower(id) = any($1);
   EOQ
 
   param "sql_server_ids" {}

@@ -1,3 +1,20 @@
+edge "app_service_web_app_to_app_service_plan" {
+  title = "app service plan"
+
+  sql = <<-EOQ
+    select
+      lower(id) as to_id,
+      lower(app ->> 'ID') as from_id
+    from
+      azure_app_service_plan,
+      jsonb_array_elements(apps) as app
+    where
+      lower(app ->> 'ID') = any($1);
+  EOQ
+
+  param "app_service_web_app_ids" {}
+}
+
 edge "app_service_web_app_to_network_subnet" {
   title = "subnet"
 
@@ -14,47 +31,5 @@ edge "app_service_web_app_to_network_subnet" {
       and lower(w.id) = any($1);
   EOQ
 
-  param "web_app_ids" {}
+  param "app_service_web_app_ids" {}
 }
-
-edge "app_service_web_app_subnet_to_virtual_network" {
-  title = "virtual network"
-
-  sql = <<-EOQ
-    select
-      lower(id) as to_id,
-      lower(sub ->> 'id') as from_id
-    from
-      azure_virtual_network,
-      jsonb_array_elements(subnets) as sub
-    where
-      lower(sub ->> 'id') in (
-        select
-          lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
-        from
-          azure_app_service_web_app
-        where
-          lower(id) = any($1)
-      );
-  EOQ
-
-  param "web_app_ids" {}
-}
-
-edge "app_service_web_app_to_app_service_plan" {
-  title = "app service plan"
-
-  sql = <<-EOQ
-    select
-      lower(id) as to_id,
-      lower(app ->> 'ID') as from_id
-    from
-      azure_app_service_plan,
-      jsonb_array_elements(apps) as app
-    where
-      lower(app ->> 'ID') = any($1);
-  EOQ
-
-  param "web_app_ids" {}
-}
-

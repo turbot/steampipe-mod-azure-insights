@@ -56,7 +56,21 @@ dashboard "key_vault_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "subnets" {
+      with "key_vault_keys" {
+        sql = <<-EOQ
+          select
+            lower(k.id) as key_id
+          from
+            azure_key_vault_key as k
+            left join azure_key_vault as v on v.name = k.vault_name
+          where
+            lower(v.id) = $1;
+        EOQ
+
+        args = [self.input.key_vault_id.value]
+      }
+
+      with "network_subnets" {
         sql = <<-EOQ
           select
             lower(s.id) as subnet_id
@@ -71,7 +85,7 @@ dashboard "key_vault_detail" {
         args = [self.input.key_vault_id.value]
       }
 
-      with "virtual_networks" {
+      with "network_virtual_networks" {
         sql = <<-EOQ
           with subnet as (
             select
@@ -95,20 +109,6 @@ dashboard "key_vault_detail" {
         args = [self.input.key_vault_id.value]
       }
 
-      with "key_vault_keys" {
-        sql = <<-EOQ
-          select
-            lower(k.id) as key_id
-          from
-            azure_key_vault_key as k
-            left join azure_key_vault as v on v.name = k.vault_name
-          where
-            lower(v.id) = $1;
-        EOQ
-
-        args = [self.input.key_vault_id.value]
-      }
-
       nodes = [
         node.key_vault_key,
         node.key_vault_secret,
@@ -127,8 +127,8 @@ dashboard "key_vault_detail" {
       args = {
         key_vault_ids       = [self.input.key_vault_id.value]
         key_vault_key_ids   = with.key_vault_keys.rows[*].key_id
-        network_subnet_ids  = with.subnets.rows[*].subnet_id
-        virtual_network_ids = with.virtual_networks.rows[*].virtual_network_id
+        network_subnet_ids  = with.network_subnets.rows[*].subnet_id
+        network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
       }
     }
   }

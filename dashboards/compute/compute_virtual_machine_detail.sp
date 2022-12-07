@@ -277,12 +277,12 @@ dashboard "compute_virtual_machine_detail" {
       args = {
         compute_disk_ids            = with.compute_disks.rows[*].disk_id
         compute_virtual_machine_ids = [self.input.vm_id.value]
-        network_interface_ids       = with.network_interfaces.rows[*].network_interface_id
+        network_network_interface_ids       = with.network_interfaces.rows[*].network_interface_id
         network_load_balancer_ids   = with.load_balancers.rows[*].load_balancer_id
         network_public_ip_ids       = with.public_ips.rows[*].public_ip_id
         network_security_group_ids  = with.network_security_groups.rows[*].nsg_id
         network_subnet_ids          = with.subnets.rows[*].subnet_id
-        virtual_network_ids         = with.virtual_networks.rows[*].virtual_network_id
+        network_virtual_network_ids         = with.virtual_networks.rows[*].virtual_network_id
       }
     }
   }
@@ -635,29 +635,6 @@ edge "compute_virtual_machine_to_os_disk" {
   param "compute_virtual_machine_ids" {}
 }
 
-edge "compute_virtual_machine_to_network_network_interface" {
-  title = "network interface"
-
-  sql = <<-EOQ
-    with network_interface_id as (
-      select
-        id,
-        jsonb_array_elements(network_interfaces)->>'id' as n_id
-      from
-        azure_compute_virtual_machine
-    )
-    select
-      lower(n.id) as to_id,
-      lower(vn.id) as from_id
-    from
-      network_interface_id as vn
-      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
-    where
-      lower(vn.id) = any($1);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
 
 edge "compute_virtual_machine_to_network_security_group" {
   title = "nsg"

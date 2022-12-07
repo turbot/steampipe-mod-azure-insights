@@ -7,7 +7,7 @@ node "network_network_interface" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'ID', id,
+        'ID', lower(id),
         'Subscription ID', subscription_id,
         'Resource Group', resource_group,
         'Region', region
@@ -18,7 +18,7 @@ node "network_network_interface" {
       lower(id) = any($1);
   EOQ
 
-  param "network_interface_ids" {}
+  param "network_network_interface_ids" {}
 }
 
 node "network_public_ip" {
@@ -30,7 +30,7 @@ node "network_public_ip" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'ID', id,
+        'ID', lower(id),
         'Subscription ID', subscription_id,
         'Resource Group', resource_group,
         'Region', region
@@ -53,7 +53,7 @@ node "network_network_security_group" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'ID', id,
+        'ID', lower(id),
         'Region', region,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
@@ -100,6 +100,7 @@ node "network_subnet" {
       lower(id) as id,
       title as title,
       jsonb_build_object(
+        'ID' ,lower(id),
         'Name', name,
         'Etag', etag,
         'Type', type,
@@ -125,7 +126,7 @@ node "network_subnet_route_table" {
       r.title as title,
       jsonb_build_object(
         'Name', r.name,
-        'ID', r.id,
+        'ID', lower(r.id),
         'Type', r.type,
         'Resource Group', r.resource_group,
         'Subscription ID', r.subscription_id
@@ -148,7 +149,7 @@ node "network_subnet_nat_gateway" {
       lower(id) as id,
       title as title,
       jsonb_build_object(
-        'ID', id,
+        'ID', lower(id),
         'Name', name,
         'Type', type,
         'Resource Group', resource_group,
@@ -173,7 +174,7 @@ node "network_subnet_cosmosdb_account" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'ID', id,
+        'ID', lower(id),
         'Type', type,
         'Resource Group', resource_group,
         'Subscription ID', subscription_id
@@ -197,7 +198,7 @@ node "network_subnet_api_management" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'ID', id,
+        'ID', lower(id),
         'ETag', etag,
         'Type', type,
         'Resource Group', resource_group,
@@ -220,7 +221,7 @@ node "network_subnet_application_gateway" {
       lower(id) as id,
       title as title,
       jsonb_build_object(
-        'ID', id,
+        'ID', lower(id),
         'Name', name,
         'Type', type,
         'Resource Group', resource_group,
@@ -244,7 +245,7 @@ node "network_virtual_network" {
       lower(id) as id,
       title as title,
       jsonb_build_object(
-        'ID',  id,
+        'ID',  lower(id),
         'Name', name,
         'Etag', etag,
         'Type', type,
@@ -258,40 +259,30 @@ node "network_virtual_network" {
       lower(id) = any($1);
   EOQ
 
-  param "virtual_network_ids" {}
+  param "network_virtual_network_ids" {}
 }
 
-node "network_virtual_network_route_table" {
+node "network_route_table" {
   category = category.network_route_table
 
   sql = <<-EOQ
-    with subnet_list as (
-      select
-        lower(s ->> 'id') as subnet_id
-      from
-        azure_virtual_network as v,
-        jsonb_array_elements(v.subnets) as s
-      where
-        lower(v.id) = any($1)
-    )
     select
-      lower(r.id) as id,
-      r.title as title,
+      lower(id) as id,
+      title as title,
       jsonb_build_object(
-        'ID', r.id,
-        'Name', r.name,
-        'Type', r.type,
-        'Resource Group', r.resource_group,
-        'Subscription ID', r.subscription_id
+        'ID', lower(id),
+        'Name', name,
+        'Type', type,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
       ) as properties
     from
-      azure_route_table as r,
-      jsonb_array_elements(r.subnets) as sub
+      azure_route_table
     where
-      lower(sub ->> 'id') in (select subnet_id from subnet_list);
+      lower(id) = any($1)
   EOQ
 
-  param "virtual_network_ids" {}
+  param "network_route_table_ids" {}
 }
 
 node "network_virtual_network_network_peering" {
@@ -311,7 +302,7 @@ node "network_virtual_network_network_peering" {
       lower(v.id) as id,
       v.title as title,
       jsonb_build_object(
-        'ID', id,
+        'ID', lower(id),
         'Name', v.name,
         'Etag', v.etag,
         'Region', v.region,
@@ -324,119 +315,53 @@ node "network_virtual_network_network_peering" {
       right join peering_vn as p on lower(p.peering_vn) = lower(v.id);
   EOQ
 
-  param "virtual_network_ids" {}
+  param "network_virtual_network_ids" {}
 }
 
-node "network_virtual_network_nat_gateway" {
+node "network_nat_gateway" {
   category = category.network_nat_gateway
 
   sql = <<-EOQ
-    with subnet_list as (
-      select
-        lower(s ->> 'id') as subnet_id
-      from
-        azure_virtual_network as v,
-        jsonb_array_elements(v.subnets) as s
-      where
-        lower(v.id) = any($1)
-    )
     select
-      lower(g.id) as id,
-      g.title as title,
+      lower(id) as id,
+      title as title,
       jsonb_build_object(
-        'ID', g.id,
-        'Name', g.name,
-        'Type', g.type,
-        'Resource Group', g.resource_group,
-        'Subscription ID', g.subscription_id
+        'ID', lower(id),
+        'Name', name,
+        'Type', type,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
       ) as properties
     from
-      azure_nat_gateway as g,
-      jsonb_array_elements(g.subnets) as sub
+      azure_nat_gateway
     where
-      lower(sub ->> 'id') in (select subnet_id from subnet_list);
+      lower(id) = any($1)
   EOQ
 
-  param "virtual_network_ids" {}
+  param "network_nat_gateway_ids" {}
 }
 
-node "network_virtual_network_application_gateway" {
-  category = category.network_application_gateway
-
-  sql = <<-EOQ
-    with subnet_list as (
-      select
-        lower(s ->> 'id') as subnet_id
-      from
-        azure_virtual_network as v,
-        jsonb_array_elements(v.subnets) as s
-      where
-        lower(v.id) = any($1)
-    )
-    select
-      lower(g.id) as id,
-      g.title as title,
-      jsonb_build_object(
-        'ID', g.id,
-        'Name', g.name,
-        'Operational State', g.operational_state,
-        'Type', g.type,
-        'Resource Group', g.resource_group,
-        'Subscription ID', g.subscription_id
-      ) as properties
-    from
-      azure_application_gateway as g,
-      jsonb_array_elements(g.gateway_ip_configurations) as ip_config
-    where
-      lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list);
-  EOQ
-
-  param "virtual_network_ids" {}
-}
-
-node "network_virtual_network_backend_address_pool" {
+node "network_load_balancer_backend_address_pool" {
   category = category.network_load_balancer_backend_address_pool
 
   sql = <<-EOQ
-    with subnet_list as (
-      select
-        lower(s ->> 'id') as subnet_id
-      from
-        azure_virtual_network as v,
-        jsonb_array_elements(v.subnets) as s
-      where
-        lower(v.id) = any($1)
-    ),
-    nic_subnet_list as (
-      select
-        lower(nic.id) as nic_id,
-        lower(ip_config ->> 'id') as ip_config_id,
-        ip_config -> 'properties' -> 'subnet' ->> 'id',
-        title
-      from
-        azure_network_interface as nic,
-        jsonb_array_elements(ip_configurations) as ip_config
-      where
-        lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list)
-    )
     select
-      lower(p.id) as id,
-      p.title as title,
+      lower(id) as id,
+      title as title,
       json_build_object(
-        'Name', p.name,
-        'Type', p.type,
-        'ID', p.id,
-        'Resource Group', p.resource_group,
-        'Subscription ID', p.subscription_id
+        'Name', name,
+        'Type', type,
+        'ID', lower(id),
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
       ) as properties
     from
-      azure_lb_backend_address_pool as p,
-      jsonb_array_elements(p.backend_ip_configurations) as c
+      azure_lb_backend_address_pool
     where
-      lower(c ->> 'id') in (select ip_config_id from nic_subnet_list);
+      lower(id) = any($1)
   EOQ
 
-  param "virtual_network_ids" {}
+  param "network_load_balancer_backend_address_pool_ids" {}
 }
 
 node "network_firewall" {
@@ -447,7 +372,7 @@ node "network_firewall" {
       lower(id) as id,
       title as title,
       jsonb_build_object(
-        'ID',  id,
+        'ID',  lower(id),
         'Name', name,
         'Etag', etag,
         'Type', type,
@@ -486,7 +411,7 @@ node "network_public_ip_api_management" {
       a.title as title,
       jsonb_build_object(
         'Name', a.name,
-        'ID', a.id,
+        'ID', lower(a.id),
         'Provisioning State', a.provisioning_state,
         'Subscription ID', a.subscription_id,
         'Resource Group', a.resource_group,
@@ -510,7 +435,7 @@ node "network_load_balancer" {
       lower(id) as id,
       title as title,
       jsonb_build_object(
-        'ID',  id,
+        'ID',  lower(id),
         'Name', name,
         'Etag', etag,
         'Type', type,
@@ -527,7 +452,7 @@ node "network_load_balancer" {
   param "network_load_balancer_ids" {}
 }
 
-node "network_load_balancer_backend_address_pool" {
+node "network_load_balancer_backend_address_pools" {
   category = category.network_load_balancer_backend_address_pool
 
   sql = <<-EOQ
@@ -535,7 +460,7 @@ node "network_load_balancer_backend_address_pool" {
       lower(p.id) as id,
       p.title as title,
       jsonb_build_object(
-        'ID', p.id,
+        'ID', lower(p.id),
         'Name', p.name,
         'Type', p.type,
         'Resource Group', p.resource_group,
@@ -581,7 +506,7 @@ node "network_load_balancer_virtual_machine_scale_set_network_interface" {
       lower(nic.id) as id,
       nic.title as title,
       jsonb_build_object(
-        'ID', nic.id,
+        'ID', lower(nic.id),
         'Name', nic.name,
         'Type', nic.type,
         'Resource Group', nic.resource_group,
@@ -622,7 +547,6 @@ node "network_load_balancer_rule" {
 
   param "network_load_balancer_ids" {}
 }
-
 
 node "network_load_balancer_probe" {
   category = category.network_load_balancer_probe
@@ -672,4 +596,27 @@ node "network_load_balancer_nat_rule" {
   EOQ
 
   param "network_load_balancer_ids" {}
+}
+
+node "network_application_gateway" {
+  category = category.network_application_gateway
+
+  sql = <<-EOQ
+    select
+      lower(g.id) as id,
+      g.title as title,
+      jsonb_build_object(
+        'Name', g.name,
+        'ID', lower(g.id),
+        'Subscription ID', g.subscription_id,
+        'Resource Group', g.resource_group,
+        'Region', g.region
+      ) as properties
+    from
+      azure_application_gateway as g
+    where
+      lower(g.id) = any($1)
+  EOQ
+
+  param "network_application_gateway_ids" {}
 }
