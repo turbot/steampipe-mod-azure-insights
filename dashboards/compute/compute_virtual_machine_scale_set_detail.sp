@@ -200,7 +200,7 @@ dashboard "compute_virtual_machine_scale_set_detail" {
       edges = [
         edge.compute_virtual_machine_scale_set_to_application_gateway,
         edge.compute_virtual_machine_scale_set_to_backend_address_pool,
-        edge.compute_virtual_machine_scale_set_to_load_balancer,
+        edge.compute_virtual_machine_scale_set_to_network_load_balancer,
         edge.compute_virtual_machine_scale_set_to_network_security_group,
         edge.compute_virtual_machine_scale_set_to_scale_set_network_interface,
         edge.compute_virtual_machine_scale_set_to_scale_set_vm,
@@ -216,7 +216,7 @@ dashboard "compute_virtual_machine_scale_set_detail" {
         network_load_balancer_ids                = with.load_balancers.rows[*].lb_id
         network_security_group_ids               = with.network_security_groups.rows[*].nsg_id
         network_subnet_ids                       = with.subnets.rows[*].subnet_id
-        network_virtual_network_ids                      = with.virtual_networks.rows[*].network_id
+        network_virtual_network_ids              = with.virtual_networks.rows[*].network_id
       }
     }
   }
@@ -710,7 +710,7 @@ node "azure_compute_virtual_machine_scale_set_backend_address_pool_to_load_balan
   param "id" {}
 }
 
-edge "compute_virtual_machine_scale_set_to_load_balancer" {
+edge "compute_virtual_machine_scale_set_to_network_load_balancer" {
   title = "load balancer"
 
   sql = <<-EOQ

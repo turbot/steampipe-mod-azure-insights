@@ -303,9 +303,9 @@ dashboard "network_load_balancer_detail" {
       ]
 
       edges = [
-        edge.network_backend_address_pool_to_network_interface_edge,
+        edge.network_backend_address_pool_to_network_interface,
         edge.network_backend_address_pool_to_virtual_network,
-        edge.network_load_balancer_from_virtual_machine_scale_set,
+        edge.compute_virtual_machine_scale_set_to_network_load_balancer,
         edge.network_load_balancer_to_backend_address_pool,
         edge.network_load_balancer_to_lb_nat_rule,
         edge.network_load_balancer_to_lb_probe,
@@ -323,7 +323,7 @@ dashboard "network_load_balancer_detail" {
         network_load_balancer_ids                      = [self.input.lb_id.value]
         network_network_interface_ids                  = with.network_network_interfaces.rows[*].network_interface_id
         network_public_ip_ids                          = with.network_public_ips.rows[*].public_ip_id
-        network_virtual_network_ids                            = with.network_virtual_networks.rows[*].virtual_network_id
+        network_virtual_network_ids                    = with.network_virtual_networks.rows[*].virtual_network_id
       }
     }
   }
