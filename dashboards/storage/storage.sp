@@ -4,13 +4,6 @@ locals {
   }
 }
 
-category "storage_storage_account" {
-  title = "Storage Account"
-  href  = "/azure_insights.dashboard.storage_account_detail?input.storage_account_id={{.properties.'ID' | @uri}}"
-  icon  = "archive-box"
-  color = local.storage_color
-}
-
 category "storage_container" {
   title = "Storage Container"
   icon  = "text:StorageContainer"
@@ -26,6 +19,13 @@ category "storage_queue" {
 category "storage_share_file" {
   title = "Storage Share File"
   icon  = "text:StorageShareFile"
+  color = local.storage_color
+}
+
+category "storage_storage_account" {
+  title = "Storage Account"
+  href  = "/azure_insights.dashboard.storage_account_detail?input.storage_account_id={{.properties.'ID' | @uri}}"
+  icon  = "archive-box"
   color = local.storage_color
 }
 

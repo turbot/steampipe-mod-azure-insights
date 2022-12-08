@@ -1,4 +1,3 @@
-
 category "batch_account" {
   title = "Batch Account"
   icon  = "text:BatchAccount"

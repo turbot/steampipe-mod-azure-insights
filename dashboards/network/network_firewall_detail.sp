@@ -113,16 +113,16 @@ dashboard "network_firewall_detail" {
       ]
 
       edges = [
-        edge.network_firewall_to_public_ip,
-        edge.network_firewall_to_subnet,
+        edge.network_firewall_to_network_public_ip,
+        edge.network_firewall_to_network_subnet,
         edge.network_subnet_to_network_virtual_network,
       ]
 
       args = {
-        network_firewall_ids  = [self.input.firewall_id.value]
-        network_public_ip_ids = with.network_public_ips.rows[*].public_ip_id
-        network_subnet_ids    = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids   = with.network_virtual_networks.rows[*].network_id
+        network_firewall_ids        = [self.input.firewall_id.value]
+        network_public_ip_ids       = with.network_public_ips.rows[*].public_ip_id
+        network_subnet_ids          = with.network_subnets.rows[*].subnet_id
+        network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
       }
     }
   }

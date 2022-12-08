@@ -224,27 +224,25 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
 
       edges = [
         edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vm,
-        edge.compute_virtual_machine_scale_set_vm_to_network_load_balancer_backend_address_pool,
         edge.compute_virtual_machine_scale_set_vm_to_compute_disk,
-        edge.compute_virtual_machine_scale_set_vm_to_network_load_balaner,
-        edge.compute_virtual_machine_scale_set_vm_to_network_security_group,
         edge.compute_virtual_machine_scale_set_vm_to_compute_virtual_machine_scale_set_network_interface,
+        edge.compute_virtual_machine_scale_set_vm_to_network_load_balancer_backend_address_pool,
+        edge.compute_virtual_machine_scale_set_vm_to_network_load_balancer,
+        edge.compute_virtual_machine_scale_set_vm_to_network_security_group,
         edge.compute_virtual_machine_scale_set_vm_to_network_subnet,
         edge.network_subnet_to_network_virtual_network,
-
       ]
 
       args = {
         compute_disk_ids                                        = with.compute_disks.rows[*].disk_id
-        compute_virtual_machine_scale_set_network_interface_ids = with.compute_virtual_machine_scale_set_network_interfaces.rows[*].network_interface_id
-        network_load_balancer_backend_address_pool_ids          = with.network_load_balancer_backend_address_pools.rows[*].pool_id
         compute_virtual_machine_scale_set_ids                   = with.compute_virtual_machine_scale_sets.rows[*].scale_set_id
+        compute_virtual_machine_scale_set_network_interface_ids = with.compute_virtual_machine_scale_set_network_interfaces.rows[*].network_interface_id
         compute_virtual_machine_scale_set_vm_ids                = [self.input.scale_set_vm_id.value]
+        network_load_balancer_backend_address_pool_ids          = with.network_load_balancer_backend_address_pools.rows[*].pool_id
         network_load_balancer_ids                               = with.network_load_balancers.rows[*].lb_id
         network_security_group_ids                              = with.network_security_groups.rows[*].nsg_id
         network_subnet_ids                                      = with.network_subnets.rows[*].subnet_id
         network_virtual_network_ids                             = with.network_virtual_networks.rows[*].network_id
-
       }
     }
   }
@@ -480,5 +478,3 @@ query "compute_virtual_machine_scale_set_vm_network_interface" {
 
   param "id" {}
 }
-
-

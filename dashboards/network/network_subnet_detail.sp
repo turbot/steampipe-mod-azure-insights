@@ -53,6 +53,20 @@ dashboard "network_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
+      with "network_application_gateways" {
+        sql = <<-EOQ
+          select
+            lower(id) as application_gateway_id
+          from
+            azure_application_gateway,
+            jsonb_array_elements(gateway_ip_configurations) as c
+          where
+            lower(c -> 'properties' -> 'subnet' ->> 'id') = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
       with "network_nat_gateways" {
         sql = <<-EOQ
           select
@@ -76,6 +90,20 @@ dashboard "network_subnet_detail" {
             jsonb_array_elements(nsg.subnets) as sub
           where
             lower(sub ->> 'id') = $1
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "network_route_tables" {
+        sql = <<-EOQ
+          select
+            lower(r.id) as route_table_id
+          from
+            azure_route_table as r,
+            jsonb_array_elements(r.subnets) as sub
+          where
+            lower(sub ->> 'id') = $1;
         EOQ
 
         args = [self.input.subnet_id.value]
@@ -125,14 +153,28 @@ dashboard "network_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
+      with "documentdb_cosmosdb_account_ids" {
+        sql = <<-EOQ
+          select
+            lower(id) as cosmosdb_account_id
+          from
+            azure_cosmosdb_account,
+            jsonb_array_elements(virtual_network_rules) as r
+          where
+            lower(r ->> 'id') = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
       nodes = [
         node.app_service_web_app,
+        node.network_application_gateway,
         node.network_nat_gateway,
         node.network_network_security_group,
+        node.network_route_table,
         node.network_subnet_api_management,
-        node.network_subnet_application_gateway,
-        node.network_subnet_cosmosdb_account,
-        node.network_subnet_route_table,
+        node.documentdb_cosmosdb_account,
         node.network_subnet,
         node.network_virtual_network,
         node.sql_server,
@@ -142,7 +184,7 @@ dashboard "network_subnet_detail" {
       edges = [
         edge.network_subnet_to_api_management,
         edge.network_subnet_to_app_service_web_app,
-        edge.network_subnet_to_cosmosdb_account,
+        edge.network_subnet_to_documentdb_cosmosdb_account,
         edge.network_subnet_to_network_application_gateway,
         edge.network_subnet_to_network_nat_gateway,
         edge.network_subnet_to_network_route_table,
@@ -153,13 +195,16 @@ dashboard "network_subnet_detail" {
       ]
 
       args = {
-        network_security_group_ids = with.network_security_groups.rows[*].nsg_id
-        network_nat_gateway_ids    = with.network_nat_gateways.rows[*].nat_gateway_id
-        network_subnet_ids         = [self.input.subnet_id.value]
-        sql_server_ids             = with.sql_servers.rows[*].sql_server_id
-        storage_account_ids        = with.storage_storage_accounts.rows[*].storage_account_id
-        network_virtual_network_ids        = with.network_virtual_networks.rows[*].virtual_network_id
-        app_service_web_app_ids    = with.app_service_web_apps.rows[*].web_app_id
+        app_service_web_app_ids         = with.app_service_web_apps.rows[*].web_app_id
+        documentdb_cosmosdb_account_ids = with.documentdb_cosmosdb_account_ids.rows[*].cosmosdb_account_id
+        network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
+        network_nat_gateway_ids         = with.network_nat_gateways.rows[*].nat_gateway_id
+        network_route_table_ids         = with.network_route_tables.rows[*].route_table_id
+        network_security_group_ids      = with.network_security_groups.rows[*].nsg_id
+        network_subnet_ids              = [self.input.subnet_id.value]
+        network_virtual_network_ids     = with.network_virtual_networks.rows[*].virtual_network_id
+        sql_server_ids                  = with.sql_servers.rows[*].sql_server_id
+        storage_account_ids             = with.storage_storage_accounts.rows[*].storage_account_id
       }
     }
   }

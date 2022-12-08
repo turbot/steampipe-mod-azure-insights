@@ -303,15 +303,15 @@ dashboard "network_load_balancer_detail" {
       ]
 
       edges = [
-        edge.network_backend_address_pool_to_network_interface,
-        edge.network_backend_address_pool_to_virtual_network,
         edge.compute_virtual_machine_scale_set_to_network_load_balancer,
+        edge.network_load_balancer_backend_address_pool_to_network_interface,
+        edge.network_load_balancer_backend_address_pool_to_virtual_network,
         edge.network_load_balancer_to_backend_address_pool,
-        edge.network_load_balancer_to_lb_nat_rule,
-        edge.network_load_balancer_to_lb_probe,
-        edge.network_load_balancer_to_load_balancer_rule,
+        edge.network_load_balancer_to_network_load_balancer_nat_rule,
+        edge.network_load_balancer_to_network_load_balancer_probe,
+        edge.network_load_balancer_to_network_load_balancer_rule,
         edge.network_load_balancer_to_network_public_ip,
-        edge.network_network_interface_to_compute_scale_set_vm,
+        edge.network_network_interface_to_compute_virtual_machine_scale_set_vm,
         edge.network_network_interface_to_compute_virtual_machine,
       ]
 

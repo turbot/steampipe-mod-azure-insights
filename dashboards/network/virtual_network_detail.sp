@@ -313,8 +313,8 @@ dashboard "virtual_network_detail" {
         edge.network_subnet_to_network_route_table,
         edge.network_subnet_to_network_security_group,
         edge.network_subnet_to_sql_server,
-        edge.network_virtual_network_to_backend_address_pool,
         edge.network_virtual_network_to_compute_virtual_machine,
+        edge.network_virtual_network_to_network_load_balancer_backend_address_pool,
         edge.network_virtual_network_to_network_load_balancer,
         edge.network_virtual_network_to_network_peering,
         edge.network_virtual_network_to_network_subnet,
@@ -330,7 +330,7 @@ dashboard "virtual_network_detail" {
         network_security_group_ids                     = with.network_security_groups.rows[*].nsg_id
         network_subnet_ids                             = with.network_subnets.rows[*].subnet_id
         sql_server_ids                                 = with.sql_servers.rows[*].sql_server_id
-        network_virtual_network_ids                            = [self.input.vn_id.value]
+        network_virtual_network_ids                    = [self.input.vn_id.value]
       }
     }
   }

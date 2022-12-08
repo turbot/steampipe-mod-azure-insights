@@ -67,16 +67,9 @@ category "network_peering" {
   color = local.network_color
 }
 
-category "network_security_group" {
-  title = "Network Security Group"
-  href  = "/azure_insights.dashboard.network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
-  icon  = "lock-closed"
-  color = local.network_color
-}
-
-category "network_watcher_flow_log" {
-  title = "Network Watcher Flow Log"
-  icon  = "text:NWFlowLog"
+category "network_private_endpoint_connection" {
+  title = "Private Endpoint Connection"
+  icon  = "text:PEC"
   color = local.network_color
 }
 
@@ -87,15 +80,16 @@ category "network_public_ip" {
   color = local.network_color
 }
 
-category "network_private_endpoint_connection" {
-  title = "Private Endpoint Connection"
-  icon  = "text:PEC"
-  color = local.network_color
-}
-
 category "network_route_table" {
   title = "Route Table"
   icon  = "arrows-right-left"
+  color = local.network_color
+}
+
+category "network_security_group" {
+  title = "Network Security Group"
+  href  = "/azure_insights.dashboard.network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
+  icon  = "lock-closed"
   color = local.network_color
 }
 
@@ -110,5 +104,11 @@ category "network_virtual_network" {
   title = "Virtual Network"
   href  = "/azure_insights.dashboard.virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
   icon  = "cloud"
+  color = local.network_color
+}
+
+category "network_watcher_flow_log" {
+  title = "Network Watcher Flow Log"
+  icon  = "text:NWFlowLog"
   color = local.network_color
 }

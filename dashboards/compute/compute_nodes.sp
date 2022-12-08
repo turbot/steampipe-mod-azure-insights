@@ -1,3 +1,28 @@
+node "compute_disk_access" {
+  category = category.compute_disk_access
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', id,
+        'Type', type,
+        'Provisioning State', provisioning_state,
+        'Subscription ID', subscription_id,
+        'Resource Group', resource_group,
+        'Region', region
+      ) as properties
+    from
+      azure_compute_disk_access
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "compute_disk_access_ids" {}
+}
+
 node "compute_disk_encryption_set" {
   category = category.compute_disk_encryption_set
 
@@ -21,27 +46,30 @@ node "compute_disk_encryption_set" {
   param "compute_disk_encryption_set_ids" {}
 }
 
-node "compute_image" {
-  category = category.compute_image
+node "compute_disk_to_compute_disk" {
+  category = category.compute_disk
 
   sql = <<-EOQ
     select
-      lower(id) as id,
-      title as title,
+      lower(d2.id) as id,
+      d2.title as title,
       jsonb_build_object(
-        'Name', name,
-        'ID', lower(id),
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Region', region
+        'Name', d2.name,
+        'ID', d2.id,
+        'OS Type', d2.os_type,
+        'SKU Nam', d2.sku_name,
+        'Subscription ID', d2.subscription_id,
+        'Resource Group', d2.resource_group,
+        'Region', d2.region
       ) as properties
     from
-      azure_compute_image
+      azure_compute_disk as d1
+      left join azure_compute_disk d2 on d1.creation_data_source_resource_id = d2.id
     where
-      lower(id) = any($1);
+      lower(d1.id) = any($1);
   EOQ
 
-  param "compute_image_ids" {}
+  param "compute_disk_ids" {}
 }
 
 node "compute_disk" {
@@ -67,6 +95,104 @@ node "compute_disk" {
   EOQ
 
   param "compute_disk_ids" {}
+}
+
+node "compute_image" {
+  category = category.compute_image
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', lower(id),
+        'Subscription ID', subscription_id,
+        'Resource Group', resource_group,
+        'Region', region
+      ) as properties
+    from
+      azure_compute_image
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "compute_image_ids" {}
+}
+
+node "compute_snapshot" {
+  category = category.compute_snapshot
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', id,
+        'Subscription ID', subscription_id,
+        'Resource Group', resource_group,
+        'Provisioning State', provisioning_state,
+        'OS Type', os_type,
+        'Region', region
+      ) as properties
+    from
+      azure_compute_snapshot
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "compute_snapshot_ids" {}
+}
+
+
+node "compute_snapshot_to_compute_snapshot" {
+  category = category.compute_snapshot
+
+  sql = <<-EOQ
+    with self as (
+      select
+        id,
+        source_resource_id
+      from
+        azure_compute_snapshot
+      where
+        lower(id) = any($1)
+    )
+    select
+      lower(s.id) as id,
+      s.title as title,
+      jsonb_build_object(
+        'Name', s.name,
+        'ID', s.id,
+        'Subscription ID', s.subscription_id,
+        'Resource Group', s.resource_group,
+        'Region', s.region
+      ) as properties
+    from
+      azure_compute_snapshot as s,
+      self
+    where
+      lower(s.id) = lower(self.source_resource_id)
+    union
+    select
+      lower(s.id) as id,
+      s.title as title,
+      jsonb_build_object(
+        'Name', s.name,
+        'ID', s.id,
+        'Subscription ID', s.subscription_id,
+        'Resource Group', s.resource_group,
+        'Region', s.region
+      ) as properties
+    from
+      azure_compute_snapshot as s,
+      self
+    where
+      lower(s.source_resource_id) = lower(self.id);
+  EOQ
+
+  param "compute_snapshot_ids" {}
 }
 
 node "compute_virtual_machine_application_gateway_backend_address_pool" {
@@ -114,31 +240,6 @@ node "compute_virtual_machine_application_gateway_backend_address_pool" {
   param "compute_virtual_machine_ids" {}
 }
 
-node "compute_virtual_machine" {
-  category = category.compute_virtual_machine
-
-  sql = <<-EOQ
-    select
-      lower(id) as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ID', vm_id,
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Power State', power_state,
-        'OS Type', os_type,
-        'Type', type,
-        'Region', region
-      ) as properties
-    from
-      azure_compute_virtual_machine
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
 
 node "compute_virtual_machine_scale_set_network_interface" {
   category = category.compute_virtual_machine_scale_set_network_interface
@@ -190,4 +291,28 @@ node "compute_virtual_machine_scale_set_vm" {
   param "compute_virtual_machine_scale_set_vm_ids" {}
 }
 
+node "compute_virtual_machine" {
+  category = category.compute_virtual_machine
 
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', vm_id,
+        'Subscription ID', subscription_id,
+        'Resource Group', resource_group,
+        'Power State', power_state,
+        'OS Type', os_type,
+        'Type', type,
+        'Region', region
+      ) as properties
+    from
+      azure_compute_virtual_machine
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}

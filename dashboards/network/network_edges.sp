@@ -105,7 +105,79 @@ edge "network_application_gateway_to_compute_virtual_machine" {
   param "compute_virtual_machine_ids" {}
 }
 
-edge "network_backend_address_pool_to_network_interface" {
+edge "network_firewall_to_network_public_ip" {
+  title = "public ip"
+
+  sql = <<-EOQ
+    select
+      lower(f.id) as from_id,
+      lower(ip.id) as to_id
+    from
+      azure_firewall as f,
+      jsonb_array_elements(ip_configurations) as c
+      left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
+    where
+      lower(f.id) = any($1);
+  EOQ
+
+  param "network_firewall_ids" {}
+}
+
+edge "network_firewall_to_network_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    select
+      lower(f.id) as from_id,
+      lower(s.id) as to_id
+    from
+      azure_firewall as f,
+      jsonb_array_elements(ip_configurations) as c
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
+    where
+      lower(f.id) = any($1);
+  EOQ
+
+  param "network_firewall_ids" {}
+}
+
+edge "network_load_balancer_backend_address_pool_to_compute_virtual_machine" {
+  title = "virtual machine"
+
+  sql = <<-EOQ
+    with network_interface as (
+      select
+        vm.id as vm_id,
+        nic.id,
+        nic.ip_configurations as ip_configurations
+      from
+        azure_compute_virtual_machine as vm,
+        jsonb_array_elements(network_interfaces) as n
+        left join azure_network_interface as nic on nic.id = n ->> 'id'
+      where
+        lower(vm.id) = any($1)
+    ),
+    loadBalancerBackendAddressPools as (
+      select
+        vm_id as vm_id,
+        p ->> 'id' as id
+      from
+        network_interface,
+        jsonb_array_elements(ip_configurations) as i,
+        jsonb_array_elements(i -> 'properties' -> 'loadBalancerBackendAddressPools') as p
+    )
+    select
+      lower(p.id) as from_id,
+      lower(p.vm_id) as to_id
+    from
+      loadBalancerBackendAddressPools as p
+      left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(p.id);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
+edge "network_load_balancer_backend_address_pool_to_network_interface" {
   title = "network interface"
 
   sql = <<-EOQ
@@ -154,7 +226,7 @@ edge "network_backend_address_pool_to_network_interface" {
   param "network_load_balancer_ids" {}
 }
 
-edge "network_backend_address_pool_to_virtual_network" {
+edge "network_load_balancer_backend_address_pool_to_virtual_network" {
   title = "virtual network"
 
   sql = <<-EOQ
@@ -192,42 +264,6 @@ edge "network_backend_address_pool_to_virtual_network" {
   param "network_load_balancer_ids" {}
 }
 
-edge "network_firewall_to_public_ip" {
-  title = "public ip"
-
-  sql = <<-EOQ
-    select
-      lower(f.id) as from_id,
-      lower(ip.id) as to_id
-    from
-      azure_firewall as f,
-      jsonb_array_elements(ip_configurations) as c
-      left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
-    where
-      lower(f.id) = any($1);
-  EOQ
-
-  param "network_firewall_ids" {}
-}
-
-edge "network_firewall_to_subnet" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    select
-      lower(f.id) as from_id,
-      lower(s.id) as to_id
-    from
-      azure_firewall as f,
-      jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
-    where
-      lower(f.id) = any($1);
-  EOQ
-
-  param "network_firewall_ids" {}
-}
-
 edge "network_load_balancer_to_backend_address_pool" {
   title = "backend address pool"
 
@@ -246,7 +282,44 @@ edge "network_load_balancer_to_backend_address_pool" {
   param "network_load_balancer_ids" {}
 }
 
-edge "network_load_balancer_to_lb_nat_rule" {
+edge "network_load_balancer_to_compute_virtual_machine_backend_address_pool" {
+  title = "backend address pool"
+
+  sql = <<-EOQ
+    with network_interface as (
+      select
+        vm.id,
+        nic.id,
+        nic.ip_configurations as ip_configurations
+      from
+        azure_compute_virtual_machine as vm,
+        jsonb_array_elements(network_interfaces) as n
+        left join azure_network_interface as nic on nic.id = n ->> 'id'
+      where
+        lower(vm.id) = any($1)
+    ),
+    loadBalancerBackendAddressPools as (
+      select
+        p ->> 'id' as id
+      from
+        network_interface,
+        jsonb_array_elements(ip_configurations) as i,
+        jsonb_array_elements(i -> 'properties' -> 'loadBalancerBackendAddressPools') as p
+    )
+    select
+      lower(lb.id) as from_id,
+      lower(pool ->> 'id') as to_id
+    from
+      azure_lb as lb,
+      jsonb_array_elements(backend_address_pools) as pool
+    where
+      lower(pool ->> 'id') in (select lower(id) from loadBalancerBackendAddressPools);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
+edge "network_load_balancer_to_network_load_balancer_nat_rule" {
   title = "nat rule"
 
   sql = <<-EOQ
@@ -264,7 +337,7 @@ edge "network_load_balancer_to_lb_nat_rule" {
   param "network_load_balancer_ids" {}
 }
 
-edge "network_load_balancer_to_lb_probe" {
+edge "network_load_balancer_to_network_load_balancer_probe" {
   title = "probe"
 
   sql = <<-EOQ
@@ -282,7 +355,7 @@ edge "network_load_balancer_to_lb_probe" {
   param "network_load_balancer_ids" {}
 }
 
-edge "network_load_balancer_to_load_balancer_rule" {
+edge "network_load_balancer_to_network_load_balancer_rule" {
   title = "lb rule"
 
   sql = <<-EOQ
@@ -318,7 +391,7 @@ edge "network_load_balancer_to_network_public_ip" {
   param "network_load_balancer_ids" {}
 }
 
-edge "network_network_interface_to_compute_scale_set_vm" {
+edge "network_network_interface_to_compute_virtual_machine_scale_set_vm" {
   title = "scale set vm"
 
   sql = <<-EOQ
@@ -577,25 +650,6 @@ edge "network_security_group_to_network_watcher_flow_log" {
   param "network_security_group_ids" {}
 }
 
-
-edge "network_subnet_to_cosmosdb_account" {
-  title = "cosmosdb"
-
-  sql = <<-EOQ
-    select
-      lower(r ->> 'id') as from_id,
-      lower(id) as to_id
-    from
-      azure_cosmosdb_account,
-      jsonb_array_elements(virtual_network_rules) as r
-    where
-      lower(r ->> 'id') = any($1);
-  EOQ
-
-  param "network_subnet_ids" {}
-}
-
-
 edge "network_subnet_to_api_management" {
   title = "api management"
 
@@ -628,6 +682,23 @@ edge "network_subnet_to_app_service_web_app" {
   param "network_subnet_ids" {}
 }
 
+edge "network_subnet_to_documentdb_cosmosdb_account" {
+  title = "cosmosdb"
+
+  sql = <<-EOQ
+    select
+      lower(r ->> 'id') as from_id,
+      lower(id) as to_id
+    from
+      azure_cosmosdb_account,
+      jsonb_array_elements(virtual_network_rules) as r
+    where
+      lower(r ->> 'id') = any($1);
+  EOQ
+
+  param "network_subnet_ids" {}
+}
+
 edge "network_subnet_to_network_application_gateway" {
   title = "application gateway"
 
@@ -644,7 +715,6 @@ edge "network_subnet_to_network_application_gateway" {
 
   param "network_subnet_ids" {}
 }
-
 
 edge "network_subnet_to_network_nat_gateway" {
   title = "nat gateway"
@@ -748,45 +818,6 @@ edge "network_subnet_to_storage_storage_account" {
   param "network_subnet_ids" {}
 }
 
-edge "network_virtual_network_to_backend_address_pool" {
-  title = "lb backend address pool"
-
-  sql = <<-EOQ
-    with subnet_list as (
-      select
-        lower(s ->> 'id') as subnet_id
-      from
-        azure_virtual_network as v,
-        jsonb_array_elements(v.subnets) as s
-      where
-        lower(v.id) = any($1)
-    ),
-    nic_subnet_list as (
-      select
-        lower(nic.id) as nic_id,
-        lower(ip_config ->> 'id') as ip_config_id,
-        lower(ip_config -> 'properties' -> 'subnet' ->> 'id') as subnet_id,
-        title
-      from
-        azure_network_interface as nic,
-        jsonb_array_elements(ip_configurations) as ip_config
-      where
-        lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list)
-    )
-    select
-      s.subnet_id as from_id,
-      lower(p.id) as to_id
-    from
-      azure_lb_backend_address_pool as p,
-      jsonb_array_elements(p.backend_ip_configurations) as c
-      left join nic_subnet_list as s on s.ip_config_id = lower(c ->> 'id')
-    where
-      lower(c ->> 'id') in (select ip_config_id from nic_subnet_list);
-  EOQ
-
-  param "network_virtual_network_ids" {}
-}
-
 edge "network_virtual_network_to_compute_virtual_machine" {
   title = "virtual machine"
 
@@ -872,13 +903,52 @@ edge "network_virtual_network_to_network_load_balancer" {
   param "network_virtual_network_ids" {}
 }
 
+edge "network_virtual_network_to_network_load_balancer_backend_address_pool" {
+  title = "lb backend address pool"
+
+  sql = <<-EOQ
+    with subnet_list as (
+      select
+        lower(s ->> 'id') as subnet_id
+      from
+        azure_virtual_network as v,
+        jsonb_array_elements(v.subnets) as s
+      where
+        lower(v.id) = any($1)
+    ),
+    nic_subnet_list as (
+      select
+        lower(nic.id) as nic_id,
+        lower(ip_config ->> 'id') as ip_config_id,
+        lower(ip_config -> 'properties' -> 'subnet' ->> 'id') as subnet_id,
+        title
+      from
+        azure_network_interface as nic,
+        jsonb_array_elements(ip_configurations) as ip_config
+      where
+        lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list)
+    )
+    select
+      s.subnet_id as from_id,
+      lower(p.id) as to_id
+    from
+      azure_lb_backend_address_pool as p,
+      jsonb_array_elements(p.backend_ip_configurations) as c
+      left join nic_subnet_list as s on s.ip_config_id = lower(c ->> 'id')
+    where
+      lower(c ->> 'id') in (select ip_config_id from nic_subnet_list);
+  EOQ
+
+  param "network_virtual_network_ids" {}
+}
+
 edge "network_virtual_network_to_network_peering" {
   title = "network peering"
 
   sql = <<-EOQ
     with peering_vn as (
       select
-        v.id as network_id
+        v.id as network_id,
         p -> 'properties' -> 'remoteVirtualNetwork' ->> 'id' as peering_vn
       from
         azure_virtual_network as v,
@@ -914,5 +984,3 @@ edge "network_virtual_network_to_network_subnet" {
 
   param "network_virtual_network_ids" {}
 }
-
-

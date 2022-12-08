@@ -56,6 +56,34 @@ dashboard "compute_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "compute_disk_accesses" {
+        sql = <<-EOQ
+          select
+            lower(a.id) as disk_access_id
+          from
+            azure_compute_disk_access as a
+            left join azure_compute_snapshot as s on lower(s.disk_access_id) = lower(a.id)
+          where
+            lower(s.id) = $1;
+          EOQ
+
+        args = [self.input.id.value]
+      }
+
+      with "compute_disk_encryption_sets" {
+        sql = <<-EOQ
+          select
+            lower(e.id) as encryption_set_id
+          from
+            azure_compute_disk_encryption_set as e
+            left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
+          where
+            lower(s.id) = $1;
+          EOQ
+
+        args = [self.input.id.value]
+      }
+
       with "compute_disks" {
         sql = <<-EOQ
           select
@@ -110,9 +138,9 @@ dashboard "compute_snapshot_detail" {
       }
 
       nodes = [
+        node.compute_disk_access,
+        node.compute_disk_encryption_set,
         node.compute_disk,
-        node.compute_snapshot_compute_disk_access,
-        node.compute_snapshot_to_compute_disk_encryption_set,
         node.compute_snapshot_to_compute_snapshot,
         node.compute_snapshot,
         node.key_vault_key,
@@ -131,10 +159,12 @@ dashboard "compute_snapshot_detail" {
       ]
 
       args = {
-        compute_disk_ids     = with.compute_disks.rows[*].disk_id
-        compute_snapshot_ids = [self.input.id.value]
-        key_vault_ids        = with.key_vault.rows[*].key_vault_id
-        key_vault_key_ids    = with.key_vault_keys.rows[*].key_id
+        compute_disk_access_ids         = with.compute_disk_accesses.rows[*].disk_access_id
+        compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
+        compute_disk_ids                = with.compute_disks.rows[*].disk_id
+        compute_snapshot_ids            = [self.input.id.value]
+        key_vault_ids                   = with.key_vault.rows[*].key_vault_id
+        key_vault_key_ids               = with.key_vault_keys.rows[*].key_id
       }
     }
   }
@@ -269,7 +299,6 @@ query "compute_snapshot_create_option" {
   param "id" {}
 }
 
-
 query "compute_snapshot_network_access_policy" {
   sql = <<-EOQ
     select
@@ -284,234 +313,6 @@ query "compute_snapshot_network_access_policy" {
 
   param "id" {}
 
-}
-
-node "compute_snapshot" {
-  category = category.compute_snapshot
-
-  sql = <<-EOQ
-    select
-      lower(id) as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Provisioning State', provisioning_state,
-        'OS Type', os_type,
-        'Region', region
-      ) as properties
-    from
-      azure_compute_snapshot
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
-
-edge "compute_snapshot_from_compute_snapshot" {
-  title = "duplicate of"
-
-  sql = <<-EOQ
-    select
-      lower(s.id) as to_id,
-      lower(d.id) as from_id
-    from
-      azure_compute_snapshot as d
-      left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
-    where
-      lower(s.id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
-
-node "compute_snapshot_to_compute_snapshot" {
-  category = category.compute_snapshot
-
-  sql = <<-EOQ
-    with self as (
-      select
-        id,
-        source_resource_id
-      from
-        azure_compute_snapshot
-      where
-        lower(id) = any($1)
-    )
-    select
-      lower(s.id) as id,
-      s.title as title,
-      jsonb_build_object(
-        'Name', s.name,
-        'ID', s.id,
-        'Subscription ID', s.subscription_id,
-        'Resource Group', s.resource_group,
-        'Region', s.region
-      ) as properties
-    from
-      azure_compute_snapshot as s,
-      self
-    where
-      lower(s.id) = lower(self.source_resource_id)
-    union
-    select
-      lower(s.id) as id,
-      s.title as title,
-      jsonb_build_object(
-        'Name', s.name,
-        'ID', s.id,
-        'Subscription ID', s.subscription_id,
-        'Resource Group', s.resource_group,
-        'Region', s.region
-      ) as properties
-    from
-      azure_compute_snapshot as s,
-      self
-    where
-      lower(s.source_resource_id) = lower(self.id);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
-
-edge "compute_snapshot_to_compute_snapshot" {
-  title = "duplicate of"
-
-  sql = <<-EOQ
-    select
-      lower(s.source_resource_id) as to_id,
-      lower(s.id) as from_id
-    from
-      azure_compute_snapshot as s
-    where
-      lower(s.source_resource_id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
-
-node "compute_snapshot_to_compute_disk_encryption_set" {
-  category = category.compute_disk_encryption_set
-
-  sql = <<-EOQ
-    select
-      lower(e.id) as id,
-      e.title as title,
-      jsonb_build_object(
-        'Name', e.name,
-        'ID', e.id,
-        'Subscription ID', e.subscription_id,
-        'Resource Group', e.resource_group,
-        'Region', e.region
-      ) as properties
-    from
-      azure_compute_disk_encryption_set as e
-      left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-    where
-      lower(s.id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
-
-edge "compute_snapshot_to_compute_disk_encryption_set" {
-  title = "disk encryption set"
-
-  sql = <<-EOQ
-    select
-      lower(s.id) as from_id,
-      lower(e.id) as to_id
-    from
-      azure_compute_disk_encryption_set as e
-      left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-    where
-      lower(s.id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
-
-edge "compute_snapshot_to_key_vault" {
-  title = "key vault"
-
-  sql = <<-EOQ
-    select
-      lower(e.id) as from_id,
-      lower(k.id) as to_id
-    from
-      azure_compute_disk_encryption_set as e
-      left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-      left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
-    where
-      lower(s.id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
-
-edge "compute_snapshot_to_key_vault_key" {
-  title = "key"
-
-  sql = <<-EOQ
-    select
-      lower(e.active_key_source_vault_id) as from_id,
-      lower(k.id) as to_id
-    from
-      azure_compute_disk_encryption_set as e
-      left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-      left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(k.key_uri_with_version)
-      left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
-    where
-      lower(s.id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
-
-node "compute_snapshot_compute_disk_access" {
-  category = category.compute_disk_access
-
-  sql = <<-EOQ
-    select
-      lower(a.id) as id,
-      a.title as title,
-      jsonb_build_object(
-        'Name', a.name,
-        'ID', a.id,
-        'Type', a.type,
-        'Provisioning State', a.provisioning_state,
-        'Subscription ID', a.subscription_id,
-        'Resource Group', a.resource_group,
-        'Region', a.region
-      ) as properties
-    from
-      azure_compute_disk_access as a
-      left join azure_compute_snapshot as s on lower(s.disk_access_id) = lower(a.id)
-    where
-      lower(s.id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
-
-edge "compute_snapshot_to_compute_disk_access" {
-  title = "disk access"
-
-  sql = <<-EOQ
-    select
-      lower(s.id) as from_id,
-      lower(a.id) as to_id
-    from
-      azure_compute_disk_access as a
-      left join azure_compute_snapshot as s on lower(s.disk_access_id) = lower(a.id)
-    where
-      lower(s.id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
 }
 
 query "compute_snapshot_overview" {

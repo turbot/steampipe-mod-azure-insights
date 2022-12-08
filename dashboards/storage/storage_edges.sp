@@ -1,20 +1,3 @@
-edge "storage_account_to_key_vault_key_version" {
-  title = "encrypted with"
-
-  sql = <<-EOQ
-    select
-      lower(s.id) as from_id,
-      lower(v.id) as to_id
-    from
-      azure_storage_account as s
-      left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
-    where
-      lower(split_part(v.id, '/versions', 1)) = any($1);
-  EOQ
-
-  param "key_vault_key_ids" {}
-}
-
 edge "storage_storage_account_to_key_vault" {
   title = "key vault"
 
@@ -49,6 +32,23 @@ edge "storage_storage_account_to_key_vault_key" {
   EOQ
 
   param "storage_account_ids" {}
+}
+
+edge "storage_account_to_key_vault_key_version" {
+  title = "encrypted with"
+
+  sql = <<-EOQ
+    select
+      lower(s.id) as from_id,
+      lower(v.id) as to_id
+    from
+      azure_storage_account as s
+      left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
+    where
+      lower(split_part(v.id, '/versions', 1)) = any($1);
+  EOQ
+
+  param "key_vault_key_ids" {}
 }
 
 edge "storage_storage_account_to_network_subnet" {
@@ -145,4 +145,3 @@ edge "storage_storage_account_to_storage_table" {
 
   param "storage_account_ids" {}
 }
-

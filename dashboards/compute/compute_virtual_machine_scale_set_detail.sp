@@ -262,15 +262,15 @@ dashboard "compute_virtual_machine_scale_set_detail" {
       ]
 
       edges = [
+        edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_network_interface,
+        edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vms,
         edge.compute_virtual_machine_scale_set_to_network_application_gateway,
         edge.compute_virtual_machine_scale_set_to_network_load_balancer_backend_address_pool,
         edge.compute_virtual_machine_scale_set_to_network_load_balancer,
         edge.compute_virtual_machine_scale_set_to_network_security_group,
-        edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_network_interface,
-        edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vms,
         edge.compute_virtual_machine_scale_set_to_network_subnet,
-        edge.network_subnet_to_network_virtual_network,
         edge.kubernetes_cluster_to_compute_virtual_machine_scale_set,
+        edge.network_subnet_to_network_virtual_network,
       ]
 
       args = {

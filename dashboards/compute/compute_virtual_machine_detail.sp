@@ -84,6 +84,54 @@ dashboard "compute_virtual_machine_detail" {
         args = [self.input.vm_id.value]
       }
 
+      with "compute_images" {
+        sql = <<-EOQ
+          select
+            lower(i.id) as compute_image_id
+          from
+            azure_compute_image as i
+            left join azure_compute_virtual_machine as v on lower(i.id) = lower(v.image_id)
+          where
+            lower(v.id) = $1;
+        EOQ
+
+        args = [self.input.vm_id.value]
+      }
+
+      with "network_application_gateways" {
+        sql = <<-EOQ
+          with network_interface as (
+            select
+              vm.id,
+              nic.id,
+              nic.ip_configurations as ip_configurations
+            from
+              azure_compute_virtual_machine as vm,
+              jsonb_array_elements(network_interfaces) as n
+              left join azure_network_interface as nic on nic.id = n ->> 'id'
+            where
+              lower(vm.id) = $1
+          ),
+          vm_application_gateway_backend_address_pool as (
+            select
+              p ->> 'id' as id
+            from
+              network_interface,
+              jsonb_array_elements(ip_configurations) as i,
+              jsonb_array_elements(i -> 'properties' -> 'applicationGatewayBackendAddressPools') as p
+          )
+          select
+            lower(g.id) as application_gateway_id
+          from
+            azure_application_gateway as g,
+            jsonb_array_elements(backend_address_pools) as p
+          where
+            lower(p ->> 'id') in (select lower(id) from vm_application_gateway_backend_address_pool);
+        EOQ
+
+        args = [self.input.vm_id.value]
+      }
+
       with "network_load_balancers" {
         sql = <<-EOQ
           with network_interface as (
@@ -113,6 +161,38 @@ dashboard "compute_virtual_machine_detail" {
             jsonb_array_elements(backend_address_pools) as pool
           where
             lower(pool ->> 'id') in (select lower(id) from loadBalancerBackendAddressPools);
+        EOQ
+
+        args = [self.input.vm_id.value]
+      }
+
+      with "network_load_balancer_backend_address_pools" {
+        sql = <<-EOQ
+          with network_interface as (
+            select
+              vm.id,
+              nic.id,
+              nic.ip_configurations as ip_configurations
+            from
+              azure_compute_virtual_machine as vm,
+              jsonb_array_elements(network_interfaces) as n
+              left join azure_network_interface as nic on nic.id = n ->> 'id'
+            where
+              lower(vm.id) = $1
+          ),
+          loadBalancerBackendAddressPools as (
+            select
+              p ->> 'id' as id
+            from
+              network_interface,
+              jsonb_array_elements(ip_configurations) as i,
+              jsonb_array_elements(i -> 'properties' -> 'loadBalancerBackendAddressPools') as p
+          )
+          select
+            lower(pool.id) as pool_id
+          from
+            loadBalancerBackendAddressPools as p
+            left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(p.id);
         EOQ
 
         args = [self.input.vm_id.value]
@@ -247,86 +327,6 @@ dashboard "compute_virtual_machine_detail" {
         args = [self.input.vm_id.value]
       }
 
-      with "network_load_balancer_backend_address_pools" {
-        sql = <<-EOQ
-          with network_interface as (
-            select
-              vm.id,
-              nic.id,
-              nic.ip_configurations as ip_configurations
-            from
-              azure_compute_virtual_machine as vm,
-              jsonb_array_elements(network_interfaces) as n
-              left join azure_network_interface as nic on nic.id = n ->> 'id'
-            where
-              lower(vm.id) = $1
-          ),
-          loadBalancerBackendAddressPools as (
-            select
-              p ->> 'id' as id
-            from
-              network_interface,
-              jsonb_array_elements(ip_configurations) as i,
-              jsonb_array_elements(i -> 'properties' -> 'loadBalancerBackendAddressPools') as p
-          )
-          select
-            lower(pool.id) as pool_id
-          from
-            loadBalancerBackendAddressPools as p
-            left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(p.id);
-        EOQ
-
-        args = [self.input.vm_id.value]
-      }
-
-      with "network_application_gateways" {
-        sql = <<-EOQ
-          with network_interface as (
-            select
-              vm.id,
-              nic.id,
-              nic.ip_configurations as ip_configurations
-            from
-              azure_compute_virtual_machine as vm,
-              jsonb_array_elements(network_interfaces) as n
-              left join azure_network_interface as nic on nic.id = n ->> 'id'
-            where
-              lower(vm.id) = $1
-          ),
-          vm_application_gateway_backend_address_pool as (
-            select
-              p ->> 'id' as id
-            from
-              network_interface,
-              jsonb_array_elements(ip_configurations) as i,
-              jsonb_array_elements(i -> 'properties' -> 'applicationGatewayBackendAddressPools') as p
-          )
-          select
-            lower(g.id) as application_gateway_id
-          from
-            azure_application_gateway as g,
-            jsonb_array_elements(backend_address_pools) as p
-          where
-            lower(p ->> 'id') in (select lower(id) from vm_application_gateway_backend_address_pool);
-        EOQ
-
-        args = [self.input.vm_id.value]
-      }
-
-      with "compute_images" {
-        sql = <<-EOQ
-          select
-            lower(i.id) as compute_image_id
-          from
-            azure_compute_image as i
-            left join azure_compute_virtual_machine as v on lower(i.id) = lower(v.image_id)
-          where
-            lower(v.id) = $1;
-        EOQ
-
-        args = [self.input.vm_id.value]
-      }
-
       nodes = [
         node.compute_disk,
         node.compute_image,
@@ -343,16 +343,16 @@ dashboard "compute_virtual_machine_detail" {
       ]
 
       edges = [
-        edge.network_application_gateway_backend_address_pool_to_compute_virtual_machine,
-        edge.network_application_gateway_to_compute_virtual_machine,
-        edge.compute_virtual_machine_to_compute_image,
         edge.compute_virtual_machine_to_compute_data_disk,
+        edge.compute_virtual_machine_to_compute_image,
+        edge.compute_virtual_machine_to_compute_os_disk,
         edge.compute_virtual_machine_to_network_network_interface,
+        edge.compute_virtual_machine_to_network_public_ip,
         edge.compute_virtual_machine_to_network_security_group,
         edge.compute_virtual_machine_to_network_subnet,
-        edge.compute_virtual_machine_to_compute_os_disk,
-        edge.compute_virtual_machine_to_network_public_ip,
         edge.compute_virtual_machine_to_network_virtual_network,
+        edge.network_application_gateway_backend_address_pool_to_compute_virtual_machine,
+        edge.network_application_gateway_to_compute_virtual_machine,
         edge.network_load_balancer_backend_address_pool_to_compute_virtual_machine,
         edge.network_load_balancer_to_compute_virtual_machine_backend_address_pool,
       ]
@@ -360,9 +360,9 @@ dashboard "compute_virtual_machine_detail" {
       args = {
         compute_disk_ids                               = with.compute_disks.rows[*].disk_id
         compute_image_ids                              = with.compute_images.rows[*].compute_image_id
+        compute_virtual_machine_ids                    = [self.input.vm_id.value]
         network_application_gateway_ids                = with.network_application_gateways.rows[*].application_gateway_id
         network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
-        compute_virtual_machine_ids                    = [self.input.vm_id.value]
         network_load_balancer_ids                      = with.network_load_balancers.rows[*].load_balancer_id
         network_network_interface_ids                  = with.network_network_interfaces.rows[*].network_interface_id
         network_public_ip_ids                          = with.network_public_ips.rows[*].public_ip_id
@@ -652,121 +652,6 @@ query "compute_virtual_machine_vulnerability_assessment_solution" {
   EOQ
 
   param "id" {}
-}
-
-node "compute_virtual_machine_lb_backend_address_pool" {
-  category = category.network_load_balancer_backend_address_pool
-
-  sql = <<-EOQ
-    with network_interface as (
-      select
-        vm.id,
-        nic.id,
-        nic.ip_configurations as ip_configurations
-      from
-        azure_compute_virtual_machine as vm,
-        jsonb_array_elements(network_interfaces) as n
-        left join azure_network_interface as nic on nic.id = n ->> 'id'
-      where
-        lower(vm.id) = any($1)
-    ),
-    loadBalancerBackendAddressPools as (
-      select
-        p ->> 'id' as id
-      from
-        network_interface,
-        jsonb_array_elements(ip_configurations) as i,
-        jsonb_array_elements(i -> 'properties' -> 'loadBalancerBackendAddressPools') as p
-    )
-    select
-      lower(pool.id) as id,
-      pool.title as title,
-      jsonb_build_object(
-        'Name', pool.name,
-        'ID', pool.id,
-        'Type', pool.type,
-        'Subscription ID', pool.subscription_id,
-        'Resource Group', pool.resource_group
-      ) as properties
-    from
-      loadBalancerBackendAddressPools as p
-      left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(p.id);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
-
-edge "network_load_balancer_backend_address_pool_to_compute_virtual_machine" {
-  title = "virtual machine"
-
-  sql = <<-EOQ
-    with network_interface as (
-      select
-        vm.id as vm_id,
-        nic.id,
-        nic.ip_configurations as ip_configurations
-      from
-        azure_compute_virtual_machine as vm,
-        jsonb_array_elements(network_interfaces) as n
-        left join azure_network_interface as nic on nic.id = n ->> 'id'
-      where
-        lower(vm.id) = any($1)
-    ),
-    loadBalancerBackendAddressPools as (
-      select
-        vm_id as vm_id,
-        p ->> 'id' as id
-      from
-        network_interface,
-        jsonb_array_elements(ip_configurations) as i,
-        jsonb_array_elements(i -> 'properties' -> 'loadBalancerBackendAddressPools') as p
-    )
-    select
-      lower(p.id) as from_id,
-      lower(p.vm_id) as to_id
-    from
-      loadBalancerBackendAddressPools as p
-      left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(p.id);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
-
-edge "network_load_balancer_to_compute_virtual_machine_backend_address_pool" {
-  title = "backend address pool"
-
-  sql = <<-EOQ
-    with network_interface as (
-      select
-        vm.id,
-        nic.id,
-        nic.ip_configurations as ip_configurations
-      from
-        azure_compute_virtual_machine as vm,
-        jsonb_array_elements(network_interfaces) as n
-        left join azure_network_interface as nic on nic.id = n ->> 'id'
-      where
-        lower(vm.id) = any($1)
-    ),
-    loadBalancerBackendAddressPools as (
-      select
-        p ->> 'id' as id
-      from
-        network_interface,
-        jsonb_array_elements(ip_configurations) as i,
-        jsonb_array_elements(i -> 'properties' -> 'loadBalancerBackendAddressPools') as p
-    )
-    select
-      lower(lb.id) as from_id,
-      lower(pool ->> 'id') as to_id
-    from
-      azure_lb as lb,
-      jsonb_array_elements(backend_address_pools) as pool
-    where
-      lower(pool ->> 'id') in (select lower(id) from loadBalancerBackendAddressPools);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
 }
 
 query "compute_virtual_machine_overview" {

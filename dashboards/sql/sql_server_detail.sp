@@ -130,20 +130,7 @@ dashboard "sql_server_detail" {
         args = [self.input.sql_server_id.value]
       }
 
-      with "sql_databases" {
-        sql = <<-EOQ
-          select
-            lower(id) as sql_database_id
-          from
-            azure_sql_database
-          where
-            lower(server_name) = lower(split_part($1, '/', 9));
-        EOQ
-
-        args = [self.input.sql_server_id.value]
-      }
-
-      with "virtual_networks" {
+      with "network_virtual_networks" {
         sql = <<-EOQ
           select
             lower(id) as virtual_networks_id
@@ -160,6 +147,19 @@ dashboard "sql_server_detail" {
               where
                 lower(id) = $1
             );
+        EOQ
+
+        args = [self.input.sql_server_id.value]
+      }
+
+      with "sql_databases" {
+        sql = <<-EOQ
+          select
+            lower(id) as sql_database_id
+          from
+            azure_sql_database
+          where
+            lower(server_name) = lower(split_part($1, '/', 9));
         EOQ
 
         args = [self.input.sql_server_id.value]
@@ -192,7 +192,7 @@ dashboard "sql_server_detail" {
         network_subnet_ids  = with.network_subnets.rows[*].subnet_id
         sql_database_ids     = with.sql_databases.rows[*].sql_database_id
         sql_server_ids      = [self.input.sql_server_id.value]
-        network_virtual_network_ids = with.virtual_networks.rows[*].virtual_networks_id
+        network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_networks_id
       }
     }
   }
@@ -416,8 +416,6 @@ query "sql_server_vulnerability_assessment_enabled" {
 
   param "id" {}
 }
-
-
 
 query "sql_server_overview" {
   sql = <<-EOQ

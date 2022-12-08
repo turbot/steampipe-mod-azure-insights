@@ -232,8 +232,8 @@ dashboard "storage_account_detail" {
         monitor_diagnostic_setting_ids = with.monitor_diagnostic_settings.rows[*].monitor_diagnostic_settings_id
         monitor_log_profile_ids        = with.monitor_log_profiles.rows[*].log_profile_id
         network_subnet_ids             = with.network_subnets.rows[*].subnet_id
-        storage_account_ids            = [self.input.storage_account_id.value]
         network_virtual_network_ids            = with.network_virtual_networks.rows[*].network_id
+        storage_account_ids            = [self.input.storage_account_id.value]
       }
     }
   }
