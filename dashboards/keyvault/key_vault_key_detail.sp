@@ -196,7 +196,7 @@ dashboard "key_vault_key_detail" {
         node.eventhub_namespace,
         node.key_vault_key_version,
         node.key_vault_key,
-        node.key_vault,
+        node. key_vault_vault,
         node.postgresql_server,
         node.servicebus_namespace,
         node.sql_server,

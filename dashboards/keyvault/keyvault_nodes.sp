@@ -1,4 +1,4 @@
-node "key_vault" {
+node "key_vault_vault" {
   category = category.key_vault
 
   sql = <<-EOQ

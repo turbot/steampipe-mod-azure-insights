@@ -167,7 +167,7 @@ dashboard "sql_server_detail" {
 
       nodes = [
         node.key_vault_key,
-        node.key_vault,
+        node. key_vault_vault,
         node.network_subnet,
         node.network_virtual_network,
         node.sql_database,

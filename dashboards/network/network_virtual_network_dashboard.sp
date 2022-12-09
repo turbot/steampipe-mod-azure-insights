@@ -1,7 +1,7 @@
-dashboard "virtual_network_dashboard" {
+dashboard "network_virtual_network_dashboard" {
 
   title         = "Azure Virtual Network Dashboard"
-  documentation = file("./dashboards/network/docs/virtual_network_dashboard.md")
+  documentation = file("./dashboards/network/docs/network_virtual_network_dashboard.md")
 
   tags = merge(local.network_common_tags, {
     type = "Dashboard"

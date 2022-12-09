@@ -53,7 +53,7 @@ category "compute_virtual_machine_scale_set" {
 category "compute_virtual_machine_scale_set_network_interface" {
   title = "Compute Virtual Machine Scale Set Network Interface"
   icon  = "text:eni"
-  color = local.network_color
+  color = local.networking_color
 }
 
 category "compute_virtual_machine_scale_set_vm" {

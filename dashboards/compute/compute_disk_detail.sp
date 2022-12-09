@@ -185,7 +185,7 @@ dashboard "compute_disk_detail" {
         node.compute_snapshot,
         node.compute_virtual_machine,
         node.key_vault_key,
-        node.key_vault,
+        node. key_vault_vault,
         node.storage_storage_account,
       ]
 

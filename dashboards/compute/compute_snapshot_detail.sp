@@ -144,7 +144,7 @@ dashboard "compute_snapshot_detail" {
         node.compute_snapshot_to_compute_snapshot,
         node.compute_snapshot,
         node.key_vault_key,
-        node.key_vault,
+        node. key_vault_vault,
       ]
 
       edges = [

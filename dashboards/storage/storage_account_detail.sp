@@ -195,7 +195,7 @@ dashboard "storage_account_detail" {
         node.compute_disk,
         node.compute_snapshot,
         node.key_vault_key,
-        node.key_vault,
+        node.key_vault_vault,
         node.monitor_diagnostic_setting,
         node.monitor_log_profile,
         node.network_subnet,
@@ -232,7 +232,7 @@ dashboard "storage_account_detail" {
         monitor_diagnostic_setting_ids = with.monitor_diagnostic_settings.rows[*].monitor_diagnostic_settings_id
         monitor_log_profile_ids        = with.monitor_log_profiles.rows[*].log_profile_id
         network_subnet_ids             = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids            = with.network_virtual_networks.rows[*].network_id
+        network_virtual_network_ids    = with.network_virtual_networks.rows[*].network_id
         storage_account_ids            = [self.input.storage_account_id.value]
       }
     }

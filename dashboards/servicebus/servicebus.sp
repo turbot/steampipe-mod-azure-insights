@@ -1,5 +1,5 @@
 category "servicebus_namespace" {
   title = "Servicebus Namespace"
   icon  = "text:SN"
-  color = local.integration_color
+  color = local.application_integration_color
 }
