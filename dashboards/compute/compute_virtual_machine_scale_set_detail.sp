@@ -249,28 +249,28 @@ dashboard "compute_virtual_machine_scale_set_detail" {
       }
 
       nodes = [
+        node.compute_virtual_machine_scale_set,
         node.compute_virtual_machine_scale_set_network_interface,
         node.compute_virtual_machine_scale_set_vm,
-        node.compute_virtual_machine_scale_set,
         node.kubernetes_cluster,
         node.network_application_gateway,
-        node.network_load_balancer_backend_address_pool,
         node.network_load_balancer,
+        node.network_load_balancer_backend_address_pool,
         node.network_network_security_group,
         node.network_subnet,
-        node.network_virtual_network,
+        node.network_virtual_network
       ]
 
       edges = [
         edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_network_interface,
         edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vms,
         edge.compute_virtual_machine_scale_set_to_network_application_gateway,
-        edge.compute_virtual_machine_scale_set_to_network_load_balancer_backend_address_pool,
         edge.compute_virtual_machine_scale_set_to_network_load_balancer,
+        edge.compute_virtual_machine_scale_set_to_network_load_balancer_backend_address_pool,
         edge.compute_virtual_machine_scale_set_to_network_security_group,
         edge.compute_virtual_machine_scale_set_to_network_subnet,
         edge.kubernetes_cluster_to_compute_virtual_machine_scale_set,
-        edge.network_subnet_to_network_virtual_network,
+        edge.network_subnet_to_network_virtual_network
       ]
 
       args = {

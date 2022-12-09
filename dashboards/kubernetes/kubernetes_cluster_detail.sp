@@ -106,16 +106,16 @@ dashboard "kubernetes_cluster_detail" {
 
       nodes = [
         node.compute_disk_encryption_set,
-        node.compute_virtual_machine_scale_set_vm,
         node.compute_virtual_machine_scale_set,
+        node.compute_virtual_machine_scale_set_vm,
         node.kubernetes_cluster,
         node.kubernetes_node_pool
       ]
 
       edges = [
         edge.kubernetes_cluster_to_compute_disk_encryption_set,
-        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set_to_vm,
         edge.kubernetes_cluster_to_compute_virtual_machine_scale_set,
+        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set_to_vm,
         edge.kubernetes_cluster_to_kubernetes_node_pool
       ]
 

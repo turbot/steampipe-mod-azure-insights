@@ -1,30 +1,3 @@
-node "key_vault_vault" {
-  category = category.key_vault
-
-  sql = <<-EOQ
-    select
-      lower(id) as id,
-      title as title,
-      jsonb_build_object(
-        'Vault Name', name,
-        'ID', lower(id),
-        'Purge Protection Enabled', (purge_protection_enabled)::text,
-        'SKU Family', sku_family,
-        'Soft Delete Enabled', soft_delete_enabled,
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Type', type,
-        'Region', region
-      ) as properties
-    from
-      azure_key_vault
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "key_vault_vault_ids" {}
-}
-
 node "key_vault_key" {
   category = category.key_vault_key
 
@@ -101,3 +74,29 @@ node "key_vault_secret" {
   param "key_vault_vault_ids" {}
 }
 
+node "key_vault_vault" {
+  category = category.key_vault
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      jsonb_build_object(
+        'Vault Name', name,
+        'ID', lower(id),
+        'Purge Protection Enabled', (purge_protection_enabled)::text,
+        'SKU Family', sku_family,
+        'Soft Delete Enabled', soft_delete_enabled,
+        'Subscription ID', subscription_id,
+        'Resource Group', resource_group,
+        'Type', type,
+        'Region', region
+      ) as properties
+    from
+      azure_key_vault
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "key_vault_vault_ids" {}
+}

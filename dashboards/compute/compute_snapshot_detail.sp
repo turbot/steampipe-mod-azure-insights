@@ -56,6 +56,28 @@ dashboard "compute_snapshot_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "compute_disks" {
+        sql = <<-EOQ
+          select
+            lower(d.id) as disk_id
+          from
+            azure_compute_disk as d
+            left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
+          where
+            lower(s.id) = $1
+          union
+          select
+            lower(d.id) as disk_id
+          from
+            azure_compute_disk as d
+            left join azure_compute_snapshot as s on lower(d.creation_data_source_resource_id) = lower(s.id)
+          where
+            lower(s.id) = $1;
+          EOQ
+
+        args = [self.input.id.value]
+      }
+
       with "compute_disk_accesses" {
         sql = <<-EOQ
           select
@@ -77,28 +99,6 @@ dashboard "compute_snapshot_detail" {
           from
             azure_compute_disk_encryption_set as e
             left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-          where
-            lower(s.id) = $1;
-          EOQ
-
-        args = [self.input.id.value]
-      }
-
-      with "compute_disks" {
-        sql = <<-EOQ
-          select
-            lower(d.id) as disk_id
-          from
-            azure_compute_disk as d
-            left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
-          where
-            lower(s.id) = $1
-          union
-          select
-            lower(d.id) as disk_id
-          from
-            azure_compute_disk as d
-            left join azure_compute_snapshot as s on lower(d.creation_data_source_resource_id) = lower(s.id)
           where
             lower(s.id) = $1;
           EOQ
@@ -138,24 +138,24 @@ dashboard "compute_snapshot_detail" {
       }
 
       nodes = [
+        node.compute_disk,
         node.compute_disk_access,
         node.compute_disk_encryption_set,
-        node.compute_disk,
-        node.compute_snapshot_to_compute_snapshot,
         node.compute_snapshot,
+        node.compute_snapshot_to_compute_snapshot,
         node.key_vault_key,
-        node.key_vault_vault,
+        node.key_vault_vault
       ]
 
       edges = [
         edge.compute_disk_to_compute_snapshot,
         edge.compute_snapshot_from_compute_snapshot,
+        edge.compute_snapshot_to_compute_disk,
         edge.compute_snapshot_to_compute_disk_access,
         edge.compute_snapshot_to_compute_disk_encryption_set,
-        edge.compute_snapshot_to_compute_disk,
         edge.compute_snapshot_to_compute_snapshot,
         edge.compute_snapshot_to_key_vault_key,
-        edge.compute_snapshot_to_key_vault_vault,
+        edge.compute_snapshot_to_key_vault_vault
       ]
 
       args = {

@@ -99,14 +99,14 @@ dashboard "network_public_ip_detail" {
       nodes = [
         node.compute_virtual_machine,
         node.network_network_interface,
-        node.network_public_ip_api_management,
         node.network_public_ip,
+        node.network_public_ip_api_management
       ]
 
       edges = [
         edge.compute_virtual_machine_to_network_network_interface,
         edge.network_network_interface_to_network_public_ip,
-        edge.network_public_ip_to_api_management,
+        edge.network_public_ip_to_api_management
       ]
 
       args = {

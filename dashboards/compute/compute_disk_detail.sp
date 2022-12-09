@@ -178,27 +178,27 @@ dashboard "compute_disk_detail" {
       }
 
       nodes = [
+        node.compute_disk,
         node.compute_disk_access,
         node.compute_disk_encryption_set,
         node.compute_disk_to_compute_disk,
-        node.compute_disk,
         node.compute_snapshot,
         node.compute_virtual_machine,
         node.key_vault_key,
         node.key_vault_vault,
-        node.storage_storage_account,
+        node.storage_storage_account
       ]
 
       edges = [
+        edge.compute_disk_to_compute_disk,
         edge.compute_disk_to_compute_disk_access,
         edge.compute_disk_to_compute_disk_encryption_set,
-        edge.compute_disk_to_compute_disk,
         edge.compute_disk_to_compute_snapshot,
         edge.compute_disk_to_key_vault_key,
         edge.compute_disk_to_key_vault_vault,
         edge.compute_disk_to_storage_storage_account,
         edge.compute_snapshot_to_compute_disk,
-        edge.compute_virtual_machine_to_compute_disk,
+        edge.compute_virtual_machine_to_compute_disk
       ]
 
       args = {

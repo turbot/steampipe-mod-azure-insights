@@ -265,30 +265,6 @@ node "compute_virtual_machine_application_gateway_backend_address_pool" {
   param "compute_virtual_machine_ids" {}
 }
 
-node "compute_virtual_machine_scale_set_network_interface" {
-  category = category.compute_virtual_machine_scale_set_network_interface
-
-  sql = <<-EOQ
-    select
-      lower(id) as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'Enable Accelerated Networking', enable_accelerated_networking,
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Region', region
-      ) as properties
-    from
-      azure_compute_virtual_machine_scale_set_network_interface
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "compute_virtual_machine_scale_set_network_interface_ids" {}
-}
-
 node "compute_virtual_machine_scale_set" {
   category = category.compute_virtual_machine_scale_set
 
@@ -313,6 +289,30 @@ node "compute_virtual_machine_scale_set" {
   EOQ
 
   param "compute_virtual_machine_scale_set_ids" {}
+}
+
+node "compute_virtual_machine_scale_set_network_interface" {
+  category = category.compute_virtual_machine_scale_set_network_interface
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', id,
+        'Enable Accelerated Networking', enable_accelerated_networking,
+        'Subscription ID', subscription_id,
+        'Resource Group', resource_group,
+        'Region', region
+      ) as properties
+    from
+      azure_compute_virtual_machine_scale_set_network_interface
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "compute_virtual_machine_scale_set_network_interface_ids" {}
 }
 
 node "compute_virtual_machine_scale_set_vm" {

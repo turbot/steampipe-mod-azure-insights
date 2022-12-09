@@ -167,7 +167,7 @@ dashboard "network_interface_detail" {
         node.network_network_security_group,
         node.network_public_ip,
         node.network_subnet,
-        node.network_virtual_network,
+        node.network_virtual_network
       ]
 
       edges = [
