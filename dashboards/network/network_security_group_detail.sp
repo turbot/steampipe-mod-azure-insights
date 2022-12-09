@@ -72,7 +72,7 @@ dashboard "network_security_group_detail" {
       type      = "graph"
       direction = "TD"
 
-      with "network_interfaces" {
+      with "network_network_interfaces" {
         sql = <<-EOQ
           select
             lower(nic.id) as nic_id
@@ -88,7 +88,7 @@ dashboard "network_security_group_detail" {
         args = [self.input.nsg_id.value]
       }
 
-      with "subnets" {
+      with "network_subnets" {
         sql = <<-EOQ
           select
             lower(s.id) as subnet_id
@@ -103,7 +103,7 @@ dashboard "network_security_group_detail" {
         args = [self.input.nsg_id.value]
       }
 
-      with "virtual_networks" {
+      with "network_virtual_networks" {
         sql = <<-EOQ
           with subnet_list as (
             select
@@ -127,7 +127,7 @@ dashboard "network_security_group_detail" {
         args = [self.input.nsg_id.value]
       }
 
-      with "virtual_machines" {
+      with "compute_virtual_machines" {
         sql = <<-EOQ
           with network_interface_list as (
             select
@@ -171,11 +171,11 @@ dashboard "network_security_group_detail" {
       ]
 
       args = {
-        compute_virtual_machine_ids = with.virtual_machines.rows[*].machine_id
-        network_network_interface_ids       = with.network_interfaces.rows[*].nic_id
-        network_security_group_ids  = [self.input.nsg_id.value]
-        network_subnet_ids          = with.subnets.rows[*].subnet_id
-        network_virtual_network_ids         = with.virtual_networks.rows[*].network_id
+        compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].machine_id
+        network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+        network_security_group_ids    = [self.input.nsg_id.value]
+        network_subnet_ids            = with.network_subnets.rows[*].subnet_id
+        network_virtual_network_ids   = with.network_virtual_networks.rows[*].network_id
       }
     }
   }

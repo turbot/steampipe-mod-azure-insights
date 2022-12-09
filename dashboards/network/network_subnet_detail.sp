@@ -53,6 +53,20 @@ dashboard "network_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
+      with "documentdb_cosmosdb_account_ids" {
+        sql = <<-EOQ
+          select
+            lower(id) as cosmosdb_account_id
+          from
+            azure_cosmosdb_account,
+            jsonb_array_elements(virtual_network_rules) as r
+          where
+            lower(r ->> 'id') = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
       with "network_application_gateways" {
         sql = <<-EOQ
           select
@@ -81,20 +95,6 @@ dashboard "network_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
-      with "network_security_groups" {
-        sql = <<-EOQ
-          select
-            lower(nsg.id) as nsg_id
-          from
-            azure_network_security_group as nsg,
-            jsonb_array_elements(nsg.subnets) as sub
-          where
-            lower(sub ->> 'id') = $1
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
       with "network_route_tables" {
         sql = <<-EOQ
           select
@@ -104,6 +104,20 @@ dashboard "network_subnet_detail" {
             jsonb_array_elements(r.subnets) as sub
           where
             lower(sub ->> 'id') = $1;
+        EOQ
+
+        args = [self.input.subnet_id.value]
+      }
+
+      with "network_security_groups" {
+        sql = <<-EOQ
+          select
+            lower(nsg.id) as nsg_id
+          from
+            azure_network_security_group as nsg,
+            jsonb_array_elements(nsg.subnets) as sub
+          where
+            lower(sub ->> 'id') = $1
         EOQ
 
         args = [self.input.subnet_id.value]
@@ -153,28 +167,14 @@ dashboard "network_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
-      with "documentdb_cosmosdb_account_ids" {
-        sql = <<-EOQ
-          select
-            lower(id) as cosmosdb_account_id
-          from
-            azure_cosmosdb_account,
-            jsonb_array_elements(virtual_network_rules) as r
-          where
-            lower(r ->> 'id') = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
       nodes = [
         node.app_service_web_app,
+        node.documentdb_cosmosdb_account,
         node.network_application_gateway,
         node.network_nat_gateway,
         node.network_network_security_group,
         node.network_route_table,
         node.network_subnet_api_management,
-        node.documentdb_cosmosdb_account,
         node.network_subnet,
         node.network_virtual_network,
         node.sql_server,

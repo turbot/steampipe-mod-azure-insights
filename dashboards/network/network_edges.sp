@@ -391,55 +391,6 @@ edge "network_load_balancer_to_network_public_ip" {
   param "network_load_balancer_ids" {}
 }
 
-edge "network_network_interface_to_compute_virtual_machine_scale_set_vm" {
-  title = "scale set vm"
-
-  sql = <<-EOQ
-    with backend_address_pools as (
-      select
-        lower(lb.id) as lb_id,
-        lower(p.id) as backend_address_id,
-        p.backend_ip_configurations as backend_ip_configurations
-      from
-        azure_lb as lb,
-        jsonb_array_elements(backend_address_pools) as b
-        left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
-      where
-        p.backend_ip_configurations is not null
-        and lower(lb.id) = any($1)
-    ), backend_ip_configurations as (
-        select
-          lb_id,
-          backend_address_id,
-          lower(c ->> 'id') as backend_ip_configuration_id
-        from
-          backend_address_pools,
-          jsonb_array_elements(backend_ip_configurations) as c
-    ), network_interface as (
-        select
-          lb_id,
-          backend_address_id,
-          nic.id as nic_id,
-          nic.virtual_machine ->> 'id' as virtual_machine_id,
-          c ->> 'id' as backend_ip_configuration_id
-        from
-          azure_compute_virtual_machine_scale_set_network_interface as nic,
-          jsonb_array_elements(ip_configurations) as c,
-          backend_ip_configurations as b
-        where
-          lower(c ->> 'id') = b.backend_ip_configuration_id
-    )
-    select
-      lower(nic.nic_id) as from_id,
-      lower(vm.id) as to_id
-    from
-      azure_compute_virtual_machine_scale_set_vm as vm
-      right join network_interface as nic on lower(nic.virtual_machine_id) = lower(vm.id)
-  EOQ
-
-  param "network_load_balancer_ids" {}
-}
-
 edge "network_network_interface_to_compute_virtual_machine" {
   title = "virtual machine"
 
@@ -484,6 +435,55 @@ edge "network_network_interface_to_compute_virtual_machine" {
     from
       azure_compute_virtual_machine as vm
       left join network_interface as nic on lower(nic.virtual_machine_id) = lower(vm.id)
+  EOQ
+
+  param "network_load_balancer_ids" {}
+}
+
+edge "network_network_interface_to_compute_virtual_machine_scale_set_vm" {
+  title = "scale set vm"
+
+  sql = <<-EOQ
+    with backend_address_pools as (
+      select
+        lower(lb.id) as lb_id,
+        lower(p.id) as backend_address_id,
+        p.backend_ip_configurations as backend_ip_configurations
+      from
+        azure_lb as lb,
+        jsonb_array_elements(backend_address_pools) as b
+        left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
+      where
+        p.backend_ip_configurations is not null
+        and lower(lb.id) = any($1)
+    ), backend_ip_configurations as (
+        select
+          lb_id,
+          backend_address_id,
+          lower(c ->> 'id') as backend_ip_configuration_id
+        from
+          backend_address_pools,
+          jsonb_array_elements(backend_ip_configurations) as c
+    ), network_interface as (
+        select
+          lb_id,
+          backend_address_id,
+          nic.id as nic_id,
+          nic.virtual_machine ->> 'id' as virtual_machine_id,
+          c ->> 'id' as backend_ip_configuration_id
+        from
+          azure_compute_virtual_machine_scale_set_network_interface as nic,
+          jsonb_array_elements(ip_configurations) as c,
+          backend_ip_configurations as b
+        where
+          lower(c ->> 'id') = b.backend_ip_configuration_id
+    )
+    select
+      lower(nic.nic_id) as from_id,
+      lower(vm.id) as to_id
+    from
+      azure_compute_virtual_machine_scale_set_vm as vm
+      right join network_interface as nic on lower(nic.virtual_machine_id) = lower(vm.id)
   EOQ
 
   param "network_load_balancer_ids" {}

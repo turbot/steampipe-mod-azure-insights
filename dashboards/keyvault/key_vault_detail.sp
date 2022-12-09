@@ -112,7 +112,7 @@ dashboard "key_vault_detail" {
       nodes = [
         node.key_vault_key,
         node.key_vault_secret,
-        node. key_vault_vault,
+        node.key_vault_vault,
         node.network_subnet,
         node.network_virtual_network,
       ]
@@ -125,9 +125,9 @@ dashboard "key_vault_detail" {
       ]
 
       args = {
-        key_vault_ids       = [self.input.key_vault_id.value]
-        key_vault_key_ids   = with.key_vault_keys.rows[*].key_id
-        network_subnet_ids  = with.network_subnets.rows[*].subnet_id
+        key_vault_vault_ids         = [self.input.key_vault_id.value]
+        key_vault_key_ids           = with.key_vault_keys.rows[*].key_id
+        network_subnet_ids          = with.network_subnets.rows[*].subnet_id
         network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
       }
     }

@@ -131,21 +131,6 @@ dashboard "compute_disk_detail" {
         args = [self.input.disk_id.value]
       }
 
-      with "key_vaults" {
-        sql = <<-EOQ
-          select
-            lower(k.id) as key_vault_id
-          from
-            azure_compute_disk_encryption_set as e
-            left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
-            left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
-          where
-            lower(d.id) = $1;
-          EOQ
-
-        args = [self.input.disk_id.value]
-      }
-
       with "key_vault_keys" {
         sql = <<-EOQ
           select
@@ -155,6 +140,21 @@ dashboard "compute_disk_detail" {
             left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
             left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
             left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
+          where
+            lower(d.id) = $1;
+          EOQ
+
+        args = [self.input.disk_id.value]
+      }
+
+      with "key_vault_vaults" {
+        sql = <<-EOQ
+          select
+            lower(k.id) as key_vault_id
+          from
+            azure_compute_disk_encryption_set as e
+            left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
+            left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
           where
             lower(d.id) = $1;
           EOQ
@@ -185,7 +185,7 @@ dashboard "compute_disk_detail" {
         node.compute_snapshot,
         node.compute_virtual_machine,
         node.key_vault_key,
-        node. key_vault_vault,
+        node.key_vault_vault,
         node.storage_storage_account,
       ]
 
@@ -195,7 +195,7 @@ dashboard "compute_disk_detail" {
         edge.compute_disk_to_compute_disk,
         edge.compute_disk_to_compute_snapshot,
         edge.compute_disk_to_key_vault_key,
-        edge.compute_disk_to_key_vault,
+        edge.compute_disk_to_key_vault_vault,
         edge.compute_disk_to_storage_storage_account,
         edge.compute_snapshot_to_compute_disk,
         edge.compute_virtual_machine_to_compute_disk,
@@ -207,8 +207,8 @@ dashboard "compute_disk_detail" {
         compute_disk_ids                = [self.input.disk_id.value]
         compute_snapshot_ids            = with.compute_snapshots.rows[*].compute_snapshot_id
         compute_virtual_machine_ids     = with.compute_virtual_machines.rows[*].virtual_machine_id
-        key_vault_ids                   = with.key_vaults.rows[*].key_vault_id
         key_vault_key_ids               = with.key_vault_keys.rows[*].key_vault_key_id
+        key_vault_vault_ids             = with.key_vault_vaults.rows[*].key_vault_id
         storage_account_ids             = with.storage_storage_accounts.rows[*].storage_account_id
       }
     }

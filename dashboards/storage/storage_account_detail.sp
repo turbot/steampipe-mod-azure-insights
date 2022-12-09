@@ -121,7 +121,7 @@ dashboard "storage_account_detail" {
         args = [self.input.storage_account_id.value]
       }
 
-      with "key_vaults" {
+      with "key_vault_vaults" {
         sql = <<-EOQ
           select
             lower(k.id) as vault_id
@@ -215,7 +215,7 @@ dashboard "storage_account_detail" {
         edge.monitor_log_profile_to_storage_storage_account,
         edge.network_subnet_to_network_virtual_network,
         edge.storage_storage_account_to_key_vault_key,
-        edge.storage_storage_account_to_key_vault,
+        edge.storage_storage_account_to_key_vault_vault,
         edge.storage_storage_account_to_network_subnet,
         edge.storage_storage_account_to_storage_container,
         edge.storage_storage_account_to_storage_queue,
@@ -227,7 +227,7 @@ dashboard "storage_account_detail" {
         batch_account_ids              = with.batch_accounts.rows[*].batch_account_id
         compute_disk_ids               = with.compute_disks.rows[*].disk_id
         compute_snapshot_ids           = with.compute_snapshots.rows[*].snapshot_id
-        key_vault_ids                  = with.key_vaults.rows[*].vault_id
+        key_vault_vault_ids            = with.key_vault_vaults.rows[*].vault_id
         key_vault_key_ids              = with.key_vault_keys.rows[*].key_id
         monitor_diagnostic_setting_ids = with.monitor_diagnostic_settings.rows[*].monitor_diagnostic_settings_id
         monitor_log_profile_ids        = with.monitor_log_profiles.rows[*].log_profile_id

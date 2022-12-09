@@ -1,3 +1,28 @@
+node "compute_disk" {
+  category = category.compute_disk
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', id,
+        'Subscription ID', subscription_id,
+        'Resource Group', resource_group,
+        'Provisioning State', provisioning_state,
+        'OS Type', os_type,
+        'Region', region
+      ) as properties
+    from
+      azure_compute_disk
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "compute_disk_ids" {}
+}
+
 node "compute_disk_access" {
   category = category.compute_disk_access
 
@@ -72,31 +97,6 @@ node "compute_disk_to_compute_disk" {
   param "compute_disk_ids" {}
 }
 
-node "compute_disk" {
-  category = category.compute_disk
-
-  sql = <<-EOQ
-    select
-      lower(id) as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ID', id,
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Provisioning State', provisioning_state,
-        'OS Type', os_type,
-        'Region', region
-      ) as properties
-    from
-      azure_compute_disk
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "compute_disk_ids" {}
-}
-
 node "compute_image" {
   category = category.compute_image
 
@@ -144,7 +144,6 @@ node "compute_snapshot" {
 
   param "compute_snapshot_ids" {}
 }
-
 
 node "compute_snapshot_to_compute_snapshot" {
   category = category.compute_snapshot
@@ -195,6 +194,32 @@ node "compute_snapshot_to_compute_snapshot" {
   param "compute_snapshot_ids" {}
 }
 
+node "compute_virtual_machine" {
+  category = category.compute_virtual_machine
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', vm_id,
+        'Subscription ID', subscription_id,
+        'Resource Group', resource_group,
+        'Power State', power_state,
+        'OS Type', os_type,
+        'Type', type,
+        'Region', region
+      ) as properties
+    from
+      azure_compute_virtual_machine
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
 node "compute_virtual_machine_application_gateway_backend_address_pool" {
   category = category.network_load_balancer_backend_address_pool
 
@@ -240,7 +265,6 @@ node "compute_virtual_machine_application_gateway_backend_address_pool" {
   param "compute_virtual_machine_ids" {}
 }
 
-
 node "compute_virtual_machine_scale_set_network_interface" {
   category = category.compute_virtual_machine_scale_set_network_interface
 
@@ -263,6 +287,32 @@ node "compute_virtual_machine_scale_set_network_interface" {
   EOQ
 
   param "compute_virtual_machine_scale_set_network_interface_ids" {}
+}
+
+node "compute_virtual_machine_scale_set" {
+  category = category.compute_virtual_machine_scale_set
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', id,
+        'Unique ID', unique_id,
+        'SKU Name', sku_name,
+        'Subscription ID', subscription_id,
+        'Resource Group', resource_group,
+        'Provisioning State', provisioning_state,
+        'Region', region
+      ) as properties
+    from
+      azure_compute_virtual_machine_scale_set
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "compute_virtual_machine_scale_set_ids" {}
 }
 
 node "compute_virtual_machine_scale_set_vm" {
@@ -291,28 +341,3 @@ node "compute_virtual_machine_scale_set_vm" {
   param "compute_virtual_machine_scale_set_vm_ids" {}
 }
 
-node "compute_virtual_machine" {
-  category = category.compute_virtual_machine
-
-  sql = <<-EOQ
-    select
-      lower(id) as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ID', vm_id,
-        'Subscription ID', subscription_id,
-        'Resource Group', resource_group,
-        'Power State', power_state,
-        'OS Type', os_type,
-        'Type', type,
-        'Region', region
-      ) as properties
-    from
-      azure_compute_virtual_machine
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}

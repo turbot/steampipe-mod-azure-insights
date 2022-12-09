@@ -104,7 +104,6 @@ dashboard "network_firewall_detail" {
         args = [self.input.firewall_id.value]
       }
 
-
       nodes = [
         node.network_firewall,
         node.network_public_ip,

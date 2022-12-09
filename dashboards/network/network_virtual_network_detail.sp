@@ -329,8 +329,8 @@ dashboard "network_virtual_network_detail" {
         network_route_table_ids                        = with.network_route_tables.rows[*].route_table_id
         network_security_group_ids                     = with.network_security_groups.rows[*].nsg_id
         network_subnet_ids                             = with.network_subnets.rows[*].subnet_id
-        sql_server_ids                                 = with.sql_servers.rows[*].sql_server_id
         network_virtual_network_ids                    = [self.input.vn_id.value]
+        sql_server_ids                                 = with.sql_servers.rows[*].sql_server_id
       }
     }
   }

@@ -97,7 +97,7 @@ dashboard "key_vault_key_detail" {
         args = [self.input.key_vault_key_id.value]
       }
 
-      with "key_vaults" {
+      with "key_vault_vaults" {
         sql = <<-EOQ
           select
             lower(v.id) as vault_id
@@ -219,7 +219,7 @@ dashboard "key_vault_key_detail" {
         compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].disk_encryption_set_id
         container_registry_ids          = with.container_registries.rows[*].registry_id
         eventhub_namespace_ids          = with.eventhub_namespaces.rows[*].eventhub_namespace_id
-        key_vault_ids                   = with.key_vaults.rows[*].vault_id
+        key_vault_vault_ids             = with.key_vault_vaults.rows[*].vault_id
         key_vault_key_ids               = [self.input.key_vault_key_id.value]
         postgresql_server_ids           = with.postgresql_servers.rows[*].postgresql_server_id
         servicebus_namespace_ids        = with.servicebus_namespaces.rows[*].servicebus_namespace_id

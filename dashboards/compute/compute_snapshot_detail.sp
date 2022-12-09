@@ -106,21 +106,6 @@ dashboard "compute_snapshot_detail" {
         args = [self.input.id.value]
       }
 
-      with "key_vault" {
-        sql = <<-EOQ
-          select
-            lower(k.id) as key_vault_id
-          from
-            azure_compute_disk_encryption_set as e
-            left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-            left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
-          where
-            lower(s.id) = $1;
-          EOQ
-
-        args = [self.input.id.value]
-      }
-
       with "key_vault_keys" {
         sql = <<-EOQ
           select
@@ -137,6 +122,21 @@ dashboard "compute_snapshot_detail" {
         args = [self.input.id.value]
       }
 
+      with "key_vault_vaults" {
+        sql = <<-EOQ
+          select
+            lower(k.id) as key_vault_id
+          from
+            azure_compute_disk_encryption_set as e
+            left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
+            left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
+          where
+            lower(s.id) = $1;
+          EOQ
+
+        args = [self.input.id.value]
+      }
+
       nodes = [
         node.compute_disk_access,
         node.compute_disk_encryption_set,
@@ -144,7 +144,7 @@ dashboard "compute_snapshot_detail" {
         node.compute_snapshot_to_compute_snapshot,
         node.compute_snapshot,
         node.key_vault_key,
-        node. key_vault_vault,
+        node.key_vault_vault,
       ]
 
       edges = [
@@ -155,7 +155,7 @@ dashboard "compute_snapshot_detail" {
         edge.compute_snapshot_to_compute_disk,
         edge.compute_snapshot_to_compute_snapshot,
         edge.compute_snapshot_to_key_vault_key,
-        edge.compute_snapshot_to_key_vault,
+        edge.compute_snapshot_to_key_vault_vault,
       ]
 
       args = {
@@ -163,8 +163,8 @@ dashboard "compute_snapshot_detail" {
         compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
         compute_disk_ids                = with.compute_disks.rows[*].disk_id
         compute_snapshot_ids            = [self.input.id.value]
-        key_vault_ids                   = with.key_vault.rows[*].key_vault_id
         key_vault_key_ids               = with.key_vault_keys.rows[*].key_id
+        key_vault_vault_ids             = with.key_vault_vaults.rows[*].key_vault_id
       }
     }
   }

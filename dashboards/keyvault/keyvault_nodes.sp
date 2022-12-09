@@ -22,7 +22,7 @@ node "key_vault_vault" {
       lower(id) = any($1);
   EOQ
 
-  param "key_vault_ids" {}
+  param "key_vault_vault_ids" {}
 }
 
 node "key_vault_key" {
@@ -98,6 +98,6 @@ node "key_vault_secret" {
       lower(v.id) = any($1);
   EOQ
 
-  param "key_vault_ids" {}
+  param "key_vault_vault_ids" {}
 }
 

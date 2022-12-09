@@ -56,6 +56,27 @@ dashboard "network_interface_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "compute_virtual_machines" {
+        sql = <<-EOQ
+          with vm_network_interface_id as (
+            select
+              id,
+              jsonb_array_elements(network_interfaces)->>'id' as n_id
+            from
+              azure_compute_virtual_machine
+          )
+          select
+            lower(v.id) as virtual_machine_id
+          from
+            vm_network_interface_id as v
+            left join azure_network_interface as n on lower(v.n_id) = lower(n.id)
+          where
+            lower(n.id) = $1;
+        EOQ
+
+        args = [self.input.nic_id.value]
+      }
+
       with "network_public_ips" {
         sql = <<-EOQ
           with network_interface_public_ip as (
@@ -114,27 +135,6 @@ dashboard "network_interface_detail" {
         args = [self.input.nic_id.value]
       }
 
-      with "compute_virtual_machines" {
-        sql = <<-EOQ
-          with vm_network_interface_id as (
-            select
-              id,
-              jsonb_array_elements(network_interfaces)->>'id' as n_id
-            from
-              azure_compute_virtual_machine
-          )
-          select
-            lower(v.id) as virtual_machine_id
-          from
-            vm_network_interface_id as v
-            left join azure_network_interface as n on lower(v.n_id) = lower(n.id)
-          where
-            lower(n.id) = $1;
-        EOQ
-
-        args = [self.input.nic_id.value]
-      }
-
       with "network_virtual_networks" {
         sql = <<-EOQ
           with subnet_list as(
@@ -179,12 +179,12 @@ dashboard "network_interface_detail" {
       ]
 
       args = {
-        compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
-        network_network_interface_ids       = [self.input.nic_id.value]
-        network_public_ip_ids       = with.network_public_ips.rows[*].public_ip_id
-        network_security_group_ids  = with.network_security_groups.rows[*].nsg_id
-        network_subnet_ids          = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids         = with.network_virtual_networks.rows[*].virtual_network_id
+        compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].virtual_machine_id
+        network_network_interface_ids = [self.input.nic_id.value]
+        network_public_ip_ids         = with.network_public_ips.rows[*].public_ip_id
+        network_security_group_ids    = with.network_security_groups.rows[*].nsg_id
+        network_subnet_ids            = with.network_subnets.rows[*].subnet_id
+        network_virtual_network_ids   = with.network_virtual_networks.rows[*].virtual_network_id
       }
     }
   }

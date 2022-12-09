@@ -47,7 +47,7 @@ edge "key_vault_to_key" {
       lower(v.id) = any($1);
   EOQ
 
-  param "key_vault_ids" {}
+  param "key_vault_vault_ids" {}
 }
 
 edge "key_vault_to_secret" {
@@ -66,7 +66,7 @@ edge "key_vault_to_secret" {
       lower(v.id) = any($1);
   EOQ
 
-  param "key_vault_ids" {}
+  param "key_vault_vault_ids" {}
 }
 
 edge "key_vault_to_subnet" {
@@ -84,5 +84,5 @@ edge "key_vault_to_subnet" {
         lower(v.id) = any($1);
   EOQ
 
-  param "key_vault_ids" {}
+  param "key_vault_vault_ids" {}
 }

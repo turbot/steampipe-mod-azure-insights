@@ -1,18 +1,18 @@
-edge "storage_storage_account_to_key_vault" {
-  title = "key vault"
+edge "storage_account_to_key_vault_key_version" {
+  title = "encrypted with"
 
   sql = <<-EOQ
     select
-      lower(a.id) as from_id,
-      lower(k.id) as to_id
+      lower(s.id) as from_id,
+      lower(v.id) as to_id
     from
-      azure_storage_account as a
-      left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
+      azure_storage_account as s
+      left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
     where
-      lower(a.id) = any($1);
+      lower(split_part(v.id, '/versions', 1)) = any($1);
   EOQ
 
-  param "storage_account_ids" {}
+  param "key_vault_key_ids" {}
 }
 
 edge "storage_storage_account_to_key_vault_key" {
@@ -34,21 +34,21 @@ edge "storage_storage_account_to_key_vault_key" {
   param "storage_account_ids" {}
 }
 
-edge "storage_account_to_key_vault_key_version" {
-  title = "encrypted with"
+edge "storage_storage_account_to_key_vault_vault" {
+  title = "key vault"
 
   sql = <<-EOQ
     select
-      lower(s.id) as from_id,
-      lower(v.id) as to_id
+      lower(a.id) as from_id,
+      lower(k.id) as to_id
     from
-      azure_storage_account as s
-      left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
+      azure_storage_account as a
+      left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
     where
-      lower(split_part(v.id, '/versions', 1)) = any($1);
+      lower(a.id) = any($1);
   EOQ
 
-  param "key_vault_key_ids" {}
+  param "storage_account_ids" {}
 }
 
 edge "storage_storage_account_to_network_subnet" {
