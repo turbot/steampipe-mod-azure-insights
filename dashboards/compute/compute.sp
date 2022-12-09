@@ -7,7 +7,7 @@ locals {
 category "compute_disk" {
   title = "Compute Disk"
   href  = "/azure_insights.dashboard.compute_disk_detail?input.d_id={{.properties.'ID' | @uri}}"
-  icon  = "inbox-stack"
+  icon  = "heroicons-outline:inbox-stack"
   color = local.storage_color
 }
 
@@ -32,21 +32,21 @@ category "compute_image" {
 category "compute_snapshot" {
   title = "Compute Snapshot"
   href  = "/azure_insights.dashboard.compute_snapshot_detail?input.id={{.properties.'ID' | @uri}}"
-  icon  = "viewfinder-circle"
+  icon  = "heroicons-outline:viewfinder-circle"
   color = local.storage_color
 }
 
 category "compute_virtual_machine" {
   title = "Compute Virtual Machine"
   href  = "/azure_insights.dashboard.compute_virtual_machine_detail?input.vm_id={{.properties.'ID' | @uri}}"
-  icon  = "cpu-chip"
+  icon  = "heroicons-outline:cpu-chip"
   color = local.compute_color
 }
 
 category "compute_virtual_machine_scale_set" {
   title = "Compute Virtual Machine Scale Set"
   href  = "/azure_insights.dashboard.compute_virtual_machine_scale_set_detail?input.vm_scale_set_id={{.properties.'ID' | @uri}}"
-  icon  = "square-2-stack"
+  icon  = "heroicons-outline:square-2-stack"
   color = local.compute_color
 }
 
@@ -59,6 +59,6 @@ category "compute_virtual_machine_scale_set_network_interface" {
 category "compute_virtual_machine_scale_set_vm" {
   title = "Compute Virtual Machine Scale Set VM"
   href  = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_vm_detail?input.scale_set_vm_id={{.properties.'ID' | @uri}}"
-  icon  = "cpu-chip"
+  icon  = "heroicons-outline:cpu-chip"
   color = local.compute_color
 }

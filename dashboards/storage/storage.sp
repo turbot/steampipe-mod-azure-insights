@@ -25,7 +25,7 @@ category "storage_share_file" {
 category "storage_storage_account" {
   title = "Storage Account"
   href  = "/azure_insights.dashboard.storage_account_detail?input.storage_account_id={{.properties.'ID' | @uri}}"
-  icon  = "archive-box"
+  icon  = "heroicons-outline:archive-box"
   color = local.storage_color
 }
 

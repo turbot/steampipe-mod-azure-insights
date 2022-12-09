@@ -7,7 +7,7 @@ locals {
 category "kubernetes_cluster" {
   title = "Kubernetes Clusters"
   href  = "/azure_insights.dashboard.kubernetes_cluster_detail?input.cluster_id={{.properties.'ID' | @uri}}"
-  icon  = "cog"
+  icon  = "heroicons-outline:cog"
   color = local.containers_color
 }
 

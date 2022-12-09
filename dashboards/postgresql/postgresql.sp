@@ -1,5 +1,5 @@
 category "postgresql_server" {
   title = "PostgreSQL Server"
-  icon  = "circle-stack"
+  icon  = "heroicons-outline:circle-stack"
   color = local.database_color
 }

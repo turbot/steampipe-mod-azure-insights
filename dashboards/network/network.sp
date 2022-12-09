@@ -6,14 +6,14 @@ locals {
 
 category "network_application_gateway" {
   title = "Application Gateway"
-  icon  = "arrows-pointing-out"
+  icon  = "heroicons-outline:arrows-pointing-out"
   color = local.networking_color
 }
 
 category "network_firewall" {
   href  = "/azure_insights.dashboard.network_firewall_detail?input.firewall_id={{.properties.'ID' | @uri}}"
   title = "Firewall"
-  icon  = "fire"
+  icon  = "heroicons-outline:fire"
   color = local.networking_color
 }
 
@@ -63,7 +63,7 @@ category "network_network_interface" {
 
 category "network_peering" {
   title = "Network Peering"
-  icon  = "cube-transparent"
+  icon  = "heroicons-outline:cube-transparent"
   color = local.networking_color
 }
 
@@ -82,28 +82,28 @@ category "network_public_ip" {
 
 category "network_route_table" {
   title = "Route Table"
-  icon  = "arrows-right-left"
+  icon  = "heroicons-outline:arrows-right-left"
   color = local.networking_color
 }
 
 category "network_security_group" {
   title = "Network Security Group"
   href  = "/azure_insights.dashboard.network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
-  icon  = "lock-closed"
+  icon  = "heroicons-outline:lock-closed"
   color = local.networking_color
 }
 
 category "network_subnet" {
   title = "Subnet"
   href  = "/azure_insights.dashboard.network_subnet_detail?input.subnet_id={{.properties.'ID' | @uri}}"
-  icon  = "share"
+  icon  = "heroicons-outline:share"
   color = local.networking_color
 }
 
 category "network_virtual_network" {
   title = "Virtual Network"
   href  = "/azure_insights.dashboard.virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
-  icon  = "cloud"
+  icon  = "heroicons-outline:cloud"
   color = local.networking_color
 }
 

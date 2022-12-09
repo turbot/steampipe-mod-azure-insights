@@ -1,5 +1,5 @@
 category "api_management" {
   title = "API Management"
-  icon  = "bolt"
+  icon  = "heroicons-outline:bolt"
   color = local.front_end_web_color
 }

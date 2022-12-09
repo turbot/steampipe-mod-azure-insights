@@ -1,6 +1,6 @@
 category "monitor_diagnostic_setting" {
   title = "Diagnostic Setting"
-  icon  = "magnifying-glass"
+  icon  = "heroicons-outline:magnifying-glass"
   color = local.management_governance_color
 }
 
