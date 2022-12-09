@@ -1,4 +1,4 @@
-node "storage_container" {
+node "storage_storage_container" {
   category = category.storage_container
 
   sql = <<-EOQ
@@ -23,7 +23,7 @@ node "storage_container" {
   param "storage_account_ids" {}
 }
 
-node "storage_queue" {
+node "storage_storage_queue" {
   category = category.storage_queue
 
   sql = <<-EOQ
@@ -48,7 +48,7 @@ node "storage_queue" {
   param "storage_account_ids" {}
 }
 
-node "storage_share_file" {
+node "storage_storage_share_file" {
   category = category.storage_share_file
 
   sql = <<-EOQ
@@ -97,7 +97,7 @@ node "storage_storage_account" {
   param "storage_account_ids" {}
 }
 
-node "storage_table" {
+node "storage_storage_table" {
   category = category.storage_table
 
   sql = <<-EOQ

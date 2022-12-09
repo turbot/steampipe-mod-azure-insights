@@ -212,7 +212,7 @@ dashboard "key_vault_key_detail" {
         edge.postgresql_server_to_key_vault_key_version,
         edge.servicebus_namespace_to_key_vault_key,
         edge.sql_server_to_key_vault_key_version,
-        edge.storage_account_to_key_vault_key_version
+        edge.storage_storage_account_to_key_vault_key_version
       ]
 
       args = {
