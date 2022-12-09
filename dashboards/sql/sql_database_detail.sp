@@ -87,8 +87,8 @@ dashboard "sql_database_detail" {
       }
 
       nodes = [
-        node.sql_database_mssql_elasticpool,
         node.sql_database,
+        node.sql_database_mssql_elasticpool,
         node.sql_server
       ]
 
@@ -301,29 +301,6 @@ query "sql_database_geo_redundant_backup_enabled" {
   EOQ
 
   param "id" {}
-}
-
-edge "sql_database_to_mssql_elasticpool" {
-  title = "elasticpool"
-  sql   = <<-EOQ
-    with sql_pools as (
-      select
-        id,
-        name
-      from
-        azure_mssql_elasticpool
-    )
-    select
-      lower(sp.id) as to_id,
-      lower(db.id) as from_id
-    from
-      azure_sql_database as db,
-      sql_pools as sp
-    where
-      lower(db.id) = any($1)
-      and lower(sp.name) = lower(db.elastic_pool_name);
-  EOQ
-  param "sql_database_ids" {}
 }
 
 query "sql_database_overview" {

@@ -288,18 +288,18 @@ dashboard "network_load_balancer_detail" {
       }
 
       nodes = [
-        node.compute_virtual_machine_scale_set_vm,
-        node.compute_virtual_machine_scale_set,
         node.compute_virtual_machine,
+        node.compute_virtual_machine_scale_set,
+        node.compute_virtual_machine_scale_set_vm,
+        node.network_load_balancer,
         node.network_load_balancer_backend_address_pool,
         node.network_load_balancer_nat_rule,
         node.network_load_balancer_probe,
         node.network_load_balancer_rule,
         node.network_load_balancer_virtual_machine_scale_set_network_interface,
-        node.network_load_balancer,
         node.network_network_interface,
         node.network_public_ip,
-        node.network_virtual_network,
+        node.network_virtual_network
       ]
 
       edges = [
@@ -311,8 +311,8 @@ dashboard "network_load_balancer_detail" {
         edge.network_load_balancer_to_network_load_balancer_probe,
         edge.network_load_balancer_to_network_load_balancer_rule,
         edge.network_load_balancer_to_network_public_ip,
-        edge.network_network_interface_to_compute_virtual_machine_scale_set_vm,
         edge.network_network_interface_to_compute_virtual_machine,
+        edge.network_network_interface_to_compute_virtual_machine_scale_set_vm
       ]
 
       args = {

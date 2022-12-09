@@ -171,19 +171,19 @@ dashboard "sql_server_detail" {
         node.network_subnet,
         node.network_virtual_network,
         node.sql_database,
-        node.sql_server_mssql_elasticpool,
-        node.sql_server_network_private_endpoint,
         node.sql_server,
+        node.sql_server_mssql_elasticpool,
+        node.sql_server_network_private_endpoint
       ]
 
       edges = [
         edge.network_subnet_to_network_virtual_network,
-        edge.sql_server_to_key_vault_key,
         edge.sql_server_to_key_vault,
+        edge.sql_server_to_key_vault_key,
         edge.sql_server_to_mssql_elasticpool,
         edge.sql_server_to_network_private_endpoint,
         edge.sql_server_to_network_subnet,
-        edge.sql_server_to_sql_database,
+        edge.sql_server_to_sql_database
       ]
 
       args = {

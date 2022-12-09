@@ -16,6 +16,24 @@ edge "kubernetes_cluster_to_compute_disk_encryption_set" {
   param "kubernetes_cluster_ids" {}
 }
 
+edge "kubernetes_cluster_to_compute_virtual_machine_scale_set" {
+  title = "vm scale set"
+
+  sql = <<-EOQ
+    select
+      lower(c.id) as from_id,
+      lower(set.id) as to_id
+    from
+      azure_kubernetes_cluster c,
+      azure_compute_virtual_machine_scale_set set
+    where
+      lower(set.resource_group) = lower(c.node_resource_group)
+      and lower(c.id) = any($1);
+  EOQ
+
+  param "kubernetes_cluster_ids" {}
+}
+
 edge "kubernetes_cluster_to_compute_virtual_machine_scale_set_to_vm" {
   title = "instance"
 
@@ -31,24 +49,6 @@ edge "kubernetes_cluster_to_compute_virtual_machine_scale_set_to_vm" {
       lower(set.resource_group) = lower(c.node_resource_group)
       and set.name = vm.scale_set_name
       and vm.resource_group = set.resource_group
-      and lower(c.id) = any($1);
-  EOQ
-
-  param "kubernetes_cluster_ids" {}
-}
-
-edge "kubernetes_cluster_to_compute_virtual_machine_scale_set" {
-  title = "vm scale set"
-
-  sql = <<-EOQ
-    select
-      lower(c.id) as from_id,
-      lower(set.id) as to_id
-    from
-      azure_kubernetes_cluster c,
-      azure_compute_virtual_machine_scale_set set
-    where
-      lower(set.resource_group) = lower(c.node_resource_group)
       and lower(c.id) = any($1);
   EOQ
 

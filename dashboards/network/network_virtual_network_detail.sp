@@ -296,15 +296,15 @@ dashboard "network_virtual_network_detail" {
       nodes = [
         node.compute_virtual_machine,
         node.network_application_gateway,
-        node.network_load_balancer_backend_address_pool,
         node.network_load_balancer,
+        node.network_load_balancer_backend_address_pool,
         node.network_nat_gateway,
         node.network_network_security_group,
         node.network_route_table,
         node.network_subnet,
-        node.network_virtual_network_network_peering,
         node.network_virtual_network,
-        node.sql_server,
+        node.network_virtual_network_network_peering,
+        node.sql_server
       ]
 
       edges = [
@@ -314,10 +314,10 @@ dashboard "network_virtual_network_detail" {
         edge.network_subnet_to_network_security_group,
         edge.network_subnet_to_sql_server,
         edge.network_virtual_network_to_compute_virtual_machine,
-        edge.network_virtual_network_to_network_load_balancer_backend_address_pool,
         edge.network_virtual_network_to_network_load_balancer,
+        edge.network_virtual_network_to_network_load_balancer_backend_address_pool,
         edge.network_virtual_network_to_network_peering,
-        edge.network_virtual_network_to_network_subnet,
+        edge.network_virtual_network_to_network_subnet
       ]
 
       args = {

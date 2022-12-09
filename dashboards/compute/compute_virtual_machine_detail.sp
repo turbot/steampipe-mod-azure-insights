@@ -330,16 +330,16 @@ dashboard "compute_virtual_machine_detail" {
       nodes = [
         node.compute_disk,
         node.compute_image,
-        node.compute_virtual_machine_application_gateway_backend_address_pool,
         node.compute_virtual_machine,
+        node.compute_virtual_machine_application_gateway_backend_address_pool,
         node.network_application_gateway,
-        node.network_load_balancer_backend_address_pool,
         node.network_load_balancer,
+        node.network_load_balancer_backend_address_pool,
         node.network_network_interface,
         node.network_network_security_group,
         node.network_public_ip,
         node.network_subnet,
-        node.network_virtual_network,
+        node.network_virtual_network
       ]
 
       edges = [
@@ -354,7 +354,7 @@ dashboard "compute_virtual_machine_detail" {
         edge.network_application_gateway_backend_address_pool_to_compute_virtual_machine,
         edge.network_application_gateway_to_compute_virtual_machine,
         edge.network_load_balancer_backend_address_pool_to_compute_virtual_machine,
-        edge.network_load_balancer_to_compute_virtual_machine_backend_address_pool,
+        edge.network_load_balancer_to_compute_virtual_machine_backend_address_pool
       ]
 
       args = {

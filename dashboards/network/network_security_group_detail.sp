@@ -72,6 +72,32 @@ dashboard "network_security_group_detail" {
       type      = "graph"
       direction = "TD"
 
+      with "compute_virtual_machines" {
+        sql = <<-EOQ
+          with network_interface_list as (
+            select
+              nsg.id as nsg_id,
+              nic.id as nic_id
+            from
+              azure_network_security_group as nsg,
+              jsonb_array_elements(network_interfaces) as ni
+              left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
+            where
+              lower(nsg.id )= $1
+          )
+          select
+            lower(vm.id) as machine_id
+          from
+            azure_compute_virtual_machine as vm,
+            jsonb_array_elements(network_interfaces) as ni
+            left join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
+          where
+            lower(nic.nsg_id) = $1;
+          EOQ
+
+        args = [self.input.nsg_id.value]
+      }
+
       with "network_network_interfaces" {
         sql = <<-EOQ
           select
@@ -127,39 +153,13 @@ dashboard "network_security_group_detail" {
         args = [self.input.nsg_id.value]
       }
 
-      with "compute_virtual_machines" {
-        sql = <<-EOQ
-          with network_interface_list as (
-            select
-              nsg.id as nsg_id,
-              nic.id as nic_id
-            from
-              azure_network_security_group as nsg,
-              jsonb_array_elements(network_interfaces) as ni
-              left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
-            where
-              lower(nsg.id )= $1
-          )
-          select
-            lower(vm.id) as machine_id
-          from
-            azure_compute_virtual_machine as vm,
-            jsonb_array_elements(network_interfaces) as ni
-            left join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
-          where
-            lower(nic.nsg_id) = $1;
-          EOQ
-
-        args = [self.input.nsg_id.value]
-      }
-
       nodes = [
         node.compute_virtual_machine,
         node.network_network_interface,
         node.network_network_security_group,
         node.network_security_group_network_watcher_flow_log,
         node.network_subnet,
-        node.network_virtual_network,
+        node.network_virtual_network
       ]
 
       edges = [
@@ -167,7 +167,7 @@ dashboard "network_security_group_detail" {
         edge.network_security_group_to_network_interface,
         edge.network_security_group_to_network_watcher_flow_log,
         edge.network_subnet_to_network_security_group,
-        edge.network_virtual_network_to_network_subnet,
+        edge.network_virtual_network_to_network_subnet
       ]
 
       args = {

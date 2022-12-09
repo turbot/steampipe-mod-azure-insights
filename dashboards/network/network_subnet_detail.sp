@@ -174,11 +174,11 @@ dashboard "network_subnet_detail" {
         node.network_nat_gateway,
         node.network_network_security_group,
         node.network_route_table,
-        node.network_subnet_api_management,
         node.network_subnet,
+        node.network_subnet_api_management,
         node.network_virtual_network,
         node.sql_server,
-        node.storage_storage_account,
+        node.storage_storage_account
       ]
 
       edges = [
@@ -191,7 +191,7 @@ dashboard "network_subnet_detail" {
         edge.network_subnet_to_network_security_group,
         edge.network_subnet_to_sql_server,
         edge.network_subnet_to_storage_storage_account,
-        edge.network_virtual_network_to_network_subnet,
+        edge.network_virtual_network_to_network_subnet
       ]
 
       args = {
