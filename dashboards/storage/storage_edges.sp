@@ -1,4 +1,4 @@
-edge "storage_storage_account_to_key_vault_key" {
+edge "storage_account_to_key_vault_key" {
   title = "key"
 
   sql = <<-EOQ
@@ -17,7 +17,7 @@ edge "storage_storage_account_to_key_vault_key" {
   param "storage_account_ids" {}
 }
 
-edge "storage_storage_account_to_key_vault_key_version" {
+edge "storage_account_to_key_vault_key_version" {
   title = "encrypted with"
 
   sql = <<-EOQ
@@ -34,7 +34,7 @@ edge "storage_storage_account_to_key_vault_key_version" {
   param "key_vault_key_ids" {}
 }
 
-edge "storage_storage_account_to_key_vault_vault" {
+edge "storage_account_to_key_vault_vault" {
   title = "key vault"
 
   sql = <<-EOQ
@@ -51,7 +51,7 @@ edge "storage_storage_account_to_key_vault_vault" {
   param "storage_account_ids" {}
 }
 
-edge "storage_storage_account_to_network_subnet" {
+edge "storage_account_to_network_subnet" {
   title = "subnet"
 
   sql = <<-EOQ
@@ -76,7 +76,7 @@ edge "storage_storage_account_to_network_subnet" {
   param "storage_account_ids" {}
 }
 
-edge "storage_storage_account_to_storage_container" {
+edge "storage_account_to_storage_container" {
   title = "storage container"
 
   sql = <<-EOQ
@@ -94,7 +94,7 @@ edge "storage_storage_account_to_storage_container" {
   param "storage_account_ids" {}
 }
 
-edge "storage_storage_account_to_storage_queue" {
+edge "storage_account_to_storage_queue" {
   title = "storage queue"
 
   sql = <<-EOQ
@@ -111,7 +111,7 @@ edge "storage_storage_account_to_storage_queue" {
   param "storage_account_ids" {}
 }
 
-edge "storage_storage_account_to_storage_share_file" {
+edge "storage_account_to_storage_share_file" {
   title = "storage share file"
 
   sql = <<-EOQ
@@ -129,7 +129,7 @@ edge "storage_storage_account_to_storage_share_file" {
   param "storage_account_ids" {}
 }
 
-edge "storage_storage_account_to_storage_table" {
+edge "storage_account_to_storage_table" {
   title = "storage table"
 
   sql = <<-EOQ

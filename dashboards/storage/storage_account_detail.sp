@@ -214,13 +214,13 @@ dashboard "storage_account_detail" {
         edge.monitor_diagnostic_setting_to_storage_storage_account,
         edge.monitor_log_profile_to_storage_storage_account,
         edge.network_subnet_to_network_virtual_network,
-        edge.storage_storage_account_to_key_vault_key,
-        edge.storage_storage_account_to_key_vault_vault,
-        edge.storage_storage_account_to_network_subnet,
-        edge.storage_storage_account_to_storage_container,
-        edge.storage_storage_account_to_storage_queue,
-        edge.storage_storage_account_to_storage_share_file,
-        edge.storage_storage_account_to_storage_table
+        edge.storage_account_to_key_vault_key,
+        edge.storage_account_to_key_vault_vault,
+        edge.storage_account_to_network_subnet,
+        edge.storage_account_to_storage_container,
+        edge.storage_account_to_storage_queue,
+        edge.storage_account_to_storage_share_file,
+        edge.storage_account_to_storage_table
       ]
 
       args = {
