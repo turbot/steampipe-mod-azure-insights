@@ -5,7 +5,7 @@ edge "storage_storage_account_to_key_vault_key" {
     select
       lower(k.id )as from_id,
       lower(key.id) as to_id
-   from
+    from
       azure_storage_account as a
       left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
       left join azure_key_vault_key_version as v on lower(v.key_uri_with_version) = lower(a.encryption_key_vault_properties_key_current_version_id)
@@ -83,7 +83,7 @@ edge "storage_storage_account_to_storage_storage_container" {
     select
       lower(a.id) as from_id,
       lower(c.id) as to_id
-   from
+    from
       azure_storage_container as c
       left join azure_storage_account as a on a.name = c.account_name
       and a.resource_group = c.resource_group

@@ -212,11 +212,11 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
 
       nodes = [
         node.compute_disk,
+        node.compute_virtual_machine_scale_set,
         node.compute_virtual_machine_scale_set_network_interface,
         node.compute_virtual_machine_scale_set_vm,
-        node.compute_virtual_machine_scale_set,
-        node.network_load_balancer_backend_address_pool,
         node.network_load_balancer,
+        node.network_load_balancer_backend_address_pool,
         node.network_network_security_group,
         node.network_subnet,
         node.network_virtual_network,
@@ -226,8 +226,8 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
         edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vm,
         edge.compute_virtual_machine_scale_set_vm_to_compute_disk,
         edge.compute_virtual_machine_scale_set_vm_to_compute_virtual_machine_scale_set_network_interface,
-        edge.compute_virtual_machine_scale_set_vm_to_network_load_balancer_backend_address_pool,
         edge.compute_virtual_machine_scale_set_vm_to_network_load_balancer,
+        edge.compute_virtual_machine_scale_set_vm_to_network_load_balancer_backend_address_pool,
         edge.compute_virtual_machine_scale_set_vm_to_network_security_group,
         edge.compute_virtual_machine_scale_set_vm_to_network_subnet,
         edge.network_subnet_to_network_virtual_network,

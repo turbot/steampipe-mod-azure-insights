@@ -71,7 +71,7 @@ dashboard "kubernetes_cluster_detail" {
         args = [self.input.cluster_id.value]
       }
 
-      with "compute_scale_sets" {
+      with "compute_virtual_machine_scale_sets" {
         sql = <<-EOQ
           select
             lower(set.id) as scale_set_id
@@ -86,7 +86,7 @@ dashboard "kubernetes_cluster_detail" {
         args = [self.input.cluster_id.value]
       }
 
-      with "compute_scale_sets_vms" {
+      with "compute_virtual_machine_scale_set_vms" {
         sql = <<-EOQ
           select
             lower(vm.id) as vm_id
@@ -115,14 +115,14 @@ dashboard "kubernetes_cluster_detail" {
       edges = [
         edge.kubernetes_cluster_to_compute_disk_encryption_set,
         edge.kubernetes_cluster_to_compute_virtual_machine_scale_set,
-        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set_to_vm,
+        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set_vm,
         edge.kubernetes_cluster_to_kubernetes_node_pool
       ]
 
       args = {
         compute_disk_encryption_set_ids          = with.compute_disk_encryption_sets.rows[*].encryption_set_id
-        compute_virtual_machine_scale_set_ids    = with.compute_scale_sets.rows[*].scale_set_id
-        compute_virtual_machine_scale_set_vm_ids = with.compute_scale_sets_vms.rows[*].vm_id
+        compute_virtual_machine_scale_set_ids    = with.compute_virtual_machine_scale_sets.rows[*].scale_set_id
+        compute_virtual_machine_scale_set_vm_ids = with.compute_virtual_machine_scale_set_vms.rows[*].vm_id
         kubernetes_cluster_ids                   = [self.input.cluster_id.value]
       }
     }

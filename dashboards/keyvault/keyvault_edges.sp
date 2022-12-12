@@ -31,7 +31,7 @@ edge "key_vault_key_version_to_key_vault_key" {
   param "key_vault_key_ids" {}
 }
 
-edge "key_vault_to_key" {
+edge "key_vault_to_key_vault_key" {
   title = "key"
 
   sql = <<-EOQ
@@ -50,7 +50,7 @@ edge "key_vault_to_key" {
   param "key_vault_vault_ids" {}
 }
 
-edge "key_vault_to_secret" {
+edge "key_vault_to_key_vault_secret" {
   title = "secret"
 
   sql = <<-EOQ

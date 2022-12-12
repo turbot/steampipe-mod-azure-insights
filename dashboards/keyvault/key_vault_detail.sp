@@ -118,8 +118,8 @@ dashboard "key_vault_detail" {
       ]
 
       edges = [
-        edge.key_vault_to_key,
-        edge.key_vault_to_secret,
+        edge.key_vault_to_key_vault_key,
+        edge.key_vault_to_key_vault_secret,
         edge.key_vault_to_subnet,
         edge.network_subnet_to_network_virtual_network,
       ]

@@ -241,7 +241,7 @@ dashboard "compute_virtual_machine_scale_set_detail" {
           from
             azure_virtual_network as vn,
             jsonb_array_elements(vn.subnets) as s
-           where
+          where
             lower(s ->> 'id') in (select lower(subnet_id) from subnet_list)
           EOQ
 
