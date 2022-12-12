@@ -200,10 +200,10 @@ dashboard "storage_account_detail" {
         node.monitor_log_profile,
         node.network_subnet,
         node.network_virtual_network,
+        node.storage_storage_account,
         node.storage_storage_container,
         node.storage_storage_queue,
         node.storage_storage_share_file,
-        node.storage_storage_account,
         node.storage_storage_table
       ]
 

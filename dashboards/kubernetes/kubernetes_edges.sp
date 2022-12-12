@@ -34,7 +34,7 @@ edge "kubernetes_cluster_to_compute_virtual_machine_scale_set" {
   param "kubernetes_cluster_ids" {}
 }
 
-edge "kubernetes_cluster_to_compute_virtual_machine_scale_set_to_vm" {
+edge "kubernetes_cluster_to_compute_virtual_machine_scale_set_vm" {
   title = "instance"
 
   sql = <<-EOQ
