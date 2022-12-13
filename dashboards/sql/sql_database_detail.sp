@@ -66,43 +66,62 @@ dashboard "sql_database_detail" {
 
   }
 
-  # container {
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+      with "sql_servers" {
+        sql = <<-EOQ
+          select
+            lower(sv.id) as sql_server_id
+          from
+            azure_sql_database as db
+            left join azure_sql_server as sv on db.server_name = sv.name
+          where
+            lower(db.id) = $1
+        EOQ
 
-  #     with "sql_servers" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(sv.id) as sql_server_id
-  #         from
-  #           azure_sql_database as db
-  #           left join azure_sql_server as sv on db.server_name = sv.name
-  #         where
-  #           lower(db.id) = $1
-  #       EOQ
+        args = [self.input.sql_database_id.value]
+      }
 
-  #       args = [self.input.sql_database_id.value]
-  #     }
+  container {
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.sql_database,
-  #       node.sql_database_mssql_elasticpool,
-  #       node.sql_server
-  #     ]
+      node {
+        base = node.sql_database
+        args = {
+          sql_database_ids = [self.input.sql_database_id.value]
+        }
+      }
 
-  #     edges = [
-  #       edge.sql_database_to_mssql_elasticpool,
-  #       edge.sql_server_to_sql_database
-  #     ]
+      node {
+        base = node.sql_database_mssql_elasticpool
+        args = {
+          sql_database_ids = [self.input.sql_database_id.value]
+        }
+      }
 
-  #     args = {
-  #       sql_database_ids = [self.input.sql_database_id.value]
-  #       sql_server_ids   = with.sql_servers.rows[*].sql_server_id
-  #     }
-  #   }
-  # }
+      node {
+        base = node.sql_server
+        args = {
+          sql_server_ids   = with.sql_servers.rows[*].sql_server_id
+        }
+      }  
+
+      edge {
+        base = edge.sql_database_to_mssql_elasticpool
+        args = {
+          sql_database_ids = [self.input.sql_database_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.sql_server_to_sql_database
+        args = {
+          sql_server_ids = with.sql_servers.rows[*].sql_server_id
+        }
+      }  
+    }
+  }
 
   container {
 

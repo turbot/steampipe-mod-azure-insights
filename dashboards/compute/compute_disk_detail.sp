@@ -57,162 +57,253 @@ dashboard "compute_disk_detail" {
 
   }
 
-  # container {
+      with "compute_disk_accesses" {
+        sql = <<-EOQ
+          select
+            lower(a.id) as disk_access_id
+          from
+            azure_compute_disk_access as a
+            left join azure_compute_disk as d on lower(d.disk_access_id) = lower(a.id)
+          where
+            lower(d.id) = $1;
+          EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+        args = [self.input.disk_id.value]
+      }
 
-  #     with "compute_disk_accesses" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(a.id) as disk_access_id
-  #         from
-  #           azure_compute_disk_access as a
-  #           left join azure_compute_disk as d on lower(d.disk_access_id) = lower(a.id)
-  #         where
-  #           lower(d.id) = $1;
-  #         EOQ
+      with "compute_disk_encryption_sets" {
+        sql = <<-EOQ
+          select
+            lower(e.id) as encryption_set_id
+          from
+            azure_compute_disk_encryption_set as e
+            left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
+          where
+            lower(d.id) = $1;
+          EOQ
 
-  #       args = [self.input.disk_id.value]
-  #     }
+        args = [self.input.disk_id.value]
+      }
 
-  #     with "compute_disk_encryption_sets" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(e.id) as encryption_set_id
-  #         from
-  #           azure_compute_disk_encryption_set as e
-  #           left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
-  #         where
-  #           lower(d.id) = $1;
-  #         EOQ
+      with "compute_snapshots" {
+        sql = <<-EOQ
+          select
+            lower(s.id) as compute_snapshot_id
+          from
+            azure_compute_disk as d
+            left join azure_compute_snapshot as s on lower(s.source_resource_id) = lower(d.id)
+          where
+            s.id is not null
+            and lower(d.id) = $1
+          union
+          select
+            lower(s.id) as compute_snapshot_id
+          from
+            azure_compute_disk as d
+            left join azure_compute_snapshot as s on lower(s.id) = lower(d.creation_data_source_resource_id)
+          where
+            s.id is not null
+            and lower(d.id) = $1
+          EOQ
 
-  #       args = [self.input.disk_id.value]
-  #     }
+        args = [self.input.disk_id.value]
+      }
 
-  #     with "compute_snapshots" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(s.id) as compute_snapshot_id
-  #         from
-  #           azure_compute_disk as d
-  #           left join azure_compute_snapshot as s on lower(s.source_resource_id) = lower(d.id)
-  #         where
-  #           s.id is not null
-  #           and lower(d.id) = $1
-  #         union
-  #         select
-  #           lower(s.id) as compute_snapshot_id
-  #         from
-  #           azure_compute_disk as d
-  #           left join azure_compute_snapshot as s on lower(s.id) = lower(d.creation_data_source_resource_id)
-  #         where
-  #           s.id is not null
-  #           and lower(d.id) = $1
-  #         EOQ
+      with "compute_virtual_machines" {
+        sql = <<-EOQ
+          select
+            lower(m.id) as virtual_machine_id
+          from
+            azure_compute_virtual_machine as m,
+            jsonb_array_elements(data_disks) as data_disk
+          where
+            lower(data_disk -> 'managedDisk' ->> 'id') = lower($1)
+            or lower(m.managed_disk_id) = $1;
+          EOQ
 
-  #       args = [self.input.disk_id.value]
-  #     }
+        args = [self.input.disk_id.value]
+      }
 
-  #     with "compute_virtual_machines" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(m.id) as virtual_machine_id
-  #         from
-  #           azure_compute_virtual_machine as m,
-  #           jsonb_array_elements(data_disks) as data_disk
-  #         where
-  #           lower(data_disk -> 'managedDisk' ->> 'id') = lower($1)
-  #           or lower(m.managed_disk_id) = $1;
-  #         EOQ
+      with "key_vault_keys" {
+        sql = <<-EOQ
+          select
+            lower(k.id) as key_vault_key_id
+          from
+            azure_compute_disk_encryption_set as e
+            left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
+            left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
+            left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
+          where
+            lower(d.id) = $1;
+          EOQ
 
-  #       args = [self.input.disk_id.value]
-  #     }
+        args = [self.input.disk_id.value]
+      }
 
-  #     with "key_vault_keys" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(k.id) as key_vault_key_id
-  #         from
-  #           azure_compute_disk_encryption_set as e
-  #           left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
-  #           left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
-  #           left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
-  #         where
-  #           lower(d.id) = $1;
-  #         EOQ
+      with "key_vault_vaults" {
+        sql = <<-EOQ
+          select
+            lower(k.id) as key_vault_id
+          from
+            azure_compute_disk_encryption_set as e
+            left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
+            left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
+          where
+            lower(d.id) = $1;
+          EOQ
 
-  #       args = [self.input.disk_id.value]
-  #     }
+        args = [self.input.disk_id.value]
+      }
 
-  #     with "key_vault_vaults" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(k.id) as key_vault_id
-  #         from
-  #           azure_compute_disk_encryption_set as e
-  #           left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
-  #           left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
-  #         where
-  #           lower(d.id) = $1;
-  #         EOQ
+      with "storage_storage_accounts" {
+        sql = <<-EOQ
+          select
+            lower(a.id) as storage_account_id
+          from
+            azure_compute_disk as d
+            left join azure_storage_account as a on lower(a.id) = lower(d.creation_data_storage_account_id)
+          where
+            d.creation_data_storage_account_id is not null
+            and lower(d.id) = $1
+          EOQ
 
-  #       args = [self.input.disk_id.value]
-  #     }
+        args = [self.input.disk_id.value]
+      }
 
-  #     with "storage_storage_accounts" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(a.id) as storage_account_id
-  #         from
-  #           azure_compute_disk as d
-  #           left join azure_storage_account as a on lower(a.id) = lower(d.creation_data_storage_account_id)
-  #         where
-  #           d.creation_data_storage_account_id is not null
-  #           and lower(d.id) = $1
-  #         EOQ
+  container {
 
-  #       args = [self.input.disk_id.value]
-  #     }
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.compute_disk,
-  #       node.compute_disk_access,
-  #       node.compute_disk_encryption_set,
-  #       node.compute_disk_to_compute_disk,
-  #       node.compute_snapshot,
-  #       node.compute_virtual_machine,
-  #       node.key_vault_key,
-  #       node.key_vault_vault,
-  #       node.storage_storage_account
-  #     ]
+      node {
+        base = node.compute_disk
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }
 
-  #     edges = [
-  #       edge.compute_disk_to_compute_disk,
-  #       edge.compute_disk_to_compute_disk_access,
-  #       edge.compute_disk_to_compute_disk_encryption_set,
-  #       edge.compute_disk_to_compute_snapshot,
-  #       edge.compute_disk_to_key_vault_key,
-  #       edge.compute_disk_to_key_vault_vault,
-  #       edge.compute_disk_to_storage_storage_account,
-  #       edge.compute_snapshot_to_compute_disk,
-  #       edge.compute_virtual_machine_to_compute_disk
-  #     ]
+      node {
+        base = node.compute_disk_access
+        args = {
+          compute_disk_access_ids = with.compute_disk_accesses.rows[*].disk_access_id
+        }
+      }
 
-  #     args = {
-  #       compute_disk_access_ids         = with.compute_disk_accesses.rows[*].disk_access_id
-  #       compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
-  #       compute_disk_ids                = [self.input.disk_id.value]
-  #       compute_snapshot_ids            = with.compute_snapshots.rows[*].compute_snapshot_id
-  #       compute_virtual_machine_ids     = with.compute_virtual_machines.rows[*].virtual_machine_id
-  #       key_vault_key_ids               = with.key_vault_keys.rows[*].key_vault_key_id
-  #       key_vault_vault_ids             = with.key_vault_vaults.rows[*].key_vault_id
-  #       storage_account_ids             = with.storage_storage_accounts.rows[*].storage_account_id
-  #     }
-  #   }
-  # }
+      node {
+        base = node.compute_disk_encryption_set
+        args = {
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
+        }
+      }  
+
+      node {
+        base = node.compute_disk_to_compute_disk
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }  
+
+      node {
+        base = node.compute_snapshot
+        args = {
+          compute_snapshot_ids = with.compute_snapshots.rows[*].compute_snapshot_id
+        }
+      }    
+
+      node {
+        base = node.compute_virtual_machine
+        args = {
+          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }
+
+      node {
+        base = node.key_vault_key
+        args = {
+          key_vault_key_ids = with.key_vault_keys.rows[*].key_vault_key_id
+        }
+      }  
+
+      node {
+        base = node.key_vault_vault
+        args = {
+          key_vault_vault_ids = with.key_vault_vaults.rows[*].key_vault_id
+        }
+      }
+
+      node {
+        base = node.storage_storage_account
+        args = {
+          storage_account_ids = with.storage_storage_accounts.rows[*].storage_account_id
+        }
+      }  
+
+      edge {
+        base = edge.compute_disk_to_compute_disk
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.compute_disk_to_compute_disk_access
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.compute_disk_to_compute_disk_encryption_set
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_disk_to_compute_snapshot
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_disk_to_key_vault_key
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_disk_to_key_vault_vault
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }   
+
+      edge {
+        base = edge.compute_disk_to_storage_storage_account
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_snapshot_to_compute_disk
+        args = {
+          compute_snapshot_ids = with.compute_snapshots.rows[*].compute_snapshot_id
+        }
+      }
+
+      edge {
+        base = edge.compute_virtual_machine_to_compute_disk
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }   
+    }
+  }
 
   container {
 

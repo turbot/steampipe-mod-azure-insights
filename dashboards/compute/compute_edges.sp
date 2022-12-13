@@ -90,7 +90,7 @@ edge "compute_disk_to_key_vault_key" {
     select
       lower(e.active_key_source_vault_id) as from_id,
       lower(k.id) as to_id
-     from
+    from
       azure_compute_disk_encryption_set as e
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
