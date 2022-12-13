@@ -49,145 +49,196 @@ dashboard "network_interface_detail" {
 
   }
 
-  # container {
+      with "compute_virtual_machines" {
+        sql = <<-EOQ
+          with vm_network_interface_id as (
+            select
+              id,
+              jsonb_array_elements(network_interfaces)->>'id' as n_id
+            from
+              azure_compute_virtual_machine
+          )
+          select
+            lower(v.id) as virtual_machine_id
+          from
+            vm_network_interface_id as v
+            left join azure_network_interface as n on lower(v.n_id) = lower(n.id)
+          where
+            lower(n.id) = $1;
+        EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+        args = [self.input.nic_id.value]
+      }
 
-  #     with "compute_virtual_machines" {
-  #       sql = <<-EOQ
-  #         with vm_network_interface_id as (
-  #           select
-  #             id,
-  #             jsonb_array_elements(network_interfaces)->>'id' as n_id
-  #           from
-  #             azure_compute_virtual_machine
-  #         )
-  #         select
-  #           lower(v.id) as virtual_machine_id
-  #         from
-  #           vm_network_interface_id as v
-  #           left join azure_network_interface as n on lower(v.n_id) = lower(n.id)
-  #         where
-  #           lower(n.id) = $1;
-  #       EOQ
+      with "network_public_ips" {
+        sql = <<-EOQ
+          with network_interface_public_ip as (
+            select
+              id,
+              jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+            from
+              azure_network_interface
+          )
+          select
+            lower(p.id) as public_ip_id
+          from
+            network_interface_public_ip as n
+            left join azure_public_ip as p on lower(p.id) = lower(n.pid)
+          where
+            n.pid is not null
+            and lower(n.id) = $1;
+          EOQ
 
-  #       args = [self.input.nic_id.value]
-  #     }
+        args = [self.input.nic_id.value]
+      }
 
-  #     with "network_public_ips" {
-  #       sql = <<-EOQ
-  #         with network_interface_public_ip as (
-  #           select
-  #             id,
-  #             jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-  #           from
-  #             azure_network_interface
-  #         )
-  #         select
-  #           lower(p.id) as public_ip_id
-  #         from
-  #           network_interface_public_ip as n
-  #           left join azure_public_ip as p on lower(p.id) = lower(n.pid)
-  #         where
-  #           n.pid is not null
-  #           and lower(n.id) = $1;
-  #         EOQ
+      with "network_security_groups" {
+        sql = <<-EOQ
+          with network_security_group_id as (
+            select
+              network_security_group_id as sid,
+              id as nid
+            from
+              azure_network_interface
+            where
+              lower(id) = $1
+          )
+        select
+          lower(nic.sid) as nsg_id
+        from
+          network_security_group_id as nic
+          left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.sid)
+        EOQ
 
-  #       args = [self.input.nic_id.value]
-  #     }
+        args = [self.input.nic_id.value]
+      }
 
-  #     with "network_security_groups" {
-  #       sql = <<-EOQ
-  #         with network_security_group_id as (
-  #           select
-  #             network_security_group_id as sid,
-  #             id as nid
-  #           from
-  #             azure_network_interface
-  #           where
-  #             lower(id) = $1
-  #         )
-  #       select
-  #         lower(nic.sid) as nsg_id
-  #       from
-  #         network_security_group_id as nic
-  #         left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.sid)
-  #       EOQ
+      with "network_subnets" {
+        sql = <<-EOQ
+          select
+            lower(s.id) as subnet_id
+          from
+            azure_network_interface as ni,
+            jsonb_array_elements(ip_configurations) as c
+            left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+          where
+            lower(ni.id) = $1
+        EOQ
 
-  #       args = [self.input.nic_id.value]
-  #     }
+        args = [self.input.nic_id.value]
+      }
 
-  #     with "network_subnets" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(s.id) as subnet_id
-  #         from
-  #           azure_network_interface as ni,
-  #           jsonb_array_elements(ip_configurations) as c
-  #           left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
-  #         where
-  #           lower(ni.id) = $1
-  #       EOQ
+      with "network_virtual_networks" {
+        sql = <<-EOQ
+          with subnet_list as(
+            select
+              ni.id as network_interface_id,
+              c -> 'properties' -> 'subnet' ->> 'id' as subnet_id
+          from
+            azure_network_interface as ni,
+            jsonb_array_elements(ip_configurations) as c
+            left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+          where
+            lower(ni.id) = $1
+          )
+          select
+            lower(v.id) as virtual_network_id
+          from
+            azure_virtual_network as v,
+            jsonb_array_elements(subnets) as s,
+            subnet_list as l
+          where
+            lower(l.subnet_id) = lower(s ->> 'id');
+        EOQ
 
-  #       args = [self.input.nic_id.value]
-  #     }
+        args = [self.input.nic_id.value]
+      }
 
-  #     with "network_virtual_networks" {
-  #       sql = <<-EOQ
-  #         with subnet_list as(
-  #           select
-  #             ni.id as network_interface_id,
-  #             c -> 'properties' -> 'subnet' ->> 'id' as subnet_id
-  #         from
-  #           azure_network_interface as ni,
-  #           jsonb_array_elements(ip_configurations) as c
-  #           left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
-  #         where
-  #           lower(ni.id) = $1
-  #         )
-  #         select
-  #           lower(v.id) as virtual_network_id
-  #         from
-  #           azure_virtual_network as v,
-  #           jsonb_array_elements(subnets) as s,
-  #           subnet_list as l
-  #         where
-  #           lower(l.subnet_id) = lower(s ->> 'id');
-  #       EOQ
+  container {
 
-  #       args = [self.input.nic_id.value]
-  #     }
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.compute_virtual_machine,
-  #       node.network_network_interface,
-  #       node.network_network_security_group,
-  #       node.network_public_ip,
-  #       node.network_subnet,
-  #       node.network_virtual_network
-  #     ]
+      node {
+        base = node.compute_virtual_machine
+        args = {
+          compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }
 
-  #     edges = [
-  #       edge.compute_virtual_machine_to_network_network_interface,
-  #       edge.network_network_interface_to_network_public_ip,
-  #       edge.network_network_interface_to_network_security_group,
-  #       edge.network_network_interface_to_network_subnet,
-  #       edge.network_subnet_to_network_virtual_network,
-  #     ]
+      node {
+        base = node.network_network_interface
+        args = {
+          network_network_interface_ids = [self.input.nic_id.value]
+        }
+      }  
 
-  #     args = {
-  #       compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].virtual_machine_id
-  #       network_network_interface_ids = [self.input.nic_id.value]
-  #       network_public_ip_ids         = with.network_public_ips.rows[*].public_ip_id
-  #       network_security_group_ids    = with.network_security_groups.rows[*].nsg_id
-  #       network_subnet_ids            = with.network_subnets.rows[*].subnet_id
-  #       network_virtual_network_ids   = with.network_virtual_networks.rows[*].virtual_network_id
-  #     }
-  #   }
-  # }
+      node {
+        base = node.network_network_security_group
+        args = {
+          network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+        }
+      }  
+
+      node {
+        base = node.network_public_ip
+        args = {
+          network_public_ip_ids = with.network_public_ips.rows[*].public_ip_id
+        }
+      }
+
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+        }
+      }  
+
+      edge {
+        base = edge.compute_virtual_machine_to_network_network_interface
+        args = {
+          compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }  
+
+      edge {
+        base = edge.network_network_interface_to_network_public_ip
+        args = {
+          network_network_interface_ids = [self.input.nic_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.network_network_interface_to_network_security_group
+        args = {
+          network_network_interface_ids = [self.input.nic_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_network_interface_to_network_subnet
+        args = {
+          network_network_interface_ids = [self.input.nic_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.network_subnet_to_network_virtual_network
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+    }
+  }
 
   container {
 

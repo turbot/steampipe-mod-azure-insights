@@ -562,7 +562,7 @@ edge "network_public_ip_to_api_management" {
   title = "public ip"
 
   sql = <<-EOQ
-   with public_ip_api_management as (
+  with public_ip_api_management as (
       select
         id,
         title,
