@@ -40,82 +40,82 @@ dashboard "network_public_ip_detail" {
     }
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "compute_virtual_machines" {
-        sql = <<-EOQ
-          with vm_network_interface as (
-            select
-              id,
-              jsonb_array_elements(network_interfaces)->>'id' as n_id
-            from
-              azure_compute_virtual_machine
-          ), ni_public_ip as (
-              select
-                id,
-                jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-              from
-                azure_network_interface
-          )
-          select
-            lower(v.id) as virtual_machine_id
-          from
-            vm_network_interface as v
-            left join ni_public_ip as n on lower(v.n_id) = lower(n.id)
-            left join azure_public_ip as p on lower(n.pid) = lower(p.id)
-          where
-            lower(p.id) = $1;
-          EOQ
+  #     with "compute_virtual_machines" {
+  #       sql = <<-EOQ
+  #         with vm_network_interface as (
+  #           select
+  #             id,
+  #             jsonb_array_elements(network_interfaces)->>'id' as n_id
+  #           from
+  #             azure_compute_virtual_machine
+  #         ), ni_public_ip as (
+  #             select
+  #               id,
+  #               jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+  #             from
+  #               azure_network_interface
+  #         )
+  #         select
+  #           lower(v.id) as virtual_machine_id
+  #         from
+  #           vm_network_interface as v
+  #           left join ni_public_ip as n on lower(v.n_id) = lower(n.id)
+  #           left join azure_public_ip as p on lower(n.pid) = lower(p.id)
+  #         where
+  #           lower(p.id) = $1;
+  #         EOQ
 
-        args = [self.input.public_ip_id.value]
-      }
+  #       args = [self.input.public_ip_id.value]
+  #     }
 
-      with "network_network_interfaces" {
-        sql = <<-EOQ
-          with network_interface_public_ip as (
-            select
-              id,
-              jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-            from
-              azure_network_interface
-          )
-          select
-            lower(n.id) as nic_id
-          from
-            network_interface_public_ip as n
-            left join azure_public_ip as p on lower(n.pid) = lower(p.id)
-          where
-            lower(p.id) = $1;
-        EOQ
+  #     with "network_network_interfaces" {
+  #       sql = <<-EOQ
+  #         with network_interface_public_ip as (
+  #           select
+  #             id,
+  #             jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+  #           from
+  #             azure_network_interface
+  #         )
+  #         select
+  #           lower(n.id) as nic_id
+  #         from
+  #           network_interface_public_ip as n
+  #           left join azure_public_ip as p on lower(n.pid) = lower(p.id)
+  #         where
+  #           lower(p.id) = $1;
+  #       EOQ
 
-        args = [self.input.public_ip_id.value]
-      }
+  #       args = [self.input.public_ip_id.value]
+  #     }
 
-      nodes = [
-        node.compute_virtual_machine,
-        node.network_network_interface,
-        node.network_public_ip,
-        node.network_public_ip_api_management
-      ]
+  #     nodes = [
+  #       node.compute_virtual_machine,
+  #       node.network_network_interface,
+  #       node.network_public_ip,
+  #       node.network_public_ip_api_management
+  #     ]
 
-      edges = [
-        edge.compute_virtual_machine_to_network_network_interface,
-        edge.network_network_interface_to_network_public_ip,
-        edge.network_public_ip_to_api_management
-      ]
+  #     edges = [
+  #       edge.compute_virtual_machine_to_network_network_interface,
+  #       edge.network_network_interface_to_network_public_ip,
+  #       edge.network_public_ip_to_api_management
+  #     ]
 
-      args = {
-        compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].virtual_machine_id
-        network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
-        network_public_ip_ids         = [self.input.public_ip_id.value]
-      }
-    }
-  }
+  #     args = {
+  #       compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].virtual_machine_id
+  #       network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+  #       network_public_ip_ids         = [self.input.public_ip_id.value]
+  #     }
+  #   }
+  # }
 
   container {
 

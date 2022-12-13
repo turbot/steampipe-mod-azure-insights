@@ -41,299 +41,299 @@ dashboard "network_virtual_network_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "compute_virtual_machines" {
-        sql = <<-EOQ
-          with subnet_list as (
-            select
-              lower(id) as vn_id,
-              lower(sub ->> 'id') as sub_id,
-              sub ->> 'name' as sub_name
-            from
-              azure_virtual_network as n,
-              jsonb_array_elements(subnets) as sub
-            where
-              lower(id) = $1
-          ),
-          virtual_machine_nic_list as (
-            select
-              m.id as machine_id,
-              n.ip_configurations as ip_configs
-            from
-              azure_compute_virtual_machine as m,
-              jsonb_array_elements(network_interfaces) as nic
-              left join azure_network_interface as n on lower(n.id) = lower(nic ->> 'id')
-          )
-          select
-            lower(l.machine_id) as virtual_machine_id
-          from
-            virtual_machine_nic_list as l,
-            jsonb_array_elements(ip_configs) as ip_config
-          where
-            lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select sub_id from subnet_list);
-          EOQ
+  #     with "compute_virtual_machines" {
+  #       sql = <<-EOQ
+  #         with subnet_list as (
+  #           select
+  #             lower(id) as vn_id,
+  #             lower(sub ->> 'id') as sub_id,
+  #             sub ->> 'name' as sub_name
+  #           from
+  #             azure_virtual_network as n,
+  #             jsonb_array_elements(subnets) as sub
+  #           where
+  #             lower(id) = $1
+  #         ),
+  #         virtual_machine_nic_list as (
+  #           select
+  #             m.id as machine_id,
+  #             n.ip_configurations as ip_configs
+  #           from
+  #             azure_compute_virtual_machine as m,
+  #             jsonb_array_elements(network_interfaces) as nic
+  #             left join azure_network_interface as n on lower(n.id) = lower(nic ->> 'id')
+  #         )
+  #         select
+  #           lower(l.machine_id) as virtual_machine_id
+  #         from
+  #           virtual_machine_nic_list as l,
+  #           jsonb_array_elements(ip_configs) as ip_config
+  #         where
+  #           lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select sub_id from subnet_list);
+  #         EOQ
 
-        args = [self.input.vn_id.value]
-      }
+  #       args = [self.input.vn_id.value]
+  #     }
 
-      with "network_application_gateways" {
-        sql = <<-EOQ
-          with subnet_list as (
-            select
-              lower(s ->> 'id') as subnet_id
-            from
-              azure_virtual_network as v,
-              jsonb_array_elements(v.subnets) as s
-            where
-              lower(v.id) = $1
-          )
-          select
-            lower(g.id) as application_gateway_id
-          from
-            azure_application_gateway as g,
-            jsonb_array_elements(g.gateway_ip_configurations) as ip_config
-          where
-            lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list);
-        EOQ
+  #     with "network_application_gateways" {
+  #       sql = <<-EOQ
+  #         with subnet_list as (
+  #           select
+  #             lower(s ->> 'id') as subnet_id
+  #           from
+  #             azure_virtual_network as v,
+  #             jsonb_array_elements(v.subnets) as s
+  #           where
+  #             lower(v.id) = $1
+  #         )
+  #         select
+  #           lower(g.id) as application_gateway_id
+  #         from
+  #           azure_application_gateway as g,
+  #           jsonb_array_elements(g.gateway_ip_configurations) as ip_config
+  #         where
+  #           lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list);
+  #       EOQ
 
-        args = [self.input.vn_id.value]
-      }
+  #       args = [self.input.vn_id.value]
+  #     }
 
-      with "network_load_balancer_backend_address_pools" {
-        sql = <<-EOQ
-          with subnet_list as (
-            select
-              lower(s ->> 'id') as subnet_id
-            from
-              azure_virtual_network as v,
-              jsonb_array_elements(v.subnets) as s
-            where
-              lower(v.id) = $1
-          ),
-          nic_subnet_list as (
-            select
-              lower(nic.id) as nic_id,
-              lower(ip_config ->> 'id') as ip_config_id,
-              ip_config -> 'properties' -> 'subnet' ->> 'id',
-              title
-            from
-              azure_network_interface as nic,
-              jsonb_array_elements(ip_configurations) as ip_config
-            where
-              lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list)
-          )
-          select
-            lower(p.id) as pool_id
-          from
-            azure_lb_backend_address_pool as p,
-            jsonb_array_elements(p.backend_ip_configurations) as c
-          where
-            lower(c ->> 'id') in (select ip_config_id from nic_subnet_list);
-        EOQ
+  #     with "network_load_balancer_backend_address_pools" {
+  #       sql = <<-EOQ
+  #         with subnet_list as (
+  #           select
+  #             lower(s ->> 'id') as subnet_id
+  #           from
+  #             azure_virtual_network as v,
+  #             jsonb_array_elements(v.subnets) as s
+  #           where
+  #             lower(v.id) = $1
+  #         ),
+  #         nic_subnet_list as (
+  #           select
+  #             lower(nic.id) as nic_id,
+  #             lower(ip_config ->> 'id') as ip_config_id,
+  #             ip_config -> 'properties' -> 'subnet' ->> 'id',
+  #             title
+  #           from
+  #             azure_network_interface as nic,
+  #             jsonb_array_elements(ip_configurations) as ip_config
+  #           where
+  #             lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list)
+  #         )
+  #         select
+  #           lower(p.id) as pool_id
+  #         from
+  #           azure_lb_backend_address_pool as p,
+  #           jsonb_array_elements(p.backend_ip_configurations) as c
+  #         where
+  #           lower(c ->> 'id') in (select ip_config_id from nic_subnet_list);
+  #       EOQ
 
-        args = [self.input.vn_id.value]
-      }
+  #       args = [self.input.vn_id.value]
+  #     }
 
-      with "network_load_balancers" {
-        sql = <<-EOQ
-          with subnet_list as (
-            select
-              lower(s ->> 'id') as subnet_id
-            from
-              azure_virtual_network as v,
-              jsonb_array_elements(v.subnets) as s
-            where
-              lower(v.id) = $1
-          ),
-          nic_subnet_list as (
-            select
-              lower(nic.id) as nic_id,
-              lower(ip_config ->> 'id') as ip_config_id,
-              ip_config -> 'properties' -> 'subnet' ->> 'id',
-              title
-            from
-              azure_network_interface as nic,
-              jsonb_array_elements(ip_configurations) as ip_config
-            where
-              lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list)
-          ),
-        azure_lb_backend_address_pool as (
-          select
-            lower(p.id) as pool_id,
-            lower(c ->> 'id')
-          from
-            azure_lb_backend_address_pool as p,
-            jsonb_array_elements(p.backend_ip_configurations) as c
-          where
-            lower(c ->> 'id') in (select ip_config_id from nic_subnet_list)
-        )
-        select
-          distinct on (id) lower(id) as network_load_balancer_id
-        from
-          azure_lb,
-          jsonb_array_elements(backend_address_pools) as pool
-        where
-          lower(pool ->> 'id') in (select pool_id from azure_lb_backend_address_pool);
-        EOQ
+  #     with "network_load_balancers" {
+  #       sql = <<-EOQ
+  #         with subnet_list as (
+  #           select
+  #             lower(s ->> 'id') as subnet_id
+  #           from
+  #             azure_virtual_network as v,
+  #             jsonb_array_elements(v.subnets) as s
+  #           where
+  #             lower(v.id) = $1
+  #         ),
+  #         nic_subnet_list as (
+  #           select
+  #             lower(nic.id) as nic_id,
+  #             lower(ip_config ->> 'id') as ip_config_id,
+  #             ip_config -> 'properties' -> 'subnet' ->> 'id',
+  #             title
+  #           from
+  #             azure_network_interface as nic,
+  #             jsonb_array_elements(ip_configurations) as ip_config
+  #           where
+  #             lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list)
+  #         ),
+  #       azure_lb_backend_address_pool as (
+  #         select
+  #           lower(p.id) as pool_id,
+  #           lower(c ->> 'id')
+  #         from
+  #           azure_lb_backend_address_pool as p,
+  #           jsonb_array_elements(p.backend_ip_configurations) as c
+  #         where
+  #           lower(c ->> 'id') in (select ip_config_id from nic_subnet_list)
+  #       )
+  #       select
+  #         distinct on (id) lower(id) as network_load_balancer_id
+  #       from
+  #         azure_lb,
+  #         jsonb_array_elements(backend_address_pools) as pool
+  #       where
+  #         lower(pool ->> 'id') in (select pool_id from azure_lb_backend_address_pool);
+  #       EOQ
 
-        args = [self.input.vn_id.value]
-      }
+  #       args = [self.input.vn_id.value]
+  #     }
 
-      with "network_nat_gateways" {
-        sql = <<-EOQ
-          with subnet_list as (
-            select
-              lower(s ->> 'id') as subnet_id
-            from
-              azure_virtual_network as v,
-              jsonb_array_elements(v.subnets) as s
-            where
-              lower(v.id) = $1
-          )
-          select
-            lower(g.id) as nat_gateway_id
-          from
-            azure_nat_gateway as g,
-            jsonb_array_elements(g.subnets) as sub
-          where
-            lower(sub ->> 'id') in (select subnet_id from subnet_list);
-        EOQ
+  #     with "network_nat_gateways" {
+  #       sql = <<-EOQ
+  #         with subnet_list as (
+  #           select
+  #             lower(s ->> 'id') as subnet_id
+  #           from
+  #             azure_virtual_network as v,
+  #             jsonb_array_elements(v.subnets) as s
+  #           where
+  #             lower(v.id) = $1
+  #         )
+  #         select
+  #           lower(g.id) as nat_gateway_id
+  #         from
+  #           azure_nat_gateway as g,
+  #           jsonb_array_elements(g.subnets) as sub
+  #         where
+  #           lower(sub ->> 'id') in (select subnet_id from subnet_list);
+  #       EOQ
 
-        args = [self.input.vn_id.value]
-      }
+  #       args = [self.input.vn_id.value]
+  #     }
 
-      with "network_route_tables" {
-        sql = <<-EOQ
-          with subnet_list as (
-            select
-              lower(s ->> 'id') as subnet_id
-            from
-              azure_virtual_network as v,
-              jsonb_array_elements(v.subnets) as s
-            where
-              lower(v.id) = $1
-          )
-          select
-            lower(r.id) as route_table_id
-          from
-            azure_route_table as r,
-            jsonb_array_elements(r.subnets) as sub
-          where
-            lower(sub ->> 'id') in (select subnet_id from subnet_list);
-        EOQ
+  #     with "network_route_tables" {
+  #       sql = <<-EOQ
+  #         with subnet_list as (
+  #           select
+  #             lower(s ->> 'id') as subnet_id
+  #           from
+  #             azure_virtual_network as v,
+  #             jsonb_array_elements(v.subnets) as s
+  #           where
+  #             lower(v.id) = $1
+  #         )
+  #         select
+  #           lower(r.id) as route_table_id
+  #         from
+  #           azure_route_table as r,
+  #           jsonb_array_elements(r.subnets) as sub
+  #         where
+  #           lower(sub ->> 'id') in (select subnet_id from subnet_list);
+  #       EOQ
 
-        args = [self.input.vn_id.value]
-      }
+  #       args = [self.input.vn_id.value]
+  #     }
 
-      with "network_security_groups" {
-        sql = <<-EOQ
-          with subnet_list as (
-            select
-              lower(s ->> 'id') as subnet_id
-            from
-              azure_virtual_network as v,
-              jsonb_array_elements(v.subnets) as s
-            where
-              lower(v.id) = $1
-          )
-          select
-            lower(nsg.id) as nsg_id,
-            lower(sub ->> 'id') as nsg_subnet_id
-          from
-            azure_network_security_group as nsg,
-            jsonb_array_elements(nsg.subnets) as sub
-          where
-            lower(sub ->> 'id') in (select subnet_id from subnet_list);
-        EOQ
+  #     with "network_security_groups" {
+  #       sql = <<-EOQ
+  #         with subnet_list as (
+  #           select
+  #             lower(s ->> 'id') as subnet_id
+  #           from
+  #             azure_virtual_network as v,
+  #             jsonb_array_elements(v.subnets) as s
+  #           where
+  #             lower(v.id) = $1
+  #         )
+  #         select
+  #           lower(nsg.id) as nsg_id,
+  #           lower(sub ->> 'id') as nsg_subnet_id
+  #         from
+  #           azure_network_security_group as nsg,
+  #           jsonb_array_elements(nsg.subnets) as sub
+  #         where
+  #           lower(sub ->> 'id') in (select subnet_id from subnet_list);
+  #       EOQ
 
-        args = [self.input.vn_id.value]
-      }
+  #       args = [self.input.vn_id.value]
+  #     }
 
-      with "network_subnets" {
-        sql = <<-EOQ
-          select
-            lower(sub.id) as subnet_id
-          from
-            azure_virtual_network as v,
-            jsonb_array_elements(subnets) as s
-            left join azure_subnet as sub on lower(sub.id) = lower(s ->> 'id')
-          where
-            lower(v.id) = $1;
-        EOQ
+  #     with "network_subnets" {
+  #       sql = <<-EOQ
+  #         select
+  #           lower(sub.id) as subnet_id
+  #         from
+  #           azure_virtual_network as v,
+  #           jsonb_array_elements(subnets) as s
+  #           left join azure_subnet as sub on lower(sub.id) = lower(s ->> 'id')
+  #         where
+  #           lower(v.id) = $1;
+  #       EOQ
 
-        args = [self.input.vn_id.value]
-      }
+  #       args = [self.input.vn_id.value]
+  #     }
 
-      with "sql_servers" {
-        sql = <<-EOQ
-          with subnet_list as (
-            select
-              lower(s ->> 'id') as subnet_id
-            from
-              azure_virtual_network as v,
-              jsonb_array_elements(v.subnets) as s
-            where
-              lower(v.id) = $1
-          )
-          select
-            lower(s.id) as sql_server_id
-          from
-            azure_sql_server as s,
-            jsonb_array_elements(s.virtual_network_rules) as rule
-          where
-            lower(rule -> 'properties' ->> 'virtualNetworkSubnetId') in (select subnet_id from subnet_list);
-        EOQ
+  #     with "sql_servers" {
+  #       sql = <<-EOQ
+  #         with subnet_list as (
+  #           select
+  #             lower(s ->> 'id') as subnet_id
+  #           from
+  #             azure_virtual_network as v,
+  #             jsonb_array_elements(v.subnets) as s
+  #           where
+  #             lower(v.id) = $1
+  #         )
+  #         select
+  #           lower(s.id) as sql_server_id
+  #         from
+  #           azure_sql_server as s,
+  #           jsonb_array_elements(s.virtual_network_rules) as rule
+  #         where
+  #           lower(rule -> 'properties' ->> 'virtualNetworkSubnetId') in (select subnet_id from subnet_list);
+  #       EOQ
 
-        args = [self.input.vn_id.value]
-      }
+  #       args = [self.input.vn_id.value]
+  #     }
 
-      nodes = [
-        node.compute_virtual_machine,
-        node.network_application_gateway,
-        node.network_load_balancer,
-        node.network_load_balancer_backend_address_pool,
-        node.network_nat_gateway,
-        node.network_network_security_group,
-        node.network_route_table,
-        node.network_subnet,
-        node.network_virtual_network,
-        node.network_virtual_network_network_peering,
-        node.sql_server
-      ]
+  #     nodes = [
+  #       node.compute_virtual_machine,
+  #       node.network_application_gateway,
+  #       node.network_load_balancer,
+  #       node.network_load_balancer_backend_address_pool,
+  #       node.network_nat_gateway,
+  #       node.network_network_security_group,
+  #       node.network_route_table,
+  #       node.network_subnet,
+  #       node.network_virtual_network,
+  #       node.network_virtual_network_network_peering,
+  #       node.sql_server
+  #     ]
 
-      edges = [
-        edge.network_subnet_to_network_application_gateway,
-        edge.network_subnet_to_network_nat_gateway,
-        edge.network_subnet_to_network_route_table,
-        edge.network_subnet_to_network_security_group,
-        edge.network_subnet_to_sql_server,
-        edge.network_virtual_network_to_compute_virtual_machine,
-        edge.network_virtual_network_to_network_load_balancer,
-        edge.network_virtual_network_to_network_load_balancer_backend_address_pool,
-        edge.network_virtual_network_to_network_peering,
-        edge.network_virtual_network_to_network_subnet
-      ]
+  #     edges = [
+  #       edge.network_subnet_to_network_application_gateway,
+  #       edge.network_subnet_to_network_nat_gateway,
+  #       edge.network_subnet_to_network_route_table,
+  #       edge.network_subnet_to_network_security_group,
+  #       edge.network_subnet_to_sql_server,
+  #       edge.network_virtual_network_to_compute_virtual_machine,
+  #       edge.network_virtual_network_to_network_load_balancer,
+  #       edge.network_virtual_network_to_network_load_balancer_backend_address_pool,
+  #       edge.network_virtual_network_to_network_peering,
+  #       edge.network_virtual_network_to_network_subnet
+  #     ]
 
-      args = {
-        compute_virtual_machine_ids                    = with.compute_virtual_machines.rows[*].virtual_machine_id
-        network_application_gateway_ids                = with.network_application_gateways.rows[*].application_gateway_id
-        network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
-        network_load_balancer_ids                      = with.network_load_balancers.rows[*].network_load_balancer_id
-        network_nat_gateway_ids                        = with.network_nat_gateways.rows[*].nat_gateway_id
-        network_route_table_ids                        = with.network_route_tables.rows[*].route_table_id
-        network_security_group_ids                     = with.network_security_groups.rows[*].nsg_id
-        network_subnet_ids                             = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids                    = [self.input.vn_id.value]
-        sql_server_ids                                 = with.sql_servers.rows[*].sql_server_id
-      }
-    }
-  }
+  #     args = {
+  #       compute_virtual_machine_ids                    = with.compute_virtual_machines.rows[*].virtual_machine_id
+  #       network_application_gateway_ids                = with.network_application_gateways.rows[*].application_gateway_id
+  #       network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
+  #       network_load_balancer_ids                      = with.network_load_balancers.rows[*].network_load_balancer_id
+  #       network_nat_gateway_ids                        = with.network_nat_gateways.rows[*].nat_gateway_id
+  #       network_route_table_ids                        = with.network_route_tables.rows[*].route_table_id
+  #       network_security_group_ids                     = with.network_security_groups.rows[*].nsg_id
+  #       network_subnet_ids                             = with.network_subnets.rows[*].subnet_id
+  #       network_virtual_network_ids                    = [self.input.vn_id.value]
+  #       sql_server_ids                                 = with.sql_servers.rows[*].sql_server_id
+  #     }
+  #   }
+  # }
 
   container {
 

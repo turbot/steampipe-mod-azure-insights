@@ -57,186 +57,186 @@ dashboard "storage_account_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "batch_accounts" {
-        sql = <<-EOQ
-          select
-            lower(b.id) as batch_account_id
-          from
-            azure_batch_account as b
-            left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
-          where
-            lower(a.id) = $1;
-        EOQ
+  #     with "batch_accounts" {
+  #       sql = <<-EOQ
+  #         select
+  #           lower(b.id) as batch_account_id
+  #         from
+  #           azure_batch_account as b
+  #           left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
+  #         where
+  #           lower(a.id) = $1;
+  #       EOQ
 
-        args = [self.input.storage_account_id.value]
-      }
+  #       args = [self.input.storage_account_id.value]
+  #     }
 
-      with "compute_disks" {
-        sql = <<-EOQ
-          select
-            lower(id) as disk_id
-          from
-            azure_compute_disk
-          where
-            lower(creation_data_storage_account_id) = $1;
-        EOQ
+  #     with "compute_disks" {
+  #       sql = <<-EOQ
+  #         select
+  #           lower(id) as disk_id
+  #         from
+  #           azure_compute_disk
+  #         where
+  #           lower(creation_data_storage_account_id) = $1;
+  #       EOQ
 
-        args = [self.input.storage_account_id.value]
-      }
+  #       args = [self.input.storage_account_id.value]
+  #     }
 
-      with "compute_snapshots" {
-        sql = <<-EOQ
-          select
-            lower(id) as snapshot_id
-          from
-            azure_compute_snapshot
-          where
-            lower(storage_account_id) = $1;
-        EOQ
+  #     with "compute_snapshots" {
+  #       sql = <<-EOQ
+  #         select
+  #           lower(id) as snapshot_id
+  #         from
+  #           azure_compute_snapshot
+  #         where
+  #           lower(storage_account_id) = $1;
+  #       EOQ
 
-        args = [self.input.storage_account_id.value]
-      }
+  #       args = [self.input.storage_account_id.value]
+  #     }
 
-      with "key_vault_keys" {
-        sql = <<-EOQ
-          select
-            lower(key.id) as key_id
-          from
-            azure_storage_account as a
-            left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
-            left join azure_key_vault_key_version as v on lower(v.key_uri_with_version) = lower(a.encryption_key_vault_properties_key_current_version_id)
-            left join azure_key_vault_key as key on lower(key.key_uri) = lower(v.key_uri)
-          where
-            key.id is not null
-            and lower(a.id) = $1;
-        EOQ
+  #     with "key_vault_keys" {
+  #       sql = <<-EOQ
+  #         select
+  #           lower(key.id) as key_id
+  #         from
+  #           azure_storage_account as a
+  #           left join azure_key_vault as k on a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
+  #           left join azure_key_vault_key_version as v on lower(v.key_uri_with_version) = lower(a.encryption_key_vault_properties_key_current_version_id)
+  #           left join azure_key_vault_key as key on lower(key.key_uri) = lower(v.key_uri)
+  #         where
+  #           key.id is not null
+  #           and lower(a.id) = $1;
+  #       EOQ
 
-        args = [self.input.storage_account_id.value]
-      }
+  #       args = [self.input.storage_account_id.value]
+  #     }
 
-      with "key_vault_vaults" {
-        sql = <<-EOQ
-          select
-            lower(k.id) as vault_id
-          from
-            azure_storage_account as a,
-            azure_key_vault as k
-          where
-            a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
-            and lower(a.id) = $1;
-        EOQ
+  #     with "key_vault_vaults" {
+  #       sql = <<-EOQ
+  #         select
+  #           lower(k.id) as vault_id
+  #         from
+  #           azure_storage_account as a,
+  #           azure_key_vault as k
+  #         where
+  #           a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
+  #           and lower(a.id) = $1;
+  #       EOQ
 
-        args = [self.input.storage_account_id.value]
-      }
+  #       args = [self.input.storage_account_id.value]
+  #     }
 
-      with "monitor_diagnostic_settings" {
-        sql = <<-EOQ
-          select
-            lower(id) as monitor_diagnostic_settings_id
-          from
-            azure_diagnostic_setting
-          where
-            lower(storage_account_id) = $1;
-        EOQ
+  #     with "monitor_diagnostic_settings" {
+  #       sql = <<-EOQ
+  #         select
+  #           lower(id) as monitor_diagnostic_settings_id
+  #         from
+  #           azure_diagnostic_setting
+  #         where
+  #           lower(storage_account_id) = $1;
+  #       EOQ
 
-        args = [self.input.storage_account_id.value]
-      }
+  #       args = [self.input.storage_account_id.value]
+  #     }
 
-      with "monitor_log_profiles" {
-        sql = <<-EOQ
-          select
-            lower(id) as log_profile_id
-          from
-            azure_log_profile
-          where
-            lower(storage_account_id) = $1;
-        EOQ
+  #     with "monitor_log_profiles" {
+  #       sql = <<-EOQ
+  #         select
+  #           lower(id) as log_profile_id
+  #         from
+  #           azure_log_profile
+  #         where
+  #           lower(storage_account_id) = $1;
+  #       EOQ
 
-        args = [self.input.storage_account_id.value]
-      }
+  #       args = [self.input.storage_account_id.value]
+  #     }
 
-      with "network_subnets" {
-        sql = <<-EOQ
-          select
-            distinct(lower(r ->> 'id')) as subnet_id
-          from
-            azure_storage_account,
-            jsonb_array_elements(virtual_network_rules) as r
-          where
-            lower(id) = $1
-        EOQ
+  #     with "network_subnets" {
+  #       sql = <<-EOQ
+  #         select
+  #           distinct(lower(r ->> 'id')) as subnet_id
+  #         from
+  #           azure_storage_account,
+  #           jsonb_array_elements(virtual_network_rules) as r
+  #         where
+  #           lower(id) = $1
+  #       EOQ
 
-        args = [self.input.storage_account_id.value]
-      }
+  #       args = [self.input.storage_account_id.value]
+  #     }
 
-      with "network_virtual_networks" {
-        sql = <<-EOQ
-            select
-              distinct lower(split_part(r ->> 'id', '/subnets', 1)) as network_id
-            from
-              azure_storage_account,
-              jsonb_array_elements(virtual_network_rules) as r
-            where
-              lower(id) = $1
-          EOQ
+  #     with "network_virtual_networks" {
+  #       sql = <<-EOQ
+  #           select
+  #             distinct lower(split_part(r ->> 'id', '/subnets', 1)) as network_id
+  #           from
+  #             azure_storage_account,
+  #             jsonb_array_elements(virtual_network_rules) as r
+  #           where
+  #             lower(id) = $1
+  #         EOQ
 
-        args = [self.input.storage_account_id.value]
-      }
+  #       args = [self.input.storage_account_id.value]
+  #     }
 
-      nodes = [
-        node.batch_account,
-        node.compute_disk,
-        node.compute_snapshot,
-        node.key_vault_key,
-        node.key_vault_vault,
-        node.monitor_diagnostic_setting,
-        node.monitor_log_profile,
-        node.network_subnet,
-        node.network_virtual_network,
-        node.storage_storage_account,
-        node.storage_storage_container,
-        node.storage_storage_queue,
-        node.storage_storage_share_file,
-        node.storage_storage_table
-      ]
+  #     nodes = [
+  #       node.batch_account,
+  #       node.compute_disk,
+  #       node.compute_snapshot,
+  #       node.key_vault_key,
+  #       node.key_vault_vault,
+  #       node.monitor_diagnostic_setting,
+  #       node.monitor_log_profile,
+  #       node.network_subnet,
+  #       node.network_virtual_network,
+  #       node.storage_storage_account,
+  #       node.storage_storage_container,
+  #       node.storage_storage_queue,
+  #       node.storage_storage_share_file,
+  #       node.storage_storage_table
+  #     ]
 
-      edges = [
-        edge.batch_account_to_storage_storage_account,
-        edge.compute_disk_to_storage_storage_account,
-        edge.compute_snapshot_to_storage_storage_account,
-        edge.monitor_diagnostic_setting_to_storage_storage_account,
-        edge.monitor_log_profile_to_storage_storage_account,
-        edge.network_subnet_to_network_virtual_network,
-        edge.storage_storage_account_to_key_vault_key,
-        edge.storage_storage_account_to_key_vault_vault,
-        edge.storage_storage_account_to_network_subnet,
-        edge.storage_storage_account_to_storage_storage_container,
-        edge.storage_storage_account_to_storage_storage_queue,
-        edge.storage_storage_account_to_storage_storage_share_file,
-        edge.storage_storage_account_to_storage_storage_table
-      ]
+  #     edges = [
+  #       edge.batch_account_to_storage_storage_account,
+  #       edge.compute_disk_to_storage_storage_account,
+  #       edge.compute_snapshot_to_storage_storage_account,
+  #       edge.monitor_diagnostic_setting_to_storage_storage_account,
+  #       edge.monitor_log_profile_to_storage_storage_account,
+  #       edge.network_subnet_to_network_virtual_network,
+  #       edge.storage_storage_account_to_key_vault_key,
+  #       edge.storage_storage_account_to_key_vault_vault,
+  #       edge.storage_storage_account_to_network_subnet,
+  #       edge.storage_storage_account_to_storage_storage_container,
+  #       edge.storage_storage_account_to_storage_storage_queue,
+  #       edge.storage_storage_account_to_storage_storage_share_file,
+  #       edge.storage_storage_account_to_storage_storage_table
+  #     ]
 
-      args = {
-        batch_account_ids              = with.batch_accounts.rows[*].batch_account_id
-        compute_disk_ids               = with.compute_disks.rows[*].disk_id
-        compute_snapshot_ids           = with.compute_snapshots.rows[*].snapshot_id
-        key_vault_key_ids              = with.key_vault_keys.rows[*].key_id
-        key_vault_vault_ids            = with.key_vault_vaults.rows[*].vault_id
-        monitor_diagnostic_setting_ids = with.monitor_diagnostic_settings.rows[*].monitor_diagnostic_settings_id
-        monitor_log_profile_ids        = with.monitor_log_profiles.rows[*].log_profile_id
-        network_subnet_ids             = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids    = with.network_virtual_networks.rows[*].network_id
-        storage_account_ids            = [self.input.storage_account_id.value]
-      }
-    }
-  }
+  #     args = {
+  #       batch_account_ids              = with.batch_accounts.rows[*].batch_account_id
+  #       compute_disk_ids               = with.compute_disks.rows[*].disk_id
+  #       compute_snapshot_ids           = with.compute_snapshots.rows[*].snapshot_id
+  #       key_vault_key_ids              = with.key_vault_keys.rows[*].key_id
+  #       key_vault_vault_ids            = with.key_vault_vaults.rows[*].vault_id
+  #       monitor_diagnostic_setting_ids = with.monitor_diagnostic_settings.rows[*].monitor_diagnostic_settings_id
+  #       monitor_log_profile_ids        = with.monitor_log_profiles.rows[*].log_profile_id
+  #       network_subnet_ids             = with.network_subnets.rows[*].subnet_id
+  #       network_virtual_network_ids    = with.network_virtual_networks.rows[*].network_id
+  #       storage_account_ids            = [self.input.storage_account_id.value]
+  #     }
+  #   }
+  # }
 
   container {
 

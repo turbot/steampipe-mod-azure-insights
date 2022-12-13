@@ -65,120 +65,120 @@ dashboard "network_security_group_detail" {
 
   }
 
-  container {
+  # container {
 
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
+  #   graph {
+  #     title     = "Relationships"
+  #     type      = "graph"
+  #     direction = "TD"
 
-      with "compute_virtual_machines" {
-        sql = <<-EOQ
-          with network_interface_list as (
-            select
-              nsg.id as nsg_id,
-              nic.id as nic_id
-            from
-              azure_network_security_group as nsg,
-              jsonb_array_elements(network_interfaces) as ni
-              left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
-            where
-              lower(nsg.id )= $1
-          )
-          select
-            lower(vm.id) as machine_id
-          from
-            azure_compute_virtual_machine as vm,
-            jsonb_array_elements(network_interfaces) as ni
-            left join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
-          where
-            lower(nic.nsg_id) = $1;
-          EOQ
+  #     with "compute_virtual_machines" {
+  #       sql = <<-EOQ
+  #         with network_interface_list as (
+  #           select
+  #             nsg.id as nsg_id,
+  #             nic.id as nic_id
+  #           from
+  #             azure_network_security_group as nsg,
+  #             jsonb_array_elements(network_interfaces) as ni
+  #             left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
+  #           where
+  #             lower(nsg.id )= $1
+  #         )
+  #         select
+  #           lower(vm.id) as machine_id
+  #         from
+  #           azure_compute_virtual_machine as vm,
+  #           jsonb_array_elements(network_interfaces) as ni
+  #           left join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
+  #         where
+  #           lower(nic.nsg_id) = $1;
+  #         EOQ
 
-        args = [self.input.nsg_id.value]
-      }
+  #       args = [self.input.nsg_id.value]
+  #     }
 
-      with "network_network_interfaces" {
-        sql = <<-EOQ
-          select
-            lower(nic.id) as nic_id
-          from
-            azure_network_security_group as nsg,
-            jsonb_array_elements(network_interfaces) as ni
-            left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
-          where
-            (nic.id) is not null
-            and lower(nsg.id) = $1;
-          EOQ
+  #     with "network_network_interfaces" {
+  #       sql = <<-EOQ
+  #         select
+  #           lower(nic.id) as nic_id
+  #         from
+  #           azure_network_security_group as nsg,
+  #           jsonb_array_elements(network_interfaces) as ni
+  #           left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
+  #         where
+  #           (nic.id) is not null
+  #           and lower(nsg.id) = $1;
+  #         EOQ
 
-        args = [self.input.nsg_id.value]
-      }
+  #       args = [self.input.nsg_id.value]
+  #     }
 
-      with "network_subnets" {
-        sql = <<-EOQ
-          select
-            lower(s.id) as subnet_id
-          from
-            azure_network_security_group as nsg,
-            jsonb_array_elements(subnets) as sub
-            left join azure_subnet as s on lower(s.id) = lower(sub ->> 'id')
-          where
-            lower(nsg.id) = $1;
-          EOQ
+  #     with "network_subnets" {
+  #       sql = <<-EOQ
+  #         select
+  #           lower(s.id) as subnet_id
+  #         from
+  #           azure_network_security_group as nsg,
+  #           jsonb_array_elements(subnets) as sub
+  #           left join azure_subnet as s on lower(s.id) = lower(sub ->> 'id')
+  #         where
+  #           lower(nsg.id) = $1;
+  #         EOQ
 
-        args = [self.input.nsg_id.value]
-      }
+  #       args = [self.input.nsg_id.value]
+  #     }
 
-      with "network_virtual_networks" {
-        sql = <<-EOQ
-          with subnet_list as (
-            select
-              nsg.id as nsg_id,
-              sub ->> 'id' as subnet_id
-            from
-              azure_network_security_group as nsg,
-              jsonb_array_elements(subnets) as sub
-            where
-              lower(nsg.id) = $1
-          ) select
-              lower(vn.id) as network_id
-            from
-              azure_virtual_network as vn,
-              jsonb_array_elements(subnets) as sub
-              join subnet_list as s on lower(s.subnet_id) = lower(sub ->> 'id')
-            where
-              lower(s.nsg_id) = $1;
-          EOQ
+  #     with "network_virtual_networks" {
+  #       sql = <<-EOQ
+  #         with subnet_list as (
+  #           select
+  #             nsg.id as nsg_id,
+  #             sub ->> 'id' as subnet_id
+  #           from
+  #             azure_network_security_group as nsg,
+  #             jsonb_array_elements(subnets) as sub
+  #           where
+  #             lower(nsg.id) = $1
+  #         ) select
+  #             lower(vn.id) as network_id
+  #           from
+  #             azure_virtual_network as vn,
+  #             jsonb_array_elements(subnets) as sub
+  #             join subnet_list as s on lower(s.subnet_id) = lower(sub ->> 'id')
+  #           where
+  #             lower(s.nsg_id) = $1;
+  #         EOQ
 
-        args = [self.input.nsg_id.value]
-      }
+  #       args = [self.input.nsg_id.value]
+  #     }
 
-      nodes = [
-        node.compute_virtual_machine,
-        node.network_network_interface,
-        node.network_network_security_group,
-        node.network_security_group_network_watcher_flow_log,
-        node.network_subnet,
-        node.network_virtual_network
-      ]
+  #     nodes = [
+  #       node.compute_virtual_machine,
+  #       node.network_network_interface,
+  #       node.network_network_security_group,
+  #       node.network_security_group_network_watcher_flow_log,
+  #       node.network_subnet,
+  #       node.network_virtual_network
+  #     ]
 
-      edges = [
-        edge.network_security_group_to_compute_virtual_machine,
-        edge.network_security_group_to_network_interface,
-        edge.network_security_group_to_network_watcher_flow_log,
-        edge.network_subnet_to_network_security_group,
-        edge.network_virtual_network_to_network_subnet
-      ]
+  #     edges = [
+  #       edge.network_security_group_to_compute_virtual_machine,
+  #       edge.network_security_group_to_network_interface,
+  #       edge.network_security_group_to_network_watcher_flow_log,
+  #       edge.network_subnet_to_network_security_group,
+  #       edge.network_virtual_network_to_network_subnet
+  #     ]
 
-      args = {
-        compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].machine_id
-        network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
-        network_security_group_ids    = [self.input.nsg_id.value]
-        network_subnet_ids            = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids   = with.network_virtual_networks.rows[*].network_id
-      }
-    }
-  }
+  #     args = {
+  #       compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].machine_id
+  #       network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+  #       network_security_group_ids    = [self.input.nsg_id.value]
+  #       network_subnet_ids            = with.network_subnets.rows[*].subnet_id
+  #       network_virtual_network_ids   = with.network_virtual_networks.rows[*].network_id
+  #     }
+  #   }
+  # }
 
   container {
 
