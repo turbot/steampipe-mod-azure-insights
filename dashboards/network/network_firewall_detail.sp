@@ -41,90 +41,119 @@ dashboard "network_firewall_detail" {
 
   }
 
-  # container {
+      with "network_public_ips" {
+        sql = <<-EOQ
+          select
+            lower(ip.id) as public_ip_id
+          from
+            azure_firewall as f,
+            jsonb_array_elements(ip_configurations) as c
+            left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
+          where
+            lower(f.id) = $1;
+        EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+        args = [self.input.firewall_id.value]
+      }
 
-  #     with "network_public_ips" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(ip.id) as public_ip_id
-  #         from
-  #           azure_firewall as f,
-  #           jsonb_array_elements(ip_configurations) as c
-  #           left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
-  #         where
-  #           lower(f.id) = $1;
-  #       EOQ
+      with "network_subnets" {
+        sql = <<-EOQ
+          select
+            lower(s.id) as subnet_id
+          from
+            azure_firewall as f,
+            jsonb_array_elements(ip_configurations) as c
+            left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
+          where
+            lower(f.id) = $1;
+        EOQ
 
-  #       args = [self.input.firewall_id.value]
-  #     }
+        args = [self.input.firewall_id.value]
+      }
 
-  #     with "network_subnets" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(s.id) as subnet_id
-  #         from
-  #           azure_firewall as f,
-  #           jsonb_array_elements(ip_configurations) as c
-  #           left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
-  #         where
-  #           lower(f.id) = $1;
-  #       EOQ
+      with "network_virtual_networks" {
+        sql = <<-EOQ
+          with subnet_list as (
+            select
+              f.id as firewall_id,
+              s.id as subnet_id
+          from
+            azure_firewall as f,
+            jsonb_array_elements(ip_configurations) as c
+            left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
+          where
+            lower(f.id) = $1
+          )
+          select
+            lower(vn.id) as network_id
+          from
+            azure_virtual_network as vn,
+            jsonb_array_elements(subnets) as s,
+            subnet_list as sub
+          where
+            lower(s ->> 'id') = lower(sub.subnet_id)
+        EOQ
 
-  #       args = [self.input.firewall_id.value]
-  #     }
+        args = [self.input.firewall_id.value]
+      }
 
-  #     with "network_virtual_networks" {
-  #       sql = <<-EOQ
-  #         with subnet_list as (
-  #           select
-  #             f.id as firewall_id,
-  #             s.id as subnet_id
-  #         from
-  #           azure_firewall as f,
-  #           jsonb_array_elements(ip_configurations) as c
-  #           left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
-  #         where
-  #           lower(f.id) = $1
-  #         )
-  #         select
-  #           lower(vn.id) as network_id
-  #         from
-  #           azure_virtual_network as vn,
-  #           jsonb_array_elements(subnets) as s,
-  #           subnet_list as sub
-  #         where
-  #           lower(s ->> 'id') = lower(sub.subnet_id)
-  #       EOQ
+  container {
 
-  #       args = [self.input.firewall_id.value]
-  #     }
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     nodes = [
-  #       node.network_firewall,
-  #       node.network_public_ip,
-  #       node.network_subnet,
-  #       node.network_virtual_network
-  #     ]
+      node {
+        base = node.network_firewall
+        args = {
+          network_firewall_ids = [self.input.firewall_id.value]
+        }
+      }
 
-  #     edges = [
-  #       edge.network_firewall_to_network_public_ip,
-  #       edge.network_firewall_to_network_subnet,
-  #       edge.network_subnet_to_network_virtual_network
-  #     ]
+      node {
+        base = node.network_public_ip
+        args = {
+          network_public_ip_ids = with.network_public_ips.rows[*].public_ip_id
+        }
+      }  
 
-  #     args = {
-  #       network_firewall_ids        = [self.input.firewall_id.value]
-  #       network_public_ip_ids       = with.network_public_ips.rows[*].public_ip_id
-  #       network_subnet_ids          = with.network_subnets.rows[*].subnet_id
-  #       network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
-  #     }
-  #   }
-  # }
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }  
+
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+        }
+      }
+
+      edge {
+        base = edge.network_firewall_to_network_public_ip
+        args = {
+          network_firewall_ids = [self.input.firewall_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.network_firewall_to_network_subnet
+        args = {
+          network_firewall_ids = [self.input.firewall_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.network_subnet_to_network_virtual_network
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+    }
+  }
 
   container {
 
