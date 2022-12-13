@@ -524,7 +524,7 @@ query "compute_virtual_machine_scale_set_encryption_status" {
 
 query "compute_virtual_machine_scale_set_logging_status" {
   sql = <<-EOQ
-     with logging_details as (
+    with logging_details as (
       select
         distinct a.id as vm_scale_set_id
       from
