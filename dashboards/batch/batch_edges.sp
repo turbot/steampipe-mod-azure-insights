@@ -5,7 +5,7 @@ edge "batch_account_to_storage_storage_account" {
     select
       lower(b.id) as from_id,
       lower(a.id) as to_id
-   from
+    from
       azure_batch_account as b
       left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
     where
