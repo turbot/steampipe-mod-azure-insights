@@ -49,84 +49,92 @@ dashboard "kubernetes_cluster_detail" {
 
   }
 
-  # container {
+  with "compute_disk_encryption_sets" {
+    sql = <<-EOQ
+          select
+            lower(e.id) as encryption_set_id
+          from
+            azure_kubernetes_cluster c,
+            azure_compute_disk_encryption_set e
+          where
+            lower(c.disk_encryption_set_id) = lower(e.id)
+            and lower(c.id) = $1;
+        EOQ
 
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
+    args = [self.input.cluster_id.value]
+  }
 
-  #     with "compute_disk_encryption_sets" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(e.id) as encryption_set_id
-  #         from
-  #           azure_kubernetes_cluster c,
-  #           azure_compute_disk_encryption_set e
-  #         where
-  #           lower(c.disk_encryption_set_id) = lower(e.id)
-  #           and lower(c.id) = $1;
-  #       EOQ
+  with "compute_virtual_machine_scale_sets" {
+    sql = <<-EOQ
+          select
+            lower(set.id) as scale_set_id
+          from
+            azure_kubernetes_cluster c,
+            azure_compute_virtual_machine_scale_set as set
+          where
+            lower(set.resource_group) = lower(c.node_resource_group)
+            and lower(c.id) = $1;
+        EOQ
 
-  #       args = [self.input.cluster_id.value]
-  #     }
+    args = [self.input.cluster_id.value]
+  }
 
-  #     with "compute_virtual_machine_scale_sets" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(set.id) as scale_set_id
-  #         from
-  #           azure_kubernetes_cluster c,
-  #           azure_compute_virtual_machine_scale_set as set
-  #         where
-  #           lower(set.resource_group) = lower(c.node_resource_group)
-  #           and lower(c.id) = $1;
-  #       EOQ
+  with "compute_virtual_machine_scale_set_vms" {
+    sql = <<-EOQ
+          select
+            lower(vm.id) as vm_id
+          from
+            azure_kubernetes_cluster c,
+            azure_compute_virtual_machine_scale_set set,
+            azure_compute_virtual_machine_scale_set_vm vm
+          where
+            lower(set.resource_group) = lower(c.node_resource_group)
+            and set.name = vm.scale_set_name
+            and vm.resource_group = set.resource_group
+            and lower(c.id) = $1;
+        EOQ
 
-  #       args = [self.input.cluster_id.value]
-  #     }
+    args = [self.input.cluster_id.value]
+  }
 
-  #     with "compute_virtual_machine_scale_set_vms" {
-  #       sql = <<-EOQ
-  #         select
-  #           lower(vm.id) as vm_id
-  #         from
-  #           azure_kubernetes_cluster c,
-  #           azure_compute_virtual_machine_scale_set set,
-  #           azure_compute_virtual_machine_scale_set_vm vm
-  #         where
-  #           lower(set.resource_group) = lower(c.node_resource_group)
-  #           and set.name = vm.scale_set_name
-  #           and vm.resource_group = set.resource_group
-  #           and lower(c.id) = $1;
-  #       EOQ
 
-  #       args = [self.input.cluster_id.value]
-  #     }
+  container {
 
-  #     nodes = [
-  #       node.compute_disk_encryption_set,
-  #       node.compute_virtual_machine_scale_set,
-  #       node.compute_virtual_machine_scale_set_vm,
-  #       node.kubernetes_cluster,
-  #       node.kubernetes_node_pool
-  #     ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-  #     edges = [
-  #       edge.kubernetes_cluster_to_compute_disk_encryption_set,
-  #       edge.kubernetes_cluster_to_compute_virtual_machine_scale_set,
-  #       edge.kubernetes_cluster_to_compute_virtual_machine_scale_set_vm,
-  #       edge.kubernetes_cluster_to_kubernetes_node_pool
-  #     ]
+      node {
+        base = node.kubernetes_cluster
+        args = {
+          kubernetes_cluster_ids = [self.input.cluster_id.value]
+        }
+      }
 
-  #     args = {
-  #       compute_disk_encryption_set_ids          = with.compute_disk_encryption_sets.rows[*].encryption_set_id
-  #       compute_virtual_machine_scale_set_ids    = with.compute_virtual_machine_scale_sets.rows[*].scale_set_id
-  #       compute_virtual_machine_scale_set_vm_ids = with.compute_virtual_machine_scale_set_vms.rows[*].vm_id
-  #       kubernetes_cluster_ids                   = [self.input.cluster_id.value]
-  #     }
-  #   }
-  # }
+      # nodes = [
+      #   node.compute_disk_encryption_set,
+      #   node.compute_virtual_machine_scale_set,
+      #   node.compute_virtual_machine_scale_set_vm,
+      #   node.kubernetes_cluster,
+      #   node.kubernetes_node_pool
+      # ]
+
+      # edges = [
+      #   edge.kubernetes_cluster_to_compute_disk_encryption_set,
+      #   edge.kubernetes_cluster_to_compute_virtual_machine_scale_set,
+      #   edge.kubernetes_cluster_to_compute_virtual_machine_scale_set_vm,
+      #   edge.kubernetes_cluster_to_kubernetes_node_pool
+      # ]
+
+      # args = {
+      #   compute_disk_encryption_set_ids          = with.compute_disk_encryption_sets.rows[*].encryption_set_id
+      #   compute_virtual_machine_scale_set_ids    = with.compute_virtual_machine_scale_sets.rows[*].scale_set_id
+      #   compute_virtual_machine_scale_set_vm_ids = with.compute_virtual_machine_scale_set_vms.rows[*].vm_id
+      #   kubernetes_cluster_ids                   = [self.input.cluster_id.value]
+      # }
+    }
+  }
 
   container {
 
