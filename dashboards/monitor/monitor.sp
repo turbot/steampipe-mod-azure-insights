@@ -6,6 +6,6 @@ category "monitor_diagnostic_setting" {
 
 category "monitor_log_profile" {
   title = "Log Profile"
-  icon  = "text:LP"
+  icon  = "query-stats"
   color = local.management_governance_color
 }

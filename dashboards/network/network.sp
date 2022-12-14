@@ -20,44 +20,44 @@ category "network_firewall" {
 category "network_load_balancer" {
   title = "Load Balancer"
   href  = "/azure_insights.dashboard.network_load_balancer_detail?input.lb_id={{.properties.'ID' | @uri}}"
-  icon  = "text:LB"
+  icon  = "mediation"
   color = local.networking_color
 }
 
 category "network_load_balancer_backend_address_pool" {
   title = "Backend Address Pool"
-  icon  = "text:LBBackendAddressPool"
+  icon  = "table-rows"
   color = local.networking_color
 }
 
 category "network_load_balancer_nat_rule" {
   title = "Load Balancer NAT Rule"
-  icon  = "text:LBNatRule"
+  icon  = "rule"
   color = local.networking_color
 }
 
 category "network_load_balancer_probe" {
   title = "Load Balancer Probe"
-  icon  = "text:LBProbe"
+  icon  = "usb"
   color = local.networking_color
 }
 
 category "network_load_balancer_rule" {
   title = "Load Balancer Rule"
-  icon  = "text:LBRule"
+  icon  = "description"
   color = local.networking_color
 }
 
 category "network_nat_gateway" {
   title = "NAT Gateway"
-  icon  = "text:LBNatGateway"
+  icon  = "lan"
   color = local.networking_color
 }
 
 category "network_network_interface" {
   title = "Network Interface"
   href  = "/azure_insights.dashboard.network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
-  icon  = "text:ENI"
+  icon  = "memory"
   color = local.networking_color
 }
 
@@ -69,14 +69,14 @@ category "network_peering" {
 
 category "network_private_endpoint_connection" {
   title = "Private Endpoint Connection"
-  icon  = "text:PEC"
+  icon  = "matter"
   color = local.networking_color
 }
 
 category "network_public_ip" {
   title = "Public IP"
   href  = "/azure_insights.dashboard.network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
-  icon  = "text:EIP"
+  icon  = "swipe-right-alt"
   color = local.networking_color
 }
 
@@ -109,6 +109,6 @@ category "network_virtual_network" {
 
 category "network_watcher_flow_log" {
   title = "Network Watcher Flow Log"
-  icon  = "text:NWFlowLog"
+  icon  = "format-text-overflow"
   color = local.networking_color
 }
