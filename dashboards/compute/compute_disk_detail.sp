@@ -54,32 +54,32 @@ dashboard "compute_disk_detail" {
 
   with "compute_disk_encryption_sets" {
     query = query.compute_disk_compute_disk_encryption_sets
-    args = [self.input.disk_id.value]
+    args  = [self.input.disk_id.value]
   }
 
   with "compute_snapshots" {
     query = query.compute_disk_compute_snapshots
-    args = [self.input.disk_id.value]
+    args  = [self.input.disk_id.value]
   }
 
   with "compute_virtual_machines" {
     query = query.compute_disk_compute_virtual_machines
-    args = [self.input.disk_id.value]
+    args  = [self.input.disk_id.value]
   }
 
   with "key_vault_keys" {
     query = query.compute_disk_key_vault_keys
-    args = [self.input.disk_id.value]
+    args  = [self.input.disk_id.value]
   }
 
   with "key_vault_vaults" {
     query = query.compute_disk_key_vault_vaults
-    args = [self.input.disk_id.value]
+    args  = [self.input.disk_id.value]
   }
 
   with "storage_storage_accounts" {
     query = query.compute_disk_storage_storage_accounts
-    args = [self.input.disk_id.value]
+    args  = [self.input.disk_id.value]
   }
 
   container {
@@ -227,14 +227,14 @@ dashboard "compute_disk_detail" {
         type  = "line"
         width = 6
         query = query.compute_disk_overview
-        args = [self.input.disk_id.value]
+        args  = [self.input.disk_id.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.compute_disk_tags
-        args = [self.input.disk_id.value]
+        args  = [self.input.disk_id.value]
       }
     }
 
@@ -245,7 +245,7 @@ dashboard "compute_disk_detail" {
       table {
         title = "Attached To"
         query = query.compute_disk_associated_virtual_machine_details
-        args = [self.input.disk_id.value]
+        args  = [self.input.disk_id.value]
 
         column "Name" {
           href = "${dashboard.compute_virtual_machine_detail.url_path}?input.vm_id={{.ID | @uri}}"
@@ -255,7 +255,7 @@ dashboard "compute_disk_detail" {
       table {
         title = "Disk Encryption Set"
         query = query.compute_disk_encryption_set_details
-        args = [self.input.disk_id.value]
+        args  = [self.input.disk_id.value]
 
         column "Key Vault ID" {
           display = "none"
