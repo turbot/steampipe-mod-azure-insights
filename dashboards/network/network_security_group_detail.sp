@@ -18,133 +18,60 @@ dashboard "network_security_group_detail" {
     card {
       width = 2
       query = query.network_security_group_ingress_rules_count
-      args = {
-        id = self.input.nsg_id.value
-      }
+      args  = [self.input.nsg_id.value]
     }
 
     card {
       width = 2
       query = query.network_security_group_egress_rules_count
-      args = {
-        id = self.input.nsg_id.value
-      }
+      args  = [self.input.nsg_id.value]
     }
 
     card {
       width = 2
       query = query.network_security_group_attached_enis_count
-      args = {
-        id = self.input.nsg_id.value
-      }
+      args  = [self.input.nsg_id.value]
     }
 
     card {
       width = 2
       query = query.network_security_group_attached_subnets_count
-      args = {
-        id = self.input.nsg_id.value
-      }
+      args  = [self.input.nsg_id.value]
     }
 
     card {
       width = 2
       query = query.network_security_group_unrestricted_ingress_remote_access
-      args = {
-        id = self.input.nsg_id.value
-      }
+      args  = [self.input.nsg_id.value]
     }
 
     card {
       width = 2
       query = query.network_security_group_unrestricted_egress_remote_access
-      args = {
-        id = self.input.nsg_id.value
-      }
+      args  = [self.input.nsg_id.value]
     }
 
   }
 
-      with "compute_virtual_machines" {
-        sql = <<-EOQ
-          with network_interface_list as (
-            select
-              nsg.id as nsg_id,
-              nic.id as nic_id
-            from
-              azure_network_security_group as nsg,
-              jsonb_array_elements(network_interfaces) as ni
-              left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
-            where
-              lower(nsg.id )= $1
-          )
-          select
-            lower(vm.id) as virtual_machine_id
-          from
-            azure_compute_virtual_machine as vm,
-            jsonb_array_elements(network_interfaces) as ni
-            left join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
-          where
-            lower(nic.nsg_id) = $1;
-          EOQ
+  with "compute_virtual_machines" {
+    query = query.network_security_group_compute_virtual_machines
+    args  = [self.input.nsg_id.value]
+  }
 
-        args = [self.input.nsg_id.value]
-      }
+  with "network_network_interfaces" {
+    query = query.network_security_group_network_network_interfaces
+    args  = [self.input.nsg_id.value]
+  }
 
-      with "network_network_interfaces" {
-        sql = <<-EOQ
-          select
-            lower(nic.id) as nic_id
-          from
-            azure_network_security_group as nsg,
-            jsonb_array_elements(network_interfaces) as ni
-            left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
-          where
-            (nic.id) is not null
-            and lower(nsg.id) = $1;
-          EOQ
+  with "network_subnets" {
+    query = query.network_security_group_network_subnets
+    args  = [self.input.nsg_id.value]
+  }
 
-        args = [self.input.nsg_id.value]
-      }
-
-      with "network_subnets" {
-        sql = <<-EOQ
-          select
-            lower(s.id) as subnet_id
-          from
-            azure_network_security_group as nsg,
-            jsonb_array_elements(subnets) as sub
-            left join azure_subnet as s on lower(s.id) = lower(sub ->> 'id')
-          where
-            lower(nsg.id) = $1;
-          EOQ
-
-        args = [self.input.nsg_id.value]
-      }
-
-      with "network_virtual_networks" {
-        sql = <<-EOQ
-          with subnet_list as (
-            select
-              nsg.id as nsg_id,
-              sub ->> 'id' as subnet_id
-            from
-              azure_network_security_group as nsg,
-              jsonb_array_elements(subnets) as sub
-            where
-              lower(nsg.id) = $1
-          ) select
-              lower(vn.id) as network_id
-            from
-              azure_virtual_network as vn,
-              jsonb_array_elements(subnets) as sub
-              join subnet_list as s on lower(s.subnet_id) = lower(sub ->> 'id')
-            where
-              lower(s.nsg_id) = $1;
-          EOQ
-
-        args = [self.input.nsg_id.value]
-      }
+  with "network_virtual_networks" {
+    query = query.network_security_group_network_virtual_networks
+    args  = [self.input.nsg_id.value]
+  }
 
   container {
 
@@ -153,82 +80,82 @@ dashboard "network_security_group_detail" {
       type      = "graph"
       direction = "TD"
 
-  node {
-    base = node.compute_virtual_machine
-    args = {
-      compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
-    }
-  }
+      node {
+        base = node.compute_virtual_machine
+        args = {
+          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }
 
-  node {
-    base = node.network_network_interface
-    args = {
-      network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
-    }
-  }
+      node {
+        base = node.network_network_interface
+        args = {
+          network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+        }
+      }
 
-  node {
-    base = node.network_network_security_group
-    args = {
-      network_security_group_ids = [self.input.nsg_id.value]
-    }
-  }
+      node {
+        base = node.network_network_security_group
+        args = {
+          network_security_group_ids = [self.input.nsg_id.value]
+        }
+      }
 
-  node {
-    base = node.network_security_group_network_watcher_flow_log
-    args = {
-      network_security_group_ids = [self.input.nsg_id.value]
-    }
-  }
+      node {
+        base = node.network_security_group_network_watcher_flow_log
+        args = {
+          network_security_group_ids = [self.input.nsg_id.value]
+        }
+      }
 
-  node {
-    base = node.network_subnet
-    args = {
-      network_subnet_ids = with.network_subnets.rows[*].subnet_id
-    }
-  }
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
 
-  node {
-    base = node.network_virtual_network
-    args = {
-      network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
-    }
-  }
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+        }
+      }
 
-  edge {
-    base = edge.network_security_group_to_compute_virtual_machine
-    args = {
-      network_security_group_ids = [self.input.nsg_id.value]
-    }
-  }
+      edge {
+        base = edge.network_security_group_to_compute_virtual_machine
+        args = {
+          network_security_group_ids = [self.input.nsg_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_security_group_to_network_interface
-    args = {
-      network_security_group_ids = [self.input.nsg_id.value]
-    }
-  }
+      edge {
+        base = edge.network_security_group_to_network_interface
+        args = {
+          network_security_group_ids = [self.input.nsg_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_security_group_to_network_watcher_flow_log
-    args = {
-      network_security_group_ids = [self.input.nsg_id.value]
-    }
-  }
+      edge {
+        base = edge.network_security_group_to_network_watcher_flow_log
+        args = {
+          network_security_group_ids = [self.input.nsg_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_subnet_to_network_security_group
-    args = {
-      network_subnet_ids = with.network_subnets.rows[*].subnet_id
-    }
-  }
+      edge {
+        base = edge.network_subnet_to_network_security_group
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
 
-  edge {
-    base = edge.network_virtual_network_to_network_subnet
-    args = {
-      network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
-    }
-  }
+      edge {
+        base = edge.network_virtual_network_to_network_subnet
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+        }
+      }
     }
   }
 
@@ -242,9 +169,7 @@ dashboard "network_security_group_detail" {
         type  = "line"
         width = 6
         query = query.network_security_group_overview
-        args = {
-          id = self.input.nsg_id.value
-        }
+        args  = [self.input.nsg_id.value]
 
       }
 
@@ -252,9 +177,7 @@ dashboard "network_security_group_detail" {
         title = "Tags"
         width = 6
         query = query.network_security_group_tags
-        args = {
-          id = self.input.nsg_id.value
-        }
+        args  = [self.input.nsg_id.value]
       }
     }
 
@@ -264,17 +187,13 @@ dashboard "network_security_group_detail" {
       table {
         title = "Associated to"
         query = query.network_security_group_assoc
-        args = {
-          id = self.input.nsg_id.value
-        }
+        args  = [self.input.nsg_id.value]
       }
 
       table {
         title = "Flow Logs"
         query = query.security_group_flow_logs
-        args = {
-          id = self.input.nsg_id.value
-        }
+        args  = [self.input.nsg_id.value]
       }
 
     }
@@ -289,18 +208,14 @@ dashboard "network_security_group_detail" {
       base  = flow.network_security_group_rules_sankey
       title = "Ingress Analysis"
       query = query.network_security_group_ingress_rule_sankey
-      args = {
-        id = self.input.nsg_id.value
-      }
+      args  = [self.input.nsg_id.value]
     }
 
 
     table {
       title = "Ingress Rules"
       query = query.network_security_group_ingress_rules
-      args = {
-        id = self.input.nsg_id.value
-      }
+      args  = [self.input.nsg_id.value]
     }
 
   }
@@ -313,17 +228,13 @@ dashboard "network_security_group_detail" {
       base  = flow.network_security_group_rules_sankey
       title = "Egress Analysis"
       query = query.network_security_group_egress_rule_sankey
-      args = {
-        id = self.input.nsg_id.value
-      }
+      args  = [self.input.nsg_id.value]
     }
 
     table {
       title = "Egress Rules"
       query = query.network_security_group_egress_rules
-      args = {
-        id = self.input.nsg_id.value
-      }
+      args  = [self.input.nsg_id.value]
     }
 
   }
@@ -363,6 +274,8 @@ query "network_security_group_input" {
   EOQ
 }
 
+# card queries
+
 query "network_security_group_ingress_rules_count" {
   sql = <<-EOQ
     select
@@ -376,7 +289,6 @@ query "network_security_group_ingress_rules_count" {
       and id = $1
   EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_egress_rules_count" {
@@ -392,7 +304,6 @@ query "network_security_group_egress_rules_count" {
       and id = $1
   EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_attached_enis_count" {
@@ -407,7 +318,6 @@ query "network_security_group_attached_enis_count" {
       id = $1
   EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_attached_subnets_count" {
@@ -422,7 +332,6 @@ query "network_security_group_attached_subnets_count" {
       id = $1
   EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_unrestricted_ingress_remote_access" {
@@ -460,7 +369,6 @@ query "network_security_group_unrestricted_ingress_remote_access" {
       unrestricted_inbound
   EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_unrestricted_egress_remote_access" {
@@ -498,8 +406,85 @@ query "network_security_group_unrestricted_egress_remote_access" {
       unrestricted_outbound
   EOQ
 
-  param "id" {}
 }
+
+# with queries
+
+query "network_security_group_compute_virtual_machines" {
+  sql   = <<-EOQ
+    with network_interface_list as (
+      select
+        nsg.id as nsg_id,
+        nic.id as nic_id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(network_interfaces) as ni
+        left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
+      where
+        lower(nsg.id )= $1
+    )
+    select
+      lower(vm.id) as virtual_machine_id
+    from
+      azure_compute_virtual_machine as vm,
+      jsonb_array_elements(network_interfaces) as ni
+      left join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
+    where
+      lower(nic.nsg_id) = $1;
+  EOQ
+}
+
+query "network_security_group_network_network_interfaces" {
+  sql   = <<-EOQ
+    select
+      lower(nic.id) as nic_id
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(network_interfaces) as ni
+      left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
+    where
+      (nic.id) is not null
+      and lower(nsg.id) = $1;
+  EOQ
+}
+
+query "network_security_group_network_subnets" {
+  sql   = <<-EOQ
+    select
+      lower(s.id) as subnet_id
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(subnets) as sub
+      left join azure_subnet as s on lower(s.id) = lower(sub ->> 'id')
+    where
+      lower(nsg.id) = $1
+      and lower(s.id) is not null;
+  EOQ
+}
+
+query "network_security_group_network_virtual_networks" {
+  sql   = <<-EOQ
+    with subnet_list as (
+      select
+        nsg.id as nsg_id,
+        sub ->> 'id' as subnet_id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(subnets) as sub
+      where
+        lower(nsg.id) = $1
+    ) select
+        lower(vn.id) as network_id
+      from
+        azure_virtual_network as vn,
+        jsonb_array_elements(subnets) as sub
+        join subnet_list as s on lower(s.subnet_id) = lower(sub ->> 'id')
+      where
+        lower(s.nsg_id) = $1;
+  EOQ
+}
+
+# table queries
 
 query "network_security_group_overview" {
   sql = <<-EOQ
@@ -517,7 +502,6 @@ query "network_security_group_overview" {
       id = $1
   EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_tags" {
@@ -534,7 +518,6 @@ query "network_security_group_tags" {
       tag.key;
     EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_assoc" {
@@ -544,11 +527,11 @@ query "network_security_group_assoc" {
       ni.title as "Title",
       'Network Interface' as "Type",
       ni.id as "ID"
-     from
-       azure_network_security_group as nsg,
-       jsonb_array_elements(nsg.network_interfaces) as nic
-       left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
-     where
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(nsg.network_interfaces) as nic
+      left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
+    where
       nsg.id = $1
 
       -- Subnets
@@ -556,15 +539,14 @@ query "network_security_group_assoc" {
       s.title as "Title",
       'Subnet' as "Type",
       S.id as "ID"
-     from
-       azure_network_security_group as nsg,
-       jsonb_array_elements(nsg.subnets) as subnets
-       left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
-     where
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(nsg.subnets) as subnets
+      left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
+    where
       nsg.id = $1
     EOQ
 
-  param "id" {}
 }
 
 query "security_group_flow_logs" {
@@ -590,7 +572,6 @@ query "security_group_flow_logs" {
 
   EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_ingress_rules" {
@@ -610,7 +591,6 @@ query "network_security_group_ingress_rules" {
         and nsg.id = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_egress_rules" {
@@ -630,7 +610,6 @@ query "network_security_group_egress_rules" {
       and nsg.id = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_ingress_rule_sankey" {
@@ -759,7 +738,6 @@ query "network_security_group_ingress_rule_sankey" {
         rules
   EOQ
 
-  param "id" {}
 }
 
 query "network_security_group_egress_rule_sankey" {
@@ -900,5 +878,4 @@ query "network_security_group_egress_rule_sankey" {
         rules
   EOQ
 
-  param "id" {}
 }
