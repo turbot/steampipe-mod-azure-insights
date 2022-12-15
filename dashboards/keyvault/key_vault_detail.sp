@@ -284,7 +284,7 @@ query "key_vault_key_vault_keys" {
 }
 
 query "key_vault_network_subnets" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(s.id) as subnet_id
       from
@@ -297,7 +297,7 @@ query "key_vault_network_subnets" {
 }
 
 query "key_vault_network_virtual_networks" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with subnet as (
       select
         lower(s.id) as id
