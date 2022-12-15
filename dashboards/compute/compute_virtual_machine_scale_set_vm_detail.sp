@@ -18,190 +18,56 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
     card {
       width = 2
       query = query.compute_virtual_machine_scale_set_scale_set_name
-      args = {
-        id = self.input.scale_set_vm_id.value
-      }
+      args  = [self.input.scale_set_vm_id.value]
     }
 
     card {
       width = 2
       query = query.compute_virtual_machine_scale_set_sku_name
-      args = {
-        id = self.input.scale_set_vm_id.value
-      }
+      args  = [self.input.scale_set_vm_id.value]
     }
 
   }
 
-      with "compute_disks" {
-        sql = <<-EOQ
-          select
-            lower(d.id) as disk_id
-          from
-            azure_compute_virtual_machine_scale_set_vm as vm,
-            jsonb_array_elements(virtual_machine_storage_profile -> 'dataDisks') as disk
-            left join azure_compute_disk as d on lower(d.id) = lower(disk -> 'managedDisk' ->> 'id')
-          where
-            d.id is not null
-            and lower(vm.id) = $1;
-        EOQ
+  with "compute_disks" {
+    query = query.compute_virtual_machine_scale_set_vm_compute_disks
+    args  = [self.input.scale_set_vm_id.value]
+  }
 
-        args = [self.input.scale_set_vm_id.value]
-      }
+  with "network_interfaces" {
+    query = query.compute_virtual_machine_scale_set_vm_network_interfaces
+    args  = [self.input.scale_set_vm_id.value]
+  }
 
-      with "compute_virtual_machine_scale_set_network_interfaces" {
-        sql = <<-EOQ
-          select
-            lower(nic.id) as network_interface_id
-          from
-            azure_compute_virtual_machine_scale_set_vm as vm
-            left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
-          where
-            lower(vm.id) = $1;
-        EOQ
+  with "compute_virtual_machine_scale_sets" {
+    query = query.compute_virtual_machine_scale_set_vm_compute_virtual_machine_scale_sets
+    args  = [self.input.scale_set_vm_id.value]
+  }
 
-        args = [self.input.scale_set_vm_id.value]
-      }
+  with "network_load_balancer_backend_address_pools" {
+    query = query.compute_virtual_machine_scale_set_vm_network_load_balancer_backend_address_pools
+    args  = [self.input.scale_set_vm_id.value]
+  }
 
-      with "compute_virtual_machine_scale_sets" {
-        sql = <<-EOQ
-          select
-            lower(s.id) as scale_set_id
-          from
-            azure_compute_virtual_machine_scale_set_vm as vm
-            left join azure_compute_virtual_machine_scale_set as s on s.name = vm.scale_set_name
-          where
-            lower(vm.id) = $1;
-        EOQ
+  with "network_load_balancers" {
+    query = query.compute_virtual_machine_scale_set_vm_network_load_balancers
+    args  = [self.input.scale_set_vm_id.value]
+  }
 
-        args = [self.input.scale_set_vm_id.value]
-      }
+  with "network_security_groups" {
+    query = query.compute_virtual_machine_scale_set_vm_network_security_groups
+    args  = [self.input.scale_set_vm_id.value]
+  }
 
-      with "network_load_balancer_backend_address_pools" {
-        sql = <<-EOQ
-          with compute_virtual_machine_scale_set_network_interface as (
-            select
-              nic.id as nic_id,
-              lower(c ->> 'id') as config_id
-            from
-              azure_compute_virtual_machine_scale_set_network_interface as nic,
-              jsonb_array_elements(ip_configurations) as c
-            where
-              lower(nic.virtual_machine ->> 'id') = $1
-          )
-          select
-            lower(p.id) as pool_id
-          from
-            azure_lb_backend_address_pool as p,
-            jsonb_array_elements(backend_ip_configurations) as c
-          where
-            lower(c ->> 'id') in (select config_id from compute_virtual_machine_scale_set_network_interface)
-        EOQ
+  with "network_subnets" {
+    query = query.compute_virtual_machine_scale_set_vm_network_subnets
+    args  = [self.input.scale_set_vm_id.value]
+  }
 
-        args = [self.input.scale_set_vm_id.value]
-      }
-
-      with "network_load_balancers" {
-        sql = <<-EOQ
-          with compute_virtual_machine_scale_set_network_interface as (
-            select
-              nic.id as nic_id,
-              c ->> 'id' as config_id
-            from
-              azure_compute_virtual_machine_scale_set_network_interface as nic,
-              jsonb_array_elements(ip_configurations) as c
-            where
-              lower(nic.virtual_machine ->> 'id') = $1
-          ),
-          backend_address_pool as (
-            select
-              lower(p.id) as id
-            from
-              azure_lb_backend_address_pool as p,
-              jsonb_array_elements(backend_ip_configurations) as c
-            where
-              c ->> 'id' in (select config_id from compute_virtual_machine_scale_set_network_interface)
-          )
-          select
-            lower(lb.id) as lb_id
-          from
-            azure_lb as lb,
-            jsonb_array_elements(backend_address_pools) as p
-            left join backend_address_pool as pool on pool.id = lower(p ->> 'id')
-        EOQ
-
-        args = [self.input.scale_set_vm_id.value]
-      }
-
-      with "network_security_groups" {
-        sql = <<-EOQ
-          select
-            lower(nsg.id) as nsg_id
-          from
-            azure_compute_virtual_machine_scale_set_vm as vm
-            left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
-            left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.network_security_group ->> 'id')
-          where
-            lower(vm.id) = $1;
-        EOQ
-
-        args = [self.input.scale_set_vm_id.value]
-      }
-
-      with "network_subnets" {
-        sql = <<-EOQ
-          with ip_configs as (
-            select
-              nic.ip_configurations as ip_config,
-              lower(vm.id) as vm_id,
-              lower(nic.id) as nic_i
-            from
-              azure_compute_virtual_machine_scale_set_vm as vm
-              left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
-            where
-            lower(vm.id) = $1
-          )
-          select
-            lower(s.id) as subnet_id
-          from
-            ip_configs,
-            jsonb_array_elements(ip_config) as c
-            left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
-        EOQ
-
-        args = [self.input.scale_set_vm_id.value]
-      }
-
-      with "network_virtual_networks" {
-        sql = <<-EOQ
-          with ip_configs as (
-            select
-              nic.ip_configurations as ip_config,
-              lower(vm.id) as vm_id,
-              lower(nic.id) as nic_id
-            from
-              azure_compute_virtual_machine_scale_set_vm as vm
-              left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
-            where
-              lower(vm.id) = $1
-          ), subnet_list as (
-            select
-              lower(c -> 'properties' -> 'subnet' ->> 'id') as subnet_id
-            from
-              ip_configs,
-              jsonb_array_elements(ip_config) as c
-          )
-          select
-            lower(vn.id) as network_id
-          from
-            azure_virtual_network as vn,
-            jsonb_array_elements(vn.subnets) as s
-          where
-            lower(s ->> 'id') in (select lower(subnet_id) from subnet_list)
-        EOQ
-
-        args = [self.input.scale_set_vm_id.value]
-      }
+  with "network_virtual_networks" {
+    query = query.compute_virtual_machine_scale_set_vm_network_virtual_networks
+    args  = [self.input.scale_set_vm_id.value]
+  }
 
   container {
 
@@ -209,13 +75,13 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
       title     = "Relationships"
       type      = "graph"
       direction = "TD"
-      
+
       node {
         base = node.compute_disk
         args = {
           compute_disk_ids = with.compute_disks.rows[*].disk_id
         }
-      }    
+      }
 
       node {
         base = node.compute_virtual_machine_scale_set
@@ -227,9 +93,9 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
       node {
         base = node.compute_virtual_machine_scale_set_network_interface
         args = {
-          compute_virtual_machine_scale_set_network_interface_ids = with.compute_virtual_machine_scale_set_network_interfaces.rows[*].network_interface_id
+          compute_virtual_machine_scale_set_network_interface_ids = with.network_interfaces.rows[*].network_interface_id
         }
-      }  
+      }
 
       node {
         base = node.compute_virtual_machine_scale_set_vm
@@ -264,28 +130,28 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
         args = {
           network_subnet_ids = with.network_subnets.rows[*].subnet_id
         }
-      }     
+      }
 
       node {
         base = node.network_virtual_network
         args = {
           network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
         }
-      }  
+      }
 
       edge {
         base = edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vm
         args = {
           compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.compute_virtual_machine_scale_set_vm_to_compute_disk
         args = {
           compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.compute_virtual_machine_scale_set_vm_to_compute_virtual_machine_scale_set_network_interface
@@ -313,14 +179,14 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
         args = {
           compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.compute_virtual_machine_scale_set_vm_to_network_subnet
         args = {
           compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.network_subnet_to_network_virtual_network
@@ -341,9 +207,7 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
         type  = "line"
         width = 6
         query = query.compute_virtual_machine_scale_set_vm_overview
-        args = {
-          id = self.input.scale_set_vm_id.value
-        }
+        args  = [self.input.scale_set_vm_id.value]
 
       }
 
@@ -351,9 +215,7 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
         title = "Tags"
         width = 6
         query = query.compute_virtual_machine_scale_set_vm_tags
-        args = {
-          id = self.input.scale_set_vm_id.value
-        }
+        args  = [self.input.scale_set_vm_id.value]
       }
     }
 
@@ -363,25 +225,19 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
       table {
         title = "Image Reference"
         query = query.compute_virtual_machine_scale_set_vm_image_reference
-        args = {
-          id = self.input.scale_set_vm_id.value
-        }
+        args  = [self.input.scale_set_vm_id.value]
       }
 
       table {
         title = "OS Disks"
         query = query.compute_virtual_machine_scale_set_vm_os_disks
-        args = {
-          id = self.input.scale_set_vm_id.value
-        }
+        args  = [self.input.scale_set_vm_id.value]
       }
 
       table {
         title = "Data Disks"
         query = query.compute_virtual_machine_scale_set_vm_data_disks
-        args = {
-          id = self.input.scale_set_vm_id.value
-        }
+        args  = [self.input.scale_set_vm_id.value]
       }
     }
 
@@ -393,9 +249,7 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
     table {
       title = "Network Interface"
       query = query.compute_virtual_machine_scale_set_vm_network_interface
-      args = {
-        id = self.input.scale_set_vm_id.value
-      }
+      args  = [self.input.scale_set_vm_id.value]
     }
 
   }
@@ -422,6 +276,8 @@ query "compute_virtual_machine_scale_set_vm_input" {
   EOQ
 }
 
+# Card Queries
+
 query "compute_virtual_machine_scale_set_scale_set_name" {
   sql = <<-EOQ
     select
@@ -432,8 +288,6 @@ query "compute_virtual_machine_scale_set_scale_set_name" {
     where
       lower(id) = $1;
   EOQ
-
-  param "id" {}
 
 }
 
@@ -448,9 +302,165 @@ query "compute_virtual_machine_scale_set_sku_name" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-
 }
+
+# With Queries
+
+query "compute_virtual_machine_scale_set_vm_compute_disks" {
+  sql   = <<-EOQ
+    select
+      lower(d.id) as disk_id
+    from
+      azure_compute_virtual_machine_scale_set_vm as vm,
+      jsonb_array_elements(virtual_machine_storage_profile -> 'dataDisks') as disk
+      left join azure_compute_disk as d on lower(d.id) = lower(disk -> 'managedDisk' ->> 'id')
+    where
+      d.id is not null
+      and lower(vm.id) = $1;
+  EOQ
+}
+
+query "compute_virtual_machine_scale_set_vm_network_interfaces" {
+  sql   = <<-EOQ
+    select
+      lower(nic.id) as network_interface_id
+    from
+      azure_compute_virtual_machine_scale_set_vm as vm
+      left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
+    where
+      lower(vm.id) = $1;
+  EOQ
+}
+
+query "compute_virtual_machine_scale_set_vm_compute_virtual_machine_scale_sets" {
+  sql   = <<-EOQ
+    select
+      lower(s.id) as scale_set_id
+    from
+      azure_compute_virtual_machine_scale_set_vm as vm
+      left join azure_compute_virtual_machine_scale_set as s on s.name = vm.scale_set_name
+    where
+      lower(vm.id) = $1;
+  EOQ
+}
+
+query "compute_virtual_machine_scale_set_vm_network_load_balancer_backend_address_pools" {
+  sql   = <<-EOQ
+    with compute_virtual_machine_scale_set_network_interface as (
+      select
+        nic.id as nic_id,
+        lower(c ->> 'id') as config_id
+      from
+        azure_compute_virtual_machine_scale_set_network_interface as nic,
+        jsonb_array_elements(ip_configurations) as c
+      where
+        lower(nic.virtual_machine ->> 'id') = $1
+    )
+    select
+      lower(p.id) as pool_id
+    from
+      azure_lb_backend_address_pool as p,
+      jsonb_array_elements(backend_ip_configurations) as c
+    where
+      lower(c ->> 'id') in (select config_id from compute_virtual_machine_scale_set_network_interface)
+  EOQ
+}
+
+query "compute_virtual_machine_scale_set_vm_network_load_balancers" {
+  sql   = <<-EOQ
+    with compute_virtual_machine_scale_set_network_interface as (
+      select
+        nic.id as nic_id,
+        c ->> 'id' as config_id
+      from
+        azure_compute_virtual_machine_scale_set_network_interface as nic,
+        jsonb_array_elements(ip_configurations) as c
+      where
+        lower(nic.virtual_machine ->> 'id') = $1
+    ),
+    backend_address_pool as (
+      select
+        lower(p.id) as id
+      from
+        azure_lb_backend_address_pool as p,
+        jsonb_array_elements(backend_ip_configurations) as c
+      where
+        c ->> 'id' in (select config_id from compute_virtual_machine_scale_set_network_interface)
+    )
+    select
+      lower(lb.id) as lb_id
+    from
+      azure_lb as lb,
+      jsonb_array_elements(backend_address_pools) as p
+      left join backend_address_pool as pool on pool.id = lower(p ->> 'id')
+  EOQ
+}
+
+query "compute_virtual_machine_scale_set_vm_network_security_groups" {
+  sql   = <<-EOQ
+      select
+        lower(nsg.id) as nsg_id
+      from
+        azure_compute_virtual_machine_scale_set_vm as vm
+        left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
+        left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.network_security_group ->> 'id')
+      where
+        lower(vm.id) = $1;
+  EOQ
+}
+
+query "compute_virtual_machine_scale_set_vm_network_subnets" {
+  sql   = <<-EOQ
+      with ip_configs as (
+        select
+          nic.ip_configurations as ip_config,
+          lower(vm.id) as vm_id,
+          lower(nic.id) as nic_i
+        from
+          azure_compute_virtual_machine_scale_set_vm as vm
+          left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
+        where
+        lower(vm.id) = $1
+      )
+      select
+        lower(s.id) as subnet_id
+      from
+        ip_configs,
+        jsonb_array_elements(ip_config) as c
+        left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+  EOQ
+}
+
+query "compute_virtual_machine_scale_set_vm_network_virtual_networks" {
+      sql   = <<-EOQ
+          with ip_configs as (
+            select
+              nic.ip_configurations as ip_config,
+              lower(vm.id) as vm_id,
+              lower(nic.id) as nic_id
+            from
+              azure_compute_virtual_machine_scale_set_vm as vm
+              left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
+            where
+              lower(vm.id) = $1
+          ), subnet_list as (
+            select
+              lower(c -> 'properties' -> 'subnet' ->> 'id') as subnet_id
+            from
+              ip_configs,
+              jsonb_array_elements(ip_config) as c
+          )
+          select
+            lower(vn.id) as network_id
+          from
+            azure_virtual_network as vn,
+            jsonb_array_elements(vn.subnets) as s
+          where
+            lower(s ->> 'id') in (select lower(subnet_id) from subnet_list)
+        EOQ
+}
+
+# Table Queries
 
 query "compute_virtual_machine_scale_set_vm_overview" {
   sql = <<-EOQ
@@ -470,7 +480,6 @@ query "compute_virtual_machine_scale_set_vm_overview" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "compute_virtual_machine_scale_set_vm_tags" {
@@ -487,7 +496,6 @@ query "compute_virtual_machine_scale_set_vm_tags" {
       tag.key;
     EOQ
 
-  param "id" {}
 }
 
 query "compute_virtual_machine_scale_set_vm_image_reference" {
@@ -503,7 +511,6 @@ query "compute_virtual_machine_scale_set_vm_image_reference" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "compute_virtual_machine_scale_set_vm_os_disks" {
@@ -520,7 +527,6 @@ query "compute_virtual_machine_scale_set_vm_os_disks" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "compute_virtual_machine_scale_set_vm_data_disks" {
@@ -539,7 +545,6 @@ query "compute_virtual_machine_scale_set_vm_data_disks" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "compute_virtual_machine_scale_set_vm_network_interface" {
@@ -560,5 +565,4 @@ query "compute_virtual_machine_scale_set_vm_network_interface" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }

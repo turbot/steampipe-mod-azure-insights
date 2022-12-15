@@ -564,6 +564,8 @@ query "compute_virtual_machine_scale_set_network_subnets" {
     from
       subnet_list as l
       left join azure_subnet as s on lower(s.id) = lower(l.subnet_id)
+    where
+      s.id is not null;
   EOQ
 }
 
