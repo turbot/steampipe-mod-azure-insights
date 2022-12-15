@@ -18,75 +18,30 @@ dashboard "network_public_ip_detail" {
     card {
       width = 2
       query = query.network_public_association
-      args = {
-        id = self.input.public_ip_id.value
-      }
+      args  = [self.input.public_ip_id.value]
     }
 
     card {
       width = 2
       query = query.network_public_ip_address
-      args = {
-        id = self.input.public_ip_id.value
-      }
+      args  = [self.input.public_ip_id.value]
     }
 
     card {
       width = 2
       query = query.network_public_ip_sku_name
-      args = {
-        id = self.input.public_ip_id.value
-      }
+      args  = [self.input.public_ip_id.value]
     }
   }
 
   with "compute_virtual_machines" {
-    sql = <<-EOQ
-          with vm_network_interface as (
-            select
-              id,
-              jsonb_array_elements(network_interfaces)->>'id' as n_id
-            from
-              azure_compute_virtual_machine
-          ), ni_public_ip as (
-              select
-                id,
-                jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-              from
-                azure_network_interface
-          )
-          select
-            lower(v.id) as virtual_machine_id
-          from
-            vm_network_interface as v
-            left join ni_public_ip as n on lower(v.n_id) = lower(n.id)
-            left join azure_public_ip as p on lower(n.pid) = lower(p.id)
-          where
-            lower(p.id) = $1;
-          EOQ
-
-    args = [self.input.public_ip_id.value]
+    query = query.network_public_ip_compute_virtual_machines
+    args  = [self.input.public_ip_id.value]
   }
 
   with "network_network_interfaces" {
-    sql = <<-EOQ
-          with network_interface_public_ip as (
-            select
-              id,
-              jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-            from
-              azure_network_interface
-          )
-          select
-            lower(n.id) as nic_id
-          from
-            network_interface_public_ip as n
-            left join azure_public_ip as p on lower(n.pid) = lower(p.id)
-          where
-            lower(p.id) = $1;
-        EOQ
-
-    args = [self.input.public_ip_id.value]
+    query = query.network_public_ip_network_network_interfaces
+    args  = [self.input.public_ip_id.value]
   }
 
   container {
@@ -96,54 +51,54 @@ dashboard "network_public_ip_detail" {
       type      = "graph"
       direction = "TD"
 
-  node {
-    base = node.compute_virtual_machine
-    args = {
-      compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
-    }
-  }
+      node {
+        base = node.compute_virtual_machine
+        args = {
+          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }
 
-  node {
-    base = node.network_network_interface
-    args = {
-      network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
-    }
-  }
+      node {
+        base = node.network_network_interface
+        args = {
+          network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+        }
+      }
 
-  node {
-    base = node.network_public_ip
-    args = {
-      network_public_ip_ids = [self.input.public_ip_id.value]
-    }
-  }
+      node {
+        base = node.network_public_ip
+        args = {
+          network_public_ip_ids = [self.input.public_ip_id.value]
+        }
+      }
 
-  node {
-    base = node.network_public_ip_api_management
-    args = {
-      network_public_ip_ids = [self.input.public_ip_id.value]
-    }
-  }
+      node {
+        base = node.network_public_ip_api_management
+        args = {
+          network_public_ip_ids = [self.input.public_ip_id.value]
+        }
+      }
 
-  edge {
-    base = edge.compute_virtual_machine_to_network_network_interface
-    args = {
-      compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
-    }
-  }
+      edge {
+        base = edge.compute_virtual_machine_to_network_network_interface
+        args = {
+          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }
 
-  edge {
-    base = edge.network_network_interface_to_network_public_ip
-    args = {
-      network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
-    }
-  }
+      edge {
+        base = edge.network_network_interface_to_network_public_ip
+        args = {
+          network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+        }
+      }
 
-  edge {
-    base = edge.network_public_ip_to_public_ip_api_management
-    args = {
-      network_public_ip_ids = [self.input.public_ip_id.value]
-    }
-  }
+      edge {
+        base = edge.network_public_ip_to_public_ip_api_management
+        args = {
+          network_public_ip_ids = [self.input.public_ip_id.value]
+        }
+      }
     }
   }
 
@@ -158,18 +113,14 @@ dashboard "network_public_ip_detail" {
         type  = "line"
         width = 6
         query = query.network_public_ip_overview
-        args = {
-          id = self.input.public_ip_id.value
-        }
+        args  = [self.input.public_ip_id.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.network_public_ip_tags
-        args = {
-          id = self.input.public_ip_id.value
-        }
+        args  = [self.input.public_ip_id.value]
       }
     }
 
@@ -180,9 +131,7 @@ dashboard "network_public_ip_detail" {
       table {
         title = "Association"
         query = query.network_public_ip_association_details
-        args = {
-          id = self.input.public_ip_id.value
-        }
+        args  = [self.input.public_ip_id.value]
       }
     }
   }
@@ -208,6 +157,8 @@ query "network_public_ip_input" {
   EOQ
 }
 
+# card queries
+
 query "network_public_association" {
   sql = <<-EOQ
     select
@@ -220,7 +171,6 @@ query "network_public_association" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_public_ip_address" {
@@ -234,7 +184,6 @@ query "network_public_ip_address" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_public_ip_sku_name" {
@@ -248,7 +197,53 @@ query "network_public_ip_sku_name" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
+}
+
+# with queries
+
+query "network_public_ip_compute_virtual_machines" {
+  sql   = <<-EOQ
+    with vm_network_interface as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as n_id
+      from
+        azure_compute_virtual_machine
+    ), ni_public_ip as (
+        select
+          id,
+          jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+        from
+          azure_network_interface
+    )
+    select
+      lower(v.id) as virtual_machine_id
+    from
+      vm_network_interface as v
+      left join ni_public_ip as n on lower(v.n_id) = lower(n.id)
+      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
+    where
+      lower(p.id) = $1;
+  EOQ
+}
+
+query "network_public_ip_network_network_interfaces" {
+  sql   = <<-EOQ
+    with network_interface_public_ip as (
+      select
+        id,
+        jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+      from
+        azure_network_interface
+    )
+    select
+      lower(n.id) as nic_id
+    from
+      network_interface_public_ip as n
+      left join azure_public_ip as p on lower(n.pid) = lower(p.id)
+    where
+      lower(p.id) = $1;
+  EOQ
 }
 
 query "azure_network_public_ip_ddos_settings_protected_ip" {
@@ -262,8 +257,9 @@ query "azure_network_public_ip_ddos_settings_protected_ip" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
+
+# table queries
 
 query "network_public_ip_overview" {
   sql = <<-EOQ
@@ -283,7 +279,6 @@ query "network_public_ip_overview" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_public_ip_tags" {
@@ -299,7 +294,6 @@ query "network_public_ip_tags" {
       tags ->> 'Key';
   EOQ
 
-  param "id" {}
 }
 
 query "network_public_ip_association_details" {
@@ -348,5 +342,4 @@ query "network_public_ip_association_details" {
       lower(p.id) = $1
   EOQ
 
-  param "id" {}
 }
