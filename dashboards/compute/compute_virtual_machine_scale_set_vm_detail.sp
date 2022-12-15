@@ -405,7 +405,8 @@ query "compute_virtual_machine_scale_set_vm_network_security_groups" {
         left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
         left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.network_security_group ->> 'id')
       where
-        lower(vm.id) = $1;
+        lower(vm.id) = $1
+        and lower(nsg.id) is not null;
   EOQ
 }
 
@@ -428,6 +429,8 @@ query "compute_virtual_machine_scale_set_vm_network_subnets" {
         ip_configs,
         jsonb_array_elements(ip_config) as c
         left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+      where
+        lower(s.id) is not null;
   EOQ
 }
 
@@ -451,7 +454,7 @@ query "compute_virtual_machine_scale_set_vm_network_virtual_networks" {
               jsonb_array_elements(ip_config) as c
           )
           select
-            lower(vn.id) as network_id
+            lower(vn.id) as virtual_network_id
           from
             azure_virtual_network as vn,
             jsonb_array_elements(vn.subnets) as s
