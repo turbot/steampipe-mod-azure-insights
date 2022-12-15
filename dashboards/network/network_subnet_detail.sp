@@ -18,147 +18,61 @@ dashboard "network_subnet_detail" {
     card {
       width = 2
       query = query.network_subnet_num_ips
-      args = {
-        id = self.input.subnet_id.value
-      }
+      args  = [self.input.subnet_id.value]
     }
 
     card {
       width = 2
       query = query.network_subnet_address_prefix
-      args = {
-        id = self.input.subnet_id.value
-      }
+      args  = [self.input.subnet_id.value]
     }
 
   }
 
-    with "app_service_web_apps" {
-        sql = <<-EOQ
-          select
-            lower(id) as web_app_id
-          from
-            azure_app_service_web_app
-          where
-            lower(vnet_connection -> 'properties' ->> 'vnetResourceId') = $1
-        EOQ
+  with "app_service_web_apps" {
+    query = query.network_subnet_app_service_web_apps
+    args  = [self.input.subnet_id.value]
+  }
 
-        args = [self.input.subnet_id.value]
-      }
+  with "documentdb_cosmosdb_account_ids" {
+    query = query.network_subnet_documentdb_cosmosdb_account_ids
+    args  = [self.input.subnet_id.value]
+  }
 
-      with "documentdb_cosmosdb_account_ids" {
-        sql = <<-EOQ
-          select
-            lower(id) as cosmosdb_account_id
-          from
-            azure_cosmosdb_account,
-            jsonb_array_elements(virtual_network_rules) as r
-          where
-            lower(r ->> 'id') = $1;
-        EOQ
+  with "network_application_gateways" {
+    query = query.network_subnet_network_application_gateways
+    args  = [self.input.subnet_id.value]
+  }
 
-        args = [self.input.subnet_id.value]
-      }
+  with "network_nat_gateways" {
+    query = query.network_subnet_network_nat_gateways
+    args  = [self.input.subnet_id.value]
+  }
 
-      with "network_application_gateways" {
-        sql = <<-EOQ
-          select
-            lower(id) as application_gateway_id
-          from
-            azure_application_gateway,
-            jsonb_array_elements(gateway_ip_configurations) as c
-          where
-            lower(c -> 'properties' -> 'subnet' ->> 'id') = $1;
-        EOQ
+  with "network_route_tables" {
+    query = query.network_subnet_network_route_tables
+    args  = [self.input.subnet_id.value]
+  }
 
-        args = [self.input.subnet_id.value]
-      }
+  with "network_security_groups" {
+    query = query.network_subnet_network_security_groups
+    args  = [self.input.subnet_id.value]
+  }
 
-      with "network_nat_gateways" {
-        sql = <<-EOQ
-          select
-            lower(id) as nat_gateway_id
-          from
-            azure_nat_gateway,
-            jsonb_array_elements(subnets) as s
-          where
-            lower(s ->> 'id') = $1;
-        EOQ
+  with "network_virtual_networks" {
+    query = query.network_subnet_network_virtual_networks
+    args  = [self.input.subnet_id.value]
+  }
 
-        args = [self.input.subnet_id.value]
-      }
+  with "sql_servers" {
+    query = query.network_subnet_sql_servers
+    args  = [self.input.subnet_id.value]
+  }
 
-      with "network_route_tables" {
-        sql = <<-EOQ
-          select
-            lower(r.id) as route_table_id
-          from
-            azure_route_table as r,
-            jsonb_array_elements(r.subnets) as sub
-          where
-            lower(sub ->> 'id') = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
-      with "network_security_groups" {
-        sql = <<-EOQ
-          select
-            lower(nsg.id) as nsg_id
-          from
-            azure_network_security_group as nsg,
-            jsonb_array_elements(nsg.subnets) as sub
-          where
-            lower(sub ->> 'id') = $1
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
-      with "network_virtual_networks" {
-        sql = <<-EOQ
-          select
-            lower(vn.id) as virtual_network_id
-          from
-            azure_subnet as s
-            left join azure_virtual_network as vn on vn.name = s.virtual_network_name
-          where
-            lower(s.subscription_id) = lower(vn.subscription_id)
-            and lower(s.resource_group) = lower(vn.resource_group)
-            and lower(s.id) = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
-      with "sql_servers" {
-        sql = <<-EOQ
-          select
-            lower(id) as sql_server_id
-          from
-            azure_sql_server,
-            jsonb_array_elements(virtual_network_rules) as r
-          where
-            lower(r -> 'properties' ->> 'virtualNetworkSubnetId') = $1
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
-
-      with "storage_storage_accounts" {
-        sql = <<-EOQ
-          select
-            lower(id) as storage_account_id
-          from
-            azure_storage_account,
-            jsonb_array_elements(virtual_network_rules) as r
-          where
-            lower(r ->> 'id') = $1;
-        EOQ
-
-        args = [self.input.subnet_id.value]
-      }
+  with "storage_storage_accounts" {
+    query = query.network_subnet_storage_storage_accounts
+    args  = [self.input.subnet_id.value]
+  }
 
   container {
 
@@ -166,153 +80,153 @@ dashboard "network_subnet_detail" {
       title     = "Relationships"
       type      = "graph"
       direction = "TD"
-      
-  node {
-    base = node.app_service_web_app
-    args = {
-      app_service_web_app_ids = with.app_service_web_apps.rows[*].web_app_id
-    }
-  }
 
-  node {
-    base = node.documentdb_cosmosdb_account
-    args = {
-      documentdb_cosmosdb_account_ids = with.documentdb_cosmosdb_account_ids.rows[*].cosmosdb_account_id
-    }
-  }
+      node {
+        base = node.app_service_web_app
+        args = {
+          app_service_web_app_ids = with.app_service_web_apps.rows[*].web_app_id
+        }
+      }
 
-  node {
-    base = node.network_application_gateway
-    args = {
-      network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
-    }
-  }
+      node {
+        base = node.documentdb_cosmosdb_account
+        args = {
+          documentdb_cosmosdb_account_ids = with.documentdb_cosmosdb_account_ids.rows[*].cosmosdb_account_id
+        }
+      }
 
-  node {
-    base = node.network_nat_gateway
-    args = {
-      network_nat_gateway_ids = with.network_nat_gateways.rows[*].nat_gateway_id
-    }
-  }
+      node {
+        base = node.network_application_gateway
+        args = {
+          network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
+        }
+      }
 
-  node {
-    base = node.network_network_security_group
-    args = {
-      network_security_group_ids = with.network_security_groups.rows[*].nsg_id
-    }
-  }
+      node {
+        base = node.network_nat_gateway
+        args = {
+          network_nat_gateway_ids = with.network_nat_gateways.rows[*].nat_gateway_id
+        }
+      }
 
-  node {
-    base = node.network_route_table
-    args = {
-      network_route_table_ids = with.network_route_tables.rows[*].route_table_id
-    }
-  }
+      node {
+        base = node.network_network_security_group
+        args = {
+          network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+        }
+      }
 
-  node {
-    base = node.network_subnet
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      node {
+        base = node.network_route_table
+        args = {
+          network_route_table_ids = with.network_route_tables.rows[*].route_table_id
+        }
+      }
 
-  node {
-    base = node.network_subnet_api_management
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
 
-  node {
-    base = node.network_virtual_network
-    args = {
-      network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
-    }
-  }
+      node {
+        base = node.network_subnet_api_management
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
 
-  node {
-    base = node.sql_server
-    args = {
-      sql_server_ids = with.sql_servers.rows[*].sql_server_id
-    }
-  }
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+        }
+      }
 
-  node {
-    base = node.storage_storage_account
-    args = {
-      storage_account_ids = with.storage_storage_accounts.rows[*].storage_account_id
-    }
-  }
+      node {
+        base = node.sql_server
+        args = {
+          sql_server_ids = with.sql_servers.rows[*].sql_server_id
+        }
+      }
 
-  edge {
-    base = edge.network_subnet_to_api_management
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      node {
+        base = node.storage_storage_account
+        args = {
+          storage_account_ids = with.storage_storage_accounts.rows[*].storage_account_id
+        }
+      }
 
-  edge {
-    base = edge.network_subnet_to_app_service_web_app
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      edge {
+        base = edge.network_subnet_to_api_management
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_subnet_to_documentdb_cosmosdb_account
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      edge {
+        base = edge.network_subnet_to_app_service_web_app
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_subnet_to_network_application_gateway
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      edge {
+        base = edge.network_subnet_to_documentdb_cosmosdb_account
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_subnet_to_network_nat_gateway
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      edge {
+        base = edge.network_subnet_to_network_application_gateway
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_subnet_to_network_route_table
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      edge {
+        base = edge.network_subnet_to_network_nat_gateway
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_subnet_to_network_security_group
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      edge {
+        base = edge.network_subnet_to_network_route_table
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_subnet_to_sql_server
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      edge {
+        base = edge.network_subnet_to_network_security_group
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_subnet_to_storage_storage_account
-    args = {
-      network_subnet_ids = [self.input.subnet_id.value]
-    }
-  }
+      edge {
+        base = edge.network_subnet_to_sql_server
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
 
-  edge {
-    base = edge.network_virtual_network_to_network_subnet
-    args = {
-      network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
-    }
-  }
+      edge {
+        base = edge.network_subnet_to_storage_storage_account
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_virtual_network_to_network_subnet
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+        }
+      }
     }
   }
 
@@ -326,9 +240,7 @@ dashboard "network_subnet_detail" {
         type  = "line"
         width = 12
         query = query.network_subnet_overview
-        args = {
-          id = self.input.subnet_id.value
-        }
+        args  = [self.input.subnet_id.value]
       }
 
     }
@@ -339,9 +251,7 @@ dashboard "network_subnet_detail" {
       table {
         title = "Launched Resources"
         query = query.network_subnet_association
-        args = {
-          id = self.input.subnet_id.value
-        }
+        args  = [self.input.subnet_id.value]
 
         column "link" {
           display = "none"
@@ -379,6 +289,8 @@ query "network_subnet_input" {
   EOQ
 }
 
+# card queries
+
 query "network_subnet_num_ips" {
   sql = <<-EOQ
     select
@@ -389,7 +301,6 @@ query "network_subnet_num_ips" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_subnet_address_prefix" {
@@ -402,8 +313,120 @@ query "network_subnet_address_prefix" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
+
+# with queries
+
+query "network_subnet_app_service_web_apps" {
+  sql = <<-EOQ
+      select
+        lower(id) as web_app_id
+      from
+        azure_app_service_web_app
+      where
+        lower(vnet_connection -> 'properties' ->> 'vnetResourceId') = $1
+    EOQ
+}
+
+query "network_subnet_documentdb_cosmosdb_account_ids" {
+  sql = <<-EOQ
+    select
+      lower(id) as cosmosdb_account_id
+    from
+      azure_cosmosdb_account,
+      jsonb_array_elements(virtual_network_rules) as r
+    where
+      lower(r ->> 'id') = $1;
+  EOQ
+}
+
+query "network_subnet_network_application_gateways" {
+  sql = <<-EOQ
+    select
+      lower(id) as application_gateway_id
+    from
+      azure_application_gateway,
+      jsonb_array_elements(gateway_ip_configurations) as c
+    where
+      lower(c -> 'properties' -> 'subnet' ->> 'id') = $1;
+  EOQ
+}
+
+query "network_subnet_network_nat_gateways" {
+  sql = <<-EOQ
+    select
+      lower(id) as nat_gateway_id
+    from
+      azure_nat_gateway,
+      jsonb_array_elements(subnets) as s
+    where
+      lower(s ->> 'id') = $1;
+  EOQ
+}
+
+query "network_subnet_network_route_tables" {
+  sql = <<-EOQ
+    select
+      lower(r.id) as route_table_id
+    from
+      azure_route_table as r,
+      jsonb_array_elements(r.subnets) as sub
+    where
+      lower(sub ->> 'id') = $1;
+  EOQ
+}
+
+query "network_subnet_network_security_groups" {
+  sql = <<-EOQ
+    select
+      lower(nsg.id) as nsg_id
+    from
+      azure_network_security_group as nsg,
+      jsonb_array_elements(nsg.subnets) as sub
+    where
+      lower(sub ->> 'id') = $1
+  EOQ
+}
+
+query "network_subnet_network_virtual_networks" {
+  sql = <<-EOQ
+    select
+      lower(vn.id) as virtual_network_id
+    from
+      azure_subnet as s
+      left join azure_virtual_network as vn on vn.name = s.virtual_network_name
+    where
+      lower(s.subscription_id) = lower(vn.subscription_id)
+      and lower(s.resource_group) = lower(vn.resource_group)
+      and lower(s.id) = $1;
+  EOQ
+}
+
+query "network_subnet_sql_servers" {
+  sql = <<-EOQ
+    select
+      lower(id) as sql_server_id
+    from
+      azure_sql_server,
+      jsonb_array_elements(virtual_network_rules) as r
+    where
+      lower(r -> 'properties' ->> 'virtualNetworkSubnetId') = $1
+  EOQ
+}
+
+query "network_subnet_storage_storage_accounts" {
+  sql = <<-EOQ
+    select
+      lower(id) as storage_account_id
+    from
+      azure_storage_account,
+      jsonb_array_elements(virtual_network_rules) as r
+    where
+      lower(r ->> 'id') = $1;
+  EOQ
+}
+
+# table queries
 
 query "network_subnet_overview" {
   sql = <<-EOQ
@@ -422,7 +445,6 @@ query "network_subnet_overview" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_subnet_association" {
@@ -530,5 +552,4 @@ query "network_subnet_association" {
       lower(sub ->> 'id') = $1;
   EOQ
 
-  param "id" {}
 }
