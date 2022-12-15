@@ -19,66 +19,45 @@ dashboard "sql_database_detail" {
     card {
       width = 2
       query = query.sql_database_server
-      args = {
-        id = self.input.sql_database_id.value
-      }
+      args  = [self.input.sql_database_id.value]
     }
 
     card {
       width = 2
       query = query.sql_database_status
-      args = {
-        id = self.input.sql_database_id.value
-      }
+      args  = [self.input.sql_database_id.value]
     }
 
     card {
       width = 2
       query = query.sql_database_zone_redundant
-      args = {
-        id = self.input.sql_database_id.value
-      }
+      args  = [self.input.sql_database_id.value]
     }
 
     card {
       width = 2
       query = query.sql_database_transparent_data_encryption
-      args = {
-        id = self.input.sql_database_id.value
-      }
+      args  = [self.input.sql_database_id.value]
     }
 
     card {
       width = 2
       query = query.sql_database_vulnerability_assessment_enabled
-      args = {
-        id = self.input.sql_database_id.value
-      }
+      args  = [self.input.sql_database_id.value]
     }
 
     card {
       width = 2
       query = query.sql_database_geo_redundant_backup_enabled
-      args = {
-        id = self.input.sql_database_id.value
-      }
+      args  = [self.input.sql_database_id.value]
     }
 
   }
 
-      with "sql_servers" {
-        sql = <<-EOQ
-          select
-            lower(sv.id) as sql_server_id
-          from
-            azure_sql_database as db
-            left join azure_sql_server as sv on db.server_name = sv.name
-          where
-            lower(db.id) = $1
-        EOQ
-
-        args = [self.input.sql_database_id.value]
-      }
+  with "sql_servers" {
+    query = query.sql_database_sql_servers
+    args  = [self.input.sql_database_id.value]
+  }
 
   container {
     graph {
@@ -103,23 +82,23 @@ dashboard "sql_database_detail" {
       node {
         base = node.sql_server
         args = {
-          sql_server_ids   = with.sql_servers.rows[*].sql_server_id
+          sql_server_ids = with.sql_servers.rows[*].sql_server_id
         }
-      }  
+      }
 
       edge {
         base = edge.sql_database_to_mssql_elasticpool
         args = {
           sql_database_ids = [self.input.sql_database_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.sql_server_to_sql_database
         args = {
           sql_server_ids = with.sql_servers.rows[*].sql_server_id
         }
-      }  
+      }
     }
   }
 
@@ -133,18 +112,14 @@ dashboard "sql_database_detail" {
         type  = "line"
         width = 6
         query = query.sql_database_overview
-        args = {
-          id = self.input.sql_database_id.value
-        }
+        args  = [self.input.sql_database_id.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.sql_database_tags
-        args = {
-          id = self.input.sql_database_id.value
-        }
+        args  = [self.input.sql_database_id.value]
       }
 
     }
@@ -155,17 +130,13 @@ dashboard "sql_database_detail" {
       table {
         title = "Retention Policy"
         query = query.sql_database_retention
-        args = {
-          id = self.input.sql_database_id.value
-        }
+        args  = [self.input.sql_database_id.value]
       }
 
       table {
         title = "Vulnerability Assessment"
         query = query.sql_database_vulnerability_assessment
-        args = {
-          id = self.input.sql_database_id.value
-        }
+        args  = [self.input.sql_database_id.value]
       }
 
     }
@@ -194,6 +165,8 @@ query "sql_database_input" {
   EOQ
 }
 
+# card queries
+
 query "sql_database_server" {
   sql = <<-EOQ
     select
@@ -205,8 +178,6 @@ query "sql_database_server" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
-  param "id" {}
 
 }
 
@@ -222,8 +193,6 @@ query "sql_database_zone_redundant" {
       and lower(id) = $1;
   EOQ
 
-  param "id" {}
-
 }
 
 query "sql_database_status" {
@@ -237,8 +206,6 @@ query "sql_database_status" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
-  param "id" {}
 
 }
 
@@ -254,7 +221,6 @@ query "azure_sql_database_edition" {
       and lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "sql_database_transparent_data_encryption" {
@@ -270,7 +236,6 @@ query "sql_database_transparent_data_encryption" {
       and lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "sql_database_vulnerability_assessment_enabled" {
@@ -289,13 +254,12 @@ query "sql_database_vulnerability_assessment_enabled" {
       case when v.id is not null then 'Enabled' else 'Disabled' end as value,
       case when v.id is not null then 'ok' else 'alert' end as type
     from
-     azure_sql_database as d left join sql_database_va as v on lower(v.id) = lower(d.id)
+      azure_sql_database as d left join sql_database_va as v on lower(v.id) = lower(d.id)
     where
       d.name <> 'master'
       and lower(d.id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "sql_database_geo_redundant_backup_enabled" {
@@ -319,8 +283,23 @@ query "sql_database_geo_redundant_backup_enabled" {
       and lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
+
+# with queries
+
+query "sql_database_sql_servers" {
+  sql = <<-EOQ
+    select
+      lower(sv.id) as sql_server_id
+    from
+      azure_sql_database as db
+      left join azure_sql_server as sv on db.server_name = sv.name
+    where
+      lower(db.id) = $1
+  EOQ
+}
+
+# table queries
 
 query "sql_database_overview" {
   sql = <<-EOQ
@@ -339,7 +318,6 @@ query "sql_database_overview" {
       and lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "sql_database_tags" {
@@ -357,7 +335,6 @@ query "sql_database_tags" {
       tag.key;
     EOQ
 
-  param "id" {}
 }
 
 query "sql_database_retention" {
@@ -376,7 +353,6 @@ query "sql_database_retention" {
       and lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "sql_database_vulnerability_assessment" {
@@ -395,5 +371,4 @@ query "sql_database_vulnerability_assessment" {
       and lower(id) = $1;
   EOQ
 
-  param "id" {}
 }

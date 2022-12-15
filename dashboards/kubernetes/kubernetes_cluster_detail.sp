@@ -18,83 +18,42 @@ dashboard "kubernetes_cluster_detail" {
     card {
       width = 2
       query = query.kubernetes_cluster_status
-      args = {
-        id = self.input.cluster_id.value
-      }
+      args  = [self.input.cluster_id.value]
     }
 
     card {
       width = 2
       query = query.kubernetes_cluster_version
-      args = {
-        id = self.input.cluster_id.value
-      }
+      args  = [self.input.cluster_id.value]
     }
 
     card {
       width = 2
       query = query.kubernetes_cluster_node_pool_count
-      args = {
-        id = self.input.cluster_id.value
-      }
+      args  = [self.input.cluster_id.value]
     }
 
     card {
       width = 2
       query = query.kubernetes_cluster_disk_encryption_status
-      args = {
-        id = self.input.cluster_id.value
-      }
+      args  = [self.input.cluster_id.value]
     }
 
   }
 
   with "compute_disk_encryption_sets" {
-    sql = <<-EOQ
-      select
-        lower(e.id) as encryption_set_id
-      from
-        azure_kubernetes_cluster c,
-        azure_compute_disk_encryption_set e
-      where
-        lower(c.disk_encryption_set_id) = lower(e.id)
-        and lower(c.id) = $1;
-    EOQ
-
-    args = [self.input.cluster_id.value]
+    query = query.kubernetes_cluster_compute_disk_encryption_sets
+    args  = [self.input.cluster_id.value]
   }
 
   with "compute_virtual_machine_scale_sets" {
-    sql = <<-EOQ
-      select
-        lower(set.id) as scale_set_id
-      from
-        azure_kubernetes_cluster c,
-        azure_compute_virtual_machine_scale_set as set
-      where
-        lower(set.resource_group) = lower(c.node_resource_group)
-        and lower(c.id) = $1;
-    EOQ
-
-    args = [self.input.cluster_id.value]
+    query = query.kubernetes_cluster_compute_virtual_machine_scale_sets
+    args  = [self.input.cluster_id.value]
   }
 
   with "compute_virtual_machine_scale_set_vms" {
-    sql = <<-EOQ
-      select
-        lower(vm.id) as vm_id
-      from
-        azure_kubernetes_cluster c,
-        azure_compute_virtual_machine_scale_set set,
-        azure_compute_virtual_machine_scale_set_vm vm
-      where
-        lower(set.resource_group) = lower(c.node_resource_group)
-        and set.name = vm.scale_set_name
-        and vm.resource_group = set.resource_group
-        and lower(c.id) = $1;
-    EOQ
-
-    args = [self.input.cluster_id.value]
+    query = query.kubernetes_cluster_compute_virtual_machine_scale_set_vms
+    args  = [self.input.cluster_id.value]
   }
 
 
@@ -180,9 +139,7 @@ dashboard "kubernetes_cluster_detail" {
         type  = "line"
         width = 6
         query = query.kubernetes_cluster_overview
-        args = {
-          id = self.input.cluster_id.value
-        }
+        args  = [self.input.cluster_id.value]
 
       }
 
@@ -190,9 +147,7 @@ dashboard "kubernetes_cluster_detail" {
         title = "Tags"
         width = 6
         query = query.kubernetes_cluster_tags
-        args = {
-          id = self.input.cluster_id.value
-        }
+        args  = [self.input.cluster_id.value]
       }
     }
 
@@ -202,17 +157,13 @@ dashboard "kubernetes_cluster_detail" {
       table {
         title = "Node Pool Details"
         query = query.kubernetes_cluster_agent_pools
-        args = {
-          id = self.input.cluster_id.value
-        }
+        args  = [self.input.cluster_id.value]
       }
 
       table {
         title = "Disk Encryption Set Details"
         query = query.kubernetes_cluster_disk_encryption_details
-        args = {
-          id = self.input.cluster_id.value
-        }
+        args  = [self.input.cluster_id.value]
       }
     }
 
@@ -241,6 +192,8 @@ query "kubernetes_cluster_input" {
   EOQ
 }
 
+#card queries
+
 query "kubernetes_cluster_status" {
   sql = <<-EOQ
     select
@@ -251,8 +204,6 @@ query "kubernetes_cluster_status" {
     where
       lower(id) = $1;
   EOQ
-
-  param "id" {}
 
 }
 
@@ -267,8 +218,6 @@ query "kubernetes_cluster_version" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-
 }
 
 query "kubernetes_cluster_node_pool_count" {
@@ -281,8 +230,6 @@ query "kubernetes_cluster_node_pool_count" {
     where
       lower(id) = $1;
   EOQ
-
-  param "id" {}
 
 }
 
@@ -298,8 +245,53 @@ query "kubernetes_cluster_disk_encryption_status" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
+
+# with queries
+
+query "kubernetes_cluster_compute_disk_encryption_sets" {
+  sql   = <<-EOQ
+    select
+      lower(e.id) as encryption_set_id
+    from
+      azure_kubernetes_cluster c,
+      azure_compute_disk_encryption_set e
+    where
+      lower(c.disk_encryption_set_id) = lower(e.id)
+      and lower(c.id) = $1;
+  EOQ
+}
+
+query "kubernetes_cluster_compute_virtual_machine_scale_sets" {
+  sql   = <<-EOQ
+    select
+      lower(set.id) as scale_set_id
+    from
+      azure_kubernetes_cluster c,
+      azure_compute_virtual_machine_scale_set as set
+    where
+      lower(set.resource_group) = lower(c.node_resource_group)
+      and lower(c.id) = $1;
+  EOQ
+}
+
+query "kubernetes_cluster_compute_virtual_machine_scale_set_vms" {
+  sql   = <<-EOQ
+    select
+      lower(vm.id) as vm_id
+    from
+      azure_kubernetes_cluster c,
+      azure_compute_virtual_machine_scale_set set,
+      azure_compute_virtual_machine_scale_set_vm vm
+    where
+      lower(set.resource_group) = lower(c.node_resource_group)
+      and set.name = vm.scale_set_name
+      and vm.resource_group = set.resource_group
+      and lower(c.id) = $1;
+  EOQ
+}
+
+# table queries
 
 query "kubernetes_cluster_overview" {
   sql = <<-EOQ
@@ -320,7 +312,6 @@ query "kubernetes_cluster_overview" {
       lower(id) = $1
   EOQ
 
-  param "id" {}
 }
 
 query "kubernetes_cluster_tags" {
@@ -337,7 +328,6 @@ query "kubernetes_cluster_tags" {
       tag.key;
     EOQ
 
-  param "id" {}
 }
 
 query "kubernetes_cluster_agent_pools" {
@@ -359,7 +349,6 @@ query "kubernetes_cluster_agent_pools" {
       lower(id) = $1
   EOQ
 
-  param "id" {}
 }
 
 query "kubernetes_cluster_disk_encryption_details" {
@@ -380,5 +369,4 @@ query "kubernetes_cluster_disk_encryption_details" {
       and lower(c.id) = $1;
   EOQ
 
-  param "id" {}
 }
