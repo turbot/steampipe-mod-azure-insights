@@ -57,13 +57,6 @@ dashboard "storage_account_detail" {
 
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "batch_accounts" {
         sql = <<-EOQ
           select
@@ -190,50 +183,200 @@ dashboard "storage_account_detail" {
         args = [self.input.storage_account_id.value]
       }
 
-      nodes = [
-        node.batch_account,
-        node.compute_disk,
-        node.compute_snapshot,
-        node.key_vault_key,
-        node.key_vault_vault,
-        node.monitor_diagnostic_setting,
-        node.monitor_log_profile,
-        node.network_subnet,
-        node.network_virtual_network,
-        node.storage_storage_account,
-        node.storage_storage_container,
-        node.storage_storage_queue,
-        node.storage_storage_share_file,
-        node.storage_storage_table
-      ]
+  container {
 
-      edges = [
-        edge.batch_account_to_storage_storage_account,
-        edge.compute_disk_to_storage_storage_account,
-        edge.compute_snapshot_to_storage_storage_account,
-        edge.monitor_diagnostic_setting_to_storage_storage_account,
-        edge.monitor_log_profile_to_storage_storage_account,
-        edge.network_subnet_to_network_virtual_network,
-        edge.storage_storage_account_to_key_vault_key,
-        edge.storage_storage_account_to_key_vault_vault,
-        edge.storage_storage_account_to_network_subnet,
-        edge.storage_storage_account_to_storage_storage_container,
-        edge.storage_storage_account_to_storage_storage_queue,
-        edge.storage_storage_account_to_storage_storage_share_file,
-        edge.storage_storage_account_to_storage_storage_table
-      ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-      args = {
-        batch_account_ids              = with.batch_accounts.rows[*].batch_account_id
-        compute_disk_ids               = with.compute_disks.rows[*].disk_id
-        compute_snapshot_ids           = with.compute_snapshots.rows[*].snapshot_id
-        key_vault_key_ids              = with.key_vault_keys.rows[*].key_id
-        key_vault_vault_ids            = with.key_vault_vaults.rows[*].vault_id
-        monitor_diagnostic_setting_ids = with.monitor_diagnostic_settings.rows[*].monitor_diagnostic_settings_id
-        monitor_log_profile_ids        = with.monitor_log_profiles.rows[*].log_profile_id
-        network_subnet_ids             = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids    = with.network_virtual_networks.rows[*].network_id
-        storage_account_ids            = [self.input.storage_account_id.value]
+      node {
+        base = node.batch_account
+        args = {
+          batch_account_ids = with.batch_accounts.rows[*].batch_account_id
+        }
+      }
+
+      node {
+        base = node.compute_disk
+        args = {
+          compute_disk_ids = with.compute_disks.rows[*].disk_id
+        }
+      }
+
+      node {
+        base = node.compute_snapshot
+        args = {
+          compute_snapshot_ids = with.compute_snapshots.rows[*].snapshot_id
+        }
+      }  
+
+      node {
+        base = node.key_vault_key
+        args = {
+          key_vault_key_ids = with.key_vault_keys.rows[*].key_id
+        }
+      }    
+
+      node {
+        base = node.key_vault_vault
+        args = {
+          key_vault_vault_ids = with.key_vault_vaults.rows[*].vault_id
+        }
+      }
+
+      node {
+        base = node.monitor_diagnostic_setting
+        args = {
+          monitor_diagnostic_setting_ids = with.monitor_diagnostic_settings.rows[*].monitor_diagnostic_settings_id
+        }
+      }  
+
+      node {
+        base = node.monitor_log_profile
+        args = {
+          monitor_log_profile_ids = with.monitor_log_profiles.rows[*].log_profile_id
+        }
+      }
+
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+        }
+      }
+
+      node {
+        base = node.storage_storage_account
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }
+
+      node {
+        base = node.storage_storage_container
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }     
+
+      node {
+        base = node.storage_storage_queue
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }  
+
+      node {
+        base = node.storage_storage_share_file
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }  
+
+      node {
+        base = node.storage_storage_table
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.batch_account_to_storage_storage_account
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_disk_to_storage_storage_account
+        args = {
+          compute_disk_ids = with.compute_disks.rows[*].disk_id
+        }
+      }
+
+      edge {
+        base = edge.compute_snapshot_to_storage_storage_account
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.monitor_diagnostic_setting_to_storage_storage_account
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.monitor_log_profile_to_storage_storage_account
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.network_subnet_to_network_virtual_network
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.storage_storage_account_to_key_vault_key
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.storage_storage_account_to_key_vault_vault
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.storage_storage_account_to_network_subnet
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.storage_storage_account_to_storage_storage_container
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.storage_storage_account_to_storage_storage_queue
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.storage_storage_account_to_storage_storage_share_file
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.storage_storage_account_to_storage_storage_table
+        args = {
+          storage_account_ids = [self.input.storage_account_id.value]
+        }
       }
     }
   }

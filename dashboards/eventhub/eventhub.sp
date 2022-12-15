@@ -1,5 +1,5 @@
 category "eventhub_namespace" {
   title = "EventHub Namespace"
-  icon  = "text:EN"
+  icon  = "device-hub"
   color = local.analytics_color
 }

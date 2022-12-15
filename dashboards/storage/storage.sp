@@ -6,31 +6,31 @@ locals {
 
 category "storage_container" {
   title = "Storage Container"
-  icon  = "text:StorageContainer"
+  icon  = "home-storage"
   color = local.storage_color
 }
 
 category "storage_queue" {
   title = "Storage Queue"
-  icon  = "text:StorageQueue"
+  icon  = "shelves"
   color = local.storage_color
 }
 
 category "storage_share_file" {
   title = "Storage Share File"
-  icon  = "text:StorageShareFile"
+  icon  = "settings-system-daydream"
   color = local.storage_color
 }
 
 category "storage_storage_account" {
   title = "Storage Account"
   href  = "/azure_insights.dashboard.storage_account_detail?input.storage_account_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:archive-box"
+  icon  = "settings-account-box"
   color = local.storage_color
 }
 
 category "storage_table" {
   title = "Storage Table"
-  icon  = "text:StorageTable"
+  icon  = "table-view"
   color = local.storage_color
 }

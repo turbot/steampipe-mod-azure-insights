@@ -49,13 +49,6 @@ dashboard "key_vault_detail" {
 
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "key_vault_keys" {
         sql = <<-EOQ
           select
@@ -109,26 +102,74 @@ dashboard "key_vault_detail" {
         args = [self.input.key_vault_id.value]
       }
 
-      nodes = [
-        node.key_vault_key,
-        node.key_vault_secret,
-        node.key_vault_vault,
-        node.network_subnet,
-        node.network_virtual_network
-      ]
+  container {
 
-      edges = [
-        edge.key_vault_to_key_vault_key,
-        edge.key_vault_to_key_vault_secret,
-        edge.key_vault_to_subnet,
-        edge.network_subnet_to_network_virtual_network,
-      ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+      
+      node {
+        base = node.key_vault_key
+        args = {
+          key_vault_key_ids = with.key_vault_keys.rows[*].key_id
+        }
+      }    
 
-      args = {
-        key_vault_key_ids           = with.key_vault_keys.rows[*].key_id
-        key_vault_vault_ids         = [self.input.key_vault_id.value]
-        network_subnet_ids          = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+      node {
+        base = node.key_vault_secret
+        args = {
+          key_vault_vault_ids = [self.input.key_vault_id.value]
+        }
+      }
+
+      node {
+        base = node.key_vault_vault
+        args = {
+          key_vault_vault_ids = [self.input.key_vault_id.value]
+        }
+      }  
+
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+        }
+      }   
+
+      edge {
+        base = edge.key_vault_to_key_vault_key
+        args = {
+          key_vault_vault_ids = [self.input.key_vault_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.key_vault_to_key_vault_secret
+        args = {
+          key_vault_vault_ids = [self.input.key_vault_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.key_vault_to_subnet
+        args = {
+          key_vault_vault_ids = [self.input.key_vault_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_subnet_to_network_virtual_network
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
       }
     }
   }

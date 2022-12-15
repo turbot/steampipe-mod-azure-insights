@@ -13,19 +13,19 @@ category "compute_disk" {
 
 category "compute_disk_access" {
   title = "Compute Disk Access"
-  icon  = "text:DiskAccess"
+  icon  = "check-circle"
   color = local.storage_color
 }
 
 category "compute_disk_encryption_set" {
   title = "Compute Disk Encryption Set"
-  icon  = "text:DES"
+  icon  = "key"
   color = local.security_color
 }
 
 category "compute_image" {
   title = "Compute Image"
-  icon  = "text:Image"
+  icon  = "developer-board"
   color = local.compute_color
 }
 
@@ -52,7 +52,7 @@ category "compute_virtual_machine_scale_set" {
 
 category "compute_virtual_machine_scale_set_network_interface" {
   title = "Compute Virtual Machine Scale Set Network Interface"
-  icon  = "text:eni"
+  icon  = "memory"
   color = local.networking_color
 }
 

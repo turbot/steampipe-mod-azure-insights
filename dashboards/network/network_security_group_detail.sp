@@ -65,13 +65,6 @@ dashboard "network_security_group_detail" {
 
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "compute_virtual_machines" {
         sql = <<-EOQ
           with network_interface_list as (
@@ -86,7 +79,7 @@ dashboard "network_security_group_detail" {
               lower(nsg.id )= $1
           )
           select
-            lower(vm.id) as machine_id
+            lower(vm.id) as virtual_machine_id
           from
             azure_compute_virtual_machine as vm,
             jsonb_array_elements(network_interfaces) as ni
@@ -153,30 +146,89 @@ dashboard "network_security_group_detail" {
         args = [self.input.nsg_id.value]
       }
 
-      nodes = [
-        node.compute_virtual_machine,
-        node.network_network_interface,
-        node.network_network_security_group,
-        node.network_security_group_network_watcher_flow_log,
-        node.network_subnet,
-        node.network_virtual_network
-      ]
+  container {
 
-      edges = [
-        edge.network_security_group_to_compute_virtual_machine,
-        edge.network_security_group_to_network_interface,
-        edge.network_security_group_to_network_watcher_flow_log,
-        edge.network_subnet_to_network_security_group,
-        edge.network_virtual_network_to_network_subnet
-      ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-      args = {
-        compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].machine_id
-        network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
-        network_security_group_ids    = [self.input.nsg_id.value]
-        network_subnet_ids            = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids   = with.network_virtual_networks.rows[*].network_id
-      }
+  node {
+    base = node.compute_virtual_machine
+    args = {
+      compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+    }
+  }
+
+  node {
+    base = node.network_network_interface
+    args = {
+      network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+    }
+  }
+
+  node {
+    base = node.network_network_security_group
+    args = {
+      network_security_group_ids = [self.input.nsg_id.value]
+    }
+  }
+
+  node {
+    base = node.network_security_group_network_watcher_flow_log
+    args = {
+      network_security_group_ids = [self.input.nsg_id.value]
+    }
+  }
+
+  node {
+    base = node.network_subnet
+    args = {
+      network_subnet_ids = with.network_subnets.rows[*].subnet_id
+    }
+  }
+
+  node {
+    base = node.network_virtual_network
+    args = {
+      network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+    }
+  }
+
+  edge {
+    base = edge.network_security_group_to_compute_virtual_machine
+    args = {
+      network_security_group_ids = [self.input.nsg_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_security_group_to_network_interface
+    args = {
+      network_security_group_ids = [self.input.nsg_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_security_group_to_network_watcher_flow_log
+    args = {
+      network_security_group_ids = [self.input.nsg_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_subnet_to_network_security_group
+    args = {
+      network_subnet_ids = with.network_subnets.rows[*].subnet_id
+    }
+  }
+
+  edge {
+    base = edge.network_virtual_network_to_network_subnet
+    args = {
+      network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+    }
+  }
     }
   }
 

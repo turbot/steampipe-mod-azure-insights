@@ -33,13 +33,6 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
 
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "compute_disks" {
         sql = <<-EOQ
           select
@@ -210,39 +203,130 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
         args = [self.input.scale_set_vm_id.value]
       }
 
-      nodes = [
-        node.compute_disk,
-        node.compute_virtual_machine_scale_set,
-        node.compute_virtual_machine_scale_set_network_interface,
-        node.compute_virtual_machine_scale_set_vm,
-        node.network_load_balancer,
-        node.network_load_balancer_backend_address_pool,
-        node.network_network_security_group,
-        node.network_subnet,
-        node.network_virtual_network,
-      ]
+  container {
 
-      edges = [
-        edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vm,
-        edge.compute_virtual_machine_scale_set_vm_to_compute_disk,
-        edge.compute_virtual_machine_scale_set_vm_to_compute_virtual_machine_scale_set_network_interface,
-        edge.compute_virtual_machine_scale_set_vm_to_network_load_balancer,
-        edge.compute_virtual_machine_scale_set_vm_to_network_load_balancer_backend_address_pool,
-        edge.compute_virtual_machine_scale_set_vm_to_network_security_group,
-        edge.compute_virtual_machine_scale_set_vm_to_network_subnet,
-        edge.network_subnet_to_network_virtual_network,
-      ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+      
+      node {
+        base = node.compute_disk
+        args = {
+          compute_disk_ids = with.compute_disks.rows[*].disk_id
+        }
+      }    
 
-      args = {
-        compute_disk_ids                                        = with.compute_disks.rows[*].disk_id
-        compute_virtual_machine_scale_set_ids                   = with.compute_virtual_machine_scale_sets.rows[*].scale_set_id
-        compute_virtual_machine_scale_set_network_interface_ids = with.compute_virtual_machine_scale_set_network_interfaces.rows[*].network_interface_id
-        compute_virtual_machine_scale_set_vm_ids                = [self.input.scale_set_vm_id.value]
-        network_load_balancer_backend_address_pool_ids          = with.network_load_balancer_backend_address_pools.rows[*].pool_id
-        network_load_balancer_ids                               = with.network_load_balancers.rows[*].lb_id
-        network_security_group_ids                              = with.network_security_groups.rows[*].nsg_id
-        network_subnet_ids                                      = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids                             = with.network_virtual_networks.rows[*].network_id
+      node {
+        base = node.compute_virtual_machine_scale_set
+        args = {
+          compute_virtual_machine_scale_set_ids = with.compute_virtual_machine_scale_sets.rows[*].scale_set_id
+        }
+      }
+
+      node {
+        base = node.compute_virtual_machine_scale_set_network_interface
+        args = {
+          compute_virtual_machine_scale_set_network_interface_ids = with.compute_virtual_machine_scale_set_network_interfaces.rows[*].network_interface_id
+        }
+      }  
+
+      node {
+        base = node.compute_virtual_machine_scale_set_vm
+        args = {
+          compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
+        }
+      }
+
+      node {
+        base = node.network_load_balancer
+        args = {
+          network_load_balancer_ids = with.network_load_balancers.rows[*].lb_id
+        }
+      }
+
+      node {
+        base = node.network_load_balancer_backend_address_pool
+        args = {
+          network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
+        }
+      }
+
+      node {
+        base = node.network_network_security_group
+        args = {
+          network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+        }
+      }
+
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }     
+
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+        }
+      }  
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vm
+        args = {
+          compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_vm_to_compute_disk
+        args = {
+          compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_vm_to_compute_virtual_machine_scale_set_network_interface
+        args = {
+          compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_vm_to_network_load_balancer
+        args = {
+          compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_vm_to_network_load_balancer_backend_address_pool
+        args = {
+          compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_vm_to_network_security_group
+        args = {
+          compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_vm_to_network_subnet
+        args = {
+          compute_virtual_machine_scale_set_vm_ids = [self.input.scale_set_vm_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.network_subnet_to_network_virtual_network
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
       }
     }
   }

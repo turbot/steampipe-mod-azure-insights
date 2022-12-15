@@ -66,12 +66,6 @@ dashboard "sql_database_detail" {
 
   }
 
-  container {
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "sql_servers" {
         sql = <<-EOQ
           select
@@ -86,21 +80,46 @@ dashboard "sql_database_detail" {
         args = [self.input.sql_database_id.value]
       }
 
-      nodes = [
-        node.sql_database,
-        node.sql_database_mssql_elasticpool,
-        node.sql_server
-      ]
+  container {
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-      edges = [
-        edge.sql_database_to_mssql_elasticpool,
-        edge.sql_server_to_sql_database
-      ]
-
-      args = {
-        sql_database_ids = [self.input.sql_database_id.value]
-        sql_server_ids   = with.sql_servers.rows[*].sql_server_id
+      node {
+        base = node.sql_database
+        args = {
+          sql_database_ids = [self.input.sql_database_id.value]
+        }
       }
+
+      node {
+        base = node.sql_database_mssql_elasticpool
+        args = {
+          sql_database_ids = [self.input.sql_database_id.value]
+        }
+      }
+
+      node {
+        base = node.sql_server
+        args = {
+          sql_server_ids   = with.sql_servers.rows[*].sql_server_id
+        }
+      }  
+
+      edge {
+        base = edge.sql_database_to_mssql_elasticpool
+        args = {
+          sql_database_ids = [self.input.sql_database_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.sql_server_to_sql_database
+        args = {
+          sql_server_ids = with.sql_servers.rows[*].sql_server_id
+        }
+      }  
     }
   }
 

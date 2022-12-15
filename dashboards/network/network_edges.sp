@@ -558,11 +558,11 @@ edge "network_network_interface_to_network_subnet" {
   param "network_network_interface_ids" {}
 }
 
-edge "network_public_ip_to_api_management" {
+edge "network_public_ip_to_public_ip_api_management" {
   title = "public ip"
 
   sql = <<-EOQ
-   with public_ip_api_management as (
+  with public_ip_api_management as (
       select
         id,
         title,

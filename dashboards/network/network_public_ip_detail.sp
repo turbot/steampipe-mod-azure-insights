@@ -40,15 +40,8 @@ dashboard "network_public_ip_detail" {
     }
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
-      with "compute_virtual_machines" {
-        sql = <<-EOQ
+  with "compute_virtual_machines" {
+    sql = <<-EOQ
           with vm_network_interface as (
             select
               id,
@@ -72,11 +65,11 @@ dashboard "network_public_ip_detail" {
             lower(p.id) = $1;
           EOQ
 
-        args = [self.input.public_ip_id.value]
-      }
+    args = [self.input.public_ip_id.value]
+  }
 
-      with "network_network_interfaces" {
-        sql = <<-EOQ
+  with "network_network_interfaces" {
+    sql = <<-EOQ
           with network_interface_public_ip as (
             select
               id,
@@ -93,27 +86,64 @@ dashboard "network_public_ip_detail" {
             lower(p.id) = $1;
         EOQ
 
-        args = [self.input.public_ip_id.value]
-      }
+    args = [self.input.public_ip_id.value]
+  }
 
-      nodes = [
-        node.compute_virtual_machine,
-        node.network_network_interface,
-        node.network_public_ip,
-        node.network_public_ip_api_management
-      ]
+  container {
 
-      edges = [
-        edge.compute_virtual_machine_to_network_network_interface,
-        edge.network_network_interface_to_network_public_ip,
-        edge.network_public_ip_to_api_management
-      ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-      args = {
-        compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].virtual_machine_id
-        network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
-        network_public_ip_ids         = [self.input.public_ip_id.value]
-      }
+  node {
+    base = node.compute_virtual_machine
+    args = {
+      compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+    }
+  }
+
+  node {
+    base = node.network_network_interface
+    args = {
+      network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+    }
+  }
+
+  node {
+    base = node.network_public_ip
+    args = {
+      network_public_ip_ids = [self.input.public_ip_id.value]
+    }
+  }
+
+  node {
+    base = node.network_public_ip_api_management
+    args = {
+      network_public_ip_ids = [self.input.public_ip_id.value]
+    }
+  }
+
+  edge {
+    base = edge.compute_virtual_machine_to_network_network_interface
+    args = {
+      compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+    }
+  }
+
+  edge {
+    base = edge.network_network_interface_to_network_public_ip
+    args = {
+      network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+    }
+  }
+
+  edge {
+    base = edge.network_public_ip_to_public_ip_api_management
+    args = {
+      network_public_ip_ids = [self.input.public_ip_id.value]
+    }
+  }
     }
   }
 

@@ -41,13 +41,6 @@ dashboard "key_vault_key_detail" {
 
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "compute_disk_encryption_sets" {
         sql = <<-EOQ
           select
@@ -190,41 +183,143 @@ dashboard "key_vault_key_detail" {
         args = [self.input.key_vault_key_id.value]
       }
 
-      nodes = [
-        node.compute_disk_encryption_set,
-        node.container_registry,
-        node.eventhub_namespace,
-        node.key_vault_key,
-        node.key_vault_key_version,
-        node.key_vault_vault,
-        node.postgresql_server,
-        node.servicebus_namespace,
-        node.sql_server,
-        node.storage_storage_account
-      ]
+  container {
 
-      edges = [
-        edge.compute_disk_encryption_set_to_key_vault_key_version,
-        edge.container_registry_to_key_vault_key_version,
-        edge.eventhub_namespace_to_key_vault_key_version,
-        edge.key_vault_key_to_key_vault,
-        edge.key_vault_key_version_to_key_vault_key,
-        edge.postgresql_server_to_key_vault_key_version,
-        edge.servicebus_namespace_to_key_vault_key,
-        edge.sql_server_to_key_vault_key_version,
-        edge.storage_storage_account_to_key_vault_key_version
-      ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+      
+      node {
+        base = node.compute_disk_encryption_set
+        args = {
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].disk_encryption_set_id
+        }
+      }    
 
-      args = {
-        compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].disk_encryption_set_id
-        container_registry_ids          = with.container_registries.rows[*].registry_id
-        eventhub_namespace_ids          = with.eventhub_namespaces.rows[*].eventhub_namespace_id
-        key_vault_key_ids               = [self.input.key_vault_key_id.value]
-        key_vault_vault_ids             = with.key_vault_vaults.rows[*].vault_id
-        postgresql_server_ids           = with.postgresql_servers.rows[*].postgresql_server_id
-        servicebus_namespace_ids        = with.servicebus_namespaces.rows[*].servicebus_namespace_id
-        sql_server_ids                  = with.sql_servers.rows[*].sql_server_id
-        storage_account_ids             = with.storage_storage_accounts.rows[*].account_id
+      node {
+        base = node.container_registry
+        args = {
+          container_registry_ids = with.container_registries.rows[*].registry_id
+        }
+      }
+
+      node {
+        base = node.eventhub_namespace
+        args = {
+          eventhub_namespace_ids = with.eventhub_namespaces.rows[*].eventhub_namespace_id
+        }
+      }  
+
+      node {
+        base = node.key_vault_key
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
+      }
+
+      node {
+        base = node.key_vault_key_version
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
+      }   
+      
+      node {
+        base = node.key_vault_vault
+        args = {
+          key_vault_vault_ids = with.key_vault_vaults.rows[*].vault_id
+        }
+      }    
+
+      node {
+        base = node.postgresql_server
+        args = {
+          postgresql_server_ids = with.postgresql_servers.rows[*].postgresql_server_id
+        }
+      }
+
+      node {
+        base = node.servicebus_namespace
+        args = {
+          servicebus_namespace_ids = with.servicebus_namespaces.rows[*].servicebus_namespace_id
+        }
+      }  
+
+      node {
+        base = node.sql_server
+        args = {
+          sql_server_ids = with.sql_servers.rows[*].sql_server_id
+        }
+      }
+
+      node {
+        base = node.storage_storage_account
+        args = {
+          storage_account_ids = with.storage_storage_accounts.rows[*].account_id
+        }
+      }   
+
+      edge {
+        base = edge.compute_disk_encryption_set_to_key_vault_key_version
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.container_registry_to_key_vault_key_version
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.eventhub_namespace_to_key_vault_key_version
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
+      }
+
+      edge {
+        base = edge.key_vault_key_to_key_vault
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
+      }
+      edge {
+        base = edge.key_vault_key_version_to_key_vault_key
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.postgresql_server_to_key_vault_key_version
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.servicebus_namespace_to_key_vault_key
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
+      }
+
+      edge {
+        base = edge.sql_server_to_key_vault_key_version
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
+      }
+
+      edge {
+        base = edge.storage_storage_account_to_key_vault_key_version
+        args = {
+          key_vault_key_ids = [self.input.key_vault_key_id.value]
+        }
       }
     }
   }

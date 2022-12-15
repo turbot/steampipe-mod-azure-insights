@@ -41,13 +41,6 @@ dashboard "network_firewall_detail" {
 
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "network_public_ips" {
         sql = <<-EOQ
           select
@@ -104,24 +97,60 @@ dashboard "network_firewall_detail" {
         args = [self.input.firewall_id.value]
       }
 
-      nodes = [
-        node.network_firewall,
-        node.network_public_ip,
-        node.network_subnet,
-        node.network_virtual_network
-      ]
+  container {
 
-      edges = [
-        edge.network_firewall_to_network_public_ip,
-        edge.network_firewall_to_network_subnet,
-        edge.network_subnet_to_network_virtual_network
-      ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-      args = {
-        network_firewall_ids        = [self.input.firewall_id.value]
-        network_public_ip_ids       = with.network_public_ips.rows[*].public_ip_id
-        network_subnet_ids          = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+      node {
+        base = node.network_firewall
+        args = {
+          network_firewall_ids = [self.input.firewall_id.value]
+        }
+      }
+
+      node {
+        base = node.network_public_ip
+        args = {
+          network_public_ip_ids = with.network_public_ips.rows[*].public_ip_id
+        }
+      }  
+
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }  
+
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+        }
+      }
+
+      edge {
+        base = edge.network_firewall_to_network_public_ip
+        args = {
+          network_firewall_ids = [self.input.firewall_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.network_firewall_to_network_subnet
+        args = {
+          network_firewall_ids = [self.input.firewall_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.network_subnet_to_network_virtual_network
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
       }
     }
   }

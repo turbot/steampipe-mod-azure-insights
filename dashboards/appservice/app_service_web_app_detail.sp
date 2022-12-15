@@ -65,32 +65,26 @@ dashboard "app_service_web_app_detail" {
 
   }
 
-  container {
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "network_application_gateways" {
         sql = <<-EOQ
-        with application_gateway as (
+          with application_gateway as (
+            select
+              g.id as id,
+              backend_address ->> 'fqdn' as app_host_name
+            from
+              azure_application_gateway as g,
+              jsonb_array_elements(backend_address_pools) as pool,
+              jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
+          )
           select
-            g.id as id,
-            backend_address ->> 'fqdn' as app_host_name
+            lower(g.id) as application_gateway_id
           from
-            azure_application_gateway as g,
-            jsonb_array_elements(backend_address_pools) as pool,
-            jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
-        )
-        select
-          lower(g.id) as application_gateway_id
-        from
-          azure_app_service_web_app as a,
-          jsonb_array_elements(a.host_names) as host_name,
-          application_gateway as g
-        where
-          lower(g.app_host_name) = lower(trim((host_name::text), '""'))
-          and lower(a.id) = $1;
+            azure_app_service_web_app as a,
+            jsonb_array_elements(a.host_names) as host_name,
+            application_gateway as g
+          where
+            lower(g.app_host_name) = lower(trim((host_name::text), '""'))
+            and lower(a.id) = $1;
         EOQ
 
         args = [self.input.web_app_id.value]
@@ -98,19 +92,19 @@ dashboard "app_service_web_app_detail" {
 
       with "network_subnets" {
         sql = <<-EOQ
-          select
-            lower(id) as subnet_id
-          from
-            azure_subnet
-          where
-            lower(id) in (
-              select
-                lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
-              from
-                azure_app_service_web_app
-              where
-                lower(id) = $1
-            )
+            select
+              lower(id) as subnet_id
+            from
+              azure_subnet
+            where
+              lower(id) in (
+                select
+                  lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
+                from
+                  azure_app_service_web_app
+                where
+                  lower(id) = $1
+              );
         EOQ
 
         args = [self.input.web_app_id.value]
@@ -122,7 +116,7 @@ dashboard "app_service_web_app_detail" {
             lower(id) as virtual_network_id
           from
             azure_virtual_network,
-            jsonb_array_elements(subnets) as sub
+              jsonb_array_elements(subnets) as sub
           where
             lower(sub ->> 'id') in (
               select
@@ -137,27 +131,76 @@ dashboard "app_service_web_app_detail" {
         args = [self.input.web_app_id.value]
       }
 
-      nodes = [
-        node.app_service_plan,
-        node.app_service_web_app,
-        node.network_application_gateway,
-        node.network_subnet,
-        node.network_virtual_network
-      ]
+  container {
+    graph {
 
-      edges = [
-        edge.app_service_web_app_to_app_service_plan,
-        edge.app_service_web_app_to_network_subnet,
-        edge.network_application_gateway_to_app_service_web_app,
-        edge.network_subnet_to_network_virtual_network
-      ]
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-      args = {
-        app_service_web_app_ids         = [self.input.web_app_id.value]
-        network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
-        network_subnet_ids              = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids     = with.network_virtual_networks.rows[*].virtual_network_id
+      node {
+        base = node.app_service_plan
+        args = {
+          app_service_web_app_ids = [self.input.web_app_id.value]
+        }
       }
+
+      node {
+        base = node.app_service_web_app
+        args = {
+          app_service_web_app_ids = [self.input.web_app_id.value]
+        }
+      }
+
+      node {
+        base = node.network_application_gateway
+        args = {
+          network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
+        }
+      }
+
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+        }
+      } 
+
+      edge {
+        base = edge.app_service_web_app_to_app_service_plan
+        args = {
+          app_service_web_app_ids = [self.input.web_app_id.value]
+        }
+      }
+
+      edge {
+        base = edge.app_service_web_app_to_network_subnet
+        args = {
+          app_service_web_app_ids = [self.input.web_app_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_application_gateway_to_app_service_web_app
+        args = {
+          app_service_web_app_ids = [self.input.web_app_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_subnet_to_network_virtual_network
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+      
     }
   }
 

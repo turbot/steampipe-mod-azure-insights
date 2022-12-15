@@ -49,13 +49,6 @@ dashboard "compute_virtual_machine_scale_set_detail" {
 
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "compute_virtual_machine_scale_set_network_interfaces" {
         sql = <<-EOQ
           with nic_list as (
@@ -248,42 +241,144 @@ dashboard "compute_virtual_machine_scale_set_detail" {
         args = [self.input.vm_scale_set_id.value]
       }
 
-      nodes = [
-        node.compute_virtual_machine_scale_set,
-        node.compute_virtual_machine_scale_set_network_interface,
-        node.compute_virtual_machine_scale_set_vm,
-        node.kubernetes_cluster,
-        node.network_application_gateway,
-        node.network_load_balancer,
-        node.network_load_balancer_backend_address_pool,
-        node.network_network_security_group,
-        node.network_subnet,
-        node.network_virtual_network
-      ]
+  container {
 
-      edges = [
-        edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_network_interface,
-        edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vms,
-        edge.compute_virtual_machine_scale_set_to_network_application_gateway,
-        edge.compute_virtual_machine_scale_set_to_network_load_balancer,
-        edge.compute_virtual_machine_scale_set_to_network_load_balancer_backend_address_pool,
-        edge.compute_virtual_machine_scale_set_to_network_security_group,
-        edge.compute_virtual_machine_scale_set_to_network_subnet,
-        edge.kubernetes_cluster_to_compute_virtual_machine_scale_set,
-        edge.network_subnet_to_network_virtual_network
-      ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+      
+      node {
+        base = node.compute_virtual_machine_scale_set
+        args = {
+          compute_virtual_machine_scale_set_ids = [self.input.vm_scale_set_id.value]
+        }
+      }    
 
-      args = {
-        compute_virtual_machine_scale_set_ids                   = [self.input.vm_scale_set_id.value]
-        compute_virtual_machine_scale_set_network_interface_ids = with.compute_virtual_machine_scale_set_network_interfaces.rows[*].network_interface_id
-        compute_virtual_machine_scale_set_vm_ids                = with.compute_virtual_machine_scale_set_vms.rows[*].scale_set_vm_id
-        kubernetes_cluster_ids                                  = with.kubernetes_clusters.rows[*].cluster_id
-        network_application_gateway_ids                         = with.network_application_gateways.rows[*].application_gateway_id
-        network_load_balancer_backend_address_pool_ids          = with.network_load_balancer_backend_address_pools.rows[*].pool_id
-        network_load_balancer_ids                               = with.network_load_balancers.rows[*].lb_id
-        network_security_group_ids                              = with.network_security_groups.rows[*].nsg_id
-        network_subnet_ids                                      = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids                             = with.network_virtual_networks.rows[*].network_id
+      node {
+        base = node.compute_virtual_machine_scale_set_network_interface
+        args = {
+          compute_virtual_machine_scale_set_network_interface_ids = with.compute_virtual_machine_scale_set_network_interfaces.rows[*].network_interface_id
+        }
+      }
+
+      node {
+        base = node.compute_virtual_machine_scale_set_vm
+        args = {
+          compute_virtual_machine_scale_set_vm_ids = with.compute_virtual_machine_scale_set_vms.rows[*].scale_set_vm_id
+        }
+      }  
+
+      node {
+        base = node.kubernetes_cluster
+        args = {
+          kubernetes_cluster_ids = with.kubernetes_clusters.rows[*].cluster_id
+        }
+      }
+
+      node {
+        base = node.network_application_gateway
+        args = {
+          network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
+        }
+      }
+
+      node {
+        base = node.network_load_balancer
+        args = {
+          network_load_balancer_ids = with.network_load_balancers.rows[*].lb_id
+        }
+      }
+
+      node {
+        base = node.network_load_balancer_backend_address_pool
+        args = {
+          network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
+        }
+      }
+
+      node {
+        base = node.network_network_security_group
+        args = {
+          network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+        }
+      }  
+
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }     
+
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+        }
+      }  
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_network_interface
+        args = {
+          compute_virtual_machine_scale_set_ids = [self.input.vm_scale_set_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vms
+        args = {
+          compute_virtual_machine_scale_set_ids = [self.input.vm_scale_set_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_to_network_application_gateway
+        args = {
+          compute_virtual_machine_scale_set_ids = [self.input.vm_scale_set_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_to_network_load_balancer
+        args = {
+          compute_virtual_machine_scale_set_ids = [self.input.vm_scale_set_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_to_network_load_balancer_backend_address_pool
+        args = {
+          compute_virtual_machine_scale_set_ids = [self.input.vm_scale_set_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_to_network_security_group
+        args = {
+          compute_virtual_machine_scale_set_ids = [self.input.vm_scale_set_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.compute_virtual_machine_scale_set_to_network_subnet
+        args = {
+          compute_virtual_machine_scale_set_ids = [self.input.vm_scale_set_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.kubernetes_cluster_to_compute_virtual_machine_scale_set
+        args = {
+          kubernetes_cluster_ids = with.kubernetes_clusters.rows[*].cluster_id
+        }
+      }
+
+      edge {
+        base = edge.network_subnet_to_network_virtual_network
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
       }
     }
   }
@@ -429,7 +524,7 @@ query "compute_virtual_machine_scale_set_encryption_status" {
 
 query "compute_virtual_machine_scale_set_logging_status" {
   sql = <<-EOQ
-     with logging_details as (
+    with logging_details as (
       select
         distinct a.id as vm_scale_set_id
       from

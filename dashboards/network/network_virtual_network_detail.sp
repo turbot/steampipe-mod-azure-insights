@@ -41,13 +41,6 @@ dashboard "network_virtual_network_detail" {
 
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "compute_virtual_machines" {
         sql = <<-EOQ
           with subnet_list as (
@@ -293,45 +286,160 @@ dashboard "network_virtual_network_detail" {
         args = [self.input.vn_id.value]
       }
 
-      nodes = [
-        node.compute_virtual_machine,
-        node.network_application_gateway,
-        node.network_load_balancer,
-        node.network_load_balancer_backend_address_pool,
-        node.network_nat_gateway,
-        node.network_network_security_group,
-        node.network_route_table,
-        node.network_subnet,
-        node.network_virtual_network,
-        node.network_virtual_network_network_peering,
-        node.sql_server
-      ]
+  container {
 
-      edges = [
-        edge.network_subnet_to_network_application_gateway,
-        edge.network_subnet_to_network_nat_gateway,
-        edge.network_subnet_to_network_route_table,
-        edge.network_subnet_to_network_security_group,
-        edge.network_subnet_to_sql_server,
-        edge.network_virtual_network_to_compute_virtual_machine,
-        edge.network_virtual_network_to_network_load_balancer,
-        edge.network_virtual_network_to_network_load_balancer_backend_address_pool,
-        edge.network_virtual_network_to_network_peering,
-        edge.network_virtual_network_to_network_subnet
-      ]
-
-      args = {
-        compute_virtual_machine_ids                    = with.compute_virtual_machines.rows[*].virtual_machine_id
-        network_application_gateway_ids                = with.network_application_gateways.rows[*].application_gateway_id
-        network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
-        network_load_balancer_ids                      = with.network_load_balancers.rows[*].network_load_balancer_id
-        network_nat_gateway_ids                        = with.network_nat_gateways.rows[*].nat_gateway_id
-        network_route_table_ids                        = with.network_route_tables.rows[*].route_table_id
-        network_security_group_ids                     = with.network_security_groups.rows[*].nsg_id
-        network_subnet_ids                             = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids                    = [self.input.vn_id.value]
-        sql_server_ids                                 = with.sql_servers.rows[*].sql_server_id
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+      
+      node {
+        base = node.compute_virtual_machine
+        args = {
+          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
       }
+
+      node {
+        base = node.network_application_gateway
+        args = {
+          network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
+        }
+      }
+
+      node {
+        base = node.network_load_balancer
+        args = {
+          network_load_balancer_ids = with.network_load_balancers.rows[*].network_load_balancer_id
+        }
+      }
+
+      node {
+        base = node.network_load_balancer_backend_address_pool
+        args = {
+          network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
+        }
+      }
+
+      node {
+        base = node.network_nat_gateway
+        args = {
+          network_nat_gateway_ids = with.network_nat_gateways.rows[*].nat_gateway_id
+        }
+      }
+
+      node {
+        base = node.network_network_security_group
+        args = {
+          network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+        }
+      }
+
+      node {
+        base = node.network_route_table
+        args = {
+          network_route_table_ids = with.network_route_tables.rows[*].route_table_id
+        }
+      }
+
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = [self.input.vn_id.value]
+        }
+      }
+
+      node {
+        base = node.network_virtual_network_network_peering
+        args = {
+          network_virtual_network_ids = [self.input.vn_id.value]
+        }
+      }
+
+      node {
+        base = node.sql_server
+        args = {
+          sql_server_ids = with.sql_servers.rows[*].sql_server_id
+        }
+      }
+
+      edge {
+        base = edge.network_subnet_to_network_application_gateway
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.network_subnet_to_network_nat_gateway
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.network_subnet_to_network_route_table
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.network_subnet_to_network_security_group
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.network_subnet_to_sql_server
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }
+
+      edge {
+        base = edge.network_virtual_network_to_compute_virtual_machine
+        args = {
+          network_virtual_network_ids = [self.input.vn_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_virtual_network_to_network_load_balancer
+        args = {
+          network_virtual_network_ids = [self.input.vn_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_virtual_network_to_network_load_balancer_backend_address_pool
+        args = {
+          network_virtual_network_ids = [self.input.vn_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_virtual_network_to_network_peering
+        args = {
+          network_virtual_network_ids = [self.input.vn_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_virtual_network_to_network_subnet
+        args = {
+          network_virtual_network_ids = [self.input.vn_id.value]
+        }
+      }
+      
     }
   }
 

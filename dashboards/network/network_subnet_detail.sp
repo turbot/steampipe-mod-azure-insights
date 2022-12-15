@@ -33,14 +33,7 @@ dashboard "network_subnet_detail" {
 
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
-      with "app_service_web_apps" {
+    with "app_service_web_apps" {
         sql = <<-EOQ
           select
             lower(id) as web_app_id
@@ -167,45 +160,159 @@ dashboard "network_subnet_detail" {
         args = [self.input.subnet_id.value]
       }
 
-      nodes = [
-        node.app_service_web_app,
-        node.documentdb_cosmosdb_account,
-        node.network_application_gateway,
-        node.network_nat_gateway,
-        node.network_network_security_group,
-        node.network_route_table,
-        node.network_subnet,
-        node.network_subnet_api_management,
-        node.network_virtual_network,
-        node.sql_server,
-        node.storage_storage_account
-      ]
+  container {
 
-      edges = [
-        edge.network_subnet_to_api_management,
-        edge.network_subnet_to_app_service_web_app,
-        edge.network_subnet_to_documentdb_cosmosdb_account,
-        edge.network_subnet_to_network_application_gateway,
-        edge.network_subnet_to_network_nat_gateway,
-        edge.network_subnet_to_network_route_table,
-        edge.network_subnet_to_network_security_group,
-        edge.network_subnet_to_sql_server,
-        edge.network_subnet_to_storage_storage_account,
-        edge.network_virtual_network_to_network_subnet
-      ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
+      
+  node {
+    base = node.app_service_web_app
+    args = {
+      app_service_web_app_ids = with.app_service_web_apps.rows[*].web_app_id
+    }
+  }
 
-      args = {
-        app_service_web_app_ids         = with.app_service_web_apps.rows[*].web_app_id
-        documentdb_cosmosdb_account_ids = with.documentdb_cosmosdb_account_ids.rows[*].cosmosdb_account_id
-        network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
-        network_nat_gateway_ids         = with.network_nat_gateways.rows[*].nat_gateway_id
-        network_route_table_ids         = with.network_route_tables.rows[*].route_table_id
-        network_security_group_ids      = with.network_security_groups.rows[*].nsg_id
-        network_subnet_ids              = [self.input.subnet_id.value]
-        network_virtual_network_ids     = with.network_virtual_networks.rows[*].virtual_network_id
-        sql_server_ids                  = with.sql_servers.rows[*].sql_server_id
-        storage_account_ids             = with.storage_storage_accounts.rows[*].storage_account_id
-      }
+  node {
+    base = node.documentdb_cosmosdb_account
+    args = {
+      documentdb_cosmosdb_account_ids = with.documentdb_cosmosdb_account_ids.rows[*].cosmosdb_account_id
+    }
+  }
+
+  node {
+    base = node.network_application_gateway
+    args = {
+      network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
+    }
+  }
+
+  node {
+    base = node.network_nat_gateway
+    args = {
+      network_nat_gateway_ids = with.network_nat_gateways.rows[*].nat_gateway_id
+    }
+  }
+
+  node {
+    base = node.network_network_security_group
+    args = {
+      network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+    }
+  }
+
+  node {
+    base = node.network_route_table
+    args = {
+      network_route_table_ids = with.network_route_tables.rows[*].route_table_id
+    }
+  }
+
+  node {
+    base = node.network_subnet
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  node {
+    base = node.network_subnet_api_management
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  node {
+    base = node.network_virtual_network
+    args = {
+      network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+    }
+  }
+
+  node {
+    base = node.sql_server
+    args = {
+      sql_server_ids = with.sql_servers.rows[*].sql_server_id
+    }
+  }
+
+  node {
+    base = node.storage_storage_account
+    args = {
+      storage_account_ids = with.storage_storage_accounts.rows[*].storage_account_id
+    }
+  }
+
+  edge {
+    base = edge.network_subnet_to_api_management
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_subnet_to_app_service_web_app
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_subnet_to_documentdb_cosmosdb_account
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_subnet_to_network_application_gateway
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_subnet_to_network_nat_gateway
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_subnet_to_network_route_table
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_subnet_to_network_security_group
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_subnet_to_sql_server
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_subnet_to_storage_storage_account
+    args = {
+      network_subnet_ids = [self.input.subnet_id.value]
+    }
+  }
+
+  edge {
+    base = edge.network_virtual_network_to_network_subnet
+    args = {
+      network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+    }
+  }
     }
   }
 

@@ -65,12 +65,6 @@ dashboard "sql_server_detail" {
 
   }
 
-  container {
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "key_vault_keys" {
         sql = <<-EOQ
           with attached_keys as (
@@ -165,35 +159,117 @@ dashboard "sql_server_detail" {
         args = [self.input.sql_server_id.value]
       }
 
-      nodes = [
-        node.key_vault_key,
-        node.key_vault_vault,
-        node.network_subnet,
-        node.network_virtual_network,
-        node.sql_database,
-        node.sql_server,
-        node.sql_server_mssql_elasticpool,
-        node.sql_server_network_private_endpoint
-      ]
+  container {
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-      edges = [
-        edge.network_subnet_to_network_virtual_network,
-        edge.sql_server_to_key_vault,
-        edge.sql_server_to_key_vault_key,
-        edge.sql_server_to_mssql_elasticpool,
-        edge.sql_server_to_network_private_endpoint,
-        edge.sql_server_to_network_subnet,
-        edge.sql_server_to_sql_database
-      ]
 
-      args = {
-        key_vault_key_ids           = with.key_vault_keys.rows[*].key_vault_key_id
-        key_vault_vault_ids         = with.key_vault_vaults.rows[*].key_vault_id
-        network_subnet_ids          = with.network_subnets.rows[*].subnet_id
-        network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_networks_id
-        sql_database_ids            = with.sql_databases.rows[*].sql_database_id
-        sql_server_ids              = [self.input.sql_server_id.value]
+      node {
+        base = node.key_vault_key
+        args = {
+          key_vault_key_ids = with.key_vault_keys.rows[*].key_vault_key_id
+        }
+      }  
+
+      node {
+        base = node.key_vault_vault
+        args = {
+          key_vault_vault_ids = with.key_vault_vaults.rows[*].key_vault_id
+        }
+      }    
+
+      node {
+        base = node.network_subnet
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
       }
+
+      node {
+        base = node.network_virtual_network
+        args = {
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_networks_id
+        }
+      }  
+
+      node {
+        base = node.sql_database
+        args = {
+          sql_database_ids = with.sql_databases.rows[*].sql_database_id
+        }
+      }
+
+      node {
+        base = node.sql_server
+        args = {
+          sql_server_ids = [self.input.sql_server_id.value]
+        }
+      }
+
+      node {
+        base = node.sql_server_mssql_elasticpool
+        args = {
+          sql_server_ids = [self.input.sql_server_id.value]
+        }
+      }
+
+      node {
+        base = node.sql_server_network_private_endpoint
+        args = {
+          sql_server_ids = [self.input.sql_server_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_subnet_to_network_virtual_network
+        args = {
+          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+        }
+      }  
+
+      edge {
+        base = edge.sql_server_to_key_vault
+        args = {
+          sql_server_ids = [self.input.sql_server_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.sql_server_to_key_vault_key
+        args = {
+          sql_server_ids = [self.input.sql_server_id.value]
+        }
+      }
+
+      edge {
+        base = edge.sql_server_to_mssql_elasticpool
+        args = {
+          sql_server_ids = [self.input.sql_server_id.value]
+        }
+      }
+
+      edge {
+        base = edge.sql_server_to_network_private_endpoint
+        args = {
+          sql_server_ids = [self.input.sql_server_id.value]
+        }
+      }
+
+      edge {
+        base = edge.sql_server_to_network_subnet
+        args = {
+          sql_server_ids = [self.input.sql_server_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.sql_server_to_sql_database
+        args = {
+          sql_server_ids = [self.input.sql_server_id.value]
+        }
+      }  
     }
   }
 

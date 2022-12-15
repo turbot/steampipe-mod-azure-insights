@@ -57,13 +57,6 @@ dashboard "compute_disk_detail" {
 
   }
 
-  container {
-
-    graph {
-      title     = "Relationships"
-      type      = "graph"
-      direction = "TD"
-
       with "compute_disk_accesses" {
         sql = <<-EOQ
           select
@@ -177,40 +170,138 @@ dashboard "compute_disk_detail" {
         args = [self.input.disk_id.value]
       }
 
-      nodes = [
-        node.compute_disk,
-        node.compute_disk_access,
-        node.compute_disk_encryption_set,
-        node.compute_disk_to_compute_disk,
-        node.compute_snapshot,
-        node.compute_virtual_machine,
-        node.key_vault_key,
-        node.key_vault_vault,
-        node.storage_storage_account
-      ]
+  container {
 
-      edges = [
-        edge.compute_disk_to_compute_disk,
-        edge.compute_disk_to_compute_disk_access,
-        edge.compute_disk_to_compute_disk_encryption_set,
-        edge.compute_disk_to_compute_snapshot,
-        edge.compute_disk_to_key_vault_key,
-        edge.compute_disk_to_key_vault_vault,
-        edge.compute_disk_to_storage_storage_account,
-        edge.compute_snapshot_to_compute_disk,
-        edge.compute_virtual_machine_to_compute_disk
-      ]
+    graph {
+      title     = "Relationships"
+      type      = "graph"
+      direction = "TD"
 
-      args = {
-        compute_disk_access_ids         = with.compute_disk_accesses.rows[*].disk_access_id
-        compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
-        compute_disk_ids                = [self.input.disk_id.value]
-        compute_snapshot_ids            = with.compute_snapshots.rows[*].compute_snapshot_id
-        compute_virtual_machine_ids     = with.compute_virtual_machines.rows[*].virtual_machine_id
-        key_vault_key_ids               = with.key_vault_keys.rows[*].key_vault_key_id
-        key_vault_vault_ids             = with.key_vault_vaults.rows[*].key_vault_id
-        storage_account_ids             = with.storage_storage_accounts.rows[*].storage_account_id
+      node {
+        base = node.compute_disk
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
       }
+
+      node {
+        base = node.compute_disk_access
+        args = {
+          compute_disk_access_ids = with.compute_disk_accesses.rows[*].disk_access_id
+        }
+      }
+
+      node {
+        base = node.compute_disk_encryption_set
+        args = {
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
+        }
+      }  
+
+      node {
+        base = node.compute_disk_to_compute_disk
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }  
+
+      node {
+        base = node.compute_snapshot
+        args = {
+          compute_snapshot_ids = with.compute_snapshots.rows[*].compute_snapshot_id
+        }
+      }    
+
+      node {
+        base = node.compute_virtual_machine
+        args = {
+          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }
+
+      node {
+        base = node.key_vault_key
+        args = {
+          key_vault_key_ids = with.key_vault_keys.rows[*].key_vault_key_id
+        }
+      }  
+
+      node {
+        base = node.key_vault_vault
+        args = {
+          key_vault_vault_ids = with.key_vault_vaults.rows[*].key_vault_id
+        }
+      }
+
+      node {
+        base = node.storage_storage_account
+        args = {
+          storage_account_ids = with.storage_storage_accounts.rows[*].storage_account_id
+        }
+      }  
+
+      edge {
+        base = edge.compute_disk_to_compute_disk
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.compute_disk_to_compute_disk_access
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }  
+
+      edge {
+        base = edge.compute_disk_to_compute_disk_encryption_set
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_disk_to_compute_snapshot
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_disk_to_key_vault_key
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_disk_to_key_vault_vault
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }   
+
+      edge {
+        base = edge.compute_disk_to_storage_storage_account
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_snapshot_to_compute_disk
+        args = {
+          compute_snapshot_ids = with.compute_snapshots.rows[*].compute_snapshot_id
+        }
+      }
+
+      edge {
+        base = edge.compute_virtual_machine_to_compute_disk
+        args = {
+          compute_disk_ids = [self.input.disk_id.value]
+        }
+      }   
     }
   }
 
