@@ -56,6 +56,11 @@ dashboard "compute_snapshot_detail" {
     args  = [self.input.id.value]
   }
 
+  with "from_compute_snapshots" {
+    query = query.compute_snapshot_from_compute_snapshots
+    args  = [self.input.id.value]
+  }
+
   with "key_vault_keys" {
     query = query.compute_snapshot_key_vault_keys
     args  = [self.input.id.value]
@@ -63,6 +68,11 @@ dashboard "compute_snapshot_detail" {
 
   with "key_vault_vaults" {
     query = query.compute_snapshot_key_vault_vaults
+    args  = [self.input.id.value]
+  }
+
+  with "to_compute_snapshots" {
+    query = query.compute_snapshot_to_compute_snapshots
     args  = [self.input.id.value]
   }
 
@@ -102,9 +112,16 @@ dashboard "compute_snapshot_detail" {
       }
 
       node {
-        base = node.compute_snapshot_to_compute_snapshot
+        base = node.compute_snapshot
         args = {
-          compute_snapshot_ids = [self.input.id.value]
+          compute_snapshot_ids = with.from_compute_snapshots.rows[*].snapshot_id
+        }
+      }
+
+      node {
+        base = node.compute_snapshot
+        args = {
+          compute_snapshot_ids = with.to_compute_snapshots.rows[*].snapshot_id
         }
       }
 
@@ -126,13 +143,6 @@ dashboard "compute_snapshot_detail" {
         base = edge.compute_disk_to_compute_snapshot
         args = {
           compute_disk_ids = with.compute_disks.rows[*].disk_id
-        }
-      }
-
-      edge {
-        base = edge.compute_snapshot_from_compute_snapshot
-        args = {
-          compute_snapshot_ids = [self.input.id.value]
         }
       }
 
@@ -161,6 +171,13 @@ dashboard "compute_snapshot_detail" {
         base = edge.compute_snapshot_to_compute_snapshot
         args = {
           compute_snapshot_ids = [self.input.id.value]
+        }
+      }
+
+      edge {
+        base = edge.compute_snapshot_to_compute_snapshot
+        args = {
+          compute_snapshot_ids = with.from_compute_snapshots.rows[*].snapshot_id
         }
       }
 
@@ -384,6 +401,31 @@ query "compute_snapshot_key_vault_vaults" {
       left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
     where
       lower(s.id) = $1;
+  EOQ
+}
+
+query "compute_snapshot_from_compute_snapshots" {
+  sql = <<-EOQ
+    select
+      lower(s.id) as snapshot_id
+    from
+      azure_compute_snapshot as s,
+      azure_compute_snapshot as self
+    where
+      lower(self.source_resource_id) = lower(s.id)
+    and
+      lower(self.id) = $1;
+  EOQ
+}
+
+query "compute_snapshot_to_compute_snapshots" {
+  sql = <<-EOQ
+    select
+      lower(s.id) as snapshot_id
+    from
+      azure_compute_snapshot as s
+    where
+      lower(s.source_resource_id) = $1;
   EOQ
 }
 

@@ -62,6 +62,11 @@ dashboard "compute_disk_detail" {
     args  = [self.input.disk_id.value]
   }
 
+  with "to_compute_disks" {
+    query = query.compute_disk_to_compute_disk
+    args  = [self.input.disk_id.value]
+  }
+
   with "compute_virtual_machines" {
     query = query.compute_disk_compute_virtual_machines
     args  = [self.input.disk_id.value]
@@ -97,6 +102,13 @@ dashboard "compute_disk_detail" {
       }
 
       node {
+        base = node.compute_disk
+        args = {
+          compute_disk_ids = with.to_compute_disks.rows[*].compute_disk_id
+        }
+      }
+
+      node {
         base = node.compute_disk_access
         args = {
           compute_disk_access_ids = with.compute_disk_accesses.rows[*].disk_access_id
@@ -107,13 +119,6 @@ dashboard "compute_disk_detail" {
         base = node.compute_disk_encryption_set
         args = {
           compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
-        }
-      }
-
-      node {
-        base = node.compute_disk_to_compute_disk
-        args = {
-          compute_disk_ids = [self.input.disk_id.value]
         }
       }
 
@@ -413,6 +418,19 @@ query "compute_disk_compute_snapshots" {
     where
       s.id is not null
       and lower(d.id) = $1
+  EOQ
+}
+
+query "compute_disk_to_compute_disk" {
+  sql = <<-EOQ
+    select
+      lower(d2.id) as compute_disk_id
+    from
+      azure_compute_disk as d1
+      left join azure_compute_disk d2 on d1.creation_data_source_resource_id = d2.id
+    where
+      lower(d1.id) = $1
+      and lower(d2.id) is not null;
   EOQ
 }
 

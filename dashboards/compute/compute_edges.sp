@@ -137,22 +137,6 @@ edge "compute_disk_to_storage_storage_account" {
   param "compute_disk_ids" {}
 }
 
-edge "compute_snapshot_from_compute_snapshot" {
-  title = "duplicate of"
-
-  sql = <<-EOQ
-    select
-      lower(s.id) as to_id,
-      lower(d.id) as from_id
-    from
-      azure_compute_snapshot as d
-      left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
-    where
-      lower(s.id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
 
 edge "compute_snapshot_to_compute_disk" {
   title = "disk"
@@ -210,8 +194,8 @@ edge "compute_snapshot_to_compute_snapshot" {
 
   sql = <<-EOQ
     select
-      lower(s.source_resource_id) as to_id,
-      lower(s.id) as from_id
+      lower(s.source_resource_id) as from_id,
+      lower(s.id) as to_id
     from
       azure_compute_snapshot as s
     where
