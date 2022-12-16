@@ -34,13 +34,13 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
     args  = [self.input.scale_set_vm_id.value]
   }
 
-  with "network_interfaces" {
-    query = query.compute_virtual_machine_scale_set_vm_network_interfaces
+  with "compute_virtual_machine_scale_sets" {
+    query = query.compute_virtual_machine_scale_set_vm_compute_virtual_machine_scale_sets
     args  = [self.input.scale_set_vm_id.value]
   }
 
-  with "compute_virtual_machine_scale_sets" {
-    query = query.compute_virtual_machine_scale_set_vm_compute_virtual_machine_scale_sets
+  with "network_interfaces" {
+    query = query.compute_virtual_machine_scale_set_vm_network_interfaces
     args  = [self.input.scale_set_vm_id.value]
   }
 
@@ -307,7 +307,7 @@ query "compute_virtual_machine_scale_set_sku_name" {
 # With Queries
 
 query "compute_virtual_machine_scale_set_vm_compute_disks" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(d.id) as disk_id
     from
@@ -321,7 +321,7 @@ query "compute_virtual_machine_scale_set_vm_compute_disks" {
 }
 
 query "compute_virtual_machine_scale_set_vm_network_interfaces" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(nic.id) as network_interface_id
     from
@@ -333,7 +333,7 @@ query "compute_virtual_machine_scale_set_vm_network_interfaces" {
 }
 
 query "compute_virtual_machine_scale_set_vm_compute_virtual_machine_scale_sets" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(s.id) as scale_set_id
     from
@@ -345,7 +345,7 @@ query "compute_virtual_machine_scale_set_vm_compute_virtual_machine_scale_sets" 
 }
 
 query "compute_virtual_machine_scale_set_vm_network_load_balancer_backend_address_pools" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with compute_virtual_machine_scale_set_network_interface as (
       select
         nic.id as nic_id,
@@ -367,7 +367,7 @@ query "compute_virtual_machine_scale_set_vm_network_load_balancer_backend_addres
 }
 
 query "compute_virtual_machine_scale_set_vm_network_load_balancers" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with compute_virtual_machine_scale_set_network_interface as (
       select
         nic.id as nic_id,
@@ -397,7 +397,7 @@ query "compute_virtual_machine_scale_set_vm_network_load_balancers" {
 }
 
 query "compute_virtual_machine_scale_set_vm_network_security_groups" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
       select
         lower(nsg.id) as nsg_id
       from
@@ -411,7 +411,7 @@ query "compute_virtual_machine_scale_set_vm_network_security_groups" {
 }
 
 query "compute_virtual_machine_scale_set_vm_network_subnets" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
       with ip_configs as (
         select
           nic.ip_configurations as ip_config,
@@ -435,7 +435,7 @@ query "compute_virtual_machine_scale_set_vm_network_subnets" {
 }
 
 query "compute_virtual_machine_scale_set_vm_network_virtual_networks" {
-      sql   = <<-EOQ
+  sql = <<-EOQ
           with ip_configs as (
             select
               nic.ip_configurations as ip_config,

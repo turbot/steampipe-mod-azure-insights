@@ -257,6 +257,226 @@ edge "compute_snapshot_to_storage_storage_account" {
   param "storage_account_ids" {}
 }
 
+edge "compute_virtual_machine_to_compute_data_disk" {
+  title = "data disk"
+
+  sql = <<-EOQ
+    with vm_disk_id as (
+      select
+        id,
+        jsonb_array_elements(data_disks)->'managedDisk'->>'id' as d_id
+      from
+        azure_compute_virtual_machine
+    )
+    select
+      lower(v.id) as from_id,
+      lower(d.id) as to_id
+    from
+      azure_compute_disk as d
+      left join vm_disk_id as v on lower(d.id) = lower(v.d_id)
+    where
+      lower(v.id) = any($1);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
+edge "compute_virtual_machine_to_compute_disk" {
+  title = "disk"
+
+  sql = <<-EOQ
+    select
+      lower(m.id) as from_id,
+      case when lower(data_disk -> 'managedDisk' ->> 'id') = any($1) then lower(data_disk -> 'managedDisk' ->> 'id') else lower(m.managed_disk_id) end as to_id
+    from
+      azure_compute_virtual_machine as m,
+      jsonb_array_elements(data_disks) as data_disk
+    where
+      lower(data_disk -> 'managedDisk' ->> 'id') = any($1)
+      or lower(m.managed_disk_id) = any($1);
+  EOQ
+
+  param "compute_disk_ids" {}
+}
+
+edge "compute_virtual_machine_to_compute_image" {
+  title = "uses"
+
+  sql = <<-EOQ
+    select
+      lower(v.id) as from_id,
+      lower(i.id) as to_id
+    from
+      azure_compute_image as i
+      left join azure_compute_virtual_machine as v on lower(i.id) = lower(v.image_id)
+    where
+      lower(v.id) = any($1);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
+edge "compute_virtual_machine_to_compute_os_disk" {
+  title = "os disk"
+
+  sql = <<-EOQ
+    select
+      lower(vm.id) as from_id,
+      lower(d.id) as to_id
+    from
+      azure_compute_virtual_machine as vm
+      left join azure_compute_disk as d on lower(d.managed_by) = lower(vm.id)
+    where
+      lower(vm.id) = any($1);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
+edge "compute_virtual_machine_to_network_network_interface" {
+  title = "network interface"
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as n_id
+      from
+        azure_compute_virtual_machine
+    )
+    select
+      lower(n.id) as to_id,
+      lower(vn.id) as from_id
+    from
+      network_interface_id as vn
+      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
+    where
+      lower(vn.id) = any($1);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
+edge "compute_virtual_machine_to_network_public_ip" {
+  title = "public ip"
+
+  sql = <<-EOQ
+    with network_interfaces as (
+      select
+        vm.id as vm_id,
+        nic.id as nic_id,
+        nic.ip_configurations as ip_configuration
+      from
+        azure_compute_virtual_machine as vm,
+        jsonb_array_elements(network_interfaces) as n
+        left join azure_network_interface as nic on lower(nic.id) = lower(n ->> 'id')
+      where
+        lower(vm.id) = any($1)
+    )
+    select
+      lower(n.nic_id) as from_id,
+      lower(p.id) as to_id
+    from
+      network_interfaces as n,
+      jsonb_array_elements(ip_configuration) as ip_config
+      left join azure_public_ip as p on lower(p.id) = lower(ip_config -> 'properties' -> 'publicIPAddress' ->> 'id');
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
+edge "compute_virtual_machine_to_network_security_group" {
+  title = "nsg"
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as n_id
+      from
+        azure_compute_virtual_machine
+      where
+        lower(id) = any($1)
+    )
+    select
+      lower(s.id) as to_id,
+      lower(n.id) as from_id
+    from
+      network_interface_id as vn
+      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
+      left join azure_network_security_group as s on lower(n.network_security_group_id) = lower(s.id)
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
+edge "compute_virtual_machine_to_network_subnet" {
+  title = "subnet"
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as nic_id
+      from
+        azure_compute_virtual_machine
+      where
+        lower(id) = any($1)
+    )
+    select
+      coalesce(
+        lower(nic.network_security_group_id),
+        lower(nic.id)
+      ) as from_id,
+      lower(s.id) as to_id
+    from
+      azure_network_interface as nic,
+      jsonb_array_elements(ip_configurations) as c
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+    where
+      nic.id in (select nic_id from network_interface_id);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
+edge "compute_virtual_machine_to_network_virtual_network" {
+  title = "virtual network"
+
+  sql = <<-EOQ
+    with network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as nic_id
+      from
+        azure_compute_virtual_machine
+      where
+        lower(id) = any($1)
+    ), subnet_id as (
+        select
+          s.id as id,
+          s.virtual_network_name
+        from
+          azure_network_interface as nic,
+          jsonb_array_elements(ip_configurations) as c
+          left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+        where
+          lower(nic.id) in (select lower(nic_id) from network_interface_id)
+    )
+    select
+      lower(vn.id) as to_id,
+      lower(sub.id) as from_id
+    from
+      azure_virtual_network as vn,
+      jsonb_array_elements(subnets) as s
+      left join subnet_id as sub on lower(sub.id) = lower(s ->> 'id')
+    where
+      lower(s ->> 'id') in (select lower(id) from subnet_id);
+  EOQ
+
+  param "compute_virtual_machine_ids" {}
+}
+
 edge "compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_network_interface" {
   title = "network interface"
 
@@ -595,224 +815,4 @@ edge "compute_virtual_machine_scale_set_vm_to_network_subnet" {
   EOQ
 
   param "compute_virtual_machine_scale_set_vm_ids" {}
-}
-
-edge "compute_virtual_machine_to_compute_data_disk" {
-  title = "data disk"
-
-  sql = <<-EOQ
-    with vm_disk_id as (
-      select
-        id,
-        jsonb_array_elements(data_disks)->'managedDisk'->>'id' as d_id
-      from
-        azure_compute_virtual_machine
-    )
-    select
-      lower(v.id) as from_id,
-      lower(d.id) as to_id
-    from
-      azure_compute_disk as d
-      left join vm_disk_id as v on lower(d.id) = lower(v.d_id)
-    where
-      lower(v.id) = any($1);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
-
-edge "compute_virtual_machine_to_compute_disk" {
-  title = "disk"
-
-  sql = <<-EOQ
-    select
-      lower(m.id) as from_id,
-      case when lower(data_disk -> 'managedDisk' ->> 'id') = any($1) then lower(data_disk -> 'managedDisk' ->> 'id') else lower(m.managed_disk_id) end as to_id
-    from
-      azure_compute_virtual_machine as m,
-      jsonb_array_elements(data_disks) as data_disk
-    where
-      lower(data_disk -> 'managedDisk' ->> 'id') = any($1)
-      or lower(m.managed_disk_id) = any($1);
-  EOQ
-
-  param "compute_disk_ids" {}
-}
-
-edge "compute_virtual_machine_to_compute_image" {
-  title = "uses"
-
-  sql = <<-EOQ
-    select
-      lower(v.id) as from_id,
-      lower(i.id) as to_id
-    from
-      azure_compute_image as i
-      left join azure_compute_virtual_machine as v on lower(i.id) = lower(v.image_id)
-    where
-      lower(v.id) = any($1);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
-
-edge "compute_virtual_machine_to_compute_os_disk" {
-  title = "os disk"
-
-  sql = <<-EOQ
-    select
-      lower(vm.id) as from_id,
-      lower(d.id) as to_id
-    from
-      azure_compute_virtual_machine as vm
-      left join azure_compute_disk as d on lower(d.managed_by) = lower(vm.id)
-    where
-      lower(vm.id) = any($1);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
-
-edge "compute_virtual_machine_to_network_network_interface" {
-  title = "network interface"
-
-  sql = <<-EOQ
-    with network_interface_id as (
-      select
-        id,
-        jsonb_array_elements(network_interfaces)->>'id' as n_id
-      from
-        azure_compute_virtual_machine
-    )
-    select
-      lower(n.id) as to_id,
-      lower(vn.id) as from_id
-    from
-      network_interface_id as vn
-      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
-    where
-      lower(vn.id) = any($1);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
-
-edge "compute_virtual_machine_to_network_public_ip" {
-  title = "public ip"
-
-  sql = <<-EOQ
-    with network_interfaces as (
-      select
-        vm.id as vm_id,
-        nic.id as nic_id,
-        nic.ip_configurations as ip_configuration
-      from
-        azure_compute_virtual_machine as vm,
-        jsonb_array_elements(network_interfaces) as n
-        left join azure_network_interface as nic on lower(nic.id) = lower(n ->> 'id')
-      where
-        lower(vm.id) = any($1)
-    )
-    select
-      lower(n.nic_id) as from_id,
-      lower(p.id) as to_id
-    from
-      network_interfaces as n,
-      jsonb_array_elements(ip_configuration) as ip_config
-      left join azure_public_ip as p on lower(p.id) = lower(ip_config -> 'properties' -> 'publicIPAddress' ->> 'id');
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
-
-edge "compute_virtual_machine_to_network_security_group" {
-  title = "nsg"
-
-  sql = <<-EOQ
-    with network_interface_id as (
-      select
-        id,
-        jsonb_array_elements(network_interfaces)->>'id' as n_id
-      from
-        azure_compute_virtual_machine
-      where
-        lower(id) = any($1)
-    )
-    select
-      lower(s.id) as to_id,
-      lower(n.id) as from_id
-    from
-      network_interface_id as vn
-      left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
-      left join azure_network_security_group as s on lower(n.network_security_group_id) = lower(s.id)
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
-
-edge "compute_virtual_machine_to_network_subnet" {
-  title = "subnet"
-
-  sql = <<-EOQ
-    with network_interface_id as (
-      select
-        id,
-        jsonb_array_elements(network_interfaces)->>'id' as nic_id
-      from
-        azure_compute_virtual_machine
-      where
-        lower(id) = any($1)
-    )
-    select
-      coalesce(
-        lower(nic.network_security_group_id),
-        lower(nic.id)
-      ) as from_id,
-      lower(s.id) as to_id
-    from
-      azure_network_interface as nic,
-      jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
-    where
-      nic.id in (select nic_id from network_interface_id);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
-}
-
-edge "compute_virtual_machine_to_network_virtual_network" {
-  title = "virtual network"
-
-  sql = <<-EOQ
-    with network_interface_id as (
-      select
-        id,
-        jsonb_array_elements(network_interfaces)->>'id' as nic_id
-      from
-        azure_compute_virtual_machine
-      where
-        lower(id) = any($1)
-    ), subnet_id as (
-        select
-          s.id as id,
-          s.virtual_network_name
-        from
-          azure_network_interface as nic,
-          jsonb_array_elements(ip_configurations) as c
-          left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
-        where
-          lower(nic.id) in (select lower(nic_id) from network_interface_id)
-    )
-    select
-      lower(vn.id) as to_id,
-      lower(sub.id) as from_id
-    from
-      azure_virtual_network as vn,
-      jsonb_array_elements(subnets) as s
-      left join subnet_id as sub on lower(sub.id) = lower(s ->> 'id')
-    where
-      lower(s ->> 'id') in (select lower(id) from subnet_id);
-  EOQ
-
-  param "compute_virtual_machine_ids" {}
 }

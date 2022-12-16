@@ -41,49 +41,49 @@ dashboard "compute_virtual_machine_scale_set_detail" {
 
   }
 
-  with "network_network_interfaces" {
-    query = query.compute_virtual_machine_scale_set_network_network_interfaces
-    args = [self.input.vm_scale_set_id.value]
-  }
-
   with "compute_virtual_machine_scale_set_vms" {
     query = query.compute_virtual_machine_scale_set_compute_virtual_machine_scale_set_vms
-    args = [self.input.vm_scale_set_id.value]
+    args  = [self.input.vm_scale_set_id.value]
   }
 
   with "kubernetes_clusters" {
     query = query.compute_virtual_machine_scale_set_kubernetes_clusters
-    args = [self.input.vm_scale_set_id.value]
+    args  = [self.input.vm_scale_set_id.value]
   }
 
   with "network_application_gateways" {
     query = query.compute_virtual_machine_scale_set_network_application_gateways
-    args = [self.input.vm_scale_set_id.value]
+    args  = [self.input.vm_scale_set_id.value]
   }
 
   with "network_load_balancer_backend_address_pools" {
     query = query.compute_virtual_machine_scale_set_network_load_balancer_backend_address_pools
-    args = [self.input.vm_scale_set_id.value]
+    args  = [self.input.vm_scale_set_id.value]
   }
 
   with "network_load_balancers" {
     query = query.compute_virtual_machine_scale_set_network_load_balancers
-    args = [self.input.vm_scale_set_id.value]
+    args  = [self.input.vm_scale_set_id.value]
+  }
+
+  with "network_network_interfaces" {
+    query = query.compute_virtual_machine_scale_set_network_network_interfaces
+    args  = [self.input.vm_scale_set_id.value]
   }
 
   with "network_security_groups" {
     query = query.compute_virtual_machine_scale_set_network_security_groups
-    args = [self.input.vm_scale_set_id.value]
+    args  = [self.input.vm_scale_set_id.value]
   }
 
   with "network_subnets" {
     query = query.compute_virtual_machine_scale_set_network_subnets
-    args = [self.input.vm_scale_set_id.value]
+    args  = [self.input.vm_scale_set_id.value]
   }
 
   with "network_virtual_networks" {
     query = query.compute_virtual_machine_scale_set_network_virtual_networks
-    args = [self.input.vm_scale_set_id.value]
+    args  = [self.input.vm_scale_set_id.value]
   }
 
   container {

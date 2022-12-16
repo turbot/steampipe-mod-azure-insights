@@ -119,7 +119,6 @@ node "compute_snapshot" {
   param "compute_snapshot_ids" {}
 }
 
-
 node "compute_virtual_machine" {
   category = category.compute_virtual_machine
 
