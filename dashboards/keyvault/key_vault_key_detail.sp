@@ -18,170 +18,62 @@ dashboard "key_vault_key_detail" {
     card {
       width = 2
       query = query.key_vault_key_type
-      args = {
-        id = self.input.key_vault_key_id.value
-      }
+      args  = [self.input.key_vault_key_id.value]
     }
 
     card {
       width = 2
       query = query.key_vault_key_size
-      args = {
-        id = self.input.key_vault_key_id.value
-      }
+      args  = [self.input.key_vault_key_id.value]
     }
 
     card {
       width = 2
       query = query.key_vault_key_status
-      args = {
-        id = self.input.key_vault_key_id.value
-      }
+      args  = [self.input.key_vault_key_id.value]
     }
 
   }
 
-      with "compute_disk_encryption_sets" {
-        sql = <<-EOQ
-          select
-            lower(s.id) as disk_encryption_set_id
-          from
-            azure_key_vault_key_version as v
-            left join azure_compute_disk_encryption_set as s on s.active_key_url = v.key_uri_with_version
-          where
-            s.id is not null
-            and lower(split_part(v.id, '/versions', 1)) = $1;
-        EOQ
+  with "compute_disk_encryption_sets" {
+    query = query.key_vault_key_compute_disk_encryption_sets
+    args  = [self.input.key_vault_key_id.value]
+  }
 
-        args = [self.input.key_vault_key_id.value]
-      }
+  with "container_registries" {
+    query = query.key_vault_key_container_registries
+    args  = [self.input.key_vault_key_id.value]
+  }
 
-      with "container_registries" {
-        sql = <<-EOQ
-          select
-            lower(r.id) as registry_id
-          from
-            azure_key_vault_key as k
-            left join azure_container_registry as r on r.encryption -> 'keyVaultProperties' ->> 'keyIdentifier' = k.key_uri
-            left join azure_key_vault_key_version as v on v.key_uri_with_version = k.key_uri_with_version
-          where
-            r.id is not null
-            and lower(k.id) = $1;
-        EOQ
+  with "eventhub_namespaces" {
+    query = query.key_vault_key_eventhub_namespaces
+    args  = [self.input.key_vault_key_id.value]
+  }
 
-        args = [self.input.key_vault_key_id.value]
-      }
+  with "key_vault_vaults" {
+    query = query.key_vault_key_key_vault_vaults
+    args  = [self.input.key_vault_key_id.value]
+  }
 
-      with "eventhub_namespaces" {
-        sql = <<-EOQ
-          select
-            lower(n.id) as eventhub_namespace_id
-          from
-            azure_eventhub_namespace as n,
-            jsonb_array_elements(encryption -> 'keyVaultProperties') as p
-            left join azure_key_vault_key as k on p ->> 'keyName' = k.name
-            left join azure_key_vault as v on v.name = k.vault_name
-          where
-            k.resource_group = v.resource_group
-            and k.resource_group = n.resource_group
-            and lower(k.id) = $1;
-        EOQ
+  with "postgresql_servers" {
+    query = query.key_vault_key_postgresql_servers
+    args  = [self.input.key_vault_key_id.value]
+  }
 
-        args = [self.input.key_vault_key_id.value]
-      }
+  with "servicebus_namespaces" {
+    query = query.key_vault_key_servicebus_namespaces
+    args  = [self.input.key_vault_key_id.value]
+  }
 
-      with "key_vault_vaults" {
-        sql = <<-EOQ
-          select
-            lower(v.id) as vault_id
-          from
-            azure_key_vault_key as k
-            left join azure_key_vault as v on v.name = k.vault_name
-          where
-            lower(k.id) = $1;
-        EOQ
+  with "sql_servers" {
+    query = query.key_vault_key_sql_servers
+    args  = [self.input.key_vault_key_id.value]
+  }
 
-        args = [self.input.key_vault_key_id.value]
-      }
-
-      with "postgresql_servers" {
-        sql = <<-EOQ
-          select
-            lower(s.id) as postgresql_server_id
-          from
-            azure_postgresql_server as s,
-            jsonb_array_elements(server_keys) as sk
-            left join azure_key_vault_key_version as v on lower(sk ->> 'ServerKeyUri') = lower(v.key_uri_with_version)
-          where
-            lower(split_part(v.id, '/versions', 1)) = $1;
-        EOQ
-
-        args = [self.input.key_vault_key_id.value]
-      }
-
-      with "servicebus_namespaces" {
-        sql = <<-EOQ
-          select
-            lower(n.id) as servicebus_namespace_id
-          from
-            azure_servicebus_namespace as n,
-            jsonb_array_elements(encryption -> 'keyVaultProperties') as p
-            left join azure_key_vault_key as k on p ->> 'keyName' = k.name
-            left join azure_key_vault as v on v.name = k.vault_name
-          where
-            n.id is not null
-            and lower(k.resource_group) = lower(v.resource_group)
-            and lower(k.resource_group) = lower(n.resource_group)
-            and lower(k.id) = $1;
-        EOQ
-
-        args = [self.input.key_vault_key_id.value]
-      }
-
-      with "sql_servers" {
-        sql = <<-EOQ
-          with sql_server as (
-            select
-              ep ->> 'uri' as uri,
-              id,
-              title,
-              name,
-              type,
-              region,
-              resource_group,
-              subscription_id
-            from
-              azure_sql_server,
-              jsonb_array_elements(encryption_protector) as ep
-            where
-              ep ->> 'kind' = 'azurekeyvault'
-          )
-          select
-            lower(s.id) as sql_server_id
-          from
-            azure_key_vault_key_version as v
-            left join sql_server as s on v.key_uri_with_version = s.uri
-          where
-            s.uri is not null
-            and lower(split_part(v.id, '/versions', 1)) = $1;
-        EOQ
-
-        args = [self.input.key_vault_key_id.value]
-      }
-
-      with "storage_storage_accounts" {
-        sql = <<-EOQ
-          select
-            lower(s.id) as account_id
-          from
-            azure_storage_account as s
-            left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
-          where
-            lower(split_part(v.id, '/versions', 1)) = $1;
-        EOQ
-
-        args = [self.input.key_vault_key_id.value]
-      }
+  with "storage_storage_accounts" {
+    query = query.key_vault_key_storage_storage_accounts
+    args  = [self.input.key_vault_key_id.value]
+  }
 
   container {
 
@@ -189,13 +81,13 @@ dashboard "key_vault_key_detail" {
       title     = "Relationships"
       type      = "graph"
       direction = "TD"
-      
+
       node {
         base = node.compute_disk_encryption_set
         args = {
           compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].disk_encryption_set_id
         }
-      }    
+      }
 
       node {
         base = node.container_registry
@@ -209,7 +101,7 @@ dashboard "key_vault_key_detail" {
         args = {
           eventhub_namespace_ids = with.eventhub_namespaces.rows[*].eventhub_namespace_id
         }
-      }  
+      }
 
       node {
         base = node.key_vault_key
@@ -223,14 +115,14 @@ dashboard "key_vault_key_detail" {
         args = {
           key_vault_key_ids = [self.input.key_vault_key_id.value]
         }
-      }   
-      
+      }
+
       node {
         base = node.key_vault_vault
         args = {
           key_vault_vault_ids = with.key_vault_vaults.rows[*].vault_id
         }
-      }    
+      }
 
       node {
         base = node.postgresql_server
@@ -244,7 +136,7 @@ dashboard "key_vault_key_detail" {
         args = {
           servicebus_namespace_ids = with.servicebus_namespaces.rows[*].servicebus_namespace_id
         }
-      }  
+      }
 
       node {
         base = node.sql_server
@@ -258,21 +150,21 @@ dashboard "key_vault_key_detail" {
         args = {
           storage_account_ids = with.storage_storage_accounts.rows[*].account_id
         }
-      }   
+      }
 
       edge {
         base = edge.compute_disk_encryption_set_to_key_vault_key_version
         args = {
           key_vault_key_ids = [self.input.key_vault_key_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.container_registry_to_key_vault_key_version
         args = {
           key_vault_key_ids = [self.input.key_vault_key_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.eventhub_namespace_to_key_vault_key_version
@@ -292,14 +184,14 @@ dashboard "key_vault_key_detail" {
         args = {
           key_vault_key_ids = [self.input.key_vault_key_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.postgresql_server_to_key_vault_key_version
         args = {
           key_vault_key_ids = [self.input.key_vault_key_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.servicebus_namespace_to_key_vault_key
@@ -334,9 +226,7 @@ dashboard "key_vault_key_detail" {
         type  = "line"
         width = 6
         query = query.key_vault_key_overview
-        args = {
-          id = self.input.key_vault_key_id.value
-        }
+        args  = [self.input.key_vault_key_id.value]
 
       }
 
@@ -344,9 +234,7 @@ dashboard "key_vault_key_detail" {
         title = "Tags"
         width = 6
         query = query.key_vault_key_tags
-        args = {
-          id = self.input.key_vault_key_id.value
-        }
+        args  = [self.input.key_vault_key_id.value]
       }
     }
 
@@ -356,9 +244,7 @@ dashboard "key_vault_key_detail" {
       table {
         title = "Key Age"
         query = query.key_vault_key_age
-        args = {
-          id = self.input.key_vault_key_id.value
-        }
+        args  = [self.input.key_vault_key_id.value]
       }
 
     }
@@ -390,6 +276,8 @@ query "key_vault_key_input" {
   EOQ
 }
 
+# card queries
+
 query "key_vault_key_status" {
   sql = <<-EOQ
     select
@@ -401,8 +289,6 @@ query "key_vault_key_status" {
     where
       lower(id) = $1;
   EOQ
-
-  param "id" {}
 
 }
 
@@ -417,8 +303,6 @@ query "key_vault_key_type" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-
 }
 
 query "key_vault_key_size" {
@@ -432,9 +316,137 @@ query "key_vault_key_size" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-
 }
+
+# with queries
+
+query "key_vault_key_compute_disk_encryption_sets" {
+  sql = <<-EOQ
+    select
+      lower(s.id) as disk_encryption_set_id
+    from
+      azure_key_vault_key_version as v
+      left join azure_compute_disk_encryption_set as s on s.active_key_url = v.key_uri_with_version
+    where
+      s.id is not null
+      and lower(split_part(v.id, '/versions', 1)) = $1;
+  EOQ
+}
+
+query "key_vault_key_container_registries" {
+  sql = <<-EOQ
+    select
+      lower(r.id) as registry_id
+    from
+      azure_key_vault_key as k
+      left join azure_container_registry as r on r.encryption -> 'keyVaultProperties' ->> 'keyIdentifier' = k.key_uri
+      left join azure_key_vault_key_version as v on v.key_uri_with_version = k.key_uri_with_version
+    where
+      r.id is not null
+      and lower(k.id) = $1;
+  EOQ
+}
+
+query "key_vault_key_eventhub_namespaces" {
+  sql = <<-EOQ
+    select
+      lower(n.id) as eventhub_namespace_id
+    from
+      azure_eventhub_namespace as n,
+      jsonb_array_elements(encryption -> 'keyVaultProperties') as p
+      left join azure_key_vault_key as k on p ->> 'keyName' = k.name
+      left join azure_key_vault as v on v.name = k.vault_name
+    where
+      k.resource_group = v.resource_group
+      and k.resource_group = n.resource_group
+      and lower(k.id) = $1;
+  EOQ
+}
+
+query "key_vault_key_key_vault_vaults" {
+  sql = <<-EOQ
+    select
+      lower(v.id) as vault_id
+    from
+      azure_key_vault_key as k
+      left join azure_key_vault as v on v.name = k.vault_name
+    where
+      lower(k.id) = $1;
+  EOQ
+}
+
+query "key_vault_key_postgresql_servers" {
+  sql = <<-EOQ
+    select
+      lower(s.id) as postgresql_server_id
+    from
+      azure_postgresql_server as s,
+      jsonb_array_elements(server_keys) as sk
+      left join azure_key_vault_key_version as v on lower(sk ->> 'ServerKeyUri') = lower(v.key_uri_with_version)
+    where
+      lower(split_part(v.id, '/versions', 1)) = $1;
+  EOQ
+}
+
+query "key_vault_key_servicebus_namespaces" {
+  sql = <<-EOQ
+    select
+      lower(n.id) as servicebus_namespace_id
+    from
+      azure_servicebus_namespace as n,
+      jsonb_array_elements(encryption -> 'keyVaultProperties') as p
+      left join azure_key_vault_key as k on p ->> 'keyName' = k.name
+      left join azure_key_vault as v on v.name = k.vault_name
+    where
+      n.id is not null
+      and lower(k.resource_group) = lower(v.resource_group)
+      and lower(k.resource_group) = lower(n.resource_group)
+      and lower(k.id) = $1;
+  EOQ
+}
+
+query "key_vault_key_sql_servers" {
+  sql   = <<-EOQ
+    with sql_server as (
+      select
+        ep ->> 'uri' as uri,
+        id,
+        title,
+        name,
+        type,
+        region,
+        resource_group,
+        subscription_id
+      from
+        azure_sql_server,
+        jsonb_array_elements(encryption_protector) as ep
+      where
+        ep ->> 'kind' = 'azurekeyvault'
+    )
+    select
+      lower(s.id) as sql_server_id
+    from
+      azure_key_vault_key_version as v
+      left join sql_server as s on v.key_uri_with_version = s.uri
+    where
+      s.uri is not null
+      and lower(split_part(v.id, '/versions', 1)) = $1;
+  EOQ
+}
+
+query "key_vault_key_storage_storage_accounts" {
+  sql   = <<-EOQ
+    select
+      lower(s.id) as account_id
+    from
+      azure_storage_account as s
+      left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
+    where
+      lower(split_part(v.id, '/versions', 1)) = $1;
+  EOQ
+}
+
+# table queries
 
 query "key_vault_key_overview" {
   sql = <<-EOQ
@@ -454,7 +466,6 @@ query "key_vault_key_overview" {
       lower(id) = $1
   EOQ
 
-  param "id" {}
 }
 
 query "key_vault_key_tags" {
@@ -470,7 +481,6 @@ query "key_vault_key_tags" {
       tags ->> 'Key';
     EOQ
 
-  param "id" {}
 }
 
 query "key_vault_key_age" {
@@ -485,5 +495,4 @@ query "key_vault_key_age" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }

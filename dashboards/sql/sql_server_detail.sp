@@ -18,146 +18,64 @@ dashboard "sql_server_detail" {
     card {
       width = 2
       query = query.sql_server_state
-      args = {
-        id = self.input.sql_server_id.value
-      }
+      args  = [self.input.sql_server_id.value]
     }
 
     card {
       width = 2
       query = query.sql_server_version
-      args = {
-        id = self.input.sql_server_id.value
-      }
+      args  = [self.input.sql_server_id.value]
     }
 
     card {
       width = 2
       query = query.sql_server_auditing_enabled
-      args = {
-        id = self.input.sql_server_id.value
-      }
     }
 
     card {
       width = 2
       query = query.sql_server_public_network_access
-      args = {
-        id = self.input.sql_server_id.value
-      }
+      args  = [self.input.sql_server_id.value]
     }
 
     card {
       width = 2
       query = query.sql_server_ad_authentication_enabled
-      args = {
-        id = self.input.sql_server_id.value
-      }
+      args  = [self.input.sql_server_id.value]
     }
 
     card {
       width = 2
       query = query.sql_server_vulnerability_assessment_enabled
-      args = {
-        id = self.input.sql_server_id.value
-      }
+      args  = [self.input.sql_server_id.value]
     }
 
   }
 
-      with "key_vault_keys" {
-        sql = <<-EOQ
-          with attached_keys as (
-            select
-              split_part(ep ->> 'serverKeyName','_',1) as key_vault_name,
-              split_part(ep ->> 'serverKeyName','_',2) as key_vault_key_name
-            from
-              azure_sql_server,
-              jsonb_array_elements(encryption_protector) as ep
-            where
-              lower(id) = $1
-              and ep ->> 'kind' = 'azurekeyvault'
-          )
-          select
-            lower(b.id) as key_vault_key_id
-          from
-            attached_keys as a
-            left join azure_key_vault_key as b on lower(a.key_vault_key_name) = lower(b.name);
-        EOQ
+  with "key_vault_keys" {
+    query = query.sql_server_key_vault_keys
+    args  = [self.input.sql_server_id.value]
+  }
 
-        args = [self.input.sql_server_id.value]
-      }
+  with "key_vault_vaults" {
+    query = query.sql_server_key_vault_vaults
+    args  = [self.input.sql_server_id.value]
+  }
 
-      with "key_vault_vaults" {
-        sql = <<-EOQ
-          select
-            lower(id) as key_vault_id
-          from
-            azure_key_vault
-          where
-            name in (
-              select
-                split_part(ep ->> 'serverKeyName','_',1) as key_vault_name
-              from
-                azure_sql_server,
-                jsonb_array_elements(encryption_protector) as ep
-              where
-                lower(id) = $1
-                and ep ->> 'kind' = 'azurekeyvault'
-            );
-        EOQ
+  with "network_subnets" {
+    query = query.sql_server_network_subnets
+    args  = [self.input.sql_server_id.value]
+  }
 
-        args = [self.input.sql_server_id.value]
-      }
+  with "network_virtual_networks" {
+    query = query.sql_server_network_virtual_networks
+    args  = [self.input.sql_server_id.value]
+  }
 
-      with "network_subnets" {
-        sql = <<-EOQ
-          select
-            lower(r -> 'properties' ->> 'virtualNetworkSubnetId') as subnet_id
-          from
-            azure_sql_server,
-            jsonb_array_elements(virtual_network_rules) as r
-          where
-            lower(id) = $1;
-        EOQ
-
-        args = [self.input.sql_server_id.value]
-      }
-
-      with "network_virtual_networks" {
-        sql = <<-EOQ
-          select
-            lower(id) as virtual_networks_id
-          from
-            azure_virtual_network,
-            jsonb_array_elements(subnets) as sub
-          where
-            lower(sub ->> 'id') in (
-              select
-                lower(vnr -> 'properties' ->> 'virtualNetworkSubnetId')
-              from
-                azure_sql_server,
-                jsonb_array_elements(virtual_network_rules) as vnr
-              where
-                lower(id) = $1
-            );
-        EOQ
-
-        args = [self.input.sql_server_id.value]
-      }
-
-      with "sql_databases" {
-        sql = <<-EOQ
-          select
-            lower(id) as sql_database_id
-          from
-            azure_sql_database
-          where
-            lower(server_name) = lower(split_part($1, '/', 9));
-        EOQ
-
-        args = [self.input.sql_server_id.value]
-      }
+  with "sql_databases" {
+    query = query.sql_server_sql_databases
+    args  = [self.input.sql_server_id.value]
+  }
 
   container {
     graph {
@@ -171,14 +89,14 @@ dashboard "sql_server_detail" {
         args = {
           key_vault_key_ids = with.key_vault_keys.rows[*].key_vault_key_id
         }
-      }  
+      }
 
       node {
         base = node.key_vault_vault
         args = {
           key_vault_vault_ids = with.key_vault_vaults.rows[*].key_vault_id
         }
-      }    
+      }
 
       node {
         base = node.network_subnet
@@ -192,7 +110,7 @@ dashboard "sql_server_detail" {
         args = {
           network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_networks_id
         }
-      }  
+      }
 
       node {
         base = node.sql_database
@@ -227,14 +145,14 @@ dashboard "sql_server_detail" {
         args = {
           network_subnet_ids = with.network_subnets.rows[*].subnet_id
         }
-      }  
+      }
 
       edge {
         base = edge.sql_server_to_key_vault
         args = {
           sql_server_ids = [self.input.sql_server_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.sql_server_to_key_vault_key
@@ -262,14 +180,14 @@ dashboard "sql_server_detail" {
         args = {
           sql_server_ids = [self.input.sql_server_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.sql_server_to_sql_database
         args = {
           sql_server_ids = [self.input.sql_server_id.value]
         }
-      }  
+      }
     }
   }
 
@@ -283,18 +201,14 @@ dashboard "sql_server_detail" {
         type  = "line"
         width = 6
         query = query.sql_server_overview
-        args = {
-          id = self.input.sql_server_id.value
-        }
+        args  = [self.input.sql_server_id.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.sql_server_tags
-        args = {
-          id = self.input.sql_server_id.value
-        }
+        args  = [self.input.sql_server_id.value]
       }
 
     }
@@ -305,25 +219,19 @@ dashboard "sql_server_detail" {
       table {
         title = "Encryption"
         query = query.sql_server_encryption
-        args = {
-          id = self.input.sql_server_id.value
-        }
+        args  = [self.input.sql_server_id.value]
       }
 
       table {
         title = "Virtual Network Rules"
         query = query.sql_server_virtual_network_rules
-        args = {
-          id = self.input.sql_server_id.value
-        }
+        args  = [self.input.sql_server_id.value]
       }
 
       table {
         title = "Firewall Rule"
         query = query.sql_server_firewall_rule
-        args = {
-          id = self.input.sql_server_id.value
-        }
+        args  = [self.input.sql_server_id.value]
       }
 
     }
@@ -336,9 +244,7 @@ dashboard "sql_server_detail" {
     table {
       title = "Audit Policy"
       query = query.sql_server_audit_policy
-      args = {
-        id = self.input.sql_server_id.value
-      }
+      args  = [self.input.sql_server_id.value]
     }
 
   }
@@ -349,9 +255,7 @@ dashboard "sql_server_detail" {
     table {
       title = "Vulnerability Assessment"
       query = query.sql_server_vulnerability_assessment
-      args = {
-        id = self.input.sql_server_id.value
-      }
+      args  = [self.input.sql_server_id.value]
     }
 
   }
@@ -362,9 +266,7 @@ dashboard "sql_server_detail" {
     table {
       title = "Private Endpoint Details"
       query = query.sql_server_private_endpoint_connection
-      args = {
-        id = self.input.sql_server_id.value
-      }
+      args  = [self.input.sql_server_id.value]
     }
 
   }
@@ -391,6 +293,8 @@ query "sql_server_input" {
   EOQ
 }
 
+# card queries
+
 query "sql_server_state" {
   sql = <<-EOQ
     select
@@ -402,7 +306,7 @@ query "sql_server_state" {
       lower(id) = lower($1);
   EOQ
 
-  param "id" {}
+
 
 }
 
@@ -417,7 +321,7 @@ query "sql_server_version" {
       lower(id) = lower($1);
   EOQ
 
-  param "id" {}
+
 }
 
 query "sql_server_auditing_enabled" {
@@ -452,7 +356,7 @@ query "sql_server_public_network_access" {
       lower(id) = lower($1);
   EOQ
 
-  param "id" {}
+
 }
 
 query "sql_server_ad_authentication_enabled" {
@@ -467,7 +371,7 @@ query "sql_server_ad_authentication_enabled" {
       lower(id) = lower($1);
   EOQ
 
-  param "id" {}
+
 }
 
 query "sql_server_vulnerability_assessment_enabled" {
@@ -490,8 +394,96 @@ query "sql_server_vulnerability_assessment_enabled" {
       where lower(s.id) = lower($1);
   EOQ
 
-  param "id" {}
+
 }
+# with queries
+
+query "sql_server_key_vault_keys" {
+  sql   = <<-EOQ
+    with attached_keys as (
+      select
+        split_part(ep ->> 'serverKeyName','_',1) as key_vault_name,
+        split_part(ep ->> 'serverKeyName','_',2) as key_vault_key_name
+      from
+        azure_sql_server,
+        jsonb_array_elements(encryption_protector) as ep
+      where
+        lower(id) = $1
+        and ep ->> 'kind' = 'azurekeyvault'
+    )
+    select
+      lower(b.id) as key_vault_key_id
+    from
+      attached_keys as a
+      left join azure_key_vault_key as b on lower(a.key_vault_key_name) = lower(b.name);
+  EOQ
+}
+
+query "sql_server_key_vault_vaults" {
+  sql = <<-EOQ
+    select
+      lower(id) as key_vault_id
+    from
+      azure_key_vault
+    where
+      name in (
+        select
+          split_part(ep ->> 'serverKeyName','_',1) as key_vault_name
+        from
+          azure_sql_server,
+          jsonb_array_elements(encryption_protector) as ep
+        where
+          lower(id) = $1
+          and ep ->> 'kind' = 'azurekeyvault'
+      );
+  EOQ
+
+}
+
+query "sql_server_network_subnets" {
+  sql   = <<-EOQ
+    select
+      lower(r -> 'properties' ->> 'virtualNetworkSubnetId') as subnet_id
+    from
+      azure_sql_server,
+      jsonb_array_elements(virtual_network_rules) as r
+    where
+      lower(id) = $1;
+  EOQ
+}
+
+query "sql_server_network_virtual_networks" {
+  sql   = <<-EOQ
+    select
+      lower(id) as virtual_networks_id
+    from
+      azure_virtual_network,
+      jsonb_array_elements(subnets) as sub
+    where
+      lower(sub ->> 'id') in (
+        select
+          lower(vnr -> 'properties' ->> 'virtualNetworkSubnetId')
+        from
+          azure_sql_server,
+          jsonb_array_elements(virtual_network_rules) as vnr
+        where
+          lower(id) = $1
+      );
+  EOQ
+}
+
+query "sql_server_sql_databases" {
+  sql   = <<-EOQ
+    select
+      lower(id) as sql_database_id
+    from
+      azure_sql_database
+    where
+      lower(server_name) = lower(split_part($1, '/', 9));
+  EOQ
+}
+
+#table queries
 
 query "sql_server_overview" {
   sql = <<-EOQ
@@ -509,7 +501,7 @@ query "sql_server_overview" {
       lower(id) = lower($1)
   EOQ
 
-  param "id" {}
+
 }
 
 query "sql_server_tags" {
@@ -526,7 +518,7 @@ query "sql_server_tags" {
       tag.key;
     EOQ
 
-  param "id" {}
+
 }
 
 query "sql_server_encryption" {
@@ -545,7 +537,7 @@ query "sql_server_encryption" {
       lower(id) = lower($1);
   EOQ
 
-  param "id" {}
+
 }
 
 query "sql_server_virtual_network_rules" {
@@ -563,7 +555,7 @@ query "sql_server_virtual_network_rules" {
       lower(id) = lower($1);
   EOQ
 
-  param "id" {}
+
 }
 
 query "sql_server_firewall_rule" {
@@ -580,7 +572,7 @@ query "sql_server_firewall_rule" {
       lower(id) = lower($1);
   EOQ
 
-  param "id" {}
+
 }
 
 query "sql_server_audit_policy" {
@@ -602,7 +594,7 @@ query "sql_server_audit_policy" {
       lower(id) = lower($1);
   EOQ
 
-  param "id" {}
+
 }
 
 query "sql_server_vulnerability_assessment" {
@@ -620,7 +612,7 @@ query "sql_server_vulnerability_assessment" {
       lower(id) = lower($1);
   EOQ
 
-  param "id" {}
+
 }
 
 query "sql_server_private_endpoint_connection" {
@@ -641,5 +633,5 @@ query "sql_server_private_endpoint_connection" {
       lower(id) = lower($1);
   EOQ
 
-  param "id" {}
+
 }

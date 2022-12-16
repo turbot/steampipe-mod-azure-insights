@@ -18,89 +18,43 @@ dashboard "key_vault_detail" {
     card {
       width = 2
       query = query.key_vault_soft_delete_retention_in_days
-      args = {
-        id = self.input.key_vault_id.value
-      }
+      args  = [self.input.key_vault_id.value]
     }
 
     card {
       width = 2
       query = query.key_vault_public_network_access_enabled
-      args = {
-        id = self.input.key_vault_id.value
-      }
+      args  = [self.input.key_vault_id.value]
     }
 
     card {
       width = 2
       query = query.key_vault_purge_protection_status
-      args = {
-        id = self.input.key_vault_id.value
-      }
+      args  = [self.input.key_vault_id.value]
     }
 
     card {
       width = 2
       query = query.key_vault_soft_delete_status
-      args = {
-        id = self.input.key_vault_id.value
-      }
+      args  = [self.input.key_vault_id.value]
     }
 
   }
 
-      with "key_vault_keys" {
-        sql = <<-EOQ
-          select
-            lower(k.id) as key_id
-          from
-            azure_key_vault_key as k
-            left join azure_key_vault as v on v.name = k.vault_name
-          where
-            lower(v.id) = $1;
-        EOQ
+  with "key_vault_keys" {
+    query = query.key_vault_key_vault_keys
+    args  = [self.input.key_vault_id.value]
+  }
 
-        args = [self.input.key_vault_id.value]
-      }
+  with "network_subnets" {
+    query = query.key_vault_network_subnets
+    args  = [self.input.key_vault_id.value]
+  }
 
-      with "network_subnets" {
-        sql = <<-EOQ
-          select
-            lower(s.id) as subnet_id
-            from
-              azure_key_vault as v,
-              jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
-              left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
-            where
-              lower(v.id) = $1;
-        EOQ
-
-        args = [self.input.key_vault_id.value]
-      }
-
-      with "network_virtual_networks" {
-        sql = <<-EOQ
-          with subnet as (
-            select
-              lower(s.id) as id
-            from
-              azure_key_vault as v,
-              jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
-              left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
-            where
-              lower(v.id) = $1
-          )
-          select
-            lower(n.id) as virtual_network_id
-            from
-              azure_virtual_network as n,
-              jsonb_array_elements(subnets) as s
-            where
-              lower(s ->> 'id') in (select id from subnet)
-        EOQ
-
-        args = [self.input.key_vault_id.value]
-      }
+  with "network_virtual_networks" {
+    query = query.key_vault_network_virtual_networks
+    args  = [self.input.key_vault_id.value]
+  }
 
   container {
 
@@ -108,13 +62,13 @@ dashboard "key_vault_detail" {
       title     = "Relationships"
       type      = "graph"
       direction = "TD"
-      
+
       node {
         base = node.key_vault_key
         args = {
           key_vault_key_ids = with.key_vault_keys.rows[*].key_id
         }
-      }    
+      }
 
       node {
         base = node.key_vault_secret
@@ -128,7 +82,7 @@ dashboard "key_vault_detail" {
         args = {
           key_vault_vault_ids = [self.input.key_vault_id.value]
         }
-      }  
+      }
 
       node {
         base = node.network_subnet
@@ -142,21 +96,21 @@ dashboard "key_vault_detail" {
         args = {
           network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
         }
-      }   
+      }
 
       edge {
         base = edge.key_vault_to_key_vault_key
         args = {
           key_vault_vault_ids = [self.input.key_vault_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.key_vault_to_key_vault_secret
         args = {
           key_vault_vault_ids = [self.input.key_vault_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.key_vault_to_subnet
@@ -184,9 +138,7 @@ dashboard "key_vault_detail" {
         type  = "line"
         width = 6
         query = query.key_vault_overview
-        args = {
-          id = self.input.key_vault_id.value
-        }
+        args  = [self.input.key_vault_id.value]
 
       }
 
@@ -194,9 +146,7 @@ dashboard "key_vault_detail" {
         title = "Tags"
         width = 6
         query = query.key_vault_tags
-        args = {
-          id = self.input.key_vault_id.value
-        }
+        args  = [self.input.key_vault_id.value]
       }
     }
 
@@ -206,17 +156,13 @@ dashboard "key_vault_detail" {
       table {
         title = "SKU Details"
         query = query.key_vault_sku
-        args = {
-          id = self.input.key_vault_id.value
-        }
+        args  = [self.input.key_vault_id.value]
       }
 
       table {
         title = "Vault Usages"
         query = query.key_vault_usage
-        args = {
-          id = self.input.key_vault_id.value
-        }
+        args  = [self.input.key_vault_id.value]
       }
 
     }
@@ -229,9 +175,7 @@ dashboard "key_vault_detail" {
     table {
       title = "Access Policies"
       query = query.key_vault_access_policies
-      args = {
-        id = self.input.key_vault_id.value
-      }
+      args  = [self.input.key_vault_id.value]
     }
 
   }
@@ -242,9 +186,7 @@ dashboard "key_vault_detail" {
     table {
       title = "Network Access Details"
       query = query.key_vault_network_acls
-      args = {
-        id = self.input.key_vault_id.value
-      }
+      args  = [self.input.key_vault_id.value]
     }
 
   }
@@ -271,6 +213,8 @@ query "key_vault_input" {
   EOQ
 }
 
+# card queries
+
 query "key_vault_purge_protection_status" {
   sql = <<-EOQ
     select
@@ -282,8 +226,6 @@ query "key_vault_purge_protection_status" {
     where
       lower(id) = $1;
   EOQ
-
-  param "id" {}
 
 }
 
@@ -299,8 +241,6 @@ query "key_vault_public_network_access_enabled" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-
 }
 
 query "key_vault_soft_delete_status" {
@@ -315,7 +255,6 @@ query "key_vault_soft_delete_status" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "key_vault_soft_delete_retention_in_days" {
@@ -329,8 +268,57 @@ query "key_vault_soft_delete_retention_in_days" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
+
+# with queries
+query "key_vault_key_vault_keys" {
+  sql = <<-EOQ
+    select
+      lower(k.id) as key_id
+    from
+      azure_key_vault_key as k
+      left join azure_key_vault as v on v.name = k.vault_name
+    where
+      lower(v.id) = $1;
+  EOQ
+}
+
+query "key_vault_network_subnets" {
+  sql = <<-EOQ
+    select
+      lower(s.id) as subnet_id
+      from
+        azure_key_vault as v,
+        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
+        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
+      where
+        lower(v.id) = $1;
+  EOQ
+}
+
+query "key_vault_network_virtual_networks" {
+  sql = <<-EOQ
+    with subnet as (
+      select
+        lower(s.id) as id
+      from
+        azure_key_vault as v,
+        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
+        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
+      where
+        lower(v.id) = $1
+    )
+    select
+      lower(n.id) as virtual_network_id
+      from
+        azure_virtual_network as n,
+        jsonb_array_elements(subnets) as s
+      where
+        lower(s ->> 'id') in (select id from subnet)
+  EOQ
+}
+
+# table queries
 
 query "key_vault_overview" {
   sql = <<-EOQ
@@ -350,7 +338,6 @@ query "key_vault_overview" {
       lower(id) = $1
   EOQ
 
-  param "id" {}
 }
 
 query "key_vault_tags" {
@@ -367,7 +354,6 @@ query "key_vault_tags" {
       tag.key;
     EOQ
 
-  param "id" {}
 }
 
 query "key_vault_access_policies" {
@@ -386,7 +372,6 @@ query "key_vault_access_policies" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "key_vault_sku" {
@@ -400,7 +385,6 @@ query "key_vault_sku" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "key_vault_network_acls" {
@@ -416,7 +400,6 @@ query "key_vault_network_acls" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "key_vault_usage" {
@@ -431,5 +414,4 @@ query "key_vault_usage" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }

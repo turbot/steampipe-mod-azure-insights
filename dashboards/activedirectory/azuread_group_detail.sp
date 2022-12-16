@@ -18,17 +18,13 @@ dashboard "azuread_group_detail" {
     card {
       width = 2
       query = query.azuread_group_type
-      args  = {
-        id = self.input.group_id.value
-      }
+      args  = [self.input.group_id.value]
     }
 
     card {
       width = 2
       query = query.azuread_group_members_attached_count
-      args  = {
-        id = self.input.group_id.value
-      }
+      args  = [self.input.group_id.value]
     }
 
   }
@@ -43,20 +39,14 @@ dashboard "azuread_group_detail" {
         type  = "line"
         width = 6
         query = query.azuread_group_overview
-        args  = {
-          id = self.input.group_id.value
-        }
-
+        args  = [self.input.group_id.value]
       }
 
       table {
         title = "Directory Roles"
         width = 6
         query = query.azuread_group_directory_roles
-        args  = {
-          id = self.input.group_id.value
-        }
-
+        args  = [self.input.group_id.value]
       }
 
     }
@@ -72,9 +62,7 @@ dashboard "azuread_group_detail" {
       href = "/azure_insights.dashboard.azuread_user_detail?input.user_id={{.ID | @uri}}"
     }
     query = query.azuread_group_members_attached
-    args  = {
-      id = self.input.group_id.value
-    }
+    args  = [self.input.group_id.value]
 
   }
 
@@ -87,9 +75,7 @@ dashboard "azuread_group_detail" {
       href = "/azure_insights.dashboard.azuread_user_detail?input.user_id={{.ID | @uri}}"
     }
     query = query.azuread_group_owners
-    args  = {
-      id = self.input.group_id.value
-    }
+    args  = [self.input.group_id.value]
 
   }
 
@@ -130,8 +116,6 @@ query "azuread_group_type" {
     where
       id = $1;
   EOQ
-
-  param "id" {}
 }
 
 query "azuread_group_members_attached_count" {
@@ -146,7 +130,6 @@ query "azuread_group_members_attached_count" {
       id = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "azuread_group_overview" {
@@ -166,7 +149,6 @@ query "azuread_group_overview" {
       id = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "azuread_group_directory_roles" {
@@ -183,7 +165,6 @@ query "azuread_group_directory_roles" {
       dr.display_name;
   EOQ
 
-  param "id" {}
 }
 
 query "azuread_group_members_attached" {
@@ -202,7 +183,6 @@ query "azuread_group_members_attached" {
       u.display_name;
   EOQ
 
-  param "id" {}
 }
 
 query "azuread_group_owners" {
@@ -221,5 +201,4 @@ query "azuread_group_owners" {
       u.display_name;
   EOQ
 
-  param "id" {}
 }

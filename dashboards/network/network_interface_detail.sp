@@ -18,141 +18,53 @@ dashboard "network_interface_detail" {
     card {
       width = 2
       query = query.network_interface_private_ip_address
-      args = {
-        id = self.input.nic_id.value
-      }
+      args  = [self.input.nic_id.value]
     }
 
     card {
       width = 2
       query = query.network_interface_public_ip_address
-      args = {
-        id = self.input.nic_id.value
-      }
+      args  = [self.input.nic_id.value]
     }
 
     card {
       width = 2
       query = query.network_interface_ip_forwarding_enabled
-      args = {
-        id = self.input.nic_id.value
-      }
+      args  = [self.input.nic_id.value]
     }
 
     card {
       width = 2
       query = query.network_interface_accelerated_networking_enabled
-      args = {
-        id = self.input.nic_id.value
-      }
+      args  = [self.input.nic_id.value]
     }
 
   }
 
-      with "compute_virtual_machines" {
-        sql = <<-EOQ
-          with vm_network_interface_id as (
-            select
-              id,
-              jsonb_array_elements(network_interfaces)->>'id' as n_id
-            from
-              azure_compute_virtual_machine
-          )
-          select
-            lower(v.id) as virtual_machine_id
-          from
-            vm_network_interface_id as v
-            left join azure_network_interface as n on lower(v.n_id) = lower(n.id)
-          where
-            lower(n.id) = $1;
-        EOQ
+  with "compute_virtual_machines" {
+    query = query.network_interface_compute_virtual_machines
+    args  = [self.input.nic_id.value]
+  }
 
-        args = [self.input.nic_id.value]
-      }
+  with "network_public_ips" {
+    query = query.network_interface_network_public_ips
+    args  = [self.input.nic_id.value]
+  }
 
-      with "network_public_ips" {
-        sql = <<-EOQ
-          with network_interface_public_ip as (
-            select
-              id,
-              jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
-            from
-              azure_network_interface
-          )
-          select
-            lower(p.id) as public_ip_id
-          from
-            network_interface_public_ip as n
-            left join azure_public_ip as p on lower(p.id) = lower(n.pid)
-          where
-            n.pid is not null
-            and lower(n.id) = $1;
-          EOQ
+  with "network_security_groups" {
+    query = query.network_interface_network_security_groups
+    args  = [self.input.nic_id.value]
+  }
 
-        args = [self.input.nic_id.value]
-      }
+  with "network_subnets" {
+    query = query.network_interface_network_subnets
+    args  = [self.input.nic_id.value]
+  }
 
-      with "network_security_groups" {
-        sql = <<-EOQ
-          with network_security_group_id as (
-            select
-              network_security_group_id as sid,
-              id as nid
-            from
-              azure_network_interface
-            where
-              lower(id) = $1
-          )
-        select
-          lower(nic.sid) as nsg_id
-        from
-          network_security_group_id as nic
-          left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.sid)
-        EOQ
-
-        args = [self.input.nic_id.value]
-      }
-
-      with "network_subnets" {
-        sql = <<-EOQ
-          select
-            lower(s.id) as subnet_id
-          from
-            azure_network_interface as ni,
-            jsonb_array_elements(ip_configurations) as c
-            left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
-          where
-            lower(ni.id) = $1
-        EOQ
-
-        args = [self.input.nic_id.value]
-      }
-
-      with "network_virtual_networks" {
-        sql = <<-EOQ
-          with subnet_list as(
-            select
-              ni.id as network_interface_id,
-              c -> 'properties' -> 'subnet' ->> 'id' as subnet_id
-          from
-            azure_network_interface as ni,
-            jsonb_array_elements(ip_configurations) as c
-            left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
-          where
-            lower(ni.id) = $1
-          )
-          select
-            lower(v.id) as virtual_network_id
-          from
-            azure_virtual_network as v,
-            jsonb_array_elements(subnets) as s,
-            subnet_list as l
-          where
-            lower(l.subnet_id) = lower(s ->> 'id');
-        EOQ
-
-        args = [self.input.nic_id.value]
-      }
+  with "network_virtual_networks" {
+    query = query.network_interface_network_virtual_networks
+    args  = [self.input.nic_id.value]
+  }
 
   container {
 
@@ -164,7 +76,7 @@ dashboard "network_interface_detail" {
       node {
         base = node.compute_virtual_machine
         args = {
-          compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].virtual_machine_id
+          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
         }
       }
 
@@ -173,14 +85,14 @@ dashboard "network_interface_detail" {
         args = {
           network_network_interface_ids = [self.input.nic_id.value]
         }
-      }  
+      }
 
       node {
         base = node.network_network_security_group
         args = {
           network_security_group_ids = with.network_security_groups.rows[*].nsg_id
         }
-      }  
+      }
 
       node {
         base = node.network_public_ip
@@ -201,21 +113,21 @@ dashboard "network_interface_detail" {
         args = {
           network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
         }
-      }  
+      }
 
       edge {
         base = edge.compute_virtual_machine_to_network_network_interface
         args = {
-          compute_virtual_machine_ids   = with.compute_virtual_machines.rows[*].virtual_machine_id
+          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
         }
-      }  
+      }
 
       edge {
         base = edge.network_network_interface_to_network_public_ip
         args = {
           network_network_interface_ids = [self.input.nic_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.network_network_interface_to_network_security_group
@@ -229,7 +141,7 @@ dashboard "network_interface_detail" {
         args = {
           network_network_interface_ids = [self.input.nic_id.value]
         }
-      }  
+      }
 
       edge {
         base = edge.network_subnet_to_network_virtual_network
@@ -251,18 +163,14 @@ dashboard "network_interface_detail" {
         type  = "line"
         width = 6
         query = query.network_interface_overview
-        args = {
-          id = self.input.nic_id.value
-        }
+        args  = [self.input.nic_id.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.network_interface_tags
-        args = {
-          id = self.input.nic_id.value
-        }
+        args  = [self.input.nic_id.value]
       }
 
     }
@@ -274,9 +182,7 @@ dashboard "network_interface_detail" {
       table {
         title = "Attached Virtual Machine"
         query = query.network_interface_attached_virtual_machine
-        args = {
-          id = self.input.nic_id.value
-        }
+        args  = [self.input.nic_id.value]
 
         column "Name" {
           href = "${dashboard.compute_virtual_machine_detail.url_path}?input.vm_id={{.ID | @uri}}"
@@ -287,9 +193,7 @@ dashboard "network_interface_detail" {
       table {
         title = "Attached Network Security Group"
         query = query.network_interface_attached_nsg
-        args = {
-          id = self.input.nic_id.value
-        }
+        args  = [self.input.nic_id.value]
 
         column "Name" {
           href = "${dashboard.network_security_group_detail.url_path}?input.nsg_id={{.ID | @uri}}"
@@ -306,9 +210,7 @@ dashboard "network_interface_detail" {
     table {
       title = "IP Configurations"
       query = query.network_interface_ip_configurations_details
-      args = {
-        id = self.input.nic_id.value
-      }
+      args  = [self.input.nic_id.value]
     }
   }
 }
@@ -333,6 +235,8 @@ query "network_interface_input" {
   EOQ
 }
 
+# card queries
+
 query "network_interface_private_ip_address" {
   sql = <<-EOQ
     select
@@ -345,7 +249,6 @@ query "network_interface_private_ip_address" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_interface_public_ip_address" {
@@ -367,7 +270,6 @@ query "network_interface_public_ip_address" {
       lower(api.id) = lower(pip.public_ip_address);
   EOQ
 
-  param "id" {}
 }
 
 query "network_interface_ip_forwarding_enabled" {
@@ -382,7 +284,6 @@ query "network_interface_ip_forwarding_enabled" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_interface_accelerated_networking_enabled" {
@@ -397,8 +298,110 @@ query "network_interface_accelerated_networking_enabled" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
+
+# with queries
+
+query "network_interface_compute_virtual_machines" {
+  sql   = <<-EOQ
+    with vm_network_interface_id as (
+      select
+        id,
+        jsonb_array_elements(network_interfaces)->>'id' as n_id
+      from
+        azure_compute_virtual_machine
+    )
+    select
+      lower(v.id) as virtual_machine_id
+    from
+      vm_network_interface_id as v
+      left join azure_network_interface as n on lower(v.n_id) = lower(n.id)
+    where
+      lower(n.id) = $1;
+  EOQ
+}
+
+
+query "network_interface_network_public_ips" {
+  sql   = <<-EOQ
+    with network_interface_public_ip as (
+      select
+        id,
+        jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
+      from
+        azure_network_interface
+    )
+    select
+      lower(p.id) as public_ip_id
+    from
+      network_interface_public_ip as n
+      left join azure_public_ip as p on lower(p.id) = lower(n.pid)
+    where
+      n.pid is not null
+      and lower(n.id) = $1;
+  EOQ
+}
+
+query "network_interface_network_security_groups" {
+  sql   = <<-EOQ
+    with network_security_group_id as (
+      select
+        network_security_group_id as sid,
+        id as nid
+      from
+        azure_network_interface
+      where
+        lower(id) = $1
+    )
+  select
+    lower(nic.sid) as nsg_id
+  from
+    network_security_group_id as nic
+    left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.sid)
+  where
+    lower(nic.sid) is not null;
+  EOQ
+}
+
+query "network_interface_network_subnets" {
+  sql   = <<-EOQ
+    select
+      lower(s.id) as subnet_id
+    from
+      azure_network_interface as ni,
+      jsonb_array_elements(ip_configurations) as c
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+    where
+      lower(ni.id) = $1
+      and lower(s.id) is not null;
+  EOQ
+}
+
+query "network_interface_network_virtual_networks" {
+  sql   = <<-EOQ
+    with subnet_list as(
+      select
+        ni.id as network_interface_id,
+        c -> 'properties' -> 'subnet' ->> 'id' as subnet_id
+    from
+      azure_network_interface as ni,
+      jsonb_array_elements(ip_configurations) as c
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+    where
+      lower(ni.id) = $1
+    )
+    select
+      lower(v.id) as virtual_network_id
+    from
+      azure_virtual_network as v,
+      jsonb_array_elements(subnets) as s,
+      subnet_list as l
+    where
+      lower(l.subnet_id) = lower(s ->> 'id');
+  EOQ
+}
+
+# table queries
 
 query "network_interface_overview" {
   sql = <<-EOQ
@@ -418,7 +421,6 @@ query "network_interface_overview" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "azure_network_private_ip" {
@@ -436,7 +438,6 @@ query "azure_network_private_ip" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_interface_tags" {
@@ -450,7 +451,6 @@ query "network_interface_tags" {
     id = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_interface_attached_virtual_machine" {
@@ -465,7 +465,6 @@ query "network_interface_attached_virtual_machine" {
       lower(ni.id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "network_interface_attached_nsg" {
@@ -480,7 +479,6 @@ query "network_interface_attached_nsg" {
       lower(ni.id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 
@@ -501,5 +499,4 @@ query "network_interface_ip_configurations_details" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }

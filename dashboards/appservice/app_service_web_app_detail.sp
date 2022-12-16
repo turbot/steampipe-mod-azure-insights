@@ -18,118 +18,55 @@ dashboard "app_service_web_app_detail" {
     card {
       width = 2
       query = query.app_service_web_app_state
-      args = {
-        id = self.input.web_app_id.value
-      }
+      args  = [self.input.web_app_id.value]
     }
 
     card {
       width = 2
       query = query.app_service_web_app_kind
-      args = {
-        id = self.input.web_app_id.value
-      }
+      args  = [self.input.web_app_id.value]
     }
 
     card {
       width = 2
       query = query.app_service_web_app_ftps_state
-      args = {
-        id = self.input.web_app_id.value
-      }
+      args  = [self.input.web_app_id.value]
     }
 
     card {
       width = 2
       query = query.app_service_web_app_https
-      args = {
-        id = self.input.web_app_id.value
-      }
+      args  = [self.input.web_app_id.value]
     }
 
     card {
       width = 2
       query = query.app_service_web_app_http_logging
-      args = {
-        id = self.input.web_app_id.value
-      }
+      args  = [self.input.web_app_id.value]
     }
 
     card {
       width = 2
       query = query.app_service_web_app_tls_version
-      args = {
-        id = self.input.web_app_id.value
-      }
+      args  = [self.input.web_app_id.value]
     }
 
   }
 
-      with "network_application_gateways" {
-        sql = <<-EOQ
-          with application_gateway as (
-            select
-              g.id as id,
-              backend_address ->> 'fqdn' as app_host_name
-            from
-              azure_application_gateway as g,
-              jsonb_array_elements(backend_address_pools) as pool,
-              jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
-          )
-          select
-            lower(g.id) as application_gateway_id
-          from
-            azure_app_service_web_app as a,
-            jsonb_array_elements(a.host_names) as host_name,
-            application_gateway as g
-          where
-            lower(g.app_host_name) = lower(trim((host_name::text), '""'))
-            and lower(a.id) = $1;
-        EOQ
+  with "network_application_gateways" {
+    query = query.app_service_web_app_network_application_gateways
+    args  = [self.input.web_app_id.value]
+  }
 
-        args = [self.input.web_app_id.value]
-      }
+  with "network_subnets" {
+    query = query.app_service_web_app_network_subnets
+    args  = [self.input.web_app_id.value]
+  }
 
-      with "network_subnets" {
-        sql = <<-EOQ
-            select
-              lower(id) as subnet_id
-            from
-              azure_subnet
-            where
-              lower(id) in (
-                select
-                  lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
-                from
-                  azure_app_service_web_app
-                where
-                  lower(id) = $1
-              );
-        EOQ
-
-        args = [self.input.web_app_id.value]
-      }
-
-      with "network_virtual_networks" {
-        sql = <<-EOQ
-          select
-            lower(id) as virtual_network_id
-          from
-            azure_virtual_network,
-              jsonb_array_elements(subnets) as sub
-          where
-            lower(sub ->> 'id') in (
-              select
-                lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
-              from
-                azure_app_service_web_app
-              where
-                lower(id) = $1
-            );
-        EOQ
-
-        args = [self.input.web_app_id.value]
-      }
+  with "network_virtual_networks" {
+    query = query.app_service_web_app_network_virtual_networks
+    args = [self.input.web_app_id.value]
+  }
 
   container {
     graph {
@@ -171,7 +108,7 @@ dashboard "app_service_web_app_detail" {
         args = {
           network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
         }
-      } 
+      }
 
       edge {
         base = edge.app_service_web_app_to_app_service_plan
@@ -200,7 +137,7 @@ dashboard "app_service_web_app_detail" {
           network_subnet_ids = with.network_subnets.rows[*].subnet_id
         }
       }
-      
+
     }
   }
 
@@ -212,59 +149,49 @@ dashboard "app_service_web_app_detail" {
       type  = "line"
       width = 6
       query = query.app_service_web_app_overview
-      args = {
-        id = self.input.web_app_id.value
-      }
+      args  = [self.input.web_app_id.value]
     }
 
     table {
       title = "Tags"
       width = 6
       query = query.app_service_web_app_tags
-      args = {
-        id = self.input.web_app_id.value
-      }
-    }
-  }
-
-  container {
-    width = 6
-
-    table {
-      title = "IP Security Restrictions"
-      query = query.app_service_web_app_ip_security_restrictions
-      args = {
-        id = self.input.web_app_id.value
-      }
+      args  = [self.input.web_app_id.value]
     }
 
-  }
+    container {
+      width = 6
 
-  container {
-    width = 12
-
-    table {
-      title = "Diagnostic Configuration"
-      query = query.app_service_web_app_diagnostic_logs_configuration
-      args = {
-        id = self.input.web_app_id.value
+      table {
+        title = "IP Security Restrictions"
+        query = query.app_service_web_app_ip_security_restrictions
+        args  = [self.input.web_app_id.value]
       }
+
     }
 
-    table {
-      title = "Site Configuration"
-      query = query.app_service_web_app_configuration
-      args = {
-        id = self.input.web_app_id.value
+    container {
+      width = 12
+
+      table {
+        title = "Diagnostic Configuration"
+        query = query.app_service_web_app_diagnostic_logs_configuration
+        args  = [self.input.web_app_id.value]
       }
+
+      table {
+        title = "Site Configuration"
+        query = query.app_service_web_app_configuration
+        args  = [self.input.web_app_id.value]
+      }
+
     }
 
   }
-
 }
 
-query "app_service_web_app_input" {
-  sql = <<-EOQ
+  query "app_service_web_app_input" {
+    sql = <<-EOQ
     select
       wa.title as label,
       lower(wa.id) as value,
@@ -281,10 +208,12 @@ query "app_service_web_app_input" {
     order by
       wa.title;
   EOQ
-}
+  }
 
-query "app_service_web_app_state" {
-  sql = <<-EOQ
+  # Card Queries
+
+  query "app_service_web_app_state" {
+    sql = <<-EOQ
     select
       'State' as label,
       state as value
@@ -294,11 +223,10 @@ query "app_service_web_app_state" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-}
+  }
 
-query "app_service_web_app_kind" {
-  sql = <<-EOQ
+  query "app_service_web_app_kind" {
+    sql = <<-EOQ
     select
       'Kind' as label,
       kind as value
@@ -308,11 +236,10 @@ query "app_service_web_app_kind" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-}
+  }
 
-query "app_service_web_app_ftps_state" {
-  sql = <<-EOQ
+  query "app_service_web_app_ftps_state" {
+    sql = <<-EOQ
     select
       'FTP State' as label,
       configuration -> 'properties' ->> 'ftpsState' as value,
@@ -323,11 +250,10 @@ query "app_service_web_app_ftps_state" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-}
+  }
 
-query "app_service_web_app_https" {
-  sql = <<-EOQ
+  query "app_service_web_app_https" {
+    sql = <<-EOQ
     select
       'HTTPS' as label,
       case when https_only then 'Enabled' else 'Disabled' end as value,
@@ -338,11 +264,10 @@ query "app_service_web_app_https" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-}
+  }
 
-query "app_service_web_app_http_logging" {
-  sql = <<-EOQ
+  query "app_service_web_app_http_logging" {
+    sql = <<-EOQ
     select
       'HTTP Logging' as label,
       case when (configuration -> 'properties' -> 'httpLoggingEnabled')::boolean then 'Enabled' else 'Disabled' end as value,
@@ -353,11 +278,10 @@ query "app_service_web_app_http_logging" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-}
+  }
 
-query "app_service_web_app_tls_version" {
-  sql = <<-EOQ
+  query "app_service_web_app_tls_version" {
+    sql = <<-EOQ
     select
       'TLS Version' as label,
       configuration -> 'properties' ->> 'minTlsVersion' as value,
@@ -368,11 +292,72 @@ query "app_service_web_app_tls_version" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-}
+  }
+  # With Queries
 
-query "app_service_web_app_overview" {
-  sql = <<-EOQ
+  query "app_service_web_app_network_application_gateways" {
+    sql = <<-EOQ
+      with application_gateway as (
+        select
+          g.id as id,
+          backend_address ->> 'fqdn' as app_host_name
+        from
+          azure_application_gateway as g,
+          jsonb_array_elements(backend_address_pools) as pool,
+          jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
+      )
+      select
+        lower(g.id) as application_gateway_id
+      from
+        azure_app_service_web_app as a,
+        jsonb_array_elements(a.host_names) as host_name,
+        application_gateway as g
+      where
+        lower(g.app_host_name) = lower(trim((host_name::text), '""'))
+        and lower(a.id) = $1;
+    EOQ
+  }
+
+  query "app_service_web_app_network_subnets" {
+    sql = <<-EOQ
+    select
+      lower(id) as subnet_id
+    from
+      azure_subnet
+    where
+      lower(id) in (
+        select
+          lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
+        from
+          azure_app_service_web_app
+        where
+          lower(id) = $1
+      );
+    EOQ
+  }
+
+  query "app_service_web_app_network_virtual_networks"{
+    sql = <<-EOQ
+    select
+      lower(id) as virtual_network_id
+    from
+      azure_virtual_network,
+        jsonb_array_elements(subnets) as sub
+    where
+      lower(sub ->> 'id') in (
+        select
+          lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
+        from
+          azure_app_service_web_app
+        where
+          lower(id) = $1
+        );
+    EOQ
+  }
+  # Table Queries
+
+  query "app_service_web_app_overview" {
+    sql = <<-EOQ
     select
       name as "Name",
       default_site_hostname as "Default Site Hostname",
@@ -389,11 +374,10 @@ query "app_service_web_app_overview" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-}
+  }
 
-query "app_service_web_app_tags" {
-  sql = <<-EOQ
+  query "app_service_web_app_tags" {
+    sql = <<-EOQ
     select
       tag.key as "Key",
       tag.value as "Value"
@@ -406,11 +390,10 @@ query "app_service_web_app_tags" {
       tag.key;
     EOQ
 
-  param "id" {}
-}
+  }
 
-query "app_service_web_app_ip_security_restrictions" {
-  sql = <<-EOQ
+  query "app_service_web_app_ip_security_restrictions" {
+    sql = <<-EOQ
     select
       r ->> 'name' as "Name",
       r ->> 'priority' as "Priority",
@@ -424,11 +407,10 @@ query "app_service_web_app_ip_security_restrictions" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-}
+  }
 
-query "app_service_web_app_diagnostic_logs_configuration" {
-  sql = <<-EOQ
+  query "app_service_web_app_diagnostic_logs_configuration" {
+    sql = <<-EOQ
     select
       diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'azureBlobStorage' ->> 'level' as "Application logging (Blob)",
       diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'azureTableStorage' ->> 'level' as "Application logging (Table)",
@@ -443,11 +425,10 @@ query "app_service_web_app_diagnostic_logs_configuration" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-}
+  }
 
-query "app_service_web_app_configuration" {
-  sql = <<-EOQ
+  query "app_service_web_app_configuration" {
+    sql = <<-EOQ
     select
       configuration -> 'properties' ->> 'linuxFxVersion' as "Linux App Framework and version",
       configuration -> 'properties' ->> 'loadBalancing' as "Load Balancing",
@@ -468,5 +449,4 @@ query "app_service_web_app_configuration" {
     where
       lower(id) = $1;
   EOQ
-  param "id" {}
-}
+  }

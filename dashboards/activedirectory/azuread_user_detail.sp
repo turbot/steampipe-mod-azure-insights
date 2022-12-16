@@ -1,7 +1,7 @@
 dashboard "azuread_user_detail" {
 
   title          = "Azure Active Directory User Detail"
-   documentation = file("./dashboards/activedirectory/docs/azuread_user_detail.md")
+  documentation = file("./dashboards/activedirectory/docs/azuread_user_detail.md")
 
   tags = merge(local.activedirectory_common_tags, {
     type = "Detail"
@@ -18,9 +18,7 @@ dashboard "azuread_user_detail" {
     card {
       width = 2
       query = query.azuread_user_type
-      args = {
-        id = self.input.user_id.value
-      }
+      args = [self.input.user_id.value]
     }
 
   }
@@ -32,9 +30,7 @@ dashboard "azuread_user_detail" {
       type  = "line"
       width = 6
       query = query.azuread_user_overview
-      args = {
-        id = self.input.user_id.value
-      }
+      args = [self.input.user_id.value]
 
     }
 
@@ -45,9 +41,7 @@ dashboard "azuread_user_detail" {
       table {
         title = "Last 5 Sign-ins"
         query = query.azuread_user_sign_in_report
-        args  = {
-          id = self.input.user_id.value
-        }
+        args  = [self.input.user_id.value]
       }
 
     }
@@ -62,27 +56,21 @@ dashboard "azuread_user_detail" {
       type  = "sankey"
       title = "Azure Active Directory Role Assignments"
       query = query.azuread_user_directory_role_sankey
-      args  = {
-        id = self.input.user_id.value
-      }
+      args  = [self.input.user_id.value]
     }
 
     table {
       title = "Azure Active Directory Role Assignments"
       width = 6
       query = query.azuread_directory_roles_for_user
-      args  = {
-        id = self.input.user_id.value
-      }
+      args  = [self.input.user_id.value]
     }
 
     table {
       title = "Azure Role Assignments"
       width = 6
       query = query.azuread_subscription_roles_for_user
-      args  = {
-        id = self.input.user_id.value
-      }
+      args  = [self.input.user_id.value]
     }
   }
 
@@ -95,10 +83,7 @@ dashboard "azuread_user_detail" {
     }
 
     query = query.azuread_groups_for_user
-    args  = {
-      id = self.input.user_id.value
-    }
-
+    args  = [self.input.user_id.value]
   }
 
 }
@@ -139,7 +124,6 @@ query "azuread_user_type" {
       id = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "azuread_user_overview" {
@@ -158,7 +142,6 @@ query "azuread_user_overview" {
       id = $1
   EOQ
 
-  param "id" {}
 }
 
 query "azuread_user_directory_role_sankey" {
@@ -240,7 +223,6 @@ query "azuread_user_directory_role_sankey" {
         trim((m::text), '""') = (select azuread_user_id from args))
   EOQ
 
-  param "id" {}
 }
 
 query "azuread_groups_for_user" {
@@ -259,7 +241,6 @@ query "azuread_groups_for_user" {
       g.display_name ;
   EOQ
 
-  param "id" {}
 }
 
 query "azuread_directory_roles_for_user" {
@@ -298,7 +279,6 @@ query "azuread_directory_roles_for_user" {
       role_name;
     EOQ
 
-  param "id" {}
 }
 
 query "azuread_subscription_roles_for_user" {
@@ -306,7 +286,7 @@ query "azuread_subscription_roles_for_user" {
     with subscription_roles as (
       select
         distinct  a.scope as scope,
-         a.id as assignmnet_id,
+        a.id as assignmnet_id,
         d.role_name as role_name
 
       from
@@ -325,7 +305,6 @@ query "azuread_subscription_roles_for_user" {
       subscription_roles;
   EOQ
 
-  param "id" {}
 }
 
 query "azuread_user_sign_in_report" {
@@ -344,5 +323,4 @@ query "azuread_user_sign_in_report" {
     limit 5;
   EOQ
 
-  param "id" {}
 }

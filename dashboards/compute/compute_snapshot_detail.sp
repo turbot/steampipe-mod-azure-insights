@@ -18,118 +18,64 @@ dashboard "compute_snapshot_detail" {
     card {
       width = 2
       query = query.compute_snapshot_sku_name
-      args = {
-        id = self.input.id.value
-      }
+      args  = [self.input.id.value]
     }
 
     card {
       width = 2
       query = query.compute_snapshot_incremental
-      args = {
-        id = self.input.id.value
-      }
+      args  = [self.input.id.value]
     }
 
     card {
       width = 2
       query = query.compute_snapshot_create_option
-      args = {
-        id = self.input.id.value
-      }
+      args  = [self.input.id.value]
     }
 
     card {
       width = 2
       query = query.compute_snapshot_network_access_policy
-      args = {
-        id = self.input.id.value
-      }
+      args  = [self.input.id.value]
     }
 
   }
 
-      with "compute_disks" {
-        sql = <<-EOQ
-          select
-            lower(d.id) as disk_id
-          from
-            azure_compute_disk as d
-            left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
-          where
-            lower(s.id) = $1
-          union
-          select
-            lower(d.id) as disk_id
-          from
-            azure_compute_disk as d
-            left join azure_compute_snapshot as s on lower(d.creation_data_source_resource_id) = lower(s.id)
-          where
-            lower(s.id) = $1;
-          EOQ
-
-        args = [self.input.id.value]
-      }
-
-      with "compute_disk_accesses" {
-        sql = <<-EOQ
-          select
-            lower(a.id) as disk_access_id
-          from
-            azure_compute_disk_access as a
-            left join azure_compute_snapshot as s on lower(s.disk_access_id) = lower(a.id)
-          where
-            lower(s.id) = $1;
-          EOQ
-
-        args = [self.input.id.value]
-      }
-
-      with "compute_disk_encryption_sets" {
-        sql = <<-EOQ
-          select
-            lower(e.id) as encryption_set_id
-          from
-            azure_compute_disk_encryption_set as e
-            left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-          where
-            lower(s.id) = $1;
-          EOQ
-
-        args = [self.input.id.value]
-      }
-
-      with "key_vault_keys" {
-        sql = <<-EOQ
-          select
-            lower(k.id) as key_id
-          from
-            azure_compute_disk_encryption_set as e
-            left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-            left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
-            left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
-          where
-            lower(s.id) = $1;
-          EOQ
-
-        args = [self.input.id.value]
-      }
-
-      with "key_vault_vaults" {
-        sql = <<-EOQ
-          select
-            lower(k.id) as key_vault_id
-          from
-            azure_compute_disk_encryption_set as e
-            left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-            left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
-          where
-            lower(s.id) = $1;
-          EOQ
-
-        args = [self.input.id.value]
+  with "compute_disks" {
+    query = query.compute_snapshot_compute_disks
+    args  = [self.input.id.value]
   }
-  
+
+  with "compute_disk_accesses" {
+    query = query.compute_snapshot_compute_disk_accesses
+    args  = [self.input.id.value]
+  }
+
+  with "compute_disk_encryption_sets" {
+    query = query.compute_snapshot_compute_disk_encryption_sets
+    args  = [self.input.id.value]
+  }
+
+  with "from_compute_snapshots" {
+    query = query.compute_snapshot_from_compute_snapshots
+    args  = [self.input.id.value]
+  }
+
+  with "key_vault_keys" {
+    query = query.compute_snapshot_key_vault_keys
+    args  = [self.input.id.value]
+  }
+
+  with "key_vault_vaults" {
+    query = query.compute_snapshot_key_vault_vaults
+    args  = [self.input.id.value]
+  }
+
+  with "to_compute_snapshots" {
+    query = query.compute_snapshot_to_compute_snapshots
+    args  = [self.input.id.value]
+  }
+
   container {
 
     graph {
@@ -156,19 +102,26 @@ dashboard "compute_snapshot_detail" {
         args = {
           compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
         }
-      }  
+      }
 
       node {
         base = node.compute_snapshot
         args = {
           compute_snapshot_ids = [self.input.id.value]
         }
-      }    
+      }
 
       node {
-        base = node.compute_snapshot_to_compute_snapshot
+        base = node.compute_snapshot
         args = {
-          compute_snapshot_ids = [self.input.id.value]
+          compute_snapshot_ids = with.from_compute_snapshots.rows[*].snapshot_id
+        }
+      }
+
+      node {
+        base = node.compute_snapshot
+        args = {
+          compute_snapshot_ids = with.to_compute_snapshots.rows[*].snapshot_id
         }
       }
 
@@ -177,7 +130,7 @@ dashboard "compute_snapshot_detail" {
         args = {
           key_vault_key_ids = with.key_vault_keys.rows[*].key_vault_key_id
         }
-      }  
+      }
 
       node {
         base = node.key_vault_vault
@@ -191,14 +144,7 @@ dashboard "compute_snapshot_detail" {
         args = {
           compute_disk_ids = with.compute_disks.rows[*].disk_id
         }
-      }  
-
-      edge {
-        base = edge.compute_snapshot_from_compute_snapshot
-        args = {
-          compute_snapshot_ids = [self.input.id.value]
-        }
-      }  
+      }
 
       edge {
         base = edge.compute_snapshot_to_compute_disk
@@ -226,7 +172,14 @@ dashboard "compute_snapshot_detail" {
         args = {
           compute_snapshot_ids = [self.input.id.value]
         }
-      }   
+      }
+
+      edge {
+        base = edge.compute_snapshot_to_compute_snapshot
+        args = {
+          compute_snapshot_ids = with.from_compute_snapshots.rows[*].snapshot_id
+        }
+      }
 
       edge {
         base = edge.compute_snapshot_to_key_vault_key
@@ -254,18 +207,14 @@ dashboard "compute_snapshot_detail" {
         type  = "line"
         width = 6
         query = query.compute_snapshot_overview
-        args = {
-          id = self.input.id.value
-        }
+        args  = [self.input.id.value]
       }
 
       table {
         title = "Tags"
         width = 6
         query = query.compute_snapshot_tags
-        args = {
-          id = self.input.id.value
-        }
+        args  = [self.input.id.value]
       }
     }
 
@@ -276,18 +225,13 @@ dashboard "compute_snapshot_detail" {
       table {
         title = "Source"
         query = query.compute_snapshot_source_details
-        args = {
-          id = self.input.id.value
-        }
-
+        args  = [self.input.id.value]
       }
 
       table {
         title = "Disk Encryption Set"
         query = query.compute_disk_encryption_details
-        args = {
-          id = self.input.id.value
-        }
+        args  = [self.input.id.value]
 
         column "Key Vault ID" {
           display = "none"
@@ -332,6 +276,8 @@ query "compute_snapshot_input" {
   EOQ
 }
 
+# Card Queries
+
 query "compute_snapshot_sku_name" {
   sql = <<-EOQ
     select
@@ -343,7 +289,6 @@ query "compute_snapshot_sku_name" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "compute_snapshot_incremental" {
@@ -357,7 +302,6 @@ query "compute_snapshot_incremental" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "compute_snapshot_create_option" {
@@ -371,7 +315,6 @@ query "compute_snapshot_create_option" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
 }
 
 query "compute_snapshot_network_access_policy" {
@@ -386,9 +329,107 @@ query "compute_snapshot_network_access_policy" {
       lower(id) = $1;
   EOQ
 
-  param "id" {}
-
 }
+
+# With Queries
+
+query "compute_snapshot_compute_disks" {
+  sql = <<-EOQ
+    select
+      lower(d.id) as disk_id
+    from
+      azure_compute_disk as d
+      left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
+    where
+      lower(s.id) = $1
+    union
+    select
+      lower(d.id) as disk_id
+    from
+      azure_compute_disk as d
+      left join azure_compute_snapshot as s on lower(d.creation_data_source_resource_id) = lower(s.id)
+    where
+      lower(s.id) = $1;
+  EOQ
+}
+
+query "compute_snapshot_compute_disk_accesses" {
+  sql = <<-EOQ
+    select
+      lower(a.id) as disk_access_id
+    from
+      azure_compute_disk_access as a
+      left join azure_compute_snapshot as s on lower(s.disk_access_id) = lower(a.id)
+    where
+      lower(s.id) = $1;
+  EOQ
+}
+
+query "compute_snapshot_compute_disk_encryption_sets" {
+  sql = <<-EOQ
+    select
+      lower(e.id) as encryption_set_id
+    from
+      azure_compute_disk_encryption_set as e
+      left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
+    where
+      lower(s.id) = $1;
+  EOQ
+}
+
+query "compute_snapshot_key_vault_keys" {
+  sql = <<-EOQ
+    select
+      lower(k.id) as key_vault_key_id
+    from
+      azure_compute_disk_encryption_set as e
+      left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
+      left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
+      left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
+    where
+      lower(s.id) = $1;
+  EOQ
+}
+
+query "compute_snapshot_key_vault_vaults" {
+  sql = <<-EOQ
+    select
+      lower(k.id) as key_vault_id
+    from
+      azure_compute_disk_encryption_set as e
+      left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
+      left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
+    where
+      lower(s.id) = $1;
+  EOQ
+}
+
+query "compute_snapshot_from_compute_snapshots" {
+  sql = <<-EOQ
+    select
+      lower(s.id) as snapshot_id
+    from
+      azure_compute_snapshot as s,
+      azure_compute_snapshot as self
+    where
+      lower(self.source_resource_id) = lower(s.id)
+    and
+      lower(self.id) = $1;
+  EOQ
+}
+
+query "compute_snapshot_to_compute_snapshots" {
+  sql = <<-EOQ
+    select
+      lower(s.id) as snapshot_id
+    from
+      azure_compute_snapshot as s
+    where
+      lower(s.source_resource_id) = $1;
+  EOQ
+}
+
+# Table Queries
 
 query "compute_snapshot_overview" {
   sql = <<-EOQ
@@ -409,7 +450,6 @@ query "compute_snapshot_overview" {
       lower(id) = $1
   EOQ
 
-  param "id" {}
 }
 
 query "compute_snapshot_tags" {
@@ -425,7 +465,6 @@ query "compute_snapshot_tags" {
       tags ->> 'Key';
     EOQ
 
-  param "id" {}
 }
 
 query "compute_snapshot_source_details" {
@@ -455,7 +494,6 @@ query "compute_snapshot_source_details" {
       lower(s.id) = $1
   EOQ
 
-  param "id" {}
 }
 
 query "compute_disk_encryption_details" {
@@ -477,5 +515,4 @@ query "compute_disk_encryption_details" {
       lower(s.id) = $1;
   EOQ
 
-  param "id" {}
 }
