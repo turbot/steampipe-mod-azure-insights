@@ -39,6 +39,11 @@ dashboard "network_public_ip_detail" {
     args  = [self.input.public_ip_id.value]
   }
 
+  with "network_load_balancers" {
+    query = query.network_public_ip_network_load_balancers
+    args  = [self.input.public_ip_id.value]
+  }
+
   with "network_network_interfaces" {
     query = query.network_public_ip_network_network_interfaces
     args  = [self.input.public_ip_id.value]
@@ -55,6 +60,13 @@ dashboard "network_public_ip_detail" {
         base = node.compute_virtual_machine
         args = {
           compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }
+
+      node {
+        base = node.network_load_balancer
+        args = {
+          network_load_balancer_ids = with.network_load_balancers.rows[*].load_balancer_id
         }
       }
 
@@ -83,6 +95,13 @@ dashboard "network_public_ip_detail" {
         base = edge.compute_virtual_machine_to_network_network_interface
         args = {
           compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }
+
+      edge {
+        base = edge.network_load_balancer_to_network_public_ip
+        args = {
+          network_load_balancer_ids = with.network_load_balancers.rows[*].load_balancer_id
         }
       }
 
@@ -222,6 +241,19 @@ query "network_public_ip_compute_virtual_machines" {
       vm_network_interface as v
       left join ni_public_ip as n on lower(v.n_id) = lower(n.id)
       left join azure_public_ip as p on lower(n.pid) = lower(p.id)
+    where
+      lower(p.id) = $1;
+  EOQ
+}
+
+query "network_public_ip_network_load_balancers" {
+  sql   = <<-EOQ
+    select
+      lower(lb.id) as load_balancer_id
+    from
+      azure_lb as lb,
+      jsonb_array_elements(frontend_ip_configurations) as c
+      left join azure_public_ip as p on lower(p.id) = lower(c -> 'properties' -> 'publicIPAddress' ->> 'id')
     where
       lower(p.id) = $1;
   EOQ

@@ -331,9 +331,7 @@ dashboard "network_virtual_network_detail" {
   table {
     title = "Peering Connections"
     query = query.virtual_network_peering_connection
-    args = {
-      id = self.input.vn_id.value
-    }
+    args  = [self.input.vn_id.value]
   }
 
 }

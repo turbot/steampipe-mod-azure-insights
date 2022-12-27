@@ -457,7 +457,7 @@ query "network_interface_attached_virtual_machine" {
   sql = <<-EOQ
     select
       vm.name as "Name",
-      vm.id as "ID"
+      lower(vm.id) as "ID"
     from
       azure_network_interface as ni
       left join azure_compute_virtual_machine as vm on lower(vm.id) = lower(ni.virtual_machine_id)
@@ -471,7 +471,7 @@ query "network_interface_attached_nsg" {
   sql = <<-EOQ
     select
       nsg.name as "Name",
-      nsg.id as "ID"
+      lower(nsg.id) as "ID"
     from
       azure_network_interface as ni
       left join azure_network_security_group as nsg on lower(nsg.id) = lower(ni.network_security_group_id)

@@ -128,7 +128,8 @@ node "compute_virtual_machine" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'ID', vm_id,
+        'ID', lower(id),
+        'VM ID', vm_id,
         'Subscription ID', subscription_id,
         'Resource Group', resource_group,
         'Power State', power_state,

@@ -25,12 +25,13 @@ edge "network_application_gateway_backend_address_pool_to_compute_virtual_machin
     )
     select
       lower(p ->> 'id') as from_id,
-      lower(p.vm_id) as to_id
+      lower(pool.vm_id) as to_id
     from
       azure_application_gateway as g,
-      jsonb_array_elements(backend_address_pools) as p
+      jsonb_array_elements(backend_address_pools) as p,
+      vm_application_gateway_backend_address_pool as  pool
     where
-      lower(p ->> 'id') in (select lower(id) from vm_application_gateway_backend_address_pool);
+      lower(p ->> 'id') = lower(pool.id)
   EOQ
 
   param "compute_virtual_machine_ids" {}
@@ -374,7 +375,7 @@ edge "network_load_balancer_to_network_load_balancer_rule" {
 }
 
 edge "network_load_balancer_to_network_public_ip" {
-  title = "frontend public ip"
+  title = "public ip"
 
   sql = <<-EOQ
     select
@@ -600,7 +601,7 @@ edge "network_security_group_to_compute_virtual_machine" {
         jsonb_array_elements(network_interfaces) as ni
         join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
       where
-        lower(nsg.id) = lower($1)
+        lower(nsg.id) = any($1)
     )
     select
       lower(nic.nsg_id) as from_id,

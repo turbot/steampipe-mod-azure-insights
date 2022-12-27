@@ -102,7 +102,7 @@ category "network_subnet" {
 
 category "network_virtual_network" {
   title = "Virtual Network"
-  href  = "/azure_insights.dashboard.virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.network_virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
   icon  = "heroicons-outline:cloud"
   color = local.networking_color
 }

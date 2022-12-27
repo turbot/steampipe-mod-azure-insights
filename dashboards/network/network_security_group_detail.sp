@@ -286,7 +286,7 @@ query "network_security_group_ingress_rules_count" {
       jsonb_array_elements(security_rules || default_security_rules ) as rules
     where
       rules -> 'properties' ->> 'direction' = 'Inbound'
-      and id = $1
+      and lower(id) = $1
   EOQ
 
 }
@@ -301,7 +301,7 @@ query "network_security_group_egress_rules_count" {
       jsonb_array_elements(security_rules || default_security_rules ) as rules
     where
       rules -> 'properties' ->> 'direction' = 'Outbound'
-      and id = $1
+      and lower(id) = $1
   EOQ
 
 }
@@ -315,7 +315,7 @@ query "network_security_group_attached_enis_count" {
       azure_network_security_group,
       jsonb_array_elements(network_interfaces ) as nic
     where
-      id = $1
+      lower(id) = $1
   EOQ
 
 }
@@ -329,7 +329,7 @@ query "network_security_group_attached_subnets_count" {
       azure_network_security_group,
       jsonb_array_elements(subnets) as s
     where
-      id = $1
+      lower(id) = $1
   EOQ
 
 }
@@ -359,7 +359,7 @@ query "network_security_group_unrestricted_ingress_remote_access" {
             )
           )
         )
-        and nsg.id = $1
+        and lower(nsg.id) = $1
     )
     select
       'Unrestricted Ingress (Excludes ICMP)' as label,
@@ -396,7 +396,7 @@ query "network_security_group_unrestricted_egress_remote_access" {
             )
           )
         )
-        and nsg.id = $1
+        and lower(nsg.id) = $1
     )
     select
       'Unrestricted Egress (Excludes ICMP)' as label,
@@ -499,7 +499,7 @@ query "network_security_group_overview" {
     from
       azure_network_security_group
     where
-      id = $1
+      lower(id) = $1
   EOQ
 
 }
@@ -513,7 +513,7 @@ query "network_security_group_tags" {
       azure_network_security_group,
       jsonb_each_text(tags) as tag
     where
-      id = $1
+      lower(id) = $1
     order by
       tag.key;
     EOQ
@@ -532,7 +532,7 @@ query "network_security_group_assoc" {
       jsonb_array_elements(nsg.network_interfaces) as nic
       left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
     where
-      nsg.id = $1
+      lower(nsg.id) = $1
 
       -- Subnets
     union select
@@ -544,7 +544,7 @@ query "network_security_group_assoc" {
       jsonb_array_elements(nsg.subnets) as subnets
       left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
     where
-      nsg.id = $1
+      lower(nsg.id) = $1
     EOQ
 
 }
@@ -558,7 +558,7 @@ query "security_group_flow_logs" {
         azure_network_security_group as nsg,
         jsonb_array_elements(flow_logs) as l
       where
-        nsg.id = $1
+        lower(nsg.id) = $1
     )
     select
       fl.name as "Name",
@@ -588,7 +588,7 @@ query "network_security_group_ingress_rules" {
         jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) sip
       where
         sg -> 'properties' ->> 'direction' = 'Inbound'
-        and nsg.id = $1;
+        and lower(nsg.id) = $1;
   EOQ
 
 }
@@ -607,7 +607,7 @@ query "network_security_group_egress_rules" {
       jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) sip
     where
       sg -> 'properties' ->> 'direction' = 'Outbound'
-      and nsg.id = $1;
+      and lower(nsg.id) = $1;
   EOQ
 
 }
@@ -628,7 +628,7 @@ query "network_security_group_ingress_rule_sankey" {
         jsonb_array_elements(nsg.network_interfaces) as nic
         left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
       where
-        nsg.id = $1
+        lower(nsg.id) = $1
 
       -- Subnets
       union select
@@ -641,7 +641,7 @@ query "network_security_group_ingress_rule_sankey" {
         jsonb_array_elements(nsg.subnets) as subnets
         left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
       where
-        nsg.id = $1
+        lower(nsg.id) = $1
       ),
       rules as (
         select
@@ -679,7 +679,7 @@ query "network_security_group_ingress_rule_sankey" {
           jsonb_array_elements_text(r -> 'properties' -> 'sourcePortRanges' || (r -> 'properties' -> 'sourcePortRange') :: jsonb) sport
         where
           r -> 'properties' ->> 'direction' = 'Inbound'
-          and id = $1
+          and lower(id) = $1
           )
 
       -- Nodes  ---------
@@ -756,7 +756,7 @@ query "network_security_group_egress_rule_sankey" {
         jsonb_array_elements(nsg.network_interfaces) as nic
         left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
       where
-        nsg.id = $1
+        lower(nsg.id) = $1
 
       -- Subnets
       union select
@@ -769,7 +769,7 @@ query "network_security_group_egress_rule_sankey" {
         jsonb_array_elements(nsg.subnets) as subnets
         left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
       where
-        nsg.id = $1
+        lower(nsg.id) = $1
       ),
       rules as (
         select
@@ -807,7 +807,7 @@ query "network_security_group_egress_rule_sankey" {
           jsonb_array_elements_text(r -> 'properties' -> 'sourcePortRanges' || (r -> 'properties' -> 'sourcePortRange') :: jsonb) sport
         where
           r -> 'properties' ->> 'direction' = 'Outbound'
-          and id = $1
+          and lower(id) = $1
           )
 
         -- Nodes  ---------
