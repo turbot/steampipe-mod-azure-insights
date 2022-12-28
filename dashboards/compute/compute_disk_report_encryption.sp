@@ -41,6 +41,10 @@ dashboard "compute_disk_encryption_report" {
       display = "none"
     }
 
+    column "Name" {
+      href = "${dashboard.compute_disk_detail.url_path}?input.disk_id={{.ID | @uri}}"
+    }
+
     query = query.compute_disk_encryption_report
   }
 
@@ -51,7 +55,7 @@ query "compute_disk_encryption_report" {
     select
       d.name as "Name",
       d.unique_id as "Unique ID",
-      d.id as "ID",
+      lower(d.id) as "ID",
       d.encryption_type as "Encryption Type",
       d.encryption_disk_encryption_set_id as "Disk Encryption Set ID",
       sub.title as "Subscription",

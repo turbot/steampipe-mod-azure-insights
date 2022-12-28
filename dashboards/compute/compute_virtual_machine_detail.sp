@@ -325,6 +325,10 @@ dashboard "compute_virtual_machine_detail" {
       title = "Security Groups"
       query = query.compute_virtual_machine_security_groups
       args  = [self.input.vm_id.value]
+
+      column "Name" {
+        href = "/azure_insights.dashboard.network_security_group_detail?input.nsg_id={{ .'Security Group ID' | @uri }}"
+      }
     }
 
   }
@@ -336,6 +340,10 @@ dashboard "compute_virtual_machine_detail" {
       title = "Network Interfaces"
       query = query.compute_virtual_machine_network_interfaces
       args  = [self.input.vm_id.value]
+
+      column "Name" {
+        href = "/azure_insights.dashboard.network_interface_detail?input.nic_id={{ .'Network Interface ID' | @uri }}"
+      }
     }
 
   }
@@ -358,6 +366,10 @@ dashboard "compute_virtual_machine_detail" {
       title = "Data Disks"
       query = query.compute_virtual_machine_data_disks
       args  = [self.input.vm_id.value]
+
+      column "Name" {
+        href = "/azure_insights.dashboard.compute_disk_detail?input.disk_id={{ .'Managed Disk ID' | @uri }}"
+      }
     }
 
   }
@@ -827,7 +839,7 @@ query "compute_virtual_machine_storage_profile" {
       os_disk_caching as "Disk Caching",
       os_disk_create_option as "Disk Create Option",
       os_disk_vhd_uri as "Virtual Hard Disk URI",
-      d.id as "ID"
+      lower(d.id) as "ID"
     from
       azure_compute_virtual_machine as vm
       left join azure_compute_disk as d on  vm.os_disk_name = d.name  and lower(vm.id)= lower(d.managed_by)
@@ -861,7 +873,7 @@ query "compute_virtual_machine_security_groups" {
       nsg.provisioning_state as "Provisioning State",
       nsg.region as "Region",
       nsg.resource_group as "Resource Group",
-      nsg.id as "Security Group ID"
+      lower(nsg.id) as "Security Group ID"
     from
       azure_network_security_group as nsg
       left join azure_compute_virtual_machine as vm on vm.network_interfaces @> nsg.network_interfaces
@@ -879,7 +891,7 @@ query "compute_virtual_machine_data_disks" {
       disk ->> 'createOption' as "Create Option",
       (disk ->> 'toBeDetached')::boolean as "To Be Detached",
       (disk ->> 'writeAcceleratorEnabled')::boolean as "Write Accelerator Enabled",
-      disk -> 'managedDisk' ->> 'id' as "Managed Disk ID"
+      lower(disk -> 'managedDisk' ->> 'id') as "Managed Disk ID"
     from
       azure_compute_virtual_machine,
       jsonb_array_elements(data_disks) as disk
@@ -909,7 +921,7 @@ query "compute_virtual_machine_network_interfaces" {
       vi.private_ips as "Private IPs",
       (ip_config -> 'properties' ->> 'primary')::boolean as "Primary IP Config",
       ip_config -> 'properties' ->> 'privateIPAddressVersion' as "Private IP Version",
-      i.id as "Network Interface ID"
+      lower(i.id) as "Network Interface ID"
     from
       vm_interface vi
       left join azure_network_interface as i on lower(i.id) = lower(vi.network_id)

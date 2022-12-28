@@ -83,7 +83,6 @@ dashboard "sql_server_detail" {
       type      = "graph"
       direction = "TD"
 
-
       node {
         base = node.key_vault_key
         args = {
@@ -287,7 +286,7 @@ query "sql_server_input" {
       azure_sql_server as s,
       azure_subscription as sub
     where
-      lower(s.subscription_id) = lower(s.subscription_id)
+      s.subscription_id = sub.subscription_id
     order by
       s.title;
   EOQ
@@ -303,11 +302,8 @@ query "sql_server_state" {
     from
       azure_sql_server
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
-
-
-
 }
 
 query "sql_server_version" {
@@ -318,7 +314,7 @@ query "sql_server_version" {
     from
       azure_sql_server
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
 
 
@@ -353,9 +349,8 @@ query "sql_server_public_network_access" {
     from
       azure_sql_server
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
-
 
 }
 
@@ -368,7 +363,7 @@ query "sql_server_ad_authentication_enabled" {
     from
       azure_sql_server
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
 
 

@@ -226,6 +226,14 @@ dashboard "compute_snapshot_detail" {
         title = "Source"
         query = query.compute_snapshot_source_details
         args  = [self.input.id.value]
+
+        column "link" {
+          display = "none"
+        }
+        // Not able to link source snapshots as it throws cyclic dependency
+        column "Name" {
+          href = "{{ .link }}"
+        }
       }
 
       table {
@@ -474,7 +482,8 @@ query "compute_snapshot_source_details" {
     select
       d.name as "Name",
       d.type as  "Type",
-      d.id as "ID"
+      lower(d.id) as "ID",
+      '${dashboard.compute_disk_detail.url_path}?input.disk_id=' || lower(d.id) as link
     from
       azure_compute_snapshot as s
       left join azure_compute_disk as d on lower(d.id) = lower(s.source_resource_id)
@@ -486,7 +495,8 @@ query "compute_snapshot_source_details" {
     select
       d.name as "Name",
       d.type as  "Type",
-      d.id as "ID"
+      lower(d.id) as "ID",
+      null  as link
     from
       azure_compute_snapshot as d
       left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
@@ -502,15 +512,15 @@ query "compute_disk_encryption_details" {
       e.name as "Name",
       e.encryption_type as "Encryption Type",
       v.name as "Key Vault Name",
-      v.id as "Key Vault ID",
-      k.id as "Key ID",
+      lower(v.id) as "Key Vault ID",
+      lower(k.key_id) as "Key ID",
       k.name as "Key Name",
       e.id as "ID"
     from
       azure_compute_disk_encryption_set as e
       left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault as v on lower(v.id) = lower(e.active_key_source_vault_id)
-      left join azure_key_vault_key as k on lower(k.key_uri_with_version) = lower(e.active_key_url)
+      left join azure_key_vault_key_version as k on lower(k.key_uri_with_version) = lower(e.active_key_url)
     where
       lower(s.id) = $1;
   EOQ

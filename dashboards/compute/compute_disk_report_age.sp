@@ -56,6 +56,10 @@ dashboard "compute_disk_age_report" {
       display = "none"
     }
 
+    column "Name" {
+      href = "${dashboard.compute_disk_detail.url_path}?input.disk_id={{.ID | @uri}}"
+    }
+
     query = query.compute_disk_age_table
   }
 
@@ -138,7 +142,7 @@ query "compute_disk_age_table" {
       d.subscription_id as "Subscription ID",
       d.resource_group as "Resource Group",
       d.region as "Region",
-      d.id as "ID"
+      lower(d.id) as "ID"
     from
       azure_compute_disk as d,
       azure_subscription as sub

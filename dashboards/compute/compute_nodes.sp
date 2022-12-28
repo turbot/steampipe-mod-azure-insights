@@ -103,7 +103,7 @@ node "compute_snapshot" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'ID', id,
+        'ID', lower(id),
         'Subscription ID', subscription_id,
         'Resource Group', resource_group,
         'Provisioning State', provisioning_state,
@@ -200,7 +200,7 @@ node "compute_virtual_machine_scale_set" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'ID', id,
+        'ID', lower(id),
         'Unique ID', unique_id,
         'SKU Name', sku_name,
         'Subscription ID', subscription_id,
@@ -250,7 +250,7 @@ node "compute_virtual_machine_scale_set_vm" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'ID', id,
+        'ID', lower(id),
         'VM ID', vm_id,
         'SKU Name', sku_name,
         'Subscription ID', subscription_id,

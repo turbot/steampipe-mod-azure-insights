@@ -142,21 +142,24 @@ dashboard "app_service_web_app_detail" {
   }
 
   container {
-    width = 6
 
-    table {
-      title = "Overview"
-      type  = "line"
+    container {
       width = 6
-      query = query.app_service_web_app_overview
-      args  = [self.input.web_app_id.value]
-    }
 
-    table {
-      title = "Tags"
-      width = 6
-      query = query.app_service_web_app_tags
-      args  = [self.input.web_app_id.value]
+      table {
+        title = "Overview"
+        type  = "line"
+        width = 6
+        query = query.app_service_web_app_overview
+        args  = [self.input.web_app_id.value]
+      }
+
+      table {
+        title = "Tags"
+        width = 6
+        query = query.app_service_web_app_tags
+        args  = [self.input.web_app_id.value]
+      }
     }
 
     container {
@@ -169,8 +172,9 @@ dashboard "app_service_web_app_detail" {
       }
 
     }
+  }
 
-    container {
+  container {
       width = 12
 
       table {
@@ -188,7 +192,6 @@ dashboard "app_service_web_app_detail" {
     }
 
   }
-}
 
   query "app_service_web_app_input" {
     sql = <<-EOQ
@@ -241,7 +244,7 @@ dashboard "app_service_web_app_detail" {
   query "app_service_web_app_ftps_state" {
     sql = <<-EOQ
     select
-      'FTP State' as label,
+      'FTP' as label,
       configuration -> 'properties' ->> 'ftpsState' as value,
       case when configuration -> 'properties' ->> 'ftpsState' = 'AllAllowed' then 'alert' else 'ok' end as type
     from

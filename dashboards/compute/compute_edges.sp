@@ -551,7 +551,7 @@ edge "compute_virtual_machine_scale_set_to_network_application_gateway" {
         jsonb_array_elements(p -> 'properties' -> 'ipConfigurations' ) as c,
         jsonb_array_elements(c -> 'properties' -> 'applicationGatewayBackendAddressPools' ) as b
       where
-        lower(s.id) = $1
+        lower(s.id) = any($1)
     )
     select
       lower(pool.scale_set_id) as from_id,
@@ -569,25 +569,16 @@ edge "compute_virtual_machine_scale_set_to_network_load_balancer" {
   title = "load balancer"
 
   sql = <<-EOQ
-    with lb_backend_address_pool as (
-      select
-        lower(b ->> 'id') as backend_address_pool_id
-      from
-        azure_compute_virtual_machine_scale_set as s,
-        jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations' ) as p,
-        jsonb_array_elements(p -> 'properties' -> 'ipConfigurations' ) as c,
-        jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools' ) as b
-      where
-        lower(s.id) = any($1)
-    )
     select
-      lower(p ->> 'id') as from_id,
-      lower(lb.id) as to_id
-    from
-      azure_lb as lb,
-      jsonb_array_elements(backend_address_pools) as p
-    where
-      lower(p ->> 'id') in (select backend_address_pool_id from lb_backend_address_pool)
+        lower(vm_scale_set.id) as from_id,
+        lower(split_part( b ->> 'id', '/backendAddressPools' , 1)) as to_id
+      from
+        azure_compute_virtual_machine_scale_set as vm_scale_set ,
+        jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') as p,
+        jsonb_array_elements(p -> 'properties' -> 'ipConfigurations') as c,
+        jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools') as b
+      where
+        lower(vm_scale_set.id) = any($1)
   EOQ
 
   param "compute_virtual_machine_scale_set_ids" {}

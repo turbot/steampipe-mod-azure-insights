@@ -985,3 +985,20 @@ edge "network_virtual_network_to_network_subnet" {
 
   param "network_virtual_network_ids" {}
 }
+
+edge "network_load_balancer_backend_address_pool_to_network_load_balancer" {
+  title = "load balancer"
+
+  sql = <<-EOQ
+    select
+      lower(p ->> 'id') as from_id,
+      lower(lb.id) as to_id
+    from
+      azure_lb as lb,
+      jsonb_array_elements(backend_address_pools) as p
+    where
+      lower(p ->> 'id') = any($1)
+  EOQ
+
+  param "network_load_balancer_backend_address_pool_ids" {}
+}

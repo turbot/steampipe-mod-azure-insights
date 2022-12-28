@@ -58,7 +58,7 @@ category "compute_virtual_machine_scale_set_network_interface" {
 
 category "compute_virtual_machine_scale_set_vm" {
   title = "Compute Virtual Machine Scale Set VM"
-  href  = "/azure_insights.dashboard.azure_compute_virtual_machine_scale_set_vm_detail?input.scale_set_vm_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.compute_virtual_machine_scale_set_vm_detail?input.scale_set_vm_id={{.properties.'ID' | @uri}}"
   icon  = "heroicons-outline:cpu-chip"
   color = local.compute_color
 }

@@ -56,6 +56,10 @@ dashboard "compute_snapshot_age_report" {
       display = "none"
     }
 
+    column "Name" {
+      href = "${dashboard.compute_snapshot_detail.url_path}?input.id={{.ID | @uri}}"
+    }
+
     query = query.compute_snapshot_age_table
   }
 
@@ -137,7 +141,7 @@ query "compute_snapshot_age_table" {
       s.subscription_id as "Subscription ID",
       s.resource_group as "Resource Group",
       s.region as "Region",
-      s.id as "ID"
+      lower(s.id) as "ID"
     from
       azure_compute_snapshot as s,
       azure_subscription as sub

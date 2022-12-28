@@ -392,7 +392,8 @@ query "compute_virtual_machine_scale_set_vm_network_load_balancers" {
     from
       azure_lb as lb,
       jsonb_array_elements(backend_address_pools) as p
-      left join backend_address_pool as pool on pool.id = lower(p ->> 'id')
+      where
+        lower(p ->> 'id') in (select id from backend_address_pool)
   EOQ
 }
 

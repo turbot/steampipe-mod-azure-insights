@@ -281,7 +281,7 @@ dashboard "network_load_balancer_detail" {
         args  = [self.input.lb_id.value]
 
         column "Name" {
-          href = "${dashboard.compute_virtual_machine_scale_set_detail.url_path}?input.vm_scale_set_id={{.'Scale Set ID' | @uri}}"
+          href = "${dashboard.compute_virtual_machine_scale_set_detail.url_path}?input.vm_scale_set_id={{.'ID' | @uri}}"
         }
       }
 
@@ -687,10 +687,9 @@ query "load_balancer_associated_virtual_machine_scale_sets" {
   sql = <<-EOQ
     select
       vm_scale_set.name as "Name",
-      vm_scale_set.id as "ID",
+      lower(vm_scale_set.id) as "ID",
       vm_scale_set.sku_name as "SKU Name",
-      vm_scale_set.sku_tier as "SKU Tier",
-      vm_scale_set.id as "Scale Set ID"
+      vm_scale_set.sku_tier as "SKU Tier"
     from
       azure_compute_virtual_machine_scale_set as vm_scale_set,
       jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') as p,

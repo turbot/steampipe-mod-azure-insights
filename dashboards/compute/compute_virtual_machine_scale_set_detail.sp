@@ -159,7 +159,7 @@ dashboard "compute_virtual_machine_scale_set_detail" {
       node {
         base = node.network_virtual_network
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+          network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
         }
       }
 
@@ -185,9 +185,9 @@ dashboard "compute_virtual_machine_scale_set_detail" {
       }
 
       edge {
-        base = edge.compute_virtual_machine_scale_set_to_network_load_balancer
+        base = edge.network_load_balancer_backend_address_pool_to_network_load_balancer
         args = {
-          compute_virtual_machine_scale_set_ids = [self.input.vm_scale_set_id.value]
+          network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
         }
       }
 

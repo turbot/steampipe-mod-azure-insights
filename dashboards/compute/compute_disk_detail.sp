@@ -493,7 +493,6 @@ query "compute_disk_overview" {
   sql = <<-EOQ
     select
       name as "Name",
-      type as "Type",
       provisioning_state as "Provisioning State",
       time_created as "Time Created",
       disk_access_id as "Disk Access ID",
@@ -530,7 +529,7 @@ query "compute_disk_associated_virtual_machine_details" {
       select
         name as "Name",
         type as "Type",
-        id as "ID"
+        lower(id) as "ID"
       from
         azure_compute_virtual_machine,
         jsonb_array_elements(data_disks)  as data_disk
@@ -542,7 +541,7 @@ query "compute_disk_associated_virtual_machine_details" {
       select
         name as "Name",
         type as "Type",
-        id as "ID"
+        lower(id) as "ID"
       from
         azure_compute_virtual_machine
       where
