@@ -121,12 +121,12 @@ edge "compute_disk_to_key_vault_vault" {
 }
 
 edge "compute_disk_to_storage_storage_account" {
-  title = "blob source for disk"
+  title = "storage account"
 
   sql = <<-EOQ
     select
-      lower(a.id) as from_id,
-      lower(d.id) as to_id
+      lower(d.id) as from_id,
+      lower(a.id) as to_id
     from
       azure_compute_disk as d
       left join azure_storage_account as a on lower(a.id) = lower(d.creation_data_storage_account_id)
@@ -136,7 +136,6 @@ edge "compute_disk_to_storage_storage_account" {
 
   param "compute_disk_ids" {}
 }
-
 
 edge "compute_snapshot_to_compute_disk" {
   title = "disk"

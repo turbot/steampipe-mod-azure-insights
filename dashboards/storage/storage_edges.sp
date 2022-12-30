@@ -1,3 +1,20 @@
+edge "storage_storage_account_to_compute_disk" {
+  title = "blob source for disk"
+
+  sql = <<-EOQ
+    select
+      lower(a.id) as from_id,
+      lower(d.id) as to_id
+    from
+      azure_compute_disk as d
+      left join azure_storage_account as a on lower(a.id) = lower(d.creation_data_storage_account_id)
+    where
+      lower(a.id) = any($1);
+  EOQ
+
+  param "storage_account_ids" {}
+}
+
 edge "storage_storage_account_to_key_vault_key" {
   title = "key"
 
@@ -145,3 +162,4 @@ edge "storage_storage_account_to_storage_storage_table" {
 
   param "storage_account_ids" {}
 }
+

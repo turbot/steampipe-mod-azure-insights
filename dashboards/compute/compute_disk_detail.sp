@@ -200,9 +200,9 @@ dashboard "compute_disk_detail" {
       }
 
       edge {
-        base = edge.compute_disk_to_storage_storage_account
+        base = edge.storage_storage_account_to_compute_disk
         args = {
-          compute_disk_ids = [self.input.disk_id.value]
+          storage_account_ids = with.storage_storage_accounts.rows[*].storage_account_id
         }
       }
 
@@ -565,7 +565,7 @@ query "compute_disk_encryption_set_details" {
       azure_compute_disk_encryption_set as e
       left join azure_compute_disk as d on d.encryption_disk_encryption_set_id = e.id
       left join azure_key_vault as v on v.id = e.active_key_source_vault_id
-      left join azure_key_vault_key as k on k.key_uri_with_version = e.active_key_url
+      left join azure_key_vault_key_version as k on k.key_uri_with_version = e.active_key_url
     where
       lower(d.id) = $1;
   EOQ
