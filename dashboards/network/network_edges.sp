@@ -717,6 +717,23 @@ edge "network_subnet_to_network_application_gateway" {
   param "network_subnet_ids" {}
 }
 
+edge "network_subnet_to_network_firewall" {
+  title = "firewall"
+
+  sql = <<-EOQ
+    select
+      lower(c -> 'subnet' ->> 'id') as from_id,
+      lower(f.id) as to_id
+    from
+      azure_firewall as f,
+      jsonb_array_elements(ip_configurations) as c
+    where
+     lower(c -> 'subnet' ->> 'id') = any($1)
+  EOQ
+
+  param "network_subnet_ids" {}
+}
+
 edge "network_subnet_to_network_nat_gateway" {
   title = "nat gateway"
 

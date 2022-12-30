@@ -361,7 +361,6 @@ query "sql_database_vulnerability_assessment" {
       a ->> 'name' as "Name",
       a -> 'recurringScans' ->> 'emailSubscriptionAdmins' as "Email Subscription Admins",
       a -> 'recurringScans' ->> 'isEnabled' as "Is Enabled",
-      a ->> 'type'  as "Type",
       a ->> 'id' as "ID"
     from
       azure_sql_database,

@@ -263,7 +263,7 @@ dashboard "sql_server_detail" {
     width = 12
 
     table {
-      title = "Private Endpoint Details"
+      title = "Private Endpoints"
       query = query.sql_server_private_endpoint_connection
       args  = [self.input.sql_server_id.value]
     }
@@ -386,11 +386,10 @@ query "sql_server_vulnerability_assessment_enabled" {
       case when v.id is not null then 'ok' else 'alert' end as type
     from
       azure_sql_server as s left join sql_server_va as v on lower(s.id) = lower(v.id)
-      where lower(s.id) = lower($1);
+      where lower(s.id) = $1;
   EOQ
-
-
 }
+
 # with queries
 
 query "sql_server_key_vault_keys" {
@@ -412,6 +411,7 @@ query "sql_server_key_vault_keys" {
       attached_keys as a
       left join azure_key_vault_key as b on lower(a.key_vault_key_name) = lower(b.name);
   EOQ
+
 }
 
 query "sql_server_key_vault_vaults" {
@@ -493,9 +493,8 @@ query "sql_server_overview" {
     from
       azure_sql_server
     where
-      lower(id) = lower($1)
+      lower(id) = $1
   EOQ
-
 
 }
 
@@ -508,7 +507,7 @@ query "sql_server_tags" {
       azure_sql_server,
       jsonb_each_text(tags) as tag
     where
-      lower(id) = lower($1)
+      lower(id) = $1
     order by
       tag.key;
     EOQ
@@ -523,15 +522,13 @@ query "sql_server_encryption" {
       ep ->> 'kind' as "Kind",
       ep ->> 'serverKeyName' as "Server Key Name",
       ep ->> 'serverKeyType' as "Server Key Type",
-      ep ->> 'type' as "Type",
       ep ->> 'id' as "ID"
     from
       azure_sql_server,
       jsonb_array_elements(encryption_protector) as ep
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
-
 
 }
 
@@ -540,33 +537,28 @@ query "sql_server_virtual_network_rules" {
     select
       r ->> 'name' as "Name",
       r -> 'properties' ->> 'ignoreMissingVnetServiceEndpoint' as "Ignore Missing VNet Service Endpoint",
-      r ->> 'virtualNetworkSubnetId' as "Virtual Network Subnet ID",
-      r ->> type as "Type",
+      r -> 'properties' ->>  'virtualNetworkSubnetId' as "Virtual Network Subnet ID",
       r ->> 'id' as "ID"
     from
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
-
-
 }
 
 query "sql_server_firewall_rule" {
   sql = <<-EOQ
     select
       r ->> 'name' as "Name",
-      r -> 'properties' -> 'endIpAddress' as "End IP Address",
-      r -> 'properties' -> 'startIpAddress' as "Start IP Address",
-      r ->> type as "Type"
+      r -> 'properties' ->> 'endIpAddress' as "End IP Address",
+      r -> 'properties' ->> 'startIpAddress' as "Start IP Address"
     from
       azure_sql_server,
       jsonb_array_elements(firewall_rules) as r
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
-
 
 }
 
@@ -586,9 +578,8 @@ query "sql_server_audit_policy" {
       azure_sql_server,
       jsonb_array_elements(server_audit_policy) as p
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
-
 
 }
 
@@ -598,15 +589,13 @@ query "sql_server_vulnerability_assessment" {
       a ->> 'name' as "Name",
       a -> 'properties' -> 'recurringScans' -> 'isEnabled' as "Is Enabled",
       a -> 'properties' -> 'recurringScans' -> 'emailSubscriptionAdmins' as "Email Subscription Admins",
-      a ->> 'type'  as "Type",
       a ->> 'id' as "ID"
     from
       azure_sql_server,
       jsonb_array_elements(server_vulnerability_assessment) as a
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
-
 
 }
 
@@ -625,8 +614,7 @@ query "sql_server_private_endpoint_connection" {
       azure_sql_server,
       jsonb_array_elements(private_endpoint_connections) as c
     where
-      lower(id) = lower($1);
+      lower(id) = $1;
   EOQ
-
 
 }

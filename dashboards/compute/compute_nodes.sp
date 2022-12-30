@@ -7,7 +7,7 @@ node "compute_disk" {
       title as title,
       jsonb_build_object(
         'Name', name,
-        'ID', id,
+        'ID', lower(id),
         'Subscription ID', subscription_id,
         'Resource Group', resource_group,
         'Provisioning State', provisioning_state,

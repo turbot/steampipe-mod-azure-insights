@@ -173,7 +173,7 @@ query "network_firewall_sku_name" {
     from
       azure_firewall
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
 }
@@ -186,7 +186,7 @@ query "network_firewall_sku_tier" {
     from
       azure_firewall
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
 }
@@ -199,7 +199,7 @@ query "network_firewall_threat_intel_mode" {
     from
       azure_firewall
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
 }
@@ -242,7 +242,6 @@ query "network_firewall_network_virtual_networks" {
   EOQ
 }
 
-
 query "network_firewall_network_subnets" {
   sql   = <<-EOQ
     select
@@ -273,7 +272,7 @@ query "network_firewall_overview" {
     from
       azure_firewall
     where
-      id = $1;
+      lower(id) = $1;
   EOQ
 
 }
@@ -287,7 +286,7 @@ query "network_firewall_tags" {
       azure_firewall,
       jsonb_each_text(tags) as tag
     where
-      id = $1
+      lower(id) = $1
     order by
       tag.key;
     EOQ
@@ -298,14 +297,14 @@ query "network_firewall_ip_configurations" {
   sql = <<-EOQ
     select
       c ->> 'privateIPAddress' as "Private IP Address",
+      c -> 'publicIPAddress' ->> 'id' as "Public IP Address",
       c ->> 'provisioningState' as "Provisioning State",
-      c -> 'publicIPAddress' ->> 'id' as "Public IP Address ID",
       c -> 'subnet' ->> 'id' as "Subnet ID"
     from
       azure_firewall,
       jsonb_array_elements(ip_configurations) as c
     where
-      id = $1;
+      lower(id) = $1;
     EOQ
 
 }

@@ -253,15 +253,17 @@ query "network_interface_private_ip_address" {
 
 query "network_interface_public_ip_address" {
   sql = <<-EOQ
-  with public_ip_address_id as (
-  select
-      ip -> 'properties' -> 'publicIPAddress' ->> 'id' as public_ip_address
-    from
-      azure_network_interface as nci
-      cross join jsonb_array_elements(ip_configurations) as ip
-    where nci.id = $1
-  )
-    select 'Public IP Address' as label,
+    with public_ip_address_id as (
+      select
+        ip -> 'properties' -> 'publicIPAddress' ->> 'id' as public_ip_address
+      from
+        azure_network_interface as nci
+        cross join jsonb_array_elements(ip_configurations) as ip
+      where
+        lower(nci.id) = $1
+    )
+    select
+      'Public IP Address' as label,
       api.ip_address as value
     from
       azure_public_ip as api,
@@ -462,7 +464,8 @@ query "network_interface_attached_virtual_machine" {
       azure_network_interface as ni
       left join azure_compute_virtual_machine as vm on lower(vm.id) = lower(ni.virtual_machine_id)
     where
-      lower(ni.id) = $1;
+      vm.id is not null
+      and lower(ni.id) = $1;
   EOQ
 
 }
@@ -476,7 +479,8 @@ query "network_interface_attached_nsg" {
       azure_network_interface as ni
       left join azure_network_security_group as nsg on lower(nsg.id) = lower(ni.network_security_group_id)
     where
-      lower(ni.id) = $1;
+      nsg.id is not null
+      and lower(ni.id) = $1;
   EOQ
 
 }

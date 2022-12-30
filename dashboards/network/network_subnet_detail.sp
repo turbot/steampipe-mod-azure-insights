@@ -44,6 +44,11 @@ dashboard "network_subnet_detail" {
     args  = [self.input.subnet_id.value]
   }
 
+  with "network_firewalls" {
+    query = query.network_subnet_network_firewalls
+    args  = [self.input.subnet_id.value]
+  }
+
   with "network_nat_gateways" {
     query = query.network_subnet_network_nat_gateways
     args  = [self.input.subnet_id.value]
@@ -99,6 +104,13 @@ dashboard "network_subnet_detail" {
         base = node.network_application_gateway
         args = {
           network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
+        }
+      }
+
+      node {
+        base = node.network_firewall
+        args = {
+          network_firewall_ids =  with.network_firewalls.rows[*].network_firewall_id
         }
       }
 
@@ -181,6 +193,13 @@ dashboard "network_subnet_detail" {
 
       edge {
         base = edge.network_subnet_to_network_application_gateway
+        args = {
+          network_subnet_ids = [self.input.subnet_id.value]
+        }
+      }
+
+      edge {
+        base = edge.network_subnet_to_network_firewall
         args = {
           network_subnet_ids = [self.input.subnet_id.value]
         }
@@ -352,6 +371,18 @@ query "network_subnet_network_application_gateways" {
   EOQ
 }
 
+query "network_subnet_network_firewalls" {
+  sql = <<-EOQ
+    select
+      lower(f.id) as network_firewall_id
+    from
+      azure_firewall as f,
+      jsonb_array_elements(ip_configurations) as c
+    where
+      lower(c -> 'subnet' ->> 'id') = $1
+  EOQ
+}
+
 query "network_subnet_network_nat_gateways" {
   sql = <<-EOQ
     select
@@ -474,13 +505,26 @@ query "network_subnet_association" {
     where
      lower(r ->> 'id') = $1
 
+    -- Firewall
+    union all
+    select
+      title as "Title",
+      type as "Type",
+      id as "ID",
+      '${dashboard.network_firewall_detail.url_path}?input.firewall_id=' || lower(id) as link
+    from
+      azure_firewall,
+      jsonb_array_elements(ip_configurations) as c
+    where
+     lower(c -> 'subnet' ->> 'id') = $1
+
     -- Storage Account
     union all
     select
       title as "Title",
       type as "Type",
       id as "ID",
-      '${dashboard.storage_account_detail.url_path}?input.storage_account_id=' || id as link
+      '${dashboard.storage_account_detail.url_path}?input.storage_account_id=' || lower(id) as link
     from
       azure_storage_account,
       jsonb_array_elements(virtual_network_rules) as r
@@ -493,7 +537,7 @@ query "network_subnet_association" {
       title as "Title",
       type as "Type",
       id as "ID",
-      '${dashboard.sql_server_detail.url_path}?input.server_id=' || id as link
+      '${dashboard.sql_server_detail.url_path}?input.server_id=' || lower(id) as link
     from
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as r
@@ -506,7 +550,7 @@ query "network_subnet_association" {
       title as "Title",
       type as "Type",
       id as "ID",
-      null as link
+      '${dashboard.app_service_web_app_detail.url_path}?input.web_app_id=' || lower(id) as link
     from
       azure_app_service_web_app
     where
@@ -531,7 +575,7 @@ query "network_subnet_association" {
       title as "Title",
       type as "Type",
       id as "ID",
-      null as link
+      '${dashboard.network_security_group_detail.url_path}?input.nsg_id=' || lower(id) as link
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(nsg.subnets) as sub

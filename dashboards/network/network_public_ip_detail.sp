@@ -39,6 +39,11 @@ dashboard "network_public_ip_detail" {
     args  = [self.input.public_ip_id.value]
   }
 
+  with "network_firewalls" {
+    query = query.network_public_ip_network_firewalls
+    args  = [self.input.public_ip_id.value]
+  }
+
   with "network_load_balancers" {
     query = query.network_public_ip_network_load_balancers
     args  = [self.input.public_ip_id.value]
@@ -60,6 +65,13 @@ dashboard "network_public_ip_detail" {
         base = node.compute_virtual_machine
         args = {
           compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }
+
+      node {
+        base = node.network_firewall
+        args = {
+          network_firewall_ids = with.network_firewalls.rows[*].network_firewall_id
         }
       }
 
@@ -95,6 +107,13 @@ dashboard "network_public_ip_detail" {
         base = edge.compute_virtual_machine_to_network_network_interface
         args = {
           compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+        }
+      }
+
+      edge {
+        base = edge.network_firewall_to_network_public_ip
+        args = {
+          network_firewall_ids = with.network_firewalls.rows[*].network_firewall_id
         }
       }
 
@@ -243,6 +262,19 @@ query "network_public_ip_compute_virtual_machines" {
       left join azure_public_ip as p on lower(n.pid) = lower(p.id)
     where
       lower(p.id) = $1;
+  EOQ
+}
+
+query "network_public_ip_network_firewalls" {
+  sql   = <<-EOQ
+    select
+      lower(f.id) as network_firewall_id
+    from
+      azure_firewall as f,
+      jsonb_array_elements(ip_configurations) as c
+      left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
+    where
+      lower(ip.id)  = $1;
   EOQ
 }
 

@@ -68,7 +68,6 @@ dashboard "storage_account_detail" {
   }
 
   with "key_vault_vaults" {
-  
     query = query.storage_account_key_vault_vaults
     args  = [self.input.storage_account_id.value]
   }
@@ -652,7 +651,7 @@ query "storage_account_sku" {
     from
       azure_storage_account
     where
-      id = $1
+      lower(id) = $1
     EOQ
 
 }
@@ -722,8 +721,3 @@ query "storage_account_blob_logging" {
     EOQ
 
 }
-
-
-
-
-

@@ -57,7 +57,7 @@ dashboard "storage_account_age_report" {
     }
 
     column "Name" {
-      href = "${dashboard.storage_account_detail.url_path}?input.id={{.ID | @uri}}"
+      href = "${dashboard.storage_account_detail.url_path}?input.storage_account_id={{.ID | @uri}}"
     }
 
     query = query.storage_account_age_table
@@ -139,7 +139,7 @@ query "storage_account_age_table" {
       a.subscription_id as "Subscription ID",
       a.resource_group as "Resource Group",
       a.region as "Region",
-      a.id as "ID"
+      lower(a.id) as "ID"
     from
       azure_storage_account as a,
       azure_subscription as sub

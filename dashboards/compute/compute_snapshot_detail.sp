@@ -444,10 +444,11 @@ query "compute_snapshot_overview" {
     select
       name as "Name",
       type as "Type",
+      unique_id as "Unique ID",
+      disk_size_gb as "Disk Size GB",
       provisioning_state as "Provisioning State",
       os_type as "OS Type",
       time_created as "Time Created",
-      disk_access_id as "Disk Access ID",
       region as "Region",
       resource_group as "Resource Group",
       subscription_id as "Subscription ID",
@@ -488,7 +489,8 @@ query "compute_snapshot_source_details" {
       azure_compute_snapshot as s
       left join azure_compute_disk as d on lower(d.id) = lower(s.source_resource_id)
     where
-      lower(s.id) = $1
+      d.id is not null
+      and lower(s.id) = $1
 
     -- Compute Snapshot
     union
@@ -501,7 +503,8 @@ query "compute_snapshot_source_details" {
       azure_compute_snapshot as d
       left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
     where
-      lower(s.id) = $1
+      d.id is not null
+      and lower(s.id) = $1
   EOQ
 
 }

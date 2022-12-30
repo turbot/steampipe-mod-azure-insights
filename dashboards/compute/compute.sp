@@ -6,7 +6,7 @@ locals {
 
 category "compute_disk" {
   title = "Compute Disk"
-  href  = "/azure_insights.dashboard.compute_disk_detail?input.d_id={{.properties.'ID' | @uri}}"
+  href  = "/azure_insights.dashboard.compute_disk_detail?input.disk_id={{.properties.'ID' | @uri}}"
   icon  = "heroicons-outline:inbox-stack"
   color = local.storage_color
 }

@@ -279,6 +279,10 @@ dashboard "network_virtual_network_detail" {
       title = "Subnets"
       query = query.virtual_network_subnet_details
       args  = [self.input.vn_id.value]
+
+      column "Name" {
+        href = "${dashboard.network_subnet_detail.url_path}?input.subnet_id={{.'Subnet ID' | @uri}}"
+      }
     }
   }
 
@@ -288,6 +292,10 @@ dashboard "network_virtual_network_detail" {
       title = "Network Security Groups"
       query = query.virtual_network_nsg
       args  = [self.input.vn_id.value]
+
+      column "Name" {
+        href = "${dashboard.network_security_group_detail.url_path}?input.nsg_id={{.'Network Security Group ID' | @uri}}"
+      }
     }
 
     flow {
@@ -693,7 +701,7 @@ query "virtual_network_subnet_details" {
       power(2, 32 - masklen((s -> 'properties' ->> 'addressPrefix'):: cidr)) -1 as "Total IPs",
       s -> 'properties' ->> 'privateEndpointNetworkPolicies' as "Private Endpoint Network Policies",
       s -> 'properties' ->> 'privateLinkServiceNetworkPolicies' as "Private Link Service Network Policies",
-      s ->> 'id' as "Subnet ID"
+      lower(s ->> 'id') as "Subnet ID"
     from
       azure_virtual_network,
       jsonb_array_elements(subnets) as s
@@ -1067,7 +1075,7 @@ query "virtual_network_nsg" {
       nsg.name as "Name",
       n.subnet_name as "Subnet Name",
       provisioning_state as "Provisioning State",
-      nsg_id as "Network Security Group ID",
+      lower(nsg_id) as "Network Security Group ID",
       n.subnet_id as "Subnet ID"
     from
       all_nsg as n left join azure_network_security_group as nsg on lower(nsg.id) = lower(n.nsg_id)

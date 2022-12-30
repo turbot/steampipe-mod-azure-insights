@@ -185,6 +185,7 @@ dashboard "network_security_group_detail" {
       width = 6
 
       table {
+        // Linking is not possible due to cyclic dependency.
         title = "Associated to"
         query = query.network_security_group_assoc
         args  = [self.input.nsg_id.value]
@@ -538,7 +539,7 @@ query "network_security_group_assoc" {
     union select
       s.title as "Title",
       'Subnet' as "Type",
-      S.id as "ID"
+      s.id as "ID"
     from
       azure_network_security_group as nsg,
       jsonb_array_elements(nsg.subnets) as subnets
