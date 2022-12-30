@@ -457,7 +457,8 @@ query "compute_virtual_machine_scale_set_kubernetes_clusters" {
       azure_compute_virtual_machine_scale_set as set
     where
       lower(set.resource_group) = lower(c.node_resource_group)
-      and lower(c.id) = $1;
+      and lower(set.subscription_id) = lower(c.subscription_id)
+      and lower(set.id) = $1;
   EOQ
 }
 
@@ -496,7 +497,8 @@ query "compute_virtual_machine_scale_set_network_load_balancer_backend_address_p
       jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools' ) as b
       left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(b ->> 'id')
     where
-      lower(s.id) = $1;
+      pool.id is not null
+      and lower(s.id) = $1;
   EOQ
 }
 
@@ -648,6 +650,7 @@ query "compute_virtual_machine_scale_set_sku" {
 query "compute_virtual_machine_scale_set_image_reference" {
   sql = <<-EOQ
     select
+      virtual_machine_storage_profile -> 'imageReference' ->> 'id' as "ID",
       virtual_machine_storage_profile -> 'imageReference' ->> 'offer' as "Offer",
       virtual_machine_storage_profile -> 'imageReference' ->> 'publisher' as "Publisher",
       virtual_machine_storage_profile -> 'imageReference' ->> 'sku' as "SKU",
