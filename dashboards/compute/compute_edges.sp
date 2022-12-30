@@ -66,6 +66,23 @@ edge "compute_disk_to_compute_disk_encryption_set" {
   param "compute_disk_ids" {}
 }
 
+edge "compute_disks_to_compute_snapshot" {
+  title = "source disk for snapshot"
+
+  sql = <<-EOQ
+    select
+      lower(d.id) as from_id,
+      lower(s.id) as to_id
+    from
+      azure_compute_disk as d
+      left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
+    where
+      lower(s.id) = any($1);
+  EOQ
+
+  param "compute_snapshot_ids" {}
+}
+
 edge "compute_disk_to_compute_snapshot" {
   title = "snapshot source for disk"
 
@@ -102,7 +119,7 @@ edge "compute_disk_to_key_vault_key" {
   param "compute_disk_ids" {}
 }
 
-edge "compute_disk_to_key_vault_vault" {
+edge "compute_disk_encryption_set_to_key_vault_vault" {
   title = "key vault"
 
   sql = <<-EOQ
@@ -111,13 +128,12 @@ edge "compute_disk_to_key_vault_vault" {
       lower(k.id) as to_id
     from
       azure_compute_disk_encryption_set as e
-      left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
     where
-      lower(d.id) = any($1);
+      lower(e.id) = any($1);
   EOQ
 
-  param "compute_disk_ids" {}
+  param "compute_disk_encryption_set_ids" {}
 }
 
 edge "compute_disk_to_storage_storage_account" {
@@ -147,6 +163,23 @@ edge "compute_snapshot_to_compute_disk" {
     from
       azure_compute_snapshot as s
       left join azure_compute_disk as d on lower(s.source_resource_id) = lower(d.id)
+    where
+      lower(s.id) = any($1);
+  EOQ
+
+  param "compute_snapshot_ids" {}
+}
+
+edge "compute_snapshot_to_compute_disks" {
+  title = "disk"
+
+  sql = <<-EOQ
+    select
+      lower(s.id) as from_id,
+      lower(d.id) as to_id
+    from
+      azure_compute_disk as d
+      left join azure_compute_snapshot as s on lower(d.creation_data_source_resource_id) = lower(s.id)
     where
       lower(s.id) = any($1);
   EOQ
@@ -215,24 +248,6 @@ edge "compute_snapshot_to_key_vault_key" {
       azure_compute_disk_encryption_set as e
       left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
-    where
-      lower(s.id) = any($1);
-  EOQ
-
-  param "compute_snapshot_ids" {}
-}
-
-edge "compute_snapshot_to_key_vault_vault" {
-  title = "key vault"
-
-  sql = <<-EOQ
-    select
-      lower(e.id) as from_id,
-      lower(k.id) as to_id
-    from
-      azure_compute_disk_encryption_set as e
-      left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-      left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
     where
       lower(s.id) = any($1);
   EOQ

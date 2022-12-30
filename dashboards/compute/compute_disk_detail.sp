@@ -158,6 +158,13 @@ dashboard "compute_disk_detail" {
       }
 
       edge {
+        base = edge.compute_disk_encryption_set_to_key_vault_vault
+        args = {
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
+        }
+      }
+
+      edge {
         base = edge.compute_disk_to_compute_disk
         args = {
           compute_disk_ids = [self.input.disk_id.value]
@@ -187,13 +194,6 @@ dashboard "compute_disk_detail" {
 
       edge {
         base = edge.compute_disk_to_key_vault_key
-        args = {
-          compute_disk_ids = [self.input.disk_id.value]
-        }
-      }
-
-      edge {
-        base = edge.compute_disk_to_key_vault_vault
         args = {
           compute_disk_ids = [self.input.disk_id.value]
         }
@@ -450,7 +450,8 @@ query "compute_disk_compute_virtual_machines" {
 query "compute_disk_key_vault_keys" {
   sql = <<-EOQ
     select
-      lower(k.id) as key_vault_key_id
+      lower(k.id) as key_vault_key_id,
+      lower(v.key_uri_with_version) as key_uri_with_version
     from
       azure_compute_disk_encryption_set as e
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)

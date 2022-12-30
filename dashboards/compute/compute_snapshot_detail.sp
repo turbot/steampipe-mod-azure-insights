@@ -140,14 +140,14 @@ dashboard "compute_snapshot_detail" {
       }
 
       edge {
-        base = edge.compute_disk_to_compute_snapshot
+        base = edge.compute_disks_to_compute_snapshot
         args = {
-          compute_disk_ids = with.compute_disks.rows[*].disk_id
+          compute_snapshot_ids = [self.input.id.value]
         }
       }
 
       edge {
-        base = edge.compute_snapshot_to_compute_disk
+        base = edge.compute_snapshot_to_compute_disks
         args = {
           compute_snapshot_ids = [self.input.id.value]
         }
@@ -189,9 +189,9 @@ dashboard "compute_snapshot_detail" {
       }
 
       edge {
-        base = edge.compute_snapshot_to_key_vault_vault
+        base = edge.compute_disk_encryption_set_to_key_vault_vault
         args = {
-          compute_snapshot_ids = [self.input.id.value]
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
         }
       }
     }
