@@ -7,13 +7,13 @@ locals {
 category "compute_disk" {
   title = "Compute Disk"
   href  = "/azure_insights.dashboard.compute_disk_detail?input.disk_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:inbox-stack"
+  icon  = "hard_drive"
   color = local.storage_color
 }
 
 category "compute_disk_access" {
   title = "Compute Disk Access"
-  icon  = "check-circle"
+  icon  = "check_circle"
   color = local.storage_color
 }
 
@@ -25,40 +25,40 @@ category "compute_disk_encryption_set" {
 
 category "compute_image" {
   title = "Compute Image"
-  icon  = "developer-board"
+  icon  = "developer_board"
   color = local.compute_color
 }
 
 category "compute_snapshot" {
   title = "Compute Snapshot"
   href  = "/azure_insights.dashboard.compute_snapshot_detail?input.id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:viewfinder-circle"
+  icon  = "add_a_photo"
   color = local.storage_color
 }
 
 category "compute_virtual_machine" {
   title = "Compute Virtual Machine"
   href  = "/azure_insights.dashboard.compute_virtual_machine_detail?input.vm_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:cpu-chip"
+  icon  = "memory"
   color = local.compute_color
 }
 
 category "compute_virtual_machine_scale_set" {
   title = "Compute Virtual Machine Scale Set"
   href  = "/azure_insights.dashboard.compute_virtual_machine_scale_set_detail?input.vm_scale_set_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:square-2-stack"
+  icon  = "square_2_stack"
   color = local.compute_color
 }
 
 category "compute_virtual_machine_scale_set_network_interface" {
   title = "Compute Virtual Machine Scale Set Network Interface"
-  icon  = "memory"
+  icon  = "settings_input_antenna"
   color = local.networking_color
 }
 
 category "compute_virtual_machine_scale_set_vm" {
   title = "Compute Virtual Machine Scale Set VM"
   href  = "/azure_insights.dashboard.compute_virtual_machine_scale_set_vm_detail?input.scale_set_vm_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:cpu-chip"
+  icon  = "memory"
   color = local.compute_color
 }

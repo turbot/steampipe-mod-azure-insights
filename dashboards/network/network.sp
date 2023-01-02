@@ -6,7 +6,7 @@ locals {
 
 category "network_application_gateway" {
   title = "Application Gateway"
-  icon  = "heroicons-outline:arrows-pointing-out"
+  icon  = "arrows_pointing_out"
   color = local.networking_color
 }
 
@@ -26,7 +26,7 @@ category "network_load_balancer" {
 
 category "network_load_balancer_backend_address_pool" {
   title = "Backend Address Pool"
-  icon  = "table-rows"
+  icon  = "table_rows"
   color = local.networking_color
 }
 
@@ -50,20 +50,20 @@ category "network_load_balancer_rule" {
 
 category "network_nat_gateway" {
   title = "NAT Gateway"
-  icon  = "lan"
+  icon  = "merge"
   color = local.networking_color
 }
 
 category "network_network_interface" {
   title = "Network Interface"
   href  = "/azure_insights.dashboard.network_interface_detail?input.nic_id={{.properties.'ID' | @uri}}"
-  icon  = "memory"
+  icon  = "settings_input_antenna"
   color = local.networking_color
 }
 
 category "network_peering" {
   title = "Network Peering"
-  icon  = "heroicons-outline:cube-transparent"
+  icon  = "sync_alt"
   color = local.networking_color
 }
 
@@ -76,39 +76,39 @@ category "network_private_endpoint_connection" {
 category "network_public_ip" {
   title = "Public IP"
   href  = "/azure_insights.dashboard.network_public_ip_detail?input.public_ip_id={{.properties.'ID' | @uri}}"
-  icon  = "swipe-right-alt"
+  icon  = "swipe_right_alt"
   color = local.networking_color
 }
 
 category "network_route_table" {
   title = "Route Table"
-  icon  = "heroicons-outline:arrows-right-left"
+  icon  = "table_rows"
   color = local.networking_color
 }
 
 category "network_security_group" {
   title = "Network Security Group"
   href  = "/azure_insights.dashboard.network_security_group_detail?input.nsg_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:lock-closed"
+  icon  = "enhanced_encryption"
   color = local.networking_color
 }
 
 category "network_subnet" {
   title = "Subnet"
   href  = "/azure_insights.dashboard.network_subnet_detail?input.subnet_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:share"
+  icon  = "lan"
   color = local.networking_color
 }
 
 category "network_virtual_network" {
   title = "Virtual Network"
   href  = "/azure_insights.dashboard.network_virtual_network_detail?input.vn_id={{.properties.'ID' | @uri}}"
-  icon  = "heroicons-outline:cloud"
+  icon  = "cloud"
   color = local.networking_color
 }
 
 category "network_watcher_flow_log" {
   title = "Network Watcher Flow Log"
-  icon  = "format-text-overflow"
+  icon  = "export_notes"
   color = local.networking_color
 }

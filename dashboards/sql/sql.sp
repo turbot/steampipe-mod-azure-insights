@@ -6,7 +6,7 @@ locals {
 
 category "mssql_elasticpool" {
   title = "SQL Elastic Pool"
-  icon  = "device-hub"
+  icon  = "device_hub"
   color = local.database_color
 }
 

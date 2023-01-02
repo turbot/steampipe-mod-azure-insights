@@ -1,5 +1,5 @@
 category "batch_account" {
   title = "Batch Account"
-  icon  = "settings-account-box"
+  icon  = "settings_account_box"
   color = local.compute_color
 }

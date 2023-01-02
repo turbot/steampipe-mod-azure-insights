@@ -712,8 +712,11 @@ query "compute_virtual_machine_network_public_ips" {
     from
       network_interfaces as n,
       jsonb_array_elements(ip_configuration) as ip_config
-      left join azure_public_ip as p on lower(p.id) = lower(ip_config -> 'properties' -> 'publicIPAddress' ->> 'id');
+      left join azure_public_ip as p on lower(p.id) = lower(ip_config -> 'properties' -> 'publicIPAddress' ->> 'id')
+    where
+      p.id is not null;
   EOQ
+  
 }
 
 query "compute_virtual_machine_network_security_groups" {

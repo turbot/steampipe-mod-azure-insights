@@ -13,6 +13,6 @@ category "kubernetes_cluster" {
 
 category "kubernetes_node_pool" {
   title = "Kubernetes Node Pools"
-  icon  = "device-hub"
+  icon  = "device_hub"
   color = local.containers_color
 }
