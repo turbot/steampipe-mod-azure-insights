@@ -57,6 +57,10 @@ dashboard "key_vault_key_age_report" {
       display = "none"
     }
 
+    column "Name" {
+      href = "${dashboard.key_vault_key_detail.url_path}?input.key_vault_key_id={{.'ID' | @uri}}"
+    }
+
     query = query.key_vault_key_age_table
   }
 
@@ -136,7 +140,7 @@ query "key_vault_key_age_table" {
       k.subscription_id as "Subscription ID",
       k.resource_group as "Resource Group",
       k.region as "Region",
-      k.id as "ID"
+      lower(k.id) as "ID"
     from
       azure_key_vault_key as k,
       azure_subscription as sub
