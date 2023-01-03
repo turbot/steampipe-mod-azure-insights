@@ -36,7 +36,6 @@ dashboard "network_virtual_network_detail" {
   }
 
   with "compute_virtual_machines" {
-
     query = query.virtual_network_compute_virtual_machines
     args  = [self.input.vn_id.value]
   }

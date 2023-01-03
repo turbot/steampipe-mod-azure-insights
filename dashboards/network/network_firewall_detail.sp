@@ -214,7 +214,8 @@ query "network_firewall_network_public_ips" {
       jsonb_array_elements(ip_configurations) as c
       left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
     where
-      lower(f.id) = $1;
+      ip.id is not null
+      and lower(f.id) = $1;
   EOQ
 }
 
