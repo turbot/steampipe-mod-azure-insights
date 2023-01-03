@@ -13,7 +13,7 @@ category "network_application_gateway" {
 category "network_firewall" {
   href  = "/azure_insights.dashboard.network_firewall_detail?input.firewall_id={{.properties.'ID' | @uri}}"
   title = "Firewall"
-  icon  = "heroicons-outline:fire"
+  icon  = "local_fire_department"
   color = local.networking_color
 }
 
