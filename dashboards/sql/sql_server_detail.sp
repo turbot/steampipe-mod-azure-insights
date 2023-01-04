@@ -474,7 +474,9 @@ query "sql_server_sql_databases" {
     from
       azure_sql_database
     where
-      lower(server_name) = lower(split_part($1, '/', 9));
+      name <> 'master'
+      and lower(server_name) = lower(split_part($1, '/', 9))
+      and subscription_id = (split_part($1, '/', 3));
   EOQ
 }
 
