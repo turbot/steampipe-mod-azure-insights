@@ -432,7 +432,9 @@ query "compute_virtual_machine_scale_set_network_network_interfaces" {
     from
       azure_compute_virtual_machine_scale_set_network_interface as nic
     where
-      nic.name = (select nic_name from nic_list ) limit 1
+      nic.name = (select nic_name from nic_list )
+      and lower(split_part(nic.virtual_machine ->> 'id', '/virtualMachines', 1)) = $1
+    limit 1
   EOQ
 }
 
@@ -527,10 +529,9 @@ query "compute_virtual_machine_scale_set_network_load_balancers" {
 
 query "compute_virtual_machine_scale_set_network_security_groups" {
   sql = <<-EOQ
-    with nic_list as (
+    with nsg_list as (
       select
-        lower(n -> 'properties' -> 'networkSecurityGroup' ->> 'id') as nsg_id,
-        n ->> 'name' as nic_name
+        lower(n -> 'properties' -> 'networkSecurityGroup' ->> 'id') as nsg_id
       from
         azure_compute_virtual_machine_scale_set as s,
         jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') n
@@ -540,8 +541,10 @@ query "compute_virtual_machine_scale_set_network_security_groups" {
     select
       lower(nsg.id) as nsg_id
     from
-      nic_list as nic
-      left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.nsg_id)
+      nsg_list as sg
+      left join azure_network_security_group as nsg on lower(nsg.id) = lower(sg.nsg_id)
+    where
+      nsg.id is not null
     limit 1
   EOQ
 }
@@ -551,7 +554,7 @@ query "compute_virtual_machine_scale_set_network_subnets" {
     with subnet_list as (
       select
         lower(c -> 'properties' -> 'subnet' ->> 'id') as subnet_id,
-        lower(s.id)as scale_set_id,
+        lower(s.id) as scale_set_id,
         n ->> 'name' as nic_name
       from
         azure_compute_virtual_machine_scale_set as s,

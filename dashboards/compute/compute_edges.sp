@@ -660,16 +660,26 @@ edge "compute_virtual_machine_scale_set_to_network_subnet" {
         jsonb_array_elements(n -> 'properties' -> 'ipConfigurations') as c
       where
         lower(s.id) = any($1)
+    ), nic_id as (
+        select
+          lower(nic.id) as network_interface_id
+        from
+          azure_compute_virtual_machine_scale_set_network_interface as nic
+        where
+          nic.name = (select nic_name from subnet_list)
+          and lower(split_part(nic.virtual_machine ->> 'id', '/virtualMachines', 1)) = any($1)
+        limit 1
     )
     select
       coalesce(
         lower(l.nsg_id),
-        l.nic_name
+        n.network_interface_id
       ) as from_id,
       lower(s.id) as to_id
     from
       subnet_list as l
-      left join azure_subnet as s on lower(s.id) = lower(l.subnet_id);
+      left join azure_subnet as s on lower(s.id) = lower(l.subnet_id),
+      nic_id as n;
   EOQ
 
   param "compute_virtual_machine_scale_set_ids" {}
