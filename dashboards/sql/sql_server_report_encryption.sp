@@ -33,7 +33,7 @@ dashboard "sql_server_encryption_report" {
     }
 
     column "Name" {
-      href = "${dashboard.sql_server_detail.url_path}?input.server_id={{.ID | @uri}}"
+      href = "${dashboard.sql_server_detail.url_path}?input.sql_server_id={{.ID | @uri}}"
     }
 
     column "Subscription ID" {
@@ -59,7 +59,6 @@ query "sql_server_encryption_report" {
     )
     select
       s.name as "Name",
-      s.id as "ID",
       e.kind as "Kind",
       e.serverKeyName as "Server Key Name",
       e.serverKeyType as "Server Key Type",

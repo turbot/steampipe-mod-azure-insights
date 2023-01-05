@@ -112,10 +112,10 @@ edge "sql_server_to_key_vault_key_version" {
       azure_key_vault_key_version as v
       left join sql_server as s on lower(v.key_uri_with_version) = lower(s.uri)
     where
-      lower(split_part(v.id, '/versions', 1)) = any($1);
+      lower(s.id) = any($1);
   EOQ
 
-  param "key_vault_key_ids" {}
+  param "sql_server_ids" {}
 }
 
 edge "sql_server_to_mssql_elasticpool" {

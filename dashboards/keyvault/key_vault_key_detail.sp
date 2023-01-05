@@ -155,21 +155,21 @@ dashboard "key_vault_key_detail" {
       edge {
         base = edge.compute_disk_encryption_set_to_key_vault_key_version
         args = {
-          key_vault_key_ids = [self.input.key_vault_key_id.value]
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].disk_encryption_set_id
         }
       }
 
       edge {
         base = edge.container_registry_to_key_vault_key_version
         args = {
-          key_vault_key_ids = [self.input.key_vault_key_id.value]
+          container_registry_ids = with.container_registries.rows[*].registry_id
         }
       }
 
       edge {
         base = edge.eventhub_namespace_to_key_vault_key_version
         args = {
-          key_vault_key_ids = [self.input.key_vault_key_id.value]
+          eventhub_namespace_ids = with.eventhub_namespaces.rows[*].eventhub_namespace_id
         }
       }
 
@@ -189,28 +189,28 @@ dashboard "key_vault_key_detail" {
       edge {
         base = edge.postgresql_server_to_key_vault_key_version
         args = {
-          key_vault_key_ids = [self.input.key_vault_key_id.value]
+          postgresql_server_ids = with.postgresql_servers.rows[*].postgresql_server_id
         }
       }
 
       edge {
         base = edge.servicebus_namespace_to_key_vault_key
         args = {
-          key_vault_key_ids = [self.input.key_vault_key_id.value]
+          servicebus_namespace_ids = with.servicebus_namespaces.rows[*].servicebus_namespace_id
         }
       }
 
       edge {
         base = edge.sql_server_to_key_vault_key_version
         args = {
-          key_vault_key_ids = [self.input.key_vault_key_id.value]
+          sql_server_ids = with.sql_servers.rows[*].sql_server_id
         }
       }
 
       edge {
         base = edge.storage_storage_account_to_key_vault_key_version
         args = {
-          key_vault_key_ids = [self.input.key_vault_key_id.value]
+          storage_account_ids = with.storage_storage_accounts.rows[*].account_id
         }
       }
     }

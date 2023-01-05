@@ -10,8 +10,8 @@ edge "container_registry_to_key_vault_key_version" {
       left join azure_container_registry as r on r.encryption -> 'keyVaultProperties' ->> 'keyIdentifier' = k.key_uri
       left join azure_key_vault_key_version as v on v.key_uri_with_version = k.key_uri_with_version
     where
-      lower(k.id) = any($1);
+      lower(r.id) = any($1);
   EOQ
 
-  param "key_vault_key_ids" {}
+  param "container_registry_ids" {}
 }

@@ -10,8 +10,8 @@ edge "postgresql_server_to_key_vault_key_version" {
       jsonb_array_elements(server_keys) as sk
       left join azure_key_vault_key_version as v on lower(sk ->> 'ServerKeyUri') = lower(v.key_uri_with_version)
     where
-      lower(split_part(v.id, '/versions', 1)) = any($1);
+      lower(s.id) = any($1);
   EOQ
 
-  param "key_vault_key_ids" {}
+  param "postgresql_server_ids" {}
 }

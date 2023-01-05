@@ -13,8 +13,8 @@ edge "servicebus_namespace_to_key_vault_key" {
     where
       k.resource_group = v.resource_group
       and k.resource_group = n.resource_group
-      and lower(k.id) = any($1);
+      and lower(n.id) = any($1);
   EOQ
 
-  param "key_vault_key_ids" {}
+  param "servicebus_namespace_ids" {}
 }

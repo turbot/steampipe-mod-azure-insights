@@ -9,10 +9,10 @@ edge "compute_disk_encryption_set_to_key_vault_key_version" {
       azure_key_vault_key_version as v
       left join azure_compute_disk_encryption_set as s on s.active_key_url = v.key_uri_with_version
     where
-      lower(split_part(v.id, '/versions', 1)) = any($1);
+      lower(s.id) = any($1);
   EOQ
 
-  param "key_vault_key_ids" {}
+  param "compute_disk_encryption_set_ids" {}
 }
 
 edge "compute_disk_to_compute_disk" {

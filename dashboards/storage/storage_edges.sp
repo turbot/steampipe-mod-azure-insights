@@ -45,10 +45,10 @@ edge "storage_storage_account_to_key_vault_key_version" {
       azure_storage_account as s
       left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
     where
-      lower(split_part(v.id, '/versions', 1)) = any($1);
+      lower(s.id) = any($1);
   EOQ
 
-  param "key_vault_key_ids" {}
+  param "storage_account_ids" {}
 }
 
 edge "storage_storage_account_to_key_vault_vault" {
