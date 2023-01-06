@@ -1,7 +1,7 @@
-dashboard "azuread_user_age_report" {
+dashboard "activedirectory_user_age_report" {
 
   title = "Azure Active Directory User Age Report"
-  documentation = file("./dashboards/activedirectory/docs/azuread_user_report_age.md")
+  documentation = file("./dashboards/activedirectory/docs/activedirectory_user_report_age.md")
 
 
   tags = merge(local.activedirectory_common_tags, {
@@ -13,37 +13,37 @@ dashboard "azuread_user_age_report" {
 
     card {
       width = 2
-      query = query.azuread_user_count
+      query = query.activedirectory_user_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azuread_user_24_hours_count
+      query = query.activedirectory_user_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azuread_user_30_days_count
+      query = query.activedirectory_user_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azuread_user_30_90_days_count
+      query = query.activedirectory_user_30_90_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azuread_user_90_365_days_count
+      query = query.activedirectory_user_90_365_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azuread_user_1_year_count
+      query = query.activedirectory_user_1_year_count
     }
 
   }
@@ -58,15 +58,15 @@ dashboard "azuread_user_age_report" {
     }
 
     column "Display Name" {
-      href = "${dashboard.azuread_user_detail.url_path}?input.user_id={{.ID | @uri}}"
+      href = "${dashboard.activedirectory_user_detail.url_path}?input.user_id={{.ID | @uri}}"
     }
 
-    query = query.azuread_user_age_table
+    query = query.activedirectory_user_age_table
   }
 
 }
 
-query "azuread_user_24_hours_count" {
+query "activedirectory_user_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -78,7 +78,7 @@ query "azuread_user_24_hours_count" {
   EOQ
 }
 
-query "azuread_user_30_days_count" {
+query "activedirectory_user_30_days_count" {
   sql = <<-EOQ
      select
       count(*) as value,
@@ -90,7 +90,7 @@ query "azuread_user_30_days_count" {
   EOQ
 }
 
-query "azuread_user_30_90_days_count" {
+query "activedirectory_user_30_90_days_count" {
   sql = <<-EOQ
      select
       count(*) as value,
@@ -102,7 +102,7 @@ query "azuread_user_30_90_days_count" {
   EOQ
 }
 
-query "azuread_user_90_365_days_count" {
+query "activedirectory_user_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -114,7 +114,7 @@ query "azuread_user_90_365_days_count" {
   EOQ
 }
 
-query "azuread_user_1_year_count" {
+query "activedirectory_user_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -126,29 +126,18 @@ query "azuread_user_1_year_count" {
   EOQ
 }
 
-query "azuread_user_age_table" {
+query "activedirectory_user_age_table" {
   sql = <<-EOQ
-    with tenants as (
-      select
-        distinct tenant_id,
-        title
-      from
-        azure_tenant
-    )
     select
       u.display_name as "Display Name",
       u.given_name as "Given Name",
       now()::date - u.created_date_time::date as "Age in Days",
       u.created_date_time as "Create Time",
       u.user_type as "User Type",
-      t.title as "Tenant",
       u.tenant_id as "Tenant ID",
       u.id as "ID"
     from
-      azuread_user as u,
-      tenants as t
-    where
-      u.tenant_id = t.tenant_id
+      azuread_user as u
     order by
       u.display_name;
   EOQ

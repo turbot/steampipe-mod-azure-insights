@@ -6,13 +6,13 @@ locals {
 
 category "kubernetes_cluster" {
   title = "Kubernetes Clusters"
+  color = local.containers_color
   href  = "/azure_insights.dashboard.kubernetes_cluster_detail?input.cluster_id={{.properties.'ID' | @uri}}"
   icon  = "hub"
-  color = local.containers_color
 }
 
 category "kubernetes_node_pool" {
   title = "Kubernetes Node Pools"
-  icon  = "device_hub"
   color = local.containers_color
+  icon  = "device_hub"
 }

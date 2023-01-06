@@ -1,7 +1,7 @@
-dashboard "azuread_group_dashboard" {
+dashboard "activedirectory_group_dashboard" {
 
   title = "Azure Active Directory Group Dashboard"
-  documentation = file("./dashboards/activedirectory/docs/azuread_group_dashboard.md")
+  documentation = file("./dashboards/activedirectory/docs/activedirectory_group_dashboard.md")
 
   tags = merge(local.activedirectory_common_tags, {
     type = "Dashboard"
@@ -10,22 +10,22 @@ dashboard "azuread_group_dashboard" {
   container {
 
     card {
-      query = query.azuread_group_count
+      query = query.activedirectory_group_count
       width = 2
     }
 
     card {
-      query = query.azuread_security_group_count
+      query = query.activedirectory_security_group_count
       width = 2
     }
 
     card {
-      query = query.azuread_microsoft_365_group_count
+      query = query.activedirectory_microsoft_365_group_count
       width = 2
     }
 
     card {
-      query = query.azuread_group_with_no_members_count
+      query = query.activedirectory_group_with_no_members_count
       width = 2
     }
 
@@ -36,7 +36,7 @@ dashboard "azuread_group_dashboard" {
 
     chart {
       title = "Groups Without Members"
-      query = query.azuread_group_with_no_member
+      query = query.activedirectory_group_with_no_member
       type  = "donut"
       width = 4
 
@@ -57,21 +57,21 @@ dashboard "azuread_group_dashboard" {
 
     chart {
       title = "Groups by Tenant"
-      query = query.azuread_group_by_tenant
+      query = query.activedirectory_group_by_tenant
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Groups by Type"
-      query = query.azuread_group_by_type
+      query = query.activedirectory_group_by_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Groups by Age"
-      sql   = query.azuread_group_by_creation_month.sql
+      sql   = query.activedirectory_group_by_creation_month.sql
       type  = "column"
       width = 4
     }
@@ -82,13 +82,13 @@ dashboard "azuread_group_dashboard" {
 
 # Card Queries
 
-query "azuread_group_count" {
+query "activedirectory_group_count" {
   sql = <<-EOQ
     select count(*) as "Groups" from azuread_group;
   EOQ
 }
 
-query "azuread_security_group_count" {
+query "activedirectory_security_group_count" {
   sql = <<-EOQ
     select
       count(*) as "Security Groups"
@@ -99,7 +99,7 @@ query "azuread_security_group_count" {
   EOQ
 }
 
-query "azuread_microsoft_365_group_count" {
+query "activedirectory_microsoft_365_group_count" {
   sql = <<-EOQ
     select
       count(*) as "Microsoft 365 Groups"
@@ -110,7 +110,7 @@ query "azuread_microsoft_365_group_count" {
   EOQ
 }
 
-query "azuread_group_with_no_members_count" {
+query "activedirectory_group_with_no_members_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -125,7 +125,7 @@ query "azuread_group_with_no_members_count" {
 
 # Assessment Queries
 
-query "azuread_group_with_no_member" {
+query "activedirectory_group_with_no_member" {
   sql = <<-EOQ
     select
       case when jsonb_array_length(member_ids) = 0  then 'no members' else 'with members' end as status,
@@ -139,7 +139,7 @@ query "azuread_group_with_no_member" {
 
 # Analysis Queries
 
-query "azuread_group_by_tenant" {
+query "activedirectory_group_by_tenant" {
   sql = <<-EOQ
     with tenants as (
       select
@@ -163,7 +163,7 @@ query "azuread_group_by_tenant" {
   EOQ
 }
 
-query "azuread_group_by_type" {
+query "activedirectory_group_by_type" {
   sql = <<-EOQ
     select
       case when security_enabled then 'Security' else 'Microsoft 365' end as type,
@@ -177,7 +177,7 @@ query "azuread_group_by_type" {
   EOQ
 }
 
-query "azuread_group_by_creation_month" {
+query "activedirectory_group_by_creation_month" {
   sql = <<-EOQ
     with users as (
       select

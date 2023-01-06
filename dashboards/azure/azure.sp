@@ -3,3 +3,9 @@ locals {
     service = "Azure"
   }
 }
+
+category "subscription" {
+  title = "Subscription"
+  color = local.compute_color
+  icon  = "cloud_circle"
+}
