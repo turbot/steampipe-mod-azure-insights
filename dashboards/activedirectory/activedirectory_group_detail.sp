@@ -43,8 +43,8 @@ dashboard "activedirectory_group_detail" {
     args = [self.input.group_id.value]
   }
 
-  with "azure_role_definitions" {
-    query = query.activedirectory_group_azure_role_definitions
+  with "role_definitions" {
+    query = query.activedirectory_group_role_definitions
     args = [self.input.group_id.value]
   }
 
@@ -95,9 +95,9 @@ dashboard "activedirectory_group_detail" {
       }
 
       node {
-        base = node.azure_role_definition
+        base = node.role_definition
         args = {
-          azure_role_definition_ids = with.azure_role_definitions.rows[*].azure_role_definition_id
+          role_definition_ids = with.role_definitions.rows[*].role_definition_id
         }
       }
 
@@ -137,9 +137,9 @@ dashboard "activedirectory_group_detail" {
       }
 
       edge {
-        base = edge.activedirectory_subscription_to_azure_role_definition
+        base = edge.activedirectory_subscription_to_role_definition
         args = {
-          azure_role_definition_ids = with.azure_role_definitions.rows[*].azure_role_definition_id
+          role_definition_ids = with.role_definitions.rows[*].role_definition_id
         }
       }
 
@@ -477,10 +477,10 @@ query "activedirectory_group_activedirectory_groups" {
 //   param "id" {}
 // }
 
-query "activedirectory_group_azure_role_definitions" {
+query "activedirectory_group_role_definitions" {
   sql = <<-EOQ
     select
-      d.id as azure_role_definition_id
+      d.id as role_definition_id
     from
       azuread_group as g
       left join azure_role_assignment as a on a.principal_id = g.id

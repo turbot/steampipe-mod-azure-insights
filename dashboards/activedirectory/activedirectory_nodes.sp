@@ -67,8 +67,8 @@ node "activedirectory_user" {
   param "activedirectory_user_ids" {}
 }
 
-node "azure_role_definition" {
-  category = category.azure_role_definition
+node "role_definition" {
+  category = category.role_definition
 
   sql = <<-EOQ
     select
@@ -88,5 +88,5 @@ node "azure_role_definition" {
       d.id = any($1);
   EOQ
 
-  param "azure_role_definition_ids" {}
+  param "role_definition_ids" {}
 }

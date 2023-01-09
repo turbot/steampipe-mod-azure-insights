@@ -35,8 +35,8 @@ dashboard "activedirectory_user_detail" {
     args = [self.input.user_id.value]
   }
 
-  with "azure_role_definitions" {
-    query = query.activedirectory_user_azure_role_definitions
+  with "role_definitions" {
+    query = query.activedirectory_user_role_definitions
     args = [self.input.user_id.value]
   }
 
@@ -74,9 +74,9 @@ dashboard "activedirectory_user_detail" {
       }
 
       node {
-        base = node.azure_role_definition
+        base = node.role_definition
         args = {
-          azure_role_definition_ids = with.azure_role_definitions.rows[*].azure_role_definition_id
+          role_definition_ids = with.role_definitions.rows[*].role_definition_id
         }
       }
 
@@ -102,9 +102,9 @@ dashboard "activedirectory_user_detail" {
       }
 
       edge {
-        base = edge.activedirectory_subscription_to_azure_role_definition
+        base = edge.activedirectory_subscription_to_role_definition
         args = {
-          azure_role_definition_ids = with.azure_role_definitions.rows[*].azure_role_definition_id
+          role_definition_ids = with.role_definitions.rows[*].role_definition_id
         }
       }
 
@@ -202,7 +202,8 @@ query "activedirectory_user_input" {
       u.display_name as label,
       u.id as value,
       json_build_object(
-        'tenant', u.tenant_id
+        'tenant', concat('[tenant: ', (split_part(u.tenant_id, '-',5))::text, ']'),
+        'user_id', concat('[', (split_part(u.id, '-',5))::text, ']')
       ) as tags
     from
       azuread_user as u
@@ -453,11 +454,11 @@ query "activedirectory_user_activedirectory_groups" {
 
 }
 
-query "activedirectory_user_azure_role_definitions" {
+query "activedirectory_user_role_definitions" {
 
   sql = <<-EOQ
     select
-      d.id as azure_role_definition_id
+      d.id as role_definition_id
     from
       azuread_user as u
       left join azure_role_assignment as a on a.principal_id = u.id

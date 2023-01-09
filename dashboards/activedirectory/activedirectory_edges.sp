@@ -1,9 +1,9 @@
-edge "activedirectory_user_to_activedirectory_directory_role" {
+edge "activedirectory_group_to_activedirectory_directory_role" {
   title = "directory role"
 
   sql = <<-EOQ
     with assigned_role as(
-        select
+      select
         id as id,
         title as title,
         tenant_id as tenant_id,
@@ -11,17 +11,17 @@ edge "activedirectory_user_to_activedirectory_directory_role" {
       from
         azuread_directory_role
     )
-     select
-      au.id as from_id,
+    select
+      g.id as from_id,
       ar.id as to_id
     from
       assigned_role as ar
-      left join azuread_user as au on au.id = ar.m_id
+      left join azuread_group as g on g.id = ar.m_id
     where
-     au.id = any($1)
+     g.id = any($1)
   EOQ
 
-  param "activedirectory_user_ids" {}
+  param "activedirectory_group_ids" {}
 }
 
 edge "activedirectory_group_to_activedirectory_group" {
@@ -75,7 +75,7 @@ edge "activedirectory_group_to_activedirectory_user" {
   param "activedirectory_group_ids" {}
 }
 
-edge "activedirectory_group_to_azure_role_definition" {
+edge "activedirectory_group_to_role_definition" {
    title = "assigned role"
 
    sql = <<-EOQ
@@ -90,7 +90,7 @@ edge "activedirectory_group_to_azure_role_definition" {
       d.id = any($1)
    EOQ
 
-   param "azure_role_definition_ids" {}
+   param "role_definition_ids" {}
 }
 
 edge "activedirectory_group_to_subscription" {
@@ -112,7 +112,7 @@ edge "activedirectory_group_to_subscription" {
   param "activedirectory_group_ids" {}
 }
 
-edge "activedirectory_subscription_to_azure_role_definition" {
+edge "activedirectory_subscription_to_role_definition" {
   title = "assigned role"
 
   sql = <<-EOQ
@@ -125,15 +125,15 @@ edge "activedirectory_subscription_to_azure_role_definition" {
       d.id = any($1);
   EOQ
 
-  param "azure_role_definition_ids" {}
+  param "role_definition_ids" {}
 }
 
-edge "activedirectory_group_to_activedirectory_directory_role" {
+edge "activedirectory_user_to_activedirectory_directory_role" {
   title = "directory role"
 
   sql = <<-EOQ
     with assigned_role as(
-      select
+        select
         id as id,
         title as title,
         tenant_id as tenant_id,
@@ -141,17 +141,17 @@ edge "activedirectory_group_to_activedirectory_directory_role" {
       from
         azuread_directory_role
     )
-    select
-      g.id as from_id,
+     select
+      au.id as from_id,
       ar.id as to_id
     from
       assigned_role as ar
-      left join azuread_group as g on g.id = ar.m_id
+      left join azuread_user as au on au.id = ar.m_id
     where
-     g.id = any($1)
+     au.id = any($1)
   EOQ
 
-  param "activedirectory_group_ids" {}
+  param "activedirectory_user_ids" {}
 }
 
 edge "activedirectory_user_to_subscription" {
@@ -172,3 +172,4 @@ edge "activedirectory_user_to_subscription" {
 
   param "activedirectory_user_ids" {}
 }
+

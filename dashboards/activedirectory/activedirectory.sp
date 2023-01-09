@@ -30,7 +30,7 @@ category "activedirectory_user" {
   icon  = "person"
 }
 
-category "azure_role_definition" {
+category "role_definition" {
   title = "Azure Role Definition"
   color = local.iam_color
   icon  = "engineering"
