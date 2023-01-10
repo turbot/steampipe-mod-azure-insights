@@ -100,25 +100,3 @@ node "sql_server_mssql_elasticpool" {
 
   param "sql_server_ids" {}
 }
-
-node "sql_server_network_private_endpoint" {
-  category = category.network_private_endpoint_connection
-
-  sql = <<-EOQ
-    select
-      lower(pec ->> 'PrivateEndpointConnectionId') as id,
-      pec ->> 'PrivateEndpointConnectionName' as title,
-      json_build_object(
-        'Private Endpoint Connection Name', pec ->> 'PrivateEndpointConnectionName',
-        'Type', pec ->> 'PrivateEndpointConnectionType',
-        'Provisioning State', pec ->> 'ProvisioningState'
-      ) as properties
-    from
-      azure_sql_server,
-      jsonb_array_elements(private_endpoint_connections) as pec
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "sql_server_ids" {}
-}
