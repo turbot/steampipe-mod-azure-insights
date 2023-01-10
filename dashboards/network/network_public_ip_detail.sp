@@ -34,6 +34,11 @@ dashboard "network_public_ip_detail" {
     }
   }
 
+  with "api_management_for_network_public_ip" {
+    query = query.api_management_for_network_public_ip
+    args  = [self.input.public_ip_id.value]
+  }
+
   with "compute_virtual_machines_for_network_public_ip" {
     query = query.compute_virtual_machines_for_network_public_ip
     args  = [self.input.public_ip_id.value]
@@ -60,6 +65,13 @@ dashboard "network_public_ip_detail" {
       title     = "Relationships"
       type      = "graph"
       direction = "TD"
+
+      node {
+        base = node.api_management
+        args = {
+          api_management_ids = with.api_management_for_network_public_ip.rows[*].api_management_id
+        }
+      }
 
       node {
         base = node.compute_virtual_machine
@@ -96,13 +108,6 @@ dashboard "network_public_ip_detail" {
         }
       }
 
-      node {
-        base = node.network_public_ip_api_management
-        args = {
-          network_public_ip_ids = [self.input.public_ip_id.value]
-        }
-      }
-
       edge {
         base = edge.compute_virtual_machine_to_network_network_interface
         args = {
@@ -132,7 +137,7 @@ dashboard "network_public_ip_detail" {
       }
 
       edge {
-        base = edge.network_public_ip_to_public_ip_api_management
+        base = edge.network_public_ip_to_api_management
         args = {
           network_public_ip_ids = [self.input.public_ip_id.value]
         }
@@ -238,6 +243,31 @@ query "network_public_ip_sku_name" {
 }
 
 # with queries
+
+query "api_management_for_network_public_ip" {
+  sql   = <<-EOQ
+    with public_ip_api_management as (
+      select
+        id,
+        title,
+        name,
+        provisioning_state,
+        subscription_id,
+        resource_group,
+        region,
+        jsonb_array_elements_text(public_ip_addresses) as pid
+      from
+        azure_api_management
+    )
+    select
+      lower(a.id) as api_management_id
+    from
+      public_ip_api_management as a
+      left join azure_public_ip as p on (a.pid)::inet = p.ip_address
+    where
+      lower(p.id) = $1;
+  EOQ
+}
 
 query "compute_virtual_machines_for_network_public_ip" {
   sql   = <<-EOQ

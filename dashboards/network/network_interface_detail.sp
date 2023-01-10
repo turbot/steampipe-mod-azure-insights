@@ -90,7 +90,7 @@ dashboard "network_interface_detail" {
       node {
         base = node.network_network_security_group
         args = {
-          network_security_group_ids = with.network_security_groups_for_network_interface.rows[*].nsg_id
+          network_network_security_group_ids = with.network_security_groups_for_network_interface.rows[*].nsg_id
         }
       }
 

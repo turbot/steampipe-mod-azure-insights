@@ -8,10 +8,10 @@ edge "monitor_diagnostic_setting_to_storage_storage_account" {
     from
       azure_diagnostic_setting
     where
-      lower(storage_account_id) = any($1);
+      lower(id) = any($1);
   EOQ
 
-  param "storage_account_ids" {}
+  param "monitor_diagnostic_setting_ids" {}
 }
 
 edge "monitor_log_profile_to_storage_storage_account" {
@@ -24,8 +24,8 @@ edge "monitor_log_profile_to_storage_storage_account" {
     from
       azure_log_profile
     where
-      lower(storage_account_id) = any($1);
+      lower(id) = any($1);
   EOQ
 
-  param "storage_account_ids" {}
+  param "monitor_log_profile_ids" {}
 }

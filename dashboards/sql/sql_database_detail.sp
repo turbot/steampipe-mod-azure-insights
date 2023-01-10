@@ -54,6 +54,11 @@ dashboard "sql_database_detail" {
 
   }
 
+  with "mssql_elasticpool_for_sql_database" {
+    query = query.mssql_elasticpool_for_sql_database
+    args  = [self.input.sql_database_id.value]
+  }
+
   with "sql_servers_for_sql_database" {
     query = query.sql_servers_for_sql_database
     args  = [self.input.sql_database_id.value]
@@ -73,9 +78,9 @@ dashboard "sql_database_detail" {
       }
 
       node {
-        base = node.sql_database_mssql_elasticpool
+        base = node.mssql_elasticpool
         args = {
-          sql_database_ids = [self.input.sql_database_id.value]
+          mssql_elasticpool_ids = with.mssql_elasticpool_for_sql_database.rows[*].mssql_elasticpool_id
         }
       }
 
@@ -286,6 +291,21 @@ query "sql_database_geo_redundant_backup_enabled" {
 }
 
 # with queries
+
+query "mssql_elasticpool_for_sql_database" {
+  sql = <<-EOQ
+    select
+      lower(p.id) as mssql_elasticpool_id
+    from
+      azure_sql_database as db
+      left join azure_mssql_elasticpool as p on lower(p.name) = lower(db.elastic_pool_name)
+    where
+      db.resource_group = p.resource_group
+      and db.subscription_id = p.subscription_id
+      and p.id is not null
+      and lower(db.id) = $1
+  EOQ
+}
 
 query "sql_servers_for_sql_database" {
   sql = <<-EOQ

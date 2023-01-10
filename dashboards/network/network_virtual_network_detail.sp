@@ -125,7 +125,7 @@ dashboard "network_virtual_network_detail" {
       node {
         base = node.network_network_security_group
         args = {
-          network_security_group_ids = with.network_security_groups_for_network_virtual_network.rows[*].nsg_id
+          network_network_security_group_ids = with.network_security_groups_for_network_virtual_network.rows[*].nsg_id
         }
       }
 

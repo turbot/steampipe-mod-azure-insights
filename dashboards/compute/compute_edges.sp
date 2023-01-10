@@ -77,10 +77,10 @@ edge "compute_disks_to_compute_snapshot" {
       azure_compute_disk as d
       left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
     where
-      lower(s.id) = any($1);
+      lower(d.id) = any($1);
   EOQ
 
-  param "compute_snapshot_ids" {}
+  param "compute_disk_ids" {}
 }
 
 edge "compute_disk_to_compute_snapshot" {
@@ -265,10 +265,10 @@ edge "compute_snapshot_to_storage_storage_account" {
     from
       azure_compute_snapshot
     where
-      lower(storage_account_id) = any($1);
+      lower(id) = any($1);
   EOQ
 
-  param "storage_account_ids" {}
+  param "compute_snapshot_ids" {}
 }
 
 edge "compute_virtual_machine_to_compute_data_disk" {
@@ -301,16 +301,23 @@ edge "compute_virtual_machine_to_compute_disk" {
   sql = <<-EOQ
     select
       lower(m.id) as from_id,
-      case when lower(data_disk -> 'managedDisk' ->> 'id') = any($1) then lower(data_disk -> 'managedDisk' ->> 'id') else lower(m.managed_disk_id) end as to_id
+      lower(m.managed_disk_id) to_id
+    from
+      azure_compute_virtual_machine as m
+    where
+      lower(m.id) = any($1)
+    union
+    select
+      lower(m.id) as from_id,
+      lower(data_disk -> 'managedDisk' ->> 'id') to_id
     from
       azure_compute_virtual_machine as m,
       jsonb_array_elements(data_disks) as data_disk
     where
-      lower(data_disk -> 'managedDisk' ->> 'id') = any($1)
-      or lower(m.managed_disk_id) = any($1);
+      lower(m.id) = any($1)
   EOQ
 
-  param "compute_disk_ids" {}
+  param "compute_virtual_machine_ids" {}
 }
 
 edge "compute_virtual_machine_to_compute_image" {

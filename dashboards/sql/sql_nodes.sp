@@ -1,3 +1,26 @@
+node "mssql_elasticpool" {
+  category = category.mssql_elasticpool
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      json_build_object(
+        'Edition', edition,
+        'State', state,
+        'Zone Redundant', zone_redundant,
+        'Type', type,
+        'ID', id
+      ) as properties
+    from
+      azure_mssql_elasticpool
+    where
+      lower(id) = any($1)
+  EOQ
+
+  param "mssql_elasticpool_ids" {}
+}
+
 node "sql_database" {
   category = category.sql_database
 
@@ -26,31 +49,6 @@ node "sql_database" {
   param "sql_database_ids" {}
 }
 
-node "sql_database_mssql_elasticpool" {
-  category = category.mssql_elasticpool
-
-  sql = <<-EOQ
-    select
-      lower(sp.id) as id,
-      sp.title as title,
-      json_build_object(
-        'Edition', sp.edition,
-        'State', sp.state,
-        'Zone Redundant', sp.zone_redundant,
-        'Type', sp.type,
-        'ID', sp.id
-      ) as properties
-    from
-      azure_sql_database as db
-      left join azure_mssql_elasticpool as sp on lower(sp.name) = lower(db.elastic_pool_name)
-    where
-      sp.id is not null
-      and lower(db.id) = any($1)
-  EOQ
-
-  param "sql_database_ids" {}
-}
-
 node "sql_server" {
   category = category.sql_server
 
@@ -71,31 +69,6 @@ node "sql_server" {
       azure_sql_server
     where
       lower(id) = any($1);
-  EOQ
-
-  param "sql_server_ids" {}
-}
-
-node "sql_server_mssql_elasticpool" {
-  category = category.mssql_elasticpool
-
-  sql = <<-EOQ
-    select
-      lower(e.id) as id,
-      e.title as title,
-      json_build_object(
-        'Name', e.name,
-        'Type', e.type,
-        'ID', e.id,
-        'Resource Group', e.resource_group,
-        'Subscription ID', e.subscription_id,
-        'Edition', e.edition
-      ) as properties
-    from
-      azure_mssql_elasticpool as e
-      left join azure_sql_server as s on lower(e.server_name) = lower(s.name)
-    where
-      lower(s.id) = any($1);;
   EOQ
 
   param "sql_server_ids" {}

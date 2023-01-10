@@ -29,6 +29,11 @@ dashboard "network_subnet_detail" {
 
   }
 
+  with "api_management_for_network_subnet" {
+    query = query.api_management_for_network_subnet
+    args  = [self.input.subnet_id.value]
+  }
+
   with "app_service_web_apps_for_network_subnet" {
     query = query.app_service_web_apps_for_network_subnet
     args  = [self.input.subnet_id.value]
@@ -124,7 +129,7 @@ dashboard "network_subnet_detail" {
       node {
         base = node.network_network_security_group
         args = {
-          network_security_group_ids = with.network_security_groups_for_network_subnet.rows[*].nsg_id
+          network_network_security_group_ids = with.network_security_groups_for_network_subnet.rows[*].nsg_id
         }
       }
 
@@ -143,9 +148,9 @@ dashboard "network_subnet_detail" {
       }
 
       node {
-        base = node.network_subnet_api_management
+        base = node.api_management
         args = {
-          network_subnet_ids = [self.input.subnet_id.value]
+          api_management_ids = with.api_management_for_network_subnet.rows[*].api_management_id
         }
       }
 
@@ -335,6 +340,17 @@ query "network_subnet_address_prefix" {
 }
 
 # with queries
+
+query "api_management_for_network_subnet" {
+  sql = <<-EOQ
+    select
+      lower(id) as api_management_id
+    from
+      azure_api_management
+    where
+      lower(virtual_network_configuration_subnet_resource_id) = $1;
+    EOQ
+}
 
 query "app_service_web_apps_for_network_subnet" {
   sql = <<-EOQ

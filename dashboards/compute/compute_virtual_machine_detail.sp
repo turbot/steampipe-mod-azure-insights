@@ -163,7 +163,7 @@ dashboard "compute_virtual_machine_detail" {
       node {
         base = node.network_network_security_group
         args = {
-          network_security_group_ids = with.network_security_groups_for_compute_virtual_machine.rows[*].nsg_id
+          network_network_security_group_ids = with.network_security_groups_for_compute_virtual_machine.rows[*].nsg_id
         }
       }
 

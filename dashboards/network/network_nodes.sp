@@ -281,7 +281,7 @@ node "network_network_security_group" {
       lower(id) = any($1);
   EOQ
 
-  param "network_security_group_ids" {}
+  param "network_network_security_group_ids" {}
 }
 
 node "network_public_ip" {
@@ -302,44 +302,6 @@ node "network_public_ip" {
       azure_public_ip
     where
       lower(id) = any($1);
-  EOQ
-
-  param "network_public_ip_ids" {}
-}
-
-node "network_public_ip_api_management" {
-  category = category.api_management
-
-  sql = <<-EOQ
-    with public_ip_api_management as (
-      select
-        id,
-        title,
-        name,
-        provisioning_state,
-        subscription_id,
-        resource_group,
-        region,
-        jsonb_array_elements_text(public_ip_addresses) as pid
-      from
-        azure_api_management
-    )
-    select
-      lower(a.id) as id,
-      a.title as title,
-      jsonb_build_object(
-        'Name', a.name,
-        'ID', lower(a.id),
-        'Provisioning State', a.provisioning_state,
-        'Subscription ID', a.subscription_id,
-        'Resource Group', a.resource_group,
-        'Region', a.region
-      ) as properties
-    from
-      public_ip_api_management as a
-      left join azure_public_ip as p on (a.pid)::inet = p.ip_address
-    where
-      lower(p.id) = any($1);
   EOQ
 
   param "network_public_ip_ids" {}
@@ -390,7 +352,7 @@ node "network_security_group_network_watcher_flow_log" {
       lower(nsg.id) = any($1);
   EOQ
 
-  param "network_security_group_ids" {}
+  param "network_network_security_group_ids" {}
 }
 
 node "network_subnet" {
@@ -413,30 +375,6 @@ node "network_subnet" {
       azure_subnet
     where
       lower(id) = any($1);
-  EOQ
-
-  param "network_subnet_ids" {}
-}
-
-node "network_subnet_api_management" {
-  category = category.api_management
-
-  sql = <<-EOQ
-    select
-      lower(id) as id,
-      title as title,
-      jsonb_build_object(
-        'Name', name,
-        'ID', lower(id),
-        'ETag', etag,
-        'Type', type,
-        'Resource Group', resource_group,
-        'Subscription ID', subscription_id
-      ) as properties
-    from
-      azure_api_management
-    where
-      lower(virtual_network_configuration_subnet_resource_id) = any($1);
   EOQ
 
   param "network_subnet_ids" {}

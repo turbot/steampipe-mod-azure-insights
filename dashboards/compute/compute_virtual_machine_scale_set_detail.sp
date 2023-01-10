@@ -145,7 +145,7 @@ dashboard "compute_virtual_machine_scale_set_detail" {
       node {
         base = node.network_network_security_group
         args = {
-          network_security_group_ids = with.network_security_groups_for_compute_virtual_machine_scale_set.rows[*].nsg_id
+          network_network_security_group_ids = with.network_security_groups_for_compute_virtual_machine_scale_set.rows[*].nsg_id
         }
       }
 

@@ -216,7 +216,7 @@ dashboard "compute_disk_detail" {
       edge {
         base = edge.compute_virtual_machine_to_compute_disk
         args = {
-          compute_disk_ids = [self.input.disk_id.value]
+          compute_virtual_machine_ids = with.compute_virtual_machines_for_compute_disk.rows[*].virtual_machine_id
         }
       }
     }

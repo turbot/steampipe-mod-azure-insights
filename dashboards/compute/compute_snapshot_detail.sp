@@ -41,8 +41,8 @@ dashboard "compute_snapshot_detail" {
 
   }
 
-  with "compute_disks_for_compute_snapshot" {
-    query = query.compute_disks_for_compute_snapshot
+  with "target_compute_disks_for_compute_snapshot" {
+    query = query.target_compute_disks_for_compute_snapshot
     args  = [self.input.id.value]
   }
 
@@ -58,6 +58,11 @@ dashboard "compute_snapshot_detail" {
 
   with "source_compute_snapshots_for_compute_snapshot" {
     query = query.source_compute_snapshots_for_compute_snapshot
+    args  = [self.input.id.value]
+  }
+
+  with "source_compute_disks_for_compute_snapshot" {
+    query = query.source_compute_disks_for_compute_snapshot
     args  = [self.input.id.value]
   }
 
@@ -86,7 +91,14 @@ dashboard "compute_snapshot_detail" {
       node {
         base = node.compute_disk
         args = {
-          compute_disk_ids = with.compute_disks_for_compute_snapshot.rows[*].disk_id
+          compute_disk_ids = with.target_compute_disks_for_compute_snapshot.rows[*].disk_id
+        }
+      }
+
+      node {
+        base = node.compute_disk
+        args = {
+          compute_disk_ids = with.source_compute_disks_for_compute_snapshot.rows[*].disk_id
         }
       }
 
@@ -142,7 +154,7 @@ dashboard "compute_snapshot_detail" {
       edge {
         base = edge.compute_disks_to_compute_snapshot
         args = {
-          compute_snapshot_ids = [self.input.id.value]
+          compute_disk_ids = with.source_compute_disks_for_compute_snapshot.rows[*].disk_id
         }
       }
 
@@ -341,16 +353,8 @@ query "compute_snapshot_network_access_policy" {
 
 # With Queries
 
-query "compute_disks_for_compute_snapshot" {
+query "target_compute_disks_for_compute_snapshot" {
   sql = <<-EOQ
-    select
-      lower(d.id) as disk_id
-    from
-      azure_compute_disk as d
-      left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
-    where
-      lower(s.id) = $1
-    union
     select
       lower(d.id) as disk_id
     from
@@ -423,6 +427,18 @@ query "source_compute_snapshots_for_compute_snapshot" {
       lower(self.source_resource_id) = lower(s.id)
     and
       lower(self.id) = $1;
+  EOQ
+}
+
+query "source_compute_disks_for_compute_snapshot" {
+  sql = <<-EOQ
+    select
+      lower(d.id) as disk_id
+    from
+      azure_compute_disk as d
+      left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
+    where
+      lower(s.id) = $1;
   EOQ
 }
 

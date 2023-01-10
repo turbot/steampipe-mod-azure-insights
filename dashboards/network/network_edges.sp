@@ -559,11 +559,38 @@ edge "network_network_interface_to_network_subnet" {
   param "network_network_interface_ids" {}
 }
 
-edge "network_public_ip_to_public_ip_api_management" {
+edge "network_network_security_group_to_compute_virtual_machine" {
+  title = "virtual machine"
+
+  sql = <<-EOQ
+    with network_interface_list as (
+      select
+        nsg.id as nsg_id,
+        nic.id as nic_id
+      from
+        azure_network_security_group as nsg,
+        jsonb_array_elements(network_interfaces) as ni
+        join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
+      where
+        lower(nsg.id) = any($1)
+    )
+    select
+      lower(nic.nsg_id) as from_id,
+      lower(vm.id) as to_id
+    from
+      azure_compute_virtual_machine as vm,
+      jsonb_array_elements(network_interfaces) as ni
+      join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
+  EOQ
+
+  param "network_network_security_group_ids" {}
+}
+
+edge "network_public_ip_to_api_management" {
   title = "public ip"
 
   sql = <<-EOQ
-  with public_ip_api_management as (
+    with public_ip_api_management as (
       select
         id,
         title,
@@ -588,33 +615,6 @@ edge "network_public_ip_to_public_ip_api_management" {
   param "network_public_ip_ids" {}
 }
 
-edge "network_security_group_to_compute_virtual_machine" {
-  title = "virtual machine"
-
-  sql = <<-EOQ
-    with network_interface_list as (
-      select
-        nsg.id as nsg_id,
-        nic.id as nic_id
-      from
-        azure_network_security_group as nsg,
-        jsonb_array_elements(network_interfaces) as ni
-        join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
-      where
-        lower(nsg.id) = any($1)
-    )
-    select
-      lower(nic.nsg_id) as from_id,
-      lower(vm.id) as to_id
-    from
-      azure_compute_virtual_machine as vm,
-      jsonb_array_elements(network_interfaces) as ni
-      join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
-  EOQ
-
-  param "network_security_group_ids" {}
-}
-
 edge "network_security_group_to_network_interface" {
   title = "network interface"
 
@@ -630,7 +630,7 @@ edge "network_security_group_to_network_interface" {
       lower(nsg.id) = any($1);
   EOQ
 
-  param "network_security_group_ids" {}
+  param "network_network_security_group_ids" {}
 }
 
 edge "network_security_group_to_network_watcher_flow_log" {
@@ -648,7 +648,7 @@ edge "network_security_group_to_network_watcher_flow_log" {
       lower(nsg.id) = any($1);
   EOQ
 
-  param "network_security_group_ids" {}
+  param "network_network_security_group_ids" {}
 }
 
 edge "network_subnet_to_api_management" {

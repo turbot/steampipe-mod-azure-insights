@@ -9,8 +9,8 @@ edge "batch_account_to_storage_storage_account" {
       azure_batch_account as b
       left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
     where
-      lower(a.id) = any($1);
+      lower(b.id) = any($1);
   EOQ
 
-  param "storage_account_ids" {}
+  param "batch_account_ids" {}
 }

@@ -97,14 +97,14 @@ dashboard "network_security_group_detail" {
       node {
         base = node.network_network_security_group
         args = {
-          network_security_group_ids = [self.input.nsg_id.value]
+          network_network_security_group_ids = [self.input.nsg_id.value]
         }
       }
 
       node {
         base = node.network_security_group_network_watcher_flow_log
         args = {
-          network_security_group_ids = [self.input.nsg_id.value]
+          network_network_security_group_ids = [self.input.nsg_id.value]
         }
       }
 
@@ -123,23 +123,23 @@ dashboard "network_security_group_detail" {
       }
 
       edge {
-        base = edge.network_security_group_to_compute_virtual_machine
+        base = edge.network_network_security_group_to_compute_virtual_machine
         args = {
-          network_security_group_ids = [self.input.nsg_id.value]
+          network_network_security_group_ids = [self.input.nsg_id.value]
         }
       }
 
       edge {
         base = edge.network_security_group_to_network_interface
         args = {
-          network_security_group_ids = [self.input.nsg_id.value]
+          network_network_security_group_ids = [self.input.nsg_id.value]
         }
       }
 
       edge {
         base = edge.network_security_group_to_network_watcher_flow_log
         args = {
-          network_security_group_ids = [self.input.nsg_id.value]
+          network_network_security_group_ids = [self.input.nsg_id.value]
         }
       }
 
@@ -570,7 +570,6 @@ query "security_group_flow_logs" {
       flow_logs as f left join azure_network_watcher_flow_log as fl on lower(fl.id) = lower(f.id)
     order by
       fl.name;
-
   EOQ
 
 }

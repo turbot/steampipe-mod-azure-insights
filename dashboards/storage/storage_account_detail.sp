@@ -200,7 +200,7 @@ dashboard "storage_account_detail" {
       edge {
         base = edge.batch_account_to_storage_storage_account
         args = {
-          storage_account_ids = [self.input.storage_account_id.value]
+          batch_account_ids = with.batch_accounts_for_storage_account.rows[*].batch_account_id
         }
       }
 
@@ -214,21 +214,21 @@ dashboard "storage_account_detail" {
       edge {
         base = edge.compute_snapshot_to_storage_storage_account
         args = {
-          storage_account_ids = [self.input.storage_account_id.value]
+          compute_snapshot_ids = with.compute_snapshots_for_storage_account.rows[*].snapshot_id
         }
       }
 
       edge {
         base = edge.monitor_diagnostic_setting_to_storage_storage_account
         args = {
-          storage_account_ids = [self.input.storage_account_id.value]
+          monitor_diagnostic_setting_ids = with.monitor_diagnostic_settings_for_storage_account.rows[*].monitor_diagnostic_settings_id
         }
       }
 
       edge {
         base = edge.monitor_log_profile_to_storage_storage_account
         args = {
-          storage_account_ids = [self.input.storage_account_id.value]
+          monitor_log_profile_ids = with.monitor_log_profiles_for_storage_account.rows[*].log_profile_id
         }
       }
 

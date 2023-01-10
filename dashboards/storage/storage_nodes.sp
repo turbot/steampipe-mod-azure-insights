@@ -41,6 +41,7 @@ node "storage_storage_container" {
       azure_storage_container as c
       left join azure_storage_account as a on a.name = c.account_name
       and a.resource_group = c.resource_group
+      and a.subscription_id = c.subscription_id
     where
       lower(a.id) = any($1);
   EOQ
@@ -66,6 +67,8 @@ node "storage_storage_queue" {
     from
       azure_storage_account as a
       left join azure_storage_queue as q on q.storage_account_name = a.name
+      and a.resource_group = q.resource_group
+      and a.subscription_id = q.subscription_id
     where
       lower(a.id) = any($1);
   EOQ
@@ -91,6 +94,7 @@ node "storage_storage_share_file" {
       azure_storage_share_file as f
       left join azure_storage_account as a on a.name = f.storage_account_name
       and a.resource_group = f.resource_group
+      and a.subscription_id = f.subscription_id
     where
       lower(a.id) = any($1);
   EOQ
@@ -116,6 +120,8 @@ node "storage_storage_table" {
     from
       azure_storage_account as a
       left join azure_storage_table as t on t.storage_account_name = a.name
+      and a.resource_group = t.resource_group
+      and a.subscription_id = t.subscription_id
     where
       lower(a.id) = any($1);
   EOQ

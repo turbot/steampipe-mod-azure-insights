@@ -62,6 +62,12 @@ dashboard "sql_server_detail" {
     args  = [self.input.sql_server_id.value]
   }
 
+  with "mssql_elasticpool_for_sql_server" {
+    query = query.mssql_elasticpool_for_sql_server
+    args  = [self.input.sql_server_id.value]
+  }
+
+
   with "network_subnets_for_sql_server" {
     query = query.network_subnets_for_sql_server
     args  = [self.input.sql_server_id.value]
@@ -126,9 +132,9 @@ dashboard "sql_server_detail" {
       }
 
       node {
-        base = node.sql_server_mssql_elasticpool
+        base = node.mssql_elasticpool
         args = {
-          sql_server_ids = [self.input.sql_server_id.value]
+          mssql_elasticpool_ids = with.mssql_elasticpool_for_sql_server.rows[*].mssql_elasticpool_id
         }
       }
 
@@ -417,6 +423,21 @@ query "key_vault_vaults_for_sql_server" {
           lower(id) = $1
           and ep ->> 'kind' = 'azurekeyvault'
       );
+  EOQ
+
+}
+
+query "mssql_elasticpool_for_sql_server" {
+  sql = <<-EOQ
+    select
+      lower(p.id) as mssql_elasticpool_id
+    from
+      azure_mssql_elasticpool as p
+      left join azure_sql_server as s on lower(p.server_name) = lower(s.name)
+    where
+      s.resource_group = p.resource_group
+      and s.subscription_id = p.subscription_id
+      and lower(s.id) = $1;
   EOQ
 
 }
