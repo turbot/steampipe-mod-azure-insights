@@ -45,12 +45,12 @@ dashboard "activedirectory_group_detail" {
 
   with "resource_groups" {
     query = query.activedirectory_group_resource_groups
-    args = [self.input.group_id.value]
+    args  = [self.input.group_id.value]
   }
 
   with "resource_group_role_definitions" {
     query = query.activedirectory_group_resource_group_role_definitions
-    args = [self.input.group_id.value]
+    args  = [self.input.group_id.value]
   }
 
   with "subscriptions" {
@@ -60,7 +60,7 @@ dashboard "activedirectory_group_detail" {
 
   with "subscription_role_definitions" {
     query = query.activedirectory_group_subscription_role_definitions
-    args = [self.input.group_id.value]
+    args  = [self.input.group_id.value]
   }
 
   with "to_activedirectory_groups" {
@@ -448,8 +448,6 @@ query "activedirectory_group_resource_group_role_definitions" {
 }
 
 query "activedirectory_group_subscriptions" {
-  category = category.subscription
-
   sql = <<-EOQ
     select
       distinct d.subscription_id as subscription_id
@@ -466,8 +464,6 @@ query "activedirectory_group_subscriptions" {
 }
 
 query "activedirectory_group_activedirectory_directory_role" {
-  category = category.activedirectory_directory_role
-
   sql = <<-EOQ
     with assigned_role as(
       select

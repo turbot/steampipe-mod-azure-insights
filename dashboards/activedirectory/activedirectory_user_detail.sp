@@ -27,32 +27,32 @@ dashboard "activedirectory_user_detail" {
 
   with "activedirectory_directory_roles" {
     query = query.activedirectory_user_activedirectory_directory_role
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   with "activedirectory_groups" {
     query = query.activedirectory_user_activedirectory_groups
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   with "resource_groups" {
     query = query.activedirectory_user_resource_groups
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   with "resource_group_role_definitions" {
     query = query.activedirectory_user_resource_group_role_definitions
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   with "subscriptions" {
     query = query.activedirectory_user_subscriptions
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   with "subscription_role_definitions" {
     query = query.activedirectory_user_subscription_role_definitions
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   container {
@@ -439,8 +439,6 @@ query "activedirectory_user_resource_group_role_definitions" {
 }
 
 query "activedirectory_user_activedirectory_directory_role" {
-  category = category.activedirectory_directory_role
-
   sql = <<-EOQ
     with assigned_role as(
       select
