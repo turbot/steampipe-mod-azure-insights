@@ -75,24 +75,6 @@ edge "activedirectory_group_to_activedirectory_user" {
   param "activedirectory_group_ids" {}
 }
 
-edge "activedirectory_group_to_role_definition" {
-   title = "assigned role"
-
-   sql = <<-EOQ
-    select
-      ag.id as from_id,
-      d.id as to_id
-    from
-      azuread_group as ag
-      left join azure_role_assignment as a on a.principal_id = ag.id
-      left join azure_role_definition as d on d.id = a.role_definition_id
-    where
-      d.id = any($1)
-   EOQ
-
-   param "role_definition_ids" {}
-}
-
 edge "activedirectory_group_to_subscription" {
    title = "subscription"
 
@@ -110,22 +92,6 @@ edge "activedirectory_group_to_subscription" {
    EOQ
 
   param "activedirectory_group_ids" {}
-}
-
-edge "activedirectory_subscription_to_role_definition" {
-  title = "assigned role"
-
-  sql = <<-EOQ
-    select
-      d.id as to_id,
-      d.subscription_id as from_id
-    from
-      azure_role_definition as d
-    where
-      d.id = any($1);
-  EOQ
-
-  param "role_definition_ids" {}
 }
 
 edge "activedirectory_user_to_activedirectory_directory_role" {

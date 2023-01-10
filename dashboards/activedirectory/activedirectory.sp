@@ -17,12 +17,6 @@ category "activedirectory_group" {
   icon  = "group"
 }
 
-category "activedirectory_role_assignment" {
-  title = "Azuread Assigned Role"
-  color = local.iam_color
-  icon  = "assignment"
-}
-
 category "activedirectory_user" {
   title = "Azuread User"
   color = local.iam_color

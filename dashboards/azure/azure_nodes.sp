@@ -1,3 +1,26 @@
+node "resource_group" {
+  category = category.resource_group
+
+  sql = <<-EOQ
+    select
+      id as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', id,
+        'Subscription ID', subscription_id,
+        'Provisioning State', provisioning_state,
+        'Managed By', managed_by
+      ) as properties
+    from
+      azure_resource_group
+    where
+      id = any($1);
+  EOQ
+
+  param "resource_group_ids" {}
+}
+
 node "subscription" {
   category = category.subscription
 

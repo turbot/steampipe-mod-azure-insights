@@ -25,23 +25,33 @@ dashboard "activedirectory_user_detail" {
 
   }
 
-  with "activedirectory_groups" {
-    query = query.activedirectory_user_activedirectory_groups
-    args = [self.input.user_id.value]
-  }
-
   with "activedirectory_directory_roles" {
     query = query.activedirectory_user_activedirectory_directory_role
     args = [self.input.user_id.value]
   }
 
-  with "role_definitions" {
-    query = query.activedirectory_user_role_definitions
+  with "activedirectory_groups" {
+    query = query.activedirectory_user_activedirectory_groups
+    args = [self.input.user_id.value]
+  }
+
+  with "resource_groups" {
+    query = query.activedirectory_user_resource_groups
+    args = [self.input.user_id.value]
+  }
+
+  with "resource_group_role_definitions" {
+    query = query.activedirectory_user_resource_group_role_definitions
     args = [self.input.user_id.value]
   }
 
   with "subscriptions" {
     query = query.activedirectory_user_subscriptions
+    args = [self.input.user_id.value]
+  }
+
+  with "subscription_role_definitions" {
+    query = query.activedirectory_user_subscription_role_definitions
     args = [self.input.user_id.value]
   }
 
@@ -53,9 +63,9 @@ dashboard "activedirectory_user_detail" {
       direction = "TD"
 
       node {
-        base = node.activedirectory_user
+        base = node.activedirectory_directory_role
         args = {
-          activedirectory_user_ids = [self.input.user_id.value]
+          activedirectory_directory_role_ids = with.activedirectory_directory_roles.rows[*].directory_role_id
         }
       }
 
@@ -67,16 +77,30 @@ dashboard "activedirectory_user_detail" {
       }
 
       node {
-        base = node.activedirectory_directory_role
+        base = node.activedirectory_user
         args = {
-          activedirectory_directory_role_ids = with.activedirectory_directory_roles.rows[*].directory_role_id
+          activedirectory_user_ids = [self.input.user_id.value]
+        }
+      }
+
+      node {
+        base = node.resource_group
+        args = {
+          resource_group_ids = with.resource_groups.rows[*].resource_group_id
         }
       }
 
       node {
         base = node.role_definition
         args = {
-          role_definition_ids = with.role_definitions.rows[*].role_definition_id
+          role_definition_ids = with.subscription_role_definitions.rows[*].role_definition_id
+        }
+      }
+
+      node {
+        base = node.role_definition
+        args = {
+          role_definition_ids = with.resource_group_role_definitions.rows[*].role_definition_id
         }
       }
 
@@ -102,16 +126,30 @@ dashboard "activedirectory_user_detail" {
       }
 
       edge {
-        base = edge.activedirectory_subscription_to_role_definition
+        base = edge.activedirectory_user_to_subscription
         args = {
-          role_definition_ids = with.role_definitions.rows[*].role_definition_id
+          activedirectory_user_ids = [self.input.user_id.value]
         }
       }
 
       edge {
-        base = edge.activedirectory_user_to_subscription
+        base = edge.subscription_to_resource_group
         args = {
-          activedirectory_user_ids = [self.input.user_id.value]
+          subscription_ids = with.subscriptions.rows[*].subscription_id
+        }
+      }
+
+      edge {
+        base = edge.subscription_to_role_definition
+        args = {
+          role_definition_ids = with.subscription_role_definitions.rows[*].role_definition_id
+        }
+      }
+
+      edge {
+        base = edge.resource_group_to_role_definition
+        args = {
+          role_definition_ids = with.resource_group_role_definitions.rows[*].role_definition_id
         }
       }
 
@@ -150,15 +188,6 @@ dashboard "activedirectory_user_detail" {
   container {
 
     title = "Azure Active Directory User Role Analysis"
-
-    flow {
-      type  = "sankey"
-      title = "Azure Active Directory Role Assignments"
-      query = query.activedirectory_user_directory_role_sankey
-      args = {
-        id = self.input.user_id.value
-      }
-    }
 
     table {
       title = "Azure Active Directory Role Assignments"
@@ -202,8 +231,8 @@ query "activedirectory_user_input" {
       u.display_name as label,
       u.id as value,
       json_build_object(
-        'tenant', concat('[tenant: ', (split_part(u.tenant_id, '-',5))::text, ']'),
-        'user_id', concat('[', (split_part(u.id, '-',5))::text, ']')
+        'Tenant', concat('tenant: ', (split_part(u.tenant_id, '-',5))::text),
+        'UPN', user_principal_name
       ) as tags
     from
       azuread_user as u
@@ -240,88 +269,6 @@ query "activedirectory_user_overview" {
       azuread_user
     where
       id = $1
-  EOQ
-
-  param "id" {}
-}
-
-query "activedirectory_user_directory_role_sankey" {
-  sql = <<-EOQ
-
-    with args as (
-      select $1 as azuread_user_id
-    ), groups as (
-        select
-          g.id as id
-        from
-          azuread_group as g,
-          jsonb_array_elements(member_ids) as m
-        where
-          trim((m::text), '""') = (select azuread_user_id from args)
-        ) ,
-        groups_with_role as (
-          select
-            trim((m::text), '""') as group_id
-          from
-            azuread_directory_role,
-            jsonb_array_elements(member_ids) as m
-          where
-            trim((m::text), '""') in (select id from groups)
-      )
-
-    -- User
-    select
-      null as from_id,
-      id as id,
-      title,
-      0 as depth,
-      'azuread_user' as category
-    from
-      azuread_user
-    where
-      id in (select azuread_user_id from args)
-
-  -- Groups
-    union select
-      (select azuread_user_id from args) as from_id,
-      group_id as id,
-      g.display_name as title,
-      1 as depth,
-      'azuread_group' as category
-    from
-      groups_with_role as gr left join azuread_group as g on g.id = gr.group_id
-
-    -- Directory Roles
-    union select
-      (select azuread_user_id from args) as from_id,
-      dr.id as id,
-      dr.display_name as title,
-      2 as depth,
-      'azuread_directory_roles' as category
-    from
-      azuread_directory_role as dr,
-      jsonb_array_elements(member_ids) as m
-    where
-      trim((m::text), '""') = (select azuread_user_id from args)
-
-    -- Directory Roles inherited from groups
-    union select
-      trim((m::text), '""') as from_id,
-      dr.id as id,
-      dr.display_name  as title,
-      2 as depth,
-      'azuread_directory_roles' as category
-    from
-      azuread_directory_role as dr,
-      jsonb_array_elements(member_ids) as m
-    where
-      trim((m::text), '""') in (select
-        g.id as id
-      from
-        azuread_group as g,
-        jsonb_array_elements(member_ids) as m
-      where
-        trim((m::text), '""') = (select azuread_user_id from args))
   EOQ
 
   param "id" {}
@@ -454,7 +401,7 @@ query "activedirectory_user_activedirectory_groups" {
 
 }
 
-query "activedirectory_user_role_definitions" {
+query "activedirectory_user_subscription_role_definitions" {
 
   sql = <<-EOQ
     select
@@ -464,7 +411,28 @@ query "activedirectory_user_role_definitions" {
       left join azure_role_assignment as a on a.principal_id = u.id
       left join azure_role_definition as d on d.id = a.role_definition_id
     where
-      d.id is not null
+      (a.scope like '/subscriptions/%' and a.scope not like '%/resourceGroups/%')
+      and (a.scope like '/subscriptions/%' and a.scope not like '%/resourcegroups/%')
+      and d.id is not null
+      and u.id = $1
+  EOQ
+
+}
+
+query "activedirectory_user_resource_group_role_definitions" {
+
+  sql = <<-EOQ
+    select
+      d.id as role_definition_id,
+      a.scope
+    from
+      azuread_user as u
+      left join azure_role_assignment as a on a.principal_id = u.id
+      left join azure_role_definition as d on d.id = a.role_definition_id
+    where
+      ((a.scope like '%/resourceGroups/%')
+       or (a.scope like '%/resourcegroups/%'))
+       and d.id is not null
       and u.id = $1
   EOQ
 
@@ -496,7 +464,6 @@ query "activedirectory_user_activedirectory_directory_role" {
 }
 
 query "activedirectory_user_subscriptions" {
-  category = category.subscription
 
   sql = <<-EOQ
     select
@@ -506,10 +473,28 @@ query "activedirectory_user_subscriptions" {
       left join azure_role_assignment as a on a.principal_id = u.id
       left join azure_role_definition as d on d.id = a.role_definition_id
     where
-      d.id is not null
+      a.scope like '/subscriptions/%'
+      and d.id is not null
       and u.id = $1
   EOQ
 
 }
 
+query "activedirectory_user_resource_groups" {
 
+  sql = <<-EOQ
+    select
+      r.id as resource_group_id
+    from
+      azuread_user as u
+      left join azure_role_assignment as a on a.principal_id = u.id
+      left join azure_role_definition as d on d.id = a.role_definition_id
+      left join azure_resource_group as r on r.name = split_part(a.scope, '/', 5)
+    where
+      (a.scope like '%/resourceGroups/%')
+      and d.id is not null
+      and r.subscription_id = d.subscription_id
+      and u.id = $1
+  EOQ
+
+}

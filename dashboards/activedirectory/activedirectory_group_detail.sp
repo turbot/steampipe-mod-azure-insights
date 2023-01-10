@@ -35,29 +35,38 @@ dashboard "activedirectory_group_detail" {
 
   with "activedirectory_directory_roles" {
     query = query.activedirectory_group_activedirectory_directory_role
-    args = [self.input.group_id.value]
+    args  = [self.input.group_id.value]
   }
 
   with "activedirectory_users" {
     query = query.activedirectory_group_activedirectory_users
+    args  = [self.input.group_id.value]
+  }
+
+  with "resource_groups" {
+    query = query.activedirectory_group_resource_groups
     args = [self.input.group_id.value]
   }
 
-  with "role_definitions" {
-    query = query.activedirectory_group_role_definitions
+  with "resource_group_role_definitions" {
+    query = query.activedirectory_group_resource_group_role_definitions
     args = [self.input.group_id.value]
   }
 
   with "subscriptions" {
     query = query.activedirectory_group_subscriptions
+    args  = [self.input.group_id.value]
+  }
+
+  with "subscription_role_definitions" {
+    query = query.activedirectory_group_subscription_role_definitions
     args = [self.input.group_id.value]
   }
 
   with "to_activedirectory_groups" {
     query = query.activedirectory_group_activedirectory_groups
-    args = [self.input.group_id.value]
+    args  = [self.input.group_id.value]
   }
-
 
   container {
 
@@ -95,9 +104,23 @@ dashboard "activedirectory_group_detail" {
       }
 
       node {
+        base = node.resource_group
+        args = {
+          resource_group_ids = with.resource_groups.rows[*].resource_group_id
+        }
+      }
+
+      node {
         base = node.role_definition
         args = {
-          role_definition_ids = with.role_definitions.rows[*].role_definition_id
+          role_definition_ids = with.subscription_role_definitions.rows[*].role_definition_id
+        }
+      }
+
+      node {
+        base = node.role_definition
+        args = {
+          role_definition_ids = with.resource_group_role_definitions.rows[*].role_definition_id
         }
       }
 
@@ -137,43 +160,28 @@ dashboard "activedirectory_group_detail" {
       }
 
       edge {
-        base = edge.activedirectory_subscription_to_role_definition
+        base = edge.subscription_to_resource_group
         args = {
-          role_definition_ids = with.role_definitions.rows[*].role_definition_id
+          subscription_ids = with.subscriptions.rows[*].subscription_id
+        }
+      }
+
+      edge {
+        base = edge.subscription_to_role_definition
+        args = {
+          role_definition_ids = with.subscription_role_definitions.rows[*].role_definition_id
+        }
+      }
+
+      edge {
+        base = edge.resource_group_to_role_definition
+        args = {
+          role_definition_ids = with.resource_group_role_definitions.rows[*].role_definition_id
         }
       }
 
     }
   }
-
-  # container {
-
-  #   graph {
-  #     title     = "Relationships"
-  #     type      = "graph"
-  #     direction = "TD"
-
-  #     nodes = [
-  #       node.azuread_group_node,
-  #       node.azuread_group_from_user_node,
-  #       node.azuread_group_from_group_node
-  #       // node.azuread_group_from_directory_role_node,
-  #       // node.azuread_group_from_assigned_role_node
-  #     ]
-
-  #     edges = [
-  #       edge.azuread_group_from_user_edge,
-  #       edge.azuread_group_from_group_edge
-  #       // edge.azuread_group_from_directory_role_edge,
-  #       // edge.azuread_group_from_assigned_role_edge
-
-  #     ]
-
-  #     args = {
-  #       id = self.input.group_id.value
-  #     }
-  #   }
-  # }
 
   container {
 
@@ -243,7 +251,8 @@ query "activedirectory_group_input" {
       g.title as label,
       g.id as value,
       json_build_object(
-        'tenant', g.tenant_id
+        'tenant', concat('tenant: ', (split_part(g.tenant_id, '-',5))::text),
+         'group_id', concat('id: ', (split_part(g.id, '-',5))::text)
       ) as tags
     from
       azuread_group as g
@@ -404,80 +413,7 @@ query "activedirectory_group_activedirectory_groups" {
 
 }
 
-
-
-// node "azuread_group_from_directory_role_node" {
-//   category = category.azuread_directory_role
-
-//   sql = <<-EOQ
-//     with assigned_role as (
-//       select
-//         id as id,
-//         title as title,
-//         tenant_id as tenant_id,
-//         jsonb_array_elements_text(member_ids) as m_id
-//       from
-//         azuread_directory_role
-//     ),
-//     groups as (
-//       select
-//         id as id,
-//         title as title,
-//         jsonb_array_elements_text(member_ids) as m_id
-//       from
-//         azuread_group
-//       where
-//         id = $1
-//     )
-//     select
-//       ar.id as id,
-//       ar.title as title,
-//       jsonb_build_object(
-//       'Tenant ID', ar.tenant_id
-//       ) as properties
-//     from
-//       assigned_role as ar
-//       left join groups as ag on ag.m_id = ar.m_id
-//   EOQ
-
-//   param "id" {}
-// }
-
-// edge "azuread_group_from_directory_role_edge" {
-//   title = "directory role"
-
-//   sql = <<-EOQ
-//     with assigned_role as (
-//         select
-//         id as id,
-//         title as title,
-//         tenant_id as tenant_id,
-//         jsonb_array_elements_text(member_ids) as m_id
-//       from
-//         azuread_directory_role
-//     ),
-//     groups as (
-//       select
-//         id as id,
-//         title as title,
-//         jsonb_array_elements_text(member_ids) as m_id
-//       from
-//         azuread_group
-//     )
-//     select
-//       ag.id as from_id,
-//       ar.id as to_id
-//     from
-//       assigned_role as ar
-//       left join groups as ag on ag.m_id = ar.m_id
-//     where
-//       ag.id = $1
-//   EOQ
-
-//   param "id" {}
-// }
-
-query "activedirectory_group_role_definitions" {
+query "activedirectory_group_subscription_role_definitions" {
   sql = <<-EOQ
     select
       d.id as role_definition_id
@@ -486,7 +422,26 @@ query "activedirectory_group_role_definitions" {
       left join azure_role_assignment as a on a.principal_id = g.id
       left join azure_role_definition as d on d.id = a.role_definition_id
     where
-      d.id is not null
+      (a.scope like '/subscriptions/%' and a.scope not like '%/resourceGroups/%')
+      and (a.scope like '/subscriptions/%' and a.scope not like '%/resourcegroups/%')
+      and  d.id is not null
+      and g.id = $1
+  EOQ
+
+}
+
+query "activedirectory_group_resource_group_role_definitions" {
+  sql = <<-EOQ
+    select
+      d.id as role_definition_id
+    from
+      azuread_group as g
+      left join azure_role_assignment as a on a.principal_id = g.id
+      left join azure_role_definition as d on d.id = a.role_definition_id
+    where
+      ((a.scope like '%/resourceGroups/%')
+      or (a.scope like '%/resourcegroups/%'))
+      and  d.id is not null
       and g.id = $1
   EOQ
 
@@ -503,7 +458,8 @@ query "activedirectory_group_subscriptions" {
       left join azure_role_assignment as a on a.principal_id = G.id
       left join azure_role_definition as d on d.id = a.role_definition_id
     where
-      d.id is not null
+      a.scope like '/subscriptions/%'
+      and d.id is not null
       and g.id = $1
   EOQ
 
@@ -530,6 +486,25 @@ query "activedirectory_group_activedirectory_directory_role" {
     where
       r.tenant_id = g.tenant_id
       and g.id = $1;
+  EOQ
+
+}
+
+query "activedirectory_group_resource_groups" {
+
+  sql = <<-EOQ
+    select
+      r.id as resource_group_id
+    from
+      azuread_group as g
+      left join azure_role_assignment as a on a.principal_id = g.id
+      left join azure_role_definition as d on d.id = a.role_definition_id
+      left join azure_resource_group as r on r.name = split_part(a.scope, '/', 5)
+    where
+      (a.scope like '%/resourceGroups/%')
+      and d.id is not null
+      and r.subscription_id = d.subscription_id
+      and g.id = $1
   EOQ
 
 }
