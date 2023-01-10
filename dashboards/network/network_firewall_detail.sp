@@ -35,18 +35,18 @@ dashboard "network_firewall_detail" {
 
   }
 
-  with "network_public_ips" {
-    query = query.network_firewall_network_public_ips
+  with "network_public_ips_for_network_firewall" {
+    query = query.network_public_ips_for_network_firewall
     args  = [self.input.firewall_id.value]
   }
 
-  with "network_subnets" {
-    query = query.network_firewall_network_subnets
+  with "network_subnets_for_network_firewall" {
+    query = query.network_subnets_for_network_firewall
     args  = [self.input.firewall_id.value]
   }
 
-  with "network_virtual_networks" {
-    query = query.network_firewall_network_virtual_networks
+  with "network_virtual_networks_for_network_firewall" {
+    query = query.network_virtual_networks_for_network_firewall
     args  = [self.input.firewall_id.value]
   }
 
@@ -67,21 +67,21 @@ dashboard "network_firewall_detail" {
       node {
         base = node.network_public_ip
         args = {
-          network_public_ip_ids = with.network_public_ips.rows[*].public_ip_id
+          network_public_ip_ids = with.network_public_ips_for_network_firewall.rows[*].public_ip_id
         }
       }
 
       node {
         base = node.network_subnet
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_firewall.rows[*].subnet_id
         }
       }
 
       node {
         base = node.network_virtual_network
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+          network_virtual_network_ids = with.network_virtual_networks_for_network_firewall.rows[*].network_id
         }
       }
 
@@ -102,7 +102,7 @@ dashboard "network_firewall_detail" {
       edge {
         base = edge.network_subnet_to_network_virtual_network
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_firewall.rows[*].subnet_id
         }
       }
     }
@@ -205,7 +205,7 @@ query "network_firewall_threat_intel_mode" {
 }
 # with queries
 
-query "network_firewall_network_public_ips" {
+query "network_public_ips_for_network_firewall" {
   sql   = <<-EOQ
     select
       lower(ip.id) as public_ip_id
@@ -219,7 +219,7 @@ query "network_firewall_network_public_ips" {
   EOQ
 }
 
-query "network_firewall_network_virtual_networks" {
+query "network_virtual_networks_for_network_firewall" {
   sql   = <<-EOQ
     with subnet_list as (
       select
@@ -243,7 +243,7 @@ query "network_firewall_network_virtual_networks" {
   EOQ
 }
 
-query "network_firewall_network_subnets" {
+query "network_subnets_for_network_firewall" {
   sql   = <<-EOQ
     select
       lower(s.id) as subnet_id

@@ -34,23 +34,23 @@ dashboard "network_public_ip_detail" {
     }
   }
 
-  with "compute_virtual_machines" {
-    query = query.network_public_ip_compute_virtual_machines
+  with "compute_virtual_machines_for_network_public_ip" {
+    query = query.compute_virtual_machines_for_network_public_ip
     args  = [self.input.public_ip_id.value]
   }
 
-  with "network_firewalls" {
-    query = query.network_public_ip_network_firewalls
+  with "network_firewalls_for_network_public_ip" {
+    query = query.network_firewalls_for_network_public_ip
     args  = [self.input.public_ip_id.value]
   }
 
-  with "network_load_balancers" {
-    query = query.network_public_ip_network_load_balancers
+  with "network_load_balancers_for_network_public_ip" {
+    query = query.network_load_balancers_for_network_public_ip
     args  = [self.input.public_ip_id.value]
   }
 
-  with "network_network_interfaces" {
-    query = query.network_public_ip_network_network_interfaces
+  with "network_network_interfaces_for_network_public_ip" {
+    query = query.network_network_interfaces_for_network_public_ip
     args  = [self.input.public_ip_id.value]
   }
 
@@ -64,28 +64,28 @@ dashboard "network_public_ip_detail" {
       node {
         base = node.compute_virtual_machine
         args = {
-          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+          compute_virtual_machine_ids = with.compute_virtual_machines_for_network_public_ip.rows[*].virtual_machine_id
         }
       }
 
       node {
         base = node.network_firewall
         args = {
-          network_firewall_ids = with.network_firewalls.rows[*].network_firewall_id
+          network_firewall_ids = with.network_firewalls_for_network_public_ip.rows[*].network_firewall_id
         }
       }
 
       node {
         base = node.network_load_balancer
         args = {
-          network_load_balancer_ids = with.network_load_balancers.rows[*].load_balancer_id
+          network_load_balancer_ids = with.network_load_balancers_for_network_public_ip.rows[*].load_balancer_id
         }
       }
 
       node {
         base = node.network_network_interface
         args = {
-          network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+          network_network_interface_ids = with.network_network_interfaces_for_network_public_ip.rows[*].nic_id
         }
       }
 
@@ -106,28 +106,28 @@ dashboard "network_public_ip_detail" {
       edge {
         base = edge.compute_virtual_machine_to_network_network_interface
         args = {
-          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+          compute_virtual_machine_ids = with.compute_virtual_machines_for_network_public_ip.rows[*].virtual_machine_id
         }
       }
 
       edge {
         base = edge.network_firewall_to_network_public_ip
         args = {
-          network_firewall_ids = with.network_firewalls.rows[*].network_firewall_id
+          network_firewall_ids = with.network_firewalls_for_network_public_ip.rows[*].network_firewall_id
         }
       }
 
       edge {
         base = edge.network_load_balancer_to_network_public_ip
         args = {
-          network_load_balancer_ids = with.network_load_balancers.rows[*].load_balancer_id
+          network_load_balancer_ids = with.network_load_balancers_for_network_public_ip.rows[*].load_balancer_id
         }
       }
 
       edge {
         base = edge.network_network_interface_to_network_public_ip
         args = {
-          network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+          network_network_interface_ids = with.network_network_interfaces_for_network_public_ip.rows[*].nic_id
         }
       }
 
@@ -239,7 +239,7 @@ query "network_public_ip_sku_name" {
 
 # with queries
 
-query "network_public_ip_compute_virtual_machines" {
+query "compute_virtual_machines_for_network_public_ip" {
   sql   = <<-EOQ
     with vm_network_interface as (
       select
@@ -265,7 +265,7 @@ query "network_public_ip_compute_virtual_machines" {
   EOQ
 }
 
-query "network_public_ip_network_firewalls" {
+query "network_firewalls_for_network_public_ip" {
   sql   = <<-EOQ
     select
       lower(f.id) as network_firewall_id
@@ -278,7 +278,7 @@ query "network_public_ip_network_firewalls" {
   EOQ
 }
 
-query "network_public_ip_network_load_balancers" {
+query "network_load_balancers_for_network_public_ip" {
   sql   = <<-EOQ
     select
       lower(lb.id) as load_balancer_id
@@ -291,7 +291,7 @@ query "network_public_ip_network_load_balancers" {
   EOQ
 }
 
-query "network_public_ip_network_network_interfaces" {
+query "network_network_interfaces_for_network_public_ip" {
   sql   = <<-EOQ
     with network_interface_public_ip as (
       select

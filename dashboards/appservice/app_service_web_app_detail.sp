@@ -53,18 +53,18 @@ dashboard "app_service_web_app_detail" {
 
   }
 
-  with "network_application_gateways" {
-    query = query.app_service_web_app_network_application_gateways
+  with "network_application_gateways_for_app_service_web" {
+    query = query.network_application_gateways_for_app_service_web
     args  = [self.input.web_app_id.value]
   }
 
-  with "network_subnets" {
-    query = query.app_service_web_app_network_subnets
+  with "network_subnets_for_app_service_web" {
+    query = query.network_subnets_for_app_service_web
     args  = [self.input.web_app_id.value]
   }
 
-  with "network_virtual_networks" {
-    query = query.app_service_web_app_network_virtual_networks
+  with "network_virtual_networks_for_app_service_web" {
+    query = query.network_virtual_networks_for_app_service_web
     args = [self.input.web_app_id.value]
   }
 
@@ -92,21 +92,21 @@ dashboard "app_service_web_app_detail" {
       node {
         base = node.network_application_gateway
         args = {
-          network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
+          network_application_gateway_ids = with.network_application_gateways_for_app_service_web.rows[*].application_gateway_id
         }
       }
 
       node {
         base = node.network_subnet
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_app_service_web.rows[*].subnet_id
         }
       }
 
       node {
         base = node.network_virtual_network
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+          network_virtual_network_ids = with.network_virtual_networks_for_app_service_web.rows[*].virtual_network_id
         }
       }
 
@@ -134,7 +134,7 @@ dashboard "app_service_web_app_detail" {
       edge {
         base = edge.network_subnet_to_network_virtual_network
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_app_service_web.rows[*].subnet_id
         }
       }
 
@@ -298,7 +298,7 @@ dashboard "app_service_web_app_detail" {
   }
   # With Queries
 
-  query "app_service_web_app_network_application_gateways" {
+  query "network_application_gateways_for_app_service_web" {
     sql = <<-EOQ
       with application_gateway as (
         select
@@ -321,7 +321,7 @@ dashboard "app_service_web_app_detail" {
     EOQ
   }
 
-  query "app_service_web_app_network_subnets" {
+  query "network_subnets_for_app_service_web" {
     sql = <<-EOQ
     select
       lower(id) as subnet_id
@@ -339,7 +339,7 @@ dashboard "app_service_web_app_detail" {
     EOQ
   }
 
-  query "app_service_web_app_network_virtual_networks"{
+  query "network_virtual_networks_for_app_service_web" {
     sql = <<-EOQ
     select
       lower(id) as virtual_network_id

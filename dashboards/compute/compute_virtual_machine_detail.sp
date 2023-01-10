@@ -46,53 +46,53 @@ dashboard "compute_virtual_machine_detail" {
     }
   }
 
-  with "compute_disks" {
-    query = query.compute_virtual_machine_compute_disks
+  with "compute_disks_for_compute_virtual_machine" {
+    query = query.compute_disks_for_compute_virtual_machine
     args  = [self.input.vm_id.value]
   }
 
-  with "compute_images" {
-    query = query.compute_virtual_machine_compute_images
+  with "compute_images_for_compute_virtual_machine" {
+    query = query.compute_images_for_compute_virtual_machine
     args  = [self.input.vm_id.value]
   }
 
-  with "network_application_gateways" {
-    query = query.compute_virtual_machine_network_application_gateways
+  with "network_application_gateways_for_compute_virtual_machine" {
+    query = query.network_application_gateways_for_compute_virtual_machine
     args  = [self.input.vm_id.value]
   }
 
-  with "network_load_balancer_backend_address_pools" {
-    query = query.compute_virtual_machine_network_load_balancer_backend_address_pools
+  with "network_load_balancer_backend_address_pools_for_compute_virtual_machine" {
+    query = query.network_load_balancer_backend_address_pools_for_compute_virtual_machine
     args  = [self.input.vm_id.value]
   }
 
-  with "network_load_balancers" {
-    query = query.compute_virtual_machine_network_load_balancers
+  with "network_load_balancers_for_compute_virtual_machine" {
+    query = query.network_load_balancers_for_compute_virtual_machine
     args  = [self.input.vm_id.value]
   }
 
-  with "network_network_interfaces" {
-    query = query.compute_virtual_machine_network_network_interfaces
+  with "network_network_interfaces_for_compute_virtual_machine" {
+    query = query.network_network_interfaces_for_compute_virtual_machine
     args  = [self.input.vm_id.value]
   }
 
-  with "network_public_ips" {
-    query = query.compute_virtual_machine_network_public_ips
+  with "network_public_ips_for_compute_virtual_machine" {
+    query = query.network_public_ips_for_compute_virtual_machine
     args  = [self.input.vm_id.value]
   }
 
-  with "network_security_groups" {
-    query = query.compute_virtual_machine_network_security_groups
+  with "network_security_groups_for_compute_virtual_machine" {
+    query = query.network_security_groups_for_compute_virtual_machine
     args  = [self.input.vm_id.value]
   }
 
-  with "network_subnets" {
-    query = query.compute_virtual_machine_network_subnets
+  with "network_subnets_for_compute_virtual_machine" {
+    query = query.network_subnets_for_compute_virtual_machine
     args  = [self.input.vm_id.value]
   }
 
-  with "network_virtual_networks" {
-    query = query.compute_virtual_machine_network_virtual_networks
+  with "network_virtual_networks_for_compute_virtual_machine" {
+    query = query.network_virtual_networks_for_compute_virtual_machine
     args  = [self.input.vm_id.value]
   }
 
@@ -107,14 +107,14 @@ dashboard "compute_virtual_machine_detail" {
       node {
         base = node.compute_disk
         args = {
-          compute_disk_ids = with.compute_disks.rows[*].disk_id
+          compute_disk_ids = with.compute_disks_for_compute_virtual_machine.rows[*].disk_id
         }
       }
 
       node {
         base = node.compute_image
         args = {
-          compute_image_ids = with.compute_images.rows[*].compute_image_id
+          compute_image_ids = with.compute_images_for_compute_virtual_machine.rows[*].compute_image_id
         }
       }
 
@@ -135,56 +135,56 @@ dashboard "compute_virtual_machine_detail" {
       node {
         base = node.network_application_gateway
         args = {
-          network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
+          network_application_gateway_ids = with.network_application_gateways_for_compute_virtual_machine.rows[*].application_gateway_id
         }
       }
 
       node {
         base = node.network_load_balancer
         args = {
-          network_load_balancer_ids = with.network_load_balancers.rows[*].load_balancer_id
+          network_load_balancer_ids = with.network_load_balancers_for_compute_virtual_machine.rows[*].load_balancer_id
         }
       }
 
       node {
         base = node.network_load_balancer_backend_address_pool
         args = {
-          network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
+          network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools_for_compute_virtual_machine.rows[*].pool_id
         }
       }
 
       node {
         base = node.network_network_interface
         args = {
-          network_network_interface_ids = with.network_network_interfaces.rows[*].network_interface_id
+          network_network_interface_ids = with.network_network_interfaces_for_compute_virtual_machine.rows[*].network_interface_id
         }
       }
 
       node {
         base = node.network_network_security_group
         args = {
-          network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+          network_security_group_ids = with.network_security_groups_for_compute_virtual_machine.rows[*].nsg_id
         }
       }
 
       node {
         base = node.network_public_ip
         args = {
-          network_public_ip_ids = with.network_public_ips.rows[*].public_ip_id
+          network_public_ip_ids = with.network_public_ips_for_compute_virtual_machine.rows[*].public_ip_id
         }
       }
 
       node {
         base = node.network_subnet
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_compute_virtual_machine.rows[*].subnet_id
         }
       }
 
       node {
         base = node.network_virtual_network
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+          network_virtual_network_ids = with.network_virtual_networks_for_compute_virtual_machine.rows[*].virtual_network_id
         }
       }
 
@@ -549,7 +549,7 @@ query "compute_virtual_machine_vulnerability_assessment_solution" {
 
 # With Queries
 
-query "compute_virtual_machine_compute_disks" {
+query "compute_disks_for_compute_virtual_machine" {
   sql = <<-EOQ
     select
       lower(jsonb_array_elements(data_disks)->'managedDisk'->>'id') as disk_id
@@ -568,7 +568,7 @@ query "compute_virtual_machine_compute_disks" {
   EOQ
 }
 
-query "compute_virtual_machine_compute_images" {
+query "compute_images_for_compute_virtual_machine" {
   sql = <<-EOQ
     select
       lower(i.id) as compute_image_id
@@ -580,7 +580,7 @@ query "compute_virtual_machine_compute_images" {
   EOQ
 }
 
-query "compute_virtual_machine_network_application_gateways" {
+query "network_application_gateways_for_compute_virtual_machine" {
   sql = <<-EOQ
     with network_interface as (
       select
@@ -612,7 +612,7 @@ query "compute_virtual_machine_network_application_gateways" {
   EOQ
 }
 
-query "compute_virtual_machine_network_load_balancer_backend_address_pools" {
+query "network_load_balancer_backend_address_pools_for_compute_virtual_machine" {
   sql = <<-EOQ
     with network_interface as (
       select
@@ -642,7 +642,7 @@ query "compute_virtual_machine_network_load_balancer_backend_address_pools" {
   EOQ
 }
 
-query "compute_virtual_machine_network_load_balancers" {
+query "network_load_balancers_for_compute_virtual_machine" {
   sql = <<-EOQ
     with network_interface as (
       select
@@ -674,7 +674,7 @@ query "compute_virtual_machine_network_load_balancers" {
   EOQ
 }
 
-query "compute_virtual_machine_network_network_interfaces" {
+query "network_network_interfaces_for_compute_virtual_machine" {
   sql = <<-EOQ
     with network_interface_id as (
       select
@@ -693,7 +693,7 @@ query "compute_virtual_machine_network_network_interfaces" {
   EOQ
 }
 
-query "compute_virtual_machine_network_public_ips" {
+query "network_public_ips_for_compute_virtual_machine" {
   sql = <<-EOQ
     with network_interfaces as (
       select
@@ -716,10 +716,10 @@ query "compute_virtual_machine_network_public_ips" {
     where
       p.id is not null;
   EOQ
-  
+
 }
 
-query "compute_virtual_machine_network_security_groups" {
+query "network_security_groups_for_compute_virtual_machine" {
   sql = <<-EOQ
     with network_interface_id as (
       select
@@ -741,7 +741,7 @@ query "compute_virtual_machine_network_security_groups" {
   EOQ
 }
 
-query "compute_virtual_machine_network_subnets" {
+query "network_subnets_for_compute_virtual_machine" {
   sql = <<-EOQ
     with network_interface_id as (
       select
@@ -763,7 +763,7 @@ query "compute_virtual_machine_network_subnets" {
   EOQ
 }
 
-query "compute_virtual_machine_network_virtual_networks" {
+query "network_virtual_networks_for_compute_virtual_machine" {
   sql = <<-EOQ
     with network_interface_id as (
       select

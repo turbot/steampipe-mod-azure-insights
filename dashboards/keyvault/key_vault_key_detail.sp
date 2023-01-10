@@ -35,43 +35,43 @@ dashboard "key_vault_key_detail" {
 
   }
 
-  with "compute_disk_encryption_sets" {
-    query = query.key_vault_key_compute_disk_encryption_sets
+  with "compute_disk_encryption_sets_for_key_vault_key" {
+    query = query.compute_disk_encryption_sets_for_key_vault_key
     args  = [self.input.key_vault_key_id.value]
   }
 
-  with "container_registries" {
-    query = query.key_vault_key_container_registries
+  with "container_registries_for_key_vault_key" {
+    query = query.container_registries_for_key_vault_key
     args  = [self.input.key_vault_key_id.value]
   }
 
-  with "eventhub_namespaces" {
-    query = query.key_vault_key_eventhub_namespaces
+  with "eventhub_namespaces_for_key_vault_key" {
+    query = query.eventhub_namespaces_for_key_vault_key
     args  = [self.input.key_vault_key_id.value]
   }
 
-  with "key_vault_vaults" {
-    query = query.key_vault_key_key_vault_vaults
+  with "key_vault_vaults_for_key_vault_key" {
+    query = query.key_vault_vaults_for_key_vault_key
     args  = [self.input.key_vault_key_id.value]
   }
 
-  with "postgresql_servers" {
-    query = query.key_vault_key_postgresql_servers
+  with "postgresql_servers_for_key_vault_key" {
+    query = query.postgresql_servers_for_key_vault_key
     args  = [self.input.key_vault_key_id.value]
   }
 
-  with "servicebus_namespaces" {
-    query = query.key_vault_key_servicebus_namespaces
+  with "servicebus_namespaces_for_key_vault_key" {
+    query = query.servicebus_namespaces_for_key_vault_key
     args  = [self.input.key_vault_key_id.value]
   }
 
-  with "sql_servers" {
-    query = query.key_vault_key_sql_servers
+  with "sql_servers_for_key_vault_key" {
+    query = query.sql_servers_for_key_vault_key
     args  = [self.input.key_vault_key_id.value]
   }
 
-  with "storage_storage_accounts" {
-    query = query.key_vault_key_storage_storage_accounts
+  with "storage_storage_accounts_for_key_vault_key" {
+    query = query.storage_storage_accounts_for_key_vault_key
     args  = [self.input.key_vault_key_id.value]
   }
 
@@ -85,21 +85,21 @@ dashboard "key_vault_key_detail" {
       node {
         base = node.compute_disk_encryption_set
         args = {
-          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].disk_encryption_set_id
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets_for_key_vault_key.rows[*].disk_encryption_set_id
         }
       }
 
       node {
         base = node.container_registry
         args = {
-          container_registry_ids = with.container_registries.rows[*].registry_id
+          container_registry_ids = with.container_registries_for_key_vault_key.rows[*].registry_id
         }
       }
 
       node {
         base = node.eventhub_namespace
         args = {
-          eventhub_namespace_ids = with.eventhub_namespaces.rows[*].eventhub_namespace_id
+          eventhub_namespace_ids = with.eventhub_namespaces_for_key_vault_key.rows[*].eventhub_namespace_id
         }
       }
 
@@ -120,56 +120,56 @@ dashboard "key_vault_key_detail" {
       node {
         base = node.key_vault_vault
         args = {
-          key_vault_vault_ids = with.key_vault_vaults.rows[*].vault_id
+          key_vault_vault_ids = with.key_vault_vaults_for_key_vault_key.rows[*].vault_id
         }
       }
 
       node {
         base = node.postgresql_server
         args = {
-          postgresql_server_ids = with.postgresql_servers.rows[*].postgresql_server_id
+          postgresql_server_ids = with.postgresql_servers_for_key_vault_key.rows[*].postgresql_server_id
         }
       }
 
       node {
         base = node.servicebus_namespace
         args = {
-          servicebus_namespace_ids = with.servicebus_namespaces.rows[*].servicebus_namespace_id
+          servicebus_namespace_ids = with.servicebus_namespaces_for_key_vault_key.rows[*].servicebus_namespace_id
         }
       }
 
       node {
         base = node.sql_server
         args = {
-          sql_server_ids = with.sql_servers.rows[*].sql_server_id
+          sql_server_ids = with.sql_servers_for_key_vault_key.rows[*].sql_server_id
         }
       }
 
       node {
         base = node.storage_storage_account
         args = {
-          storage_account_ids = with.storage_storage_accounts.rows[*].account_id
+          storage_account_ids = with.storage_storage_accounts_for_key_vault_key.rows[*].account_id
         }
       }
 
       edge {
         base = edge.compute_disk_encryption_set_to_key_vault_key_version
         args = {
-          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].disk_encryption_set_id
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets_for_key_vault_key.rows[*].disk_encryption_set_id
         }
       }
 
       edge {
         base = edge.container_registry_to_key_vault_key_version
         args = {
-          container_registry_ids = with.container_registries.rows[*].registry_id
+          container_registry_ids = with.container_registries_for_key_vault_key.rows[*].registry_id
         }
       }
 
       edge {
         base = edge.eventhub_namespace_to_key_vault_key_version
         args = {
-          eventhub_namespace_ids = with.eventhub_namespaces.rows[*].eventhub_namespace_id
+          eventhub_namespace_ids = with.eventhub_namespaces_for_key_vault_key.rows[*].eventhub_namespace_id
         }
       }
 
@@ -189,28 +189,28 @@ dashboard "key_vault_key_detail" {
       edge {
         base = edge.postgresql_server_to_key_vault_key_version
         args = {
-          postgresql_server_ids = with.postgresql_servers.rows[*].postgresql_server_id
+          postgresql_server_ids = with.postgresql_servers_for_key_vault_key.rows[*].postgresql_server_id
         }
       }
 
       edge {
         base = edge.servicebus_namespace_to_key_vault_key
         args = {
-          servicebus_namespace_ids = with.servicebus_namespaces.rows[*].servicebus_namespace_id
+          servicebus_namespace_ids = with.servicebus_namespaces_for_key_vault_key.rows[*].servicebus_namespace_id
         }
       }
 
       edge {
         base = edge.sql_server_to_key_vault_key_version
         args = {
-          sql_server_ids = with.sql_servers.rows[*].sql_server_id
+          sql_server_ids = with.sql_servers_for_key_vault_key.rows[*].sql_server_id
         }
       }
 
       edge {
         base = edge.storage_storage_account_to_key_vault_key_version
         args = {
-          storage_account_ids = with.storage_storage_accounts.rows[*].account_id
+          storage_account_ids = with.storage_storage_accounts_for_key_vault_key.rows[*].account_id
         }
       }
     }
@@ -320,7 +320,7 @@ query "key_vault_key_size" {
 
 # with queries
 
-query "key_vault_key_compute_disk_encryption_sets" {
+query "compute_disk_encryption_sets_for_key_vault_key" {
   sql = <<-EOQ
     select
       lower(s.id) as disk_encryption_set_id
@@ -333,7 +333,7 @@ query "key_vault_key_compute_disk_encryption_sets" {
   EOQ
 }
 
-query "key_vault_key_container_registries" {
+query "container_registries_for_key_vault_key" {
   sql = <<-EOQ
     select
       lower(r.id) as registry_id
@@ -347,7 +347,7 @@ query "key_vault_key_container_registries" {
   EOQ
 }
 
-query "key_vault_key_eventhub_namespaces" {
+query "eventhub_namespaces_for_key_vault_key" {
   sql = <<-EOQ
     select
       lower(n.id) as eventhub_namespace_id
@@ -363,7 +363,7 @@ query "key_vault_key_eventhub_namespaces" {
   EOQ
 }
 
-query "key_vault_key_key_vault_vaults" {
+query "key_vault_vaults_for_key_vault_key" {
   sql = <<-EOQ
     select
       lower(v.id) as vault_id
@@ -375,7 +375,7 @@ query "key_vault_key_key_vault_vaults" {
   EOQ
 }
 
-query "key_vault_key_postgresql_servers" {
+query "postgresql_servers_for_key_vault_key" {
   sql = <<-EOQ
     select
       lower(s.id) as postgresql_server_id
@@ -388,7 +388,7 @@ query "key_vault_key_postgresql_servers" {
   EOQ
 }
 
-query "key_vault_key_servicebus_namespaces" {
+query "servicebus_namespaces_for_key_vault_key" {
   sql = <<-EOQ
     select
       lower(n.id) as servicebus_namespace_id
@@ -405,7 +405,7 @@ query "key_vault_key_servicebus_namespaces" {
   EOQ
 }
 
-query "key_vault_key_sql_servers" {
+query "sql_servers_for_key_vault_key" {
   sql   = <<-EOQ
     with sql_server as (
       select
@@ -434,7 +434,7 @@ query "key_vault_key_sql_servers" {
   EOQ
 }
 
-query "key_vault_key_storage_storage_accounts" {
+query "storage_storage_accounts_for_key_vault_key" {
   sql   = <<-EOQ
     select
       lower(s.id) as account_id

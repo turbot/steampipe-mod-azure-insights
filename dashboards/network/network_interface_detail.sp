@@ -41,28 +41,28 @@ dashboard "network_interface_detail" {
 
   }
 
-  with "compute_virtual_machines" {
-    query = query.network_interface_compute_virtual_machines
+  with "compute_virtual_machines_for_network_interface" {
+    query = query.compute_virtual_machines_for_network_interface
     args  = [self.input.nic_id.value]
   }
 
-  with "network_public_ips" {
-    query = query.network_interface_network_public_ips
+  with "network_public_ips_for_network_interface" {
+    query = query.network_public_ips_for_network_interface
     args  = [self.input.nic_id.value]
   }
 
-  with "network_security_groups" {
-    query = query.network_interface_network_security_groups
+  with "network_security_groups_for_network_interface" {
+    query = query.network_security_groups_for_network_interface
     args  = [self.input.nic_id.value]
   }
 
-  with "network_subnets" {
-    query = query.network_interface_network_subnets
+  with "network_subnets_for_network_interface" {
+    query = query.network_subnets_for_network_interface
     args  = [self.input.nic_id.value]
   }
 
-  with "network_virtual_networks" {
-    query = query.network_interface_network_virtual_networks
+  with "network_virtual_networks_for_network_interface" {
+    query = query.network_virtual_networks_for_network_interface
     args  = [self.input.nic_id.value]
   }
 
@@ -76,7 +76,7 @@ dashboard "network_interface_detail" {
       node {
         base = node.compute_virtual_machine
         args = {
-          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+          compute_virtual_machine_ids = with.compute_virtual_machines_for_network_interface.rows[*].virtual_machine_id
         }
       }
 
@@ -90,35 +90,35 @@ dashboard "network_interface_detail" {
       node {
         base = node.network_network_security_group
         args = {
-          network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+          network_security_group_ids = with.network_security_groups_for_network_interface.rows[*].nsg_id
         }
       }
 
       node {
         base = node.network_public_ip
         args = {
-          network_public_ip_ids = with.network_public_ips.rows[*].public_ip_id
+          network_public_ip_ids = with.network_public_ips_for_network_interface.rows[*].public_ip_id
         }
       }
 
       node {
         base = node.network_subnet
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_interface.rows[*].subnet_id
         }
       }
 
       node {
         base = node.network_virtual_network
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+          network_virtual_network_ids = with.network_virtual_networks_for_network_interface.rows[*].virtual_network_id
         }
       }
 
       edge {
         base = edge.compute_virtual_machine_to_network_network_interface
         args = {
-          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+          compute_virtual_machine_ids = with.compute_virtual_machines_for_network_interface.rows[*].virtual_machine_id
         }
       }
 
@@ -146,7 +146,7 @@ dashboard "network_interface_detail" {
       edge {
         base = edge.network_subnet_to_network_virtual_network
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_interface.rows[*].subnet_id
         }
       }
     }
@@ -304,7 +304,7 @@ query "network_interface_accelerated_networking_enabled" {
 
 # with queries
 
-query "network_interface_compute_virtual_machines" {
+query "compute_virtual_machines_for_network_interface" {
   sql   = <<-EOQ
     with vm_network_interface_id as (
       select
@@ -324,7 +324,7 @@ query "network_interface_compute_virtual_machines" {
 }
 
 
-query "network_interface_network_public_ips" {
+query "network_public_ips_for_network_interface" {
   sql   = <<-EOQ
     with network_interface_public_ip as (
       select
@@ -344,7 +344,7 @@ query "network_interface_network_public_ips" {
   EOQ
 }
 
-query "network_interface_network_security_groups" {
+query "network_security_groups_for_network_interface" {
   sql   = <<-EOQ
     with network_security_group_id as (
       select
@@ -365,7 +365,7 @@ query "network_interface_network_security_groups" {
   EOQ
 }
 
-query "network_interface_network_subnets" {
+query "network_subnets_for_network_interface" {
   sql   = <<-EOQ
     select
       lower(s.id) as subnet_id
@@ -379,7 +379,7 @@ query "network_interface_network_subnets" {
   EOQ
 }
 
-query "network_interface_network_virtual_networks" {
+query "network_virtual_networks_for_network_interface" {
   sql   = <<-EOQ
     with subnet_list as(
       select
