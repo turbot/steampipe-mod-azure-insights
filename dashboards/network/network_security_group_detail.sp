@@ -53,23 +53,23 @@ dashboard "network_security_group_detail" {
 
   }
 
-  with "compute_virtual_machines" {
-    query = query.network_security_group_compute_virtual_machines
+  with "compute_virtual_machines_for_network_security_group" {
+    query = query.compute_virtual_machines_for_network_security_group
     args  = [self.input.nsg_id.value]
   }
 
-  with "network_network_interfaces" {
-    query = query.network_security_group_network_network_interfaces
+  with "network_network_interfaces_for_network_security_group" {
+    query = query.network_network_interfaces_for_network_security_group
     args  = [self.input.nsg_id.value]
   }
 
-  with "network_subnets" {
-    query = query.network_security_group_network_subnets
+  with "network_subnets_for_network_security_group" {
+    query = query.network_subnets_for_network_security_group
     args  = [self.input.nsg_id.value]
   }
 
-  with "network_virtual_networks" {
-    query = query.network_security_group_network_virtual_networks
+  with "network_virtual_networks_for_network_security_group" {
+    query = query.network_virtual_networks_for_network_security_group
     args  = [self.input.nsg_id.value]
   }
 
@@ -83,14 +83,14 @@ dashboard "network_security_group_detail" {
       node {
         base = node.compute_virtual_machine
         args = {
-          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+          compute_virtual_machine_ids = with.compute_virtual_machines_for_network_security_group.rows[*].virtual_machine_id
         }
       }
 
       node {
         base = node.network_network_interface
         args = {
-          network_network_interface_ids = with.network_network_interfaces.rows[*].nic_id
+          network_network_interface_ids = with.network_network_interfaces_for_network_security_group.rows[*].nic_id
         }
       }
 
@@ -111,14 +111,14 @@ dashboard "network_security_group_detail" {
       node {
         base = node.network_subnet
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_security_group.rows[*].subnet_id
         }
       }
 
       node {
         base = node.network_virtual_network
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+          network_virtual_network_ids = with.network_virtual_networks_for_network_security_group.rows[*].network_id
         }
       }
 
@@ -146,14 +146,14 @@ dashboard "network_security_group_detail" {
       edge {
         base = edge.network_subnet_to_network_security_group
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_security_group.rows[*].subnet_id
         }
       }
 
       edge {
         base = edge.network_virtual_network_to_network_subnet
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+          network_virtual_network_ids = with.network_virtual_networks_for_network_security_group.rows[*].network_id
         }
       }
     }
@@ -411,7 +411,7 @@ query "network_security_group_unrestricted_egress_remote_access" {
 
 # with queries
 
-query "network_security_group_compute_virtual_machines" {
+query "compute_virtual_machines_for_network_security_group" {
   sql   = <<-EOQ
     with network_interface_list as (
       select
@@ -435,7 +435,7 @@ query "network_security_group_compute_virtual_machines" {
   EOQ
 }
 
-query "network_security_group_network_network_interfaces" {
+query "network_network_interfaces_for_network_security_group" {
   sql   = <<-EOQ
     select
       lower(nic.id) as nic_id
@@ -449,7 +449,7 @@ query "network_security_group_network_network_interfaces" {
   EOQ
 }
 
-query "network_security_group_network_subnets" {
+query "network_subnets_for_network_security_group" {
   sql   = <<-EOQ
     select
       lower(s.id) as subnet_id
@@ -463,7 +463,7 @@ query "network_security_group_network_subnets" {
   EOQ
 }
 
-query "network_security_group_network_virtual_networks" {
+query "network_virtual_networks_for_network_security_group" {
   sql   = <<-EOQ
     with subnet_list as (
       select

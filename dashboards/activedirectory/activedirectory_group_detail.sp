@@ -33,38 +33,38 @@ dashboard "activedirectory_group_detail" {
 
   }
 
-  with "activedirectory_directory_roles" {
-    query = query.activedirectory_group_activedirectory_directory_role
+  with "activedirectory_directory_roles_for_activedirectory_group" {
+    query = query.activedirectory_directory_roles_for_activedirectory_group
     args  = [self.input.group_id.value]
   }
 
-  with "activedirectory_users" {
-    query = query.activedirectory_group_activedirectory_users
+  with "activedirectory_users_for_activedirectory_group" {
+    query = query.activedirectory_users_for_activedirectory_group
     args  = [self.input.group_id.value]
   }
 
-  with "resource_groups" {
-    query = query.activedirectory_group_resource_groups
+  with "resource_groups_for_activedirectory_group" {
+    query = query.resource_groups_for_activedirectory_group
+    args = [self.input.group_id.value]
+  }
+
+  with "resource_group_role_definitions_for_activedirectory_group" {
+    query = query.resource_group_role_definitions_for_activedirectory_group
+    args = [self.input.group_id.value]
+  }
+
+  with "subscriptions_for_activedirectory_group" {
+    query = query.subscriptions_for_activedirectory_group
     args  = [self.input.group_id.value]
   }
 
-  with "resource_group_role_definitions" {
-    query = query.activedirectory_group_resource_group_role_definitions
-    args  = [self.input.group_id.value]
+  with "subscription_role_definitions_for_activedirectory_group" {
+    query = query.subscription_role_definitions_for_activedirectory_group
+    args = [self.input.group_id.value]
   }
 
-  with "subscriptions" {
-    query = query.activedirectory_group_subscriptions
-    args  = [self.input.group_id.value]
-  }
-
-  with "subscription_role_definitions" {
-    query = query.activedirectory_group_subscription_role_definitions
-    args  = [self.input.group_id.value]
-  }
-
-  with "to_activedirectory_groups" {
-    query = query.activedirectory_group_activedirectory_groups
+  with "target_activedirectory_groups_for_activedirectory_group" {
+    query = query.target_activedirectory_groups_for_activedirectory_group
     args  = [self.input.group_id.value]
   }
 
@@ -78,7 +78,7 @@ dashboard "activedirectory_group_detail" {
       node {
         base = node.activedirectory_directory_role
         args = {
-          activedirectory_directory_role_ids = with.activedirectory_directory_roles.rows[*].directory_role_id
+          activedirectory_directory_role_ids = with.activedirectory_directory_roles_for_activedirectory_group.rows[*].directory_role_id
         }
       }
 
@@ -92,42 +92,42 @@ dashboard "activedirectory_group_detail" {
       node {
         base = node.activedirectory_group
         args = {
-          activedirectory_group_ids = with.to_activedirectory_groups.rows[*].activedirectory_group_id
+          activedirectory_group_ids = with.target_activedirectory_groups_for_activedirectory_group.rows[*].activedirectory_group_id
         }
       }
 
       node {
         base = node.activedirectory_user
         args = {
-          activedirectory_user_ids = with.activedirectory_users.rows[*].activedirectory_user_id
+          activedirectory_user_ids = with.activedirectory_users_for_activedirectory_group.rows[*].activedirectory_user_id
         }
       }
 
       node {
         base = node.resource_group
         args = {
-          resource_group_ids = with.resource_groups.rows[*].resource_group_id
+          resource_group_ids = with.resource_groups_for_activedirectory_group.rows[*].resource_group_id
         }
       }
 
       node {
         base = node.role_definition
         args = {
-          role_definition_ids = with.subscription_role_definitions.rows[*].role_definition_id
+          role_definition_ids = with.subscription_role_definitions_for_activedirectory_group.rows[*].role_definition_id
         }
       }
 
       node {
         base = node.role_definition
         args = {
-          role_definition_ids = with.resource_group_role_definitions.rows[*].role_definition_id
+          role_definition_ids = with.resource_group_role_definitions_for_activedirectory_group.rows[*].role_definition_id
         }
       }
 
       node {
         base = node.subscription
         args = {
-          subscription_ids = with.subscriptions.rows[*].subscription_id
+          subscription_ids = with.subscriptions_for_activedirectory_group.rows[*].subscription_id
         }
       }
 
@@ -162,21 +162,21 @@ dashboard "activedirectory_group_detail" {
       edge {
         base = edge.subscription_to_resource_group
         args = {
-          subscription_ids = with.subscriptions.rows[*].subscription_id
+          subscription_ids = with.subscriptions_for_activedirectory_group.rows[*].subscription_id
         }
       }
 
       edge {
         base = edge.subscription_to_role_definition
         args = {
-          role_definition_ids = with.subscription_role_definitions.rows[*].role_definition_id
+          role_definition_ids = with.subscription_role_definitions_for_activedirectory_group.rows[*].role_definition_id
         }
       }
 
       edge {
         base = edge.resource_group_to_role_definition
         args = {
-          role_definition_ids = with.resource_group_role_definitions.rows[*].role_definition_id
+          role_definition_ids = with.resource_group_role_definitions_for_activedirectory_group.rows[*].role_definition_id
         }
       }
 
@@ -365,7 +365,9 @@ query "activedirectory_group_owners" {
   param "id" {}
 }
 
-query "activedirectory_group_activedirectory_users" {
+# with queries
+
+query "activedirectory_users_for_activedirectory_group" {
   sql = <<-EOQ
 
     with group_details as(
@@ -389,7 +391,7 @@ query "activedirectory_group_activedirectory_users" {
 
 }
 
-query "activedirectory_group_activedirectory_groups" {
+query "target_activedirectory_groups_for_activedirectory_group" {
 
   sql = <<-EOQ
     with group_details as(
@@ -413,7 +415,7 @@ query "activedirectory_group_activedirectory_groups" {
 
 }
 
-query "activedirectory_group_subscription_role_definitions" {
+query "subscription_role_definitions_for_activedirectory_group" {
   sql = <<-EOQ
     select
       d.id as role_definition_id
@@ -430,7 +432,7 @@ query "activedirectory_group_subscription_role_definitions" {
 
 }
 
-query "activedirectory_group_resource_group_role_definitions" {
+query "resource_group_role_definitions_for_activedirectory_group" {
   sql = <<-EOQ
     select
       d.id as role_definition_id
@@ -447,7 +449,8 @@ query "activedirectory_group_resource_group_role_definitions" {
 
 }
 
-query "activedirectory_group_subscriptions" {
+query "subscriptions_for_activedirectory_group" {
+
   sql = <<-EOQ
     select
       distinct d.subscription_id as subscription_id
@@ -463,7 +466,8 @@ query "activedirectory_group_subscriptions" {
 
 }
 
-query "activedirectory_group_activedirectory_directory_role" {
+query "activedirectory_directory_roles_for_activedirectory_group" {
+
   sql = <<-EOQ
     with assigned_role as(
       select
@@ -486,7 +490,7 @@ query "activedirectory_group_activedirectory_directory_role" {
 
 }
 
-query "activedirectory_group_resource_groups" {
+query "resource_groups_for_activedirectory_group" {
 
   sql = <<-EOQ
     select

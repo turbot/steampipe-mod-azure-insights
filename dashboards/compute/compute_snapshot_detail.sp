@@ -41,38 +41,38 @@ dashboard "compute_snapshot_detail" {
 
   }
 
-  with "compute_disks" {
-    query = query.compute_snapshot_compute_disks
+  with "compute_disks_for_compute_snapshot" {
+    query = query.compute_disks_for_compute_snapshot
     args  = [self.input.id.value]
   }
 
-  with "compute_disk_accesses" {
-    query = query.compute_snapshot_compute_disk_accesses
+  with "compute_disk_accesses_for_compute_snapshot" {
+    query = query.compute_disk_accesses_for_compute_snapshot
     args  = [self.input.id.value]
   }
 
-  with "compute_disk_encryption_sets" {
-    query = query.compute_snapshot_compute_disk_encryption_sets
+  with "compute_disk_encryption_sets_for_compute_snapshot" {
+    query = query.compute_disk_encryption_sets_for_compute_snapshot
     args  = [self.input.id.value]
   }
 
-  with "from_compute_snapshots" {
-    query = query.compute_snapshot_from_compute_snapshots
+  with "source_compute_snapshots_for_compute_snapshot" {
+    query = query.source_compute_snapshots_for_compute_snapshot
     args  = [self.input.id.value]
   }
 
-  with "key_vault_keys" {
-    query = query.compute_snapshot_key_vault_keys
+  with "key_vault_keys_for_compute_snapshot" {
+    query = query.key_vault_keys_for_compute_snapshot
     args  = [self.input.id.value]
   }
 
-  with "key_vault_vaults" {
-    query = query.compute_snapshot_key_vault_vaults
+  with "key_vault_vaults_for_compute_snapshot" {
+    query = query.key_vault_vaults_for_compute_snapshot
     args  = [self.input.id.value]
   }
 
-  with "to_compute_snapshots" {
-    query = query.compute_snapshot_to_compute_snapshots
+  with "target_compute_snapshots_for_compute_snapshot" {
+    query = query.target_compute_snapshots_for_compute_snapshot
     args  = [self.input.id.value]
   }
 
@@ -86,21 +86,21 @@ dashboard "compute_snapshot_detail" {
       node {
         base = node.compute_disk
         args = {
-          compute_disk_ids = with.compute_disks.rows[*].disk_id
+          compute_disk_ids = with.compute_disks_for_compute_snapshot.rows[*].disk_id
         }
       }
 
       node {
         base = node.compute_disk_access
         args = {
-          compute_disk_access_ids = with.compute_disk_accesses.rows[*].disk_access_id
+          compute_disk_access_ids = with.compute_disk_accesses_for_compute_snapshot.rows[*].disk_access_id
         }
       }
 
       node {
         base = node.compute_disk_encryption_set
         args = {
-          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets_for_compute_snapshot.rows[*].encryption_set_id
         }
       }
 
@@ -114,28 +114,28 @@ dashboard "compute_snapshot_detail" {
       node {
         base = node.compute_snapshot
         args = {
-          compute_snapshot_ids = with.from_compute_snapshots.rows[*].snapshot_id
+          compute_snapshot_ids = with.source_compute_snapshots_for_compute_snapshot.rows[*].snapshot_id
         }
       }
 
       node {
         base = node.compute_snapshot
         args = {
-          compute_snapshot_ids = with.to_compute_snapshots.rows[*].snapshot_id
+          compute_snapshot_ids = with.target_compute_snapshots_for_compute_snapshot.rows[*].snapshot_id
         }
       }
 
       node {
         base = node.key_vault_key
         args = {
-          key_vault_key_ids = with.key_vault_keys.rows[*].key_vault_key_id
+          key_vault_key_ids = with.key_vault_keys_for_compute_snapshot.rows[*].key_vault_key_id
         }
       }
 
       node {
         base = node.key_vault_vault
         args = {
-          key_vault_vault_ids = with.key_vault_vaults.rows[*].key_vault_id
+          key_vault_vault_ids = with.key_vault_vaults_for_compute_snapshot.rows[*].key_vault_id
         }
       }
 
@@ -177,7 +177,7 @@ dashboard "compute_snapshot_detail" {
       edge {
         base = edge.compute_snapshot_to_compute_snapshot
         args = {
-          compute_snapshot_ids = with.from_compute_snapshots.rows[*].snapshot_id
+          compute_snapshot_ids = with.source_compute_snapshots_for_compute_snapshot.rows[*].snapshot_id
         }
       }
 
@@ -191,7 +191,7 @@ dashboard "compute_snapshot_detail" {
       edge {
         base = edge.compute_disk_encryption_set_to_key_vault_vault
         args = {
-          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets_for_compute_snapshot.rows[*].encryption_set_id
         }
       }
     }
@@ -341,7 +341,7 @@ query "compute_snapshot_network_access_policy" {
 
 # With Queries
 
-query "compute_snapshot_compute_disks" {
+query "compute_disks_for_compute_snapshot" {
   sql = <<-EOQ
     select
       lower(d.id) as disk_id
@@ -361,7 +361,7 @@ query "compute_snapshot_compute_disks" {
   EOQ
 }
 
-query "compute_snapshot_compute_disk_accesses" {
+query "compute_disk_accesses_for_compute_snapshot" {
   sql = <<-EOQ
     select
       lower(a.id) as disk_access_id
@@ -373,7 +373,7 @@ query "compute_snapshot_compute_disk_accesses" {
   EOQ
 }
 
-query "compute_snapshot_compute_disk_encryption_sets" {
+query "compute_disk_encryption_sets_for_compute_snapshot" {
   sql = <<-EOQ
     select
       lower(e.id) as encryption_set_id
@@ -385,7 +385,7 @@ query "compute_snapshot_compute_disk_encryption_sets" {
   EOQ
 }
 
-query "compute_snapshot_key_vault_keys" {
+query "key_vault_keys_for_compute_snapshot" {
   sql = <<-EOQ
     select
       lower(k.id) as key_vault_key_id
@@ -399,7 +399,7 @@ query "compute_snapshot_key_vault_keys" {
   EOQ
 }
 
-query "compute_snapshot_key_vault_vaults" {
+query "key_vault_vaults_for_compute_snapshot" {
   sql = <<-EOQ
     select
       lower(k.id) as key_vault_id
@@ -412,7 +412,7 @@ query "compute_snapshot_key_vault_vaults" {
   EOQ
 }
 
-query "compute_snapshot_from_compute_snapshots" {
+query "source_compute_snapshots_for_compute_snapshot" {
   sql = <<-EOQ
     select
       lower(s.id) as snapshot_id
@@ -426,7 +426,7 @@ query "compute_snapshot_from_compute_snapshots" {
   EOQ
 }
 
-query "compute_snapshot_to_compute_snapshots" {
+query "target_compute_snapshots_for_compute_snapshot" {
   sql = <<-EOQ
     select
       lower(s.id) as snapshot_id

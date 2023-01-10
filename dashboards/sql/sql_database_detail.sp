@@ -54,8 +54,8 @@ dashboard "sql_database_detail" {
 
   }
 
-  with "sql_servers" {
-    query = query.sql_database_sql_servers
+  with "sql_servers_for_sql_database" {
+    query = query.sql_servers_for_sql_database
     args  = [self.input.sql_database_id.value]
   }
 
@@ -82,7 +82,7 @@ dashboard "sql_database_detail" {
       node {
         base = node.sql_server
         args = {
-          sql_server_ids = with.sql_servers.rows[*].sql_server_id
+          sql_server_ids = with.sql_servers_for_sql_database.rows[*].sql_server_id
         }
       }
 
@@ -96,7 +96,7 @@ dashboard "sql_database_detail" {
       edge {
         base = edge.sql_server_to_sql_database
         args = {
-          sql_server_ids = with.sql_servers.rows[*].sql_server_id
+          sql_server_ids = with.sql_servers_for_sql_database.rows[*].sql_server_id
         }
       }
     }
@@ -287,7 +287,7 @@ query "sql_database_geo_redundant_backup_enabled" {
 
 # with queries
 
-query "sql_database_sql_servers" {
+query "sql_servers_for_sql_database" {
   sql = <<-EOQ
     select
       lower(sv.id) as sql_server_id

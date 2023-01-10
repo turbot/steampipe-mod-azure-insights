@@ -47,43 +47,43 @@ dashboard "compute_disk_detail" {
 
   }
 
-  with "compute_disk_accesses" {
-    query = query.compute_disk_compute_disk_accesses
+  with "compute_disk_accesses_for_compute_disk" {
+    query = query.compute_disk_accesses_for_compute_disk
     args  = [self.input.disk_id.value]
   }
 
-  with "compute_disk_encryption_sets" {
-    query = query.compute_disk_compute_disk_encryption_sets
+  with "compute_disk_encryption_sets_for_compute_disk" {
+    query = query.compute_disk_encryption_sets_for_compute_disk
     args  = [self.input.disk_id.value]
   }
 
-  with "compute_snapshots" {
-    query = query.compute_disk_compute_snapshots
+  with "compute_snapshots_for_compute_disk" {
+    query = query.compute_snapshots_for_compute_disk
     args  = [self.input.disk_id.value]
   }
 
-  with "to_compute_disks" {
-    query = query.compute_disk_to_compute_disk
+  with "source_compute_disks_for_compute_disk" {
+    query = query.source_compute_disks_for_compute_disk
     args  = [self.input.disk_id.value]
   }
 
-  with "compute_virtual_machines" {
-    query = query.compute_disk_compute_virtual_machines
+  with "compute_virtual_machines_for_compute_disk" {
+    query = query.compute_virtual_machines_for_compute_disk
     args  = [self.input.disk_id.value]
   }
 
-  with "key_vault_keys" {
-    query = query.compute_disk_key_vault_keys
+  with "key_vault_keys_for_compute_disk" {
+    query = query.key_vault_keys_for_compute_disk
     args  = [self.input.disk_id.value]
   }
 
-  with "key_vault_vaults" {
-    query = query.compute_disk_key_vault_vaults
+  with "key_vault_vaults_for_compute_disk" {
+    query = query.key_vault_vaults_for_compute_disk
     args  = [self.input.disk_id.value]
   }
 
-  with "storage_storage_accounts" {
-    query = query.compute_disk_storage_storage_accounts
+  with "storage_storage_accounts_for_compute_disk" {
+    query = query.storage_storage_accounts_for_compute_disk
     args  = [self.input.disk_id.value]
   }
 
@@ -104,63 +104,63 @@ dashboard "compute_disk_detail" {
       node {
         base = node.compute_disk
         args = {
-          compute_disk_ids = with.to_compute_disks.rows[*].compute_disk_id
+          compute_disk_ids = with.source_compute_disks_for_compute_disk.rows[*].compute_disk_id
         }
       }
 
       node {
         base = node.compute_disk_access
         args = {
-          compute_disk_access_ids = with.compute_disk_accesses.rows[*].disk_access_id
+          compute_disk_access_ids = with.compute_disk_accesses_for_compute_disk.rows[*].disk_access_id
         }
       }
 
       node {
         base = node.compute_disk_encryption_set
         args = {
-          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets_for_compute_disk.rows[*].encryption_set_id
         }
       }
 
       node {
         base = node.compute_snapshot
         args = {
-          compute_snapshot_ids = with.compute_snapshots.rows[*].compute_snapshot_id
+          compute_snapshot_ids = with.compute_snapshots_for_compute_disk.rows[*].compute_snapshot_id
         }
       }
 
       node {
         base = node.compute_virtual_machine
         args = {
-          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+          compute_virtual_machine_ids = with.compute_virtual_machines_for_compute_disk.rows[*].virtual_machine_id
         }
       }
 
       node {
         base = node.key_vault_key
         args = {
-          key_vault_key_ids = with.key_vault_keys.rows[*].key_vault_key_id
+          key_vault_key_ids = with.key_vault_keys_for_compute_disk.rows[*].key_vault_key_id
         }
       }
 
       node {
         base = node.key_vault_vault
         args = {
-          key_vault_vault_ids = with.key_vault_vaults.rows[*].key_vault_id
+          key_vault_vault_ids = with.key_vault_vaults_for_compute_disk.rows[*].key_vault_id
         }
       }
 
       node {
         base = node.storage_storage_account
         args = {
-          storage_account_ids = with.storage_storage_accounts.rows[*].storage_account_id
+          storage_account_ids = with.storage_storage_accounts_for_compute_disk.rows[*].storage_account_id
         }
       }
 
       edge {
         base = edge.compute_disk_encryption_set_to_key_vault_vault
         args = {
-          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets_for_compute_disk.rows[*].encryption_set_id
         }
       }
 
@@ -202,14 +202,14 @@ dashboard "compute_disk_detail" {
       edge {
         base = edge.storage_storage_account_to_compute_disk
         args = {
-          storage_account_ids = with.storage_storage_accounts.rows[*].storage_account_id
+          storage_account_ids = with.storage_storage_accounts_for_compute_disk.rows[*].storage_account_id
         }
       }
 
       edge {
         base = edge.compute_snapshot_to_compute_disk
         args = {
-          compute_snapshot_ids = with.compute_snapshots.rows[*].compute_snapshot_id
+          compute_snapshot_ids = with.compute_snapshots_for_compute_disk.rows[*].compute_snapshot_id
         }
       }
 
@@ -375,7 +375,7 @@ query "compute_disk_sku_name" {
 
 # With Queries
 
-query "compute_disk_compute_disk_accesses" {
+query "compute_disk_accesses_for_compute_disk" {
   sql = <<-EOQ
     select
       lower(a.id) as disk_access_id
@@ -387,7 +387,7 @@ query "compute_disk_compute_disk_accesses" {
   EOQ
 }
 
-query "compute_disk_compute_disk_encryption_sets" {
+query "compute_disk_encryption_sets_for_compute_disk" {
   sql = <<-EOQ
     select
       lower(e.id) as encryption_set_id
@@ -399,7 +399,7 @@ query "compute_disk_compute_disk_encryption_sets" {
   EOQ
 }
 
-query "compute_disk_compute_snapshots" {
+query "compute_snapshots_for_compute_disk" {
   sql = <<-EOQ
     select
       lower(s.id) as compute_snapshot_id
@@ -421,7 +421,7 @@ query "compute_disk_compute_snapshots" {
   EOQ
 }
 
-query "compute_disk_to_compute_disk" {
+query "source_compute_disks_for_compute_disk" {
   sql = <<-EOQ
     select
       lower(d2.id) as compute_disk_id
@@ -434,7 +434,7 @@ query "compute_disk_to_compute_disk" {
   EOQ
 }
 
-query "compute_disk_compute_virtual_machines" {
+query "compute_virtual_machines_for_compute_disk" {
   sql = <<-EOQ
     select
       lower(m.id) as virtual_machine_id
@@ -447,7 +447,7 @@ query "compute_disk_compute_virtual_machines" {
   EOQ
 }
 
-query "compute_disk_key_vault_keys" {
+query "key_vault_keys_for_compute_disk" {
   sql = <<-EOQ
     select
       lower(k.id) as key_vault_key_id,
@@ -462,7 +462,7 @@ query "compute_disk_key_vault_keys" {
   EOQ
 }
 
-query "compute_disk_key_vault_vaults" {
+query "key_vault_vaults_for_compute_disk" {
   sql = <<-EOQ
     select
       lower(k.id) as key_vault_id
@@ -475,7 +475,7 @@ query "compute_disk_key_vault_vaults" {
   EOQ
 }
 
-query "compute_disk_storage_storage_accounts" {
+query "storage_storage_accounts_for_compute_disk" {
   sql = <<-EOQ
     select
       lower(a.id) as storage_account_id

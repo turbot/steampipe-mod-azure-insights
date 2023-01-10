@@ -52,28 +52,28 @@ dashboard "sql_server_detail" {
 
   }
 
-  with "key_vault_keys" {
-    query = query.sql_server_key_vault_keys
+  with "key_vault_keys_for_sql_server" {
+    query = query.key_vault_keys_for_sql_server
     args  = [self.input.sql_server_id.value]
   }
 
-  with "key_vault_vaults" {
-    query = query.sql_server_key_vault_vaults
+  with "key_vault_vaults_for_sql_server" {
+    query = query.key_vault_vaults_for_sql_server
     args  = [self.input.sql_server_id.value]
   }
 
-  with "network_subnets" {
-    query = query.sql_server_network_subnets
+  with "network_subnets_for_sql_server" {
+    query = query.network_subnets_for_sql_server
     args  = [self.input.sql_server_id.value]
   }
 
-  with "network_virtual_networks" {
-    query = query.sql_server_network_virtual_networks
+  with "network_virtual_networks_for_sql_server" {
+    query = query.network_virtual_networks_for_sql_server
     args  = [self.input.sql_server_id.value]
   }
 
-  with "sql_databases" {
-    query = query.sql_server_sql_databases
+  with "sql_databases_for_sql_server" {
+    query = query.sql_databases_for_sql_server
     args  = [self.input.sql_server_id.value]
   }
 
@@ -86,35 +86,35 @@ dashboard "sql_server_detail" {
       node {
         base = node.key_vault_key
         args = {
-          key_vault_key_ids = with.key_vault_keys.rows[*].key_vault_key_id
+          key_vault_key_ids = with.key_vault_keys_for_sql_server.rows[*].key_vault_key_id
         }
       }
 
       node {
         base = node.key_vault_vault
         args = {
-          key_vault_vault_ids = with.key_vault_vaults.rows[*].key_vault_id
+          key_vault_vault_ids = with.key_vault_vaults_for_sql_server.rows[*].key_vault_id
         }
       }
 
       node {
         base = node.network_subnet
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_sql_server.rows[*].subnet_id
         }
       }
 
       node {
         base = node.network_virtual_network
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_networks_id
+          network_virtual_network_ids = with.network_virtual_networks_for_sql_server.rows[*].virtual_networks_id
         }
       }
 
       node {
         base = node.sql_database
         args = {
-          sql_database_ids = with.sql_databases.rows[*].sql_database_id
+          sql_database_ids = with.sql_databases_for_sql_server.rows[*].sql_database_id
         }
       }
 
@@ -135,7 +135,7 @@ dashboard "sql_server_detail" {
       edge {
         base = edge.network_subnet_to_network_virtual_network
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_virtual_networks_for_sql_server.rows[*].subnet_id
         }
       }
 
@@ -159,7 +159,7 @@ dashboard "sql_server_detail" {
           sql_server_ids = [self.input.sql_server_id.value]
         }
       }
-      
+
       edge {
         base = edge.sql_server_to_network_subnet
         args = {
@@ -378,7 +378,7 @@ query "sql_server_vulnerability_assessment_enabled" {
 
 # with queries
 
-query "sql_server_key_vault_keys" {
+query "key_vault_keys_for_sql_server" {
   sql   = <<-EOQ
     with attached_keys as (
       select
@@ -400,7 +400,7 @@ query "sql_server_key_vault_keys" {
 
 }
 
-query "sql_server_key_vault_vaults" {
+query "key_vault_vaults_for_sql_server" {
   sql = <<-EOQ
     select
       lower(id) as key_vault_id
@@ -421,7 +421,7 @@ query "sql_server_key_vault_vaults" {
 
 }
 
-query "sql_server_network_subnets" {
+query "network_subnets_for_sql_server" {
   sql   = <<-EOQ
     select
       lower(r -> 'properties' ->> 'virtualNetworkSubnetId') as subnet_id
@@ -433,7 +433,7 @@ query "sql_server_network_subnets" {
   EOQ
 }
 
-query "sql_server_network_virtual_networks" {
+query "network_virtual_networks_for_sql_server" {
   sql   = <<-EOQ
     select
       lower(id) as virtual_networks_id
@@ -453,7 +453,7 @@ query "sql_server_network_virtual_networks" {
   EOQ
 }
 
-query "sql_server_sql_databases" {
+query "sql_databases_for_sql_server" {
   sql   = <<-EOQ
     select
       lower(id) as sql_database_id

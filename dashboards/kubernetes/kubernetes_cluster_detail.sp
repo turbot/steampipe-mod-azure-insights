@@ -41,18 +41,18 @@ dashboard "kubernetes_cluster_detail" {
 
   }
 
-  with "compute_disk_encryption_sets" {
-    query = query.kubernetes_cluster_compute_disk_encryption_sets
+  with "compute_disk_encryption_sets_for_kubernetes_cluster" {
+    query = query.compute_disk_encryption_sets_for_kubernetes_cluster
     args  = [self.input.cluster_id.value]
   }
 
-  with "compute_virtual_machine_scale_sets" {
-    query = query.kubernetes_cluster_compute_virtual_machine_scale_sets
+  with "compute_virtual_machine_scale_sets_for_kubernetes_cluster" {
+    query = query.compute_virtual_machine_scale_sets_for_kubernetes_cluster
     args  = [self.input.cluster_id.value]
   }
 
-  with "compute_virtual_machine_scale_set_vms" {
-    query = query.kubernetes_cluster_compute_virtual_machine_scale_set_vms
+  with "compute_virtual_machine_scale_set_vms_for_kubernetes_cluster" {
+    query = query.compute_virtual_machine_scale_set_vms_for_kubernetes_cluster
     args  = [self.input.cluster_id.value]
   }
 
@@ -67,21 +67,21 @@ dashboard "kubernetes_cluster_detail" {
       node {
         base = node.compute_disk_encryption_set
         args = {
-          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets.rows[*].encryption_set_id
+          compute_disk_encryption_set_ids = with.compute_disk_encryption_sets_for_kubernetes_cluster.rows[*].encryption_set_id
         }
       }
 
       node {
         base = node.compute_virtual_machine_scale_set
         args = {
-          compute_virtual_machine_scale_set_ids = with.compute_virtual_machine_scale_sets.rows[*].scale_set_id
+          compute_virtual_machine_scale_set_ids = with.compute_virtual_machine_scale_sets_for_kubernetes_cluster.rows[*].scale_set_id
         }
       }
 
       node {
         base = node.compute_virtual_machine_scale_set_vm
         args = {
-          compute_virtual_machine_scale_set_vm_ids = with.compute_virtual_machine_scale_set_vms.rows[*].vm_id
+          compute_virtual_machine_scale_set_vm_ids = with.compute_virtual_machine_scale_set_vms_for_kubernetes_cluster.rows[*].vm_id
         }
       }
 
@@ -249,7 +249,7 @@ query "kubernetes_cluster_disk_encryption_status" {
 
 # with queries
 
-query "kubernetes_cluster_compute_disk_encryption_sets" {
+query "compute_disk_encryption_sets_for_kubernetes_cluster" {
   sql   = <<-EOQ
     select
       lower(e.id) as encryption_set_id
@@ -262,7 +262,7 @@ query "kubernetes_cluster_compute_disk_encryption_sets" {
   EOQ
 }
 
-query "kubernetes_cluster_compute_virtual_machine_scale_sets" {
+query "compute_virtual_machine_scale_sets_for_kubernetes_cluster" {
   sql   = <<-EOQ
     select
       lower(set.id) as scale_set_id
@@ -275,7 +275,7 @@ query "kubernetes_cluster_compute_virtual_machine_scale_sets" {
   EOQ
 }
 
-query "kubernetes_cluster_compute_virtual_machine_scale_set_vms" {
+query "compute_virtual_machine_scale_set_vms_for_kubernetes_cluster" {
   sql   = <<-EOQ
     select
       lower(vm.id) as vm_id

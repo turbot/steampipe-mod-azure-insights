@@ -35,48 +35,48 @@ dashboard "network_virtual_network_detail" {
 
   }
 
-  with "compute_virtual_machines" {
-    query = query.virtual_network_compute_virtual_machines
+  with "compute_virtual_machines_for_network_virtual_network" {
+    query = query.compute_virtual_machines_for_network_virtual_network
     args  = [self.input.vn_id.value]
   }
 
-  with "network_application_gateways" {
-    query = query.virtual_network_network_application_gateways
+  with "network_application_gateways_for_network_virtual_network" {
+    query = query.network_application_gateways_for_network_virtual_network
     args  = [self.input.vn_id.value]
   }
 
-  with "network_load_balancer_backend_address_pools" {
-    query = query.virtual_network_network_load_balancer_backend_address_pools
+  with "network_load_balancer_backend_address_pools_for_network_virtual_network" {
+    query = query.network_load_balancer_backend_address_pools_for_network_virtual_network
     args  = [self.input.vn_id.value]
   }
 
-  with "network_load_balancers" {
-    query = query.virtual_network_network_load_balancers
+  with "network_load_balancers_for_network_virtual_network" {
+    query = query.network_load_balancers_for_network_virtual_network
     args  = [self.input.vn_id.value]
   }
 
-  with "network_nat_gateways" {
-    query = query.virtual_network_network_nat_gateways
+  with "network_nat_gateways_for_network_virtual_network" {
+    query = query.network_nat_gateways_for_network_virtual_network
     args  = [self.input.vn_id.value]
   }
 
-  with "network_route_tables" {
-    query = query.virtual_network_network_route_tables
+  with "network_route_tables_for_network_virtual_network" {
+    query = query.network_route_tables_for_network_virtual_network
     args  = [self.input.vn_id.value]
   }
 
-  with "network_security_groups" {
-    query = query.virtual_network_network_security_groups
+  with "network_security_groups_for_network_virtual_network" {
+    query = query.network_security_groups_for_network_virtual_network
     args  = [self.input.vn_id.value]
   }
 
-  with "network_subnets" {
-    query = query.virtual_network_network_subnets
+  with "network_subnets_for_network_virtual_network" {
+    query = query.network_subnets_for_network_virtual_network
     args  = [self.input.vn_id.value]
   }
 
-  with "sql_servers" {
-    query = query.virtual_network_sql_servers
+  with "sql_servers_for_network_virtual_network" {
+    query = query.sql_servers_for_network_virtual_network
     args  = [self.input.vn_id.value]
   }
 
@@ -90,56 +90,56 @@ dashboard "network_virtual_network_detail" {
       node {
         base = node.compute_virtual_machine
         args = {
-          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+          compute_virtual_machine_ids = with.compute_virtual_machines_for_network_virtual_network.rows[*].virtual_machine_id
         }
       }
 
       node {
         base = node.network_application_gateway
         args = {
-          network_application_gateway_ids = with.network_application_gateways.rows[*].application_gateway_id
+          network_application_gateway_ids = with.network_application_gateways_for_network_virtual_network.rows[*].application_gateway_id
         }
       }
 
       node {
         base = node.network_load_balancer
         args = {
-          network_load_balancer_ids = with.network_load_balancers.rows[*].network_load_balancer_id
+          network_load_balancer_ids = with.network_load_balancers_for_network_virtual_network.rows[*].network_load_balancer_id
         }
       }
 
       node {
         base = node.network_load_balancer_backend_address_pool
         args = {
-          network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
+          network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools_for_network_virtual_network.rows[*].pool_id
         }
       }
 
       node {
         base = node.network_nat_gateway
         args = {
-          network_nat_gateway_ids = with.network_nat_gateways.rows[*].nat_gateway_id
+          network_nat_gateway_ids = with.network_nat_gateways_for_network_virtual_network.rows[*].nat_gateway_id
         }
       }
 
       node {
         base = node.network_network_security_group
         args = {
-          network_security_group_ids = with.network_security_groups.rows[*].nsg_id
+          network_security_group_ids = with.network_security_groups_for_network_virtual_network.rows[*].nsg_id
         }
       }
 
       node {
         base = node.network_route_table
         args = {
-          network_route_table_ids = with.network_route_tables.rows[*].route_table_id
+          network_route_table_ids = with.network_route_tables_for_network_virtual_network.rows[*].route_table_id
         }
       }
 
       node {
         base = node.network_subnet
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_virtual_network.rows[*].subnet_id
         }
       }
 
@@ -160,42 +160,42 @@ dashboard "network_virtual_network_detail" {
       node {
         base = node.sql_server
         args = {
-          sql_server_ids = with.sql_servers.rows[*].sql_server_id
+          sql_server_ids = with.sql_servers_for_network_virtual_network.rows[*].sql_server_id
         }
       }
 
       edge {
         base = edge.network_subnet_to_network_application_gateway
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_virtual_network.rows[*].subnet_id
         }
       }
 
       edge {
         base = edge.network_subnet_to_network_nat_gateway
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_virtual_network.rows[*].subnet_id
         }
       }
 
       edge {
         base = edge.network_subnet_to_network_route_table
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_virtual_network.rows[*].subnet_id
         }
       }
 
       edge {
         base = edge.network_subnet_to_network_security_group
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_virtual_network.rows[*].subnet_id
         }
       }
 
       edge {
         base = edge.network_subnet_to_sql_server
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_network_virtual_network.rows[*].subnet_id
         }
       }
 
@@ -429,7 +429,7 @@ query "virtual_network_ddos_protection" {
 
 # with queries
 
-query "virtual_network_compute_virtual_machines" {
+query "compute_virtual_machines_for_network_virtual_network" {
   sql = <<-EOQ
     with subnet_list as (
       select
@@ -461,7 +461,7 @@ query "virtual_network_compute_virtual_machines" {
   EOQ
 }
 
-query "virtual_network_network_application_gateways" {
+query "network_application_gateways_for_network_virtual_network" {
   sql   = <<-EOQ
     with subnet_list as (
       select
@@ -482,7 +482,7 @@ query "virtual_network_network_application_gateways" {
   EOQ
 }
 
-query "virtual_network_network_load_balancer_backend_address_pools" {
+query "network_load_balancer_backend_address_pools_for_network_virtual_network" {
     sql   = <<-EOQ
       with subnet_list as (
         select
@@ -515,7 +515,7 @@ query "virtual_network_network_load_balancer_backend_address_pools" {
   EOQ
 }
 
-query "virtual_network_network_load_balancers" {
+query "network_load_balancers_for_network_virtual_network" {
   sql   = <<-EOQ
     with subnet_list as (
       select
@@ -558,7 +558,7 @@ query "virtual_network_network_load_balancers" {
   EOQ
 }
 
-query "virtual_network_network_nat_gateways" {
+query "network_nat_gateways_for_network_virtual_network" {
   sql   = <<-EOQ
     with subnet_list as (
       select
@@ -579,7 +579,7 @@ query "virtual_network_network_nat_gateways" {
   EOQ
 }
 
-query "virtual_network_network_route_tables" {
+query "network_route_tables_for_network_virtual_network" {
   sql   = <<-EOQ
     with subnet_list as (
       select
@@ -600,7 +600,7 @@ query "virtual_network_network_route_tables" {
   EOQ
 }
 
-query "virtual_network_network_security_groups" {
+query "network_security_groups_for_network_virtual_network" {
   sql   = <<-EOQ
     with subnet_list as (
       select
@@ -622,7 +622,7 @@ query "virtual_network_network_security_groups" {
   EOQ
 }
 
-query "virtual_network_network_subnets" {
+query "network_subnets_for_network_virtual_network" {
   sql   = <<-EOQ
     select
       lower(sub.id) as subnet_id
@@ -635,7 +635,7 @@ query "virtual_network_network_subnets" {
   EOQ
 }
 
-query "virtual_network_sql_servers" {
+query "sql_servers_for_network_virtual_network" {
   sql   = <<-EOQ
     with subnet_list as (
       select

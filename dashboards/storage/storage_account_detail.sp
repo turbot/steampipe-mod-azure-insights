@@ -47,48 +47,48 @@ dashboard "storage_account_detail" {
 
   }
 
-  with "batch_accounts" {
-    query = query.storage_account_batch_accounts
+  with "batch_accounts_for_storage_account" {
+    query = query.batch_accounts_for_storage_account
     args  = [self.input.storage_account_id.value]
   }
 
-  with "compute_disks" {
-    query = query.storage_account_compute_disks
+  with "compute_disks_for_storage_account" {
+    query = query.compute_disks_for_storage_account
     args  = [self.input.storage_account_id.value]
   }
 
-  with "compute_snapshots" {
-    query = query.storage_account_compute_snapshots
+  with "compute_snapshots_for_storage_account" {
+    query = query.compute_snapshots_for_storage_account
     args  = [self.input.storage_account_id.value]
   }
 
-  with "key_vault_keys" {
-    query = query.storage_account_key_vault_keys
+  with "key_vault_keys_for_storage_account" {
+    query = query.key_vault_keys_for_storage_account
     args  = [self.input.storage_account_id.value]
   }
 
-  with "key_vault_vaults" {
-    query = query.storage_account_key_vault_vaults
+  with "key_vault_vaults_for_storage_account" {
+    query = query.key_vault_vaults_for_storage_account
     args  = [self.input.storage_account_id.value]
   }
 
-  with "monitor_diagnostic_settings" {
-    query = query.storage_account_monitor_diagnostic_settings
+  with "monitor_diagnostic_settings_for_storage_account" {
+    query = query.monitor_diagnostic_settings_for_storage_account
     args  = [self.input.storage_account_id.value]
   }
 
-  with "monitor_log_profiles" {
-    query = query.storage_account_monitor_log_profiles
+  with "monitor_log_profiles_for_storage_account" {
+    query = query.monitor_log_profiles_for_storage_account
     args  = [self.input.storage_account_id.value]
   }
 
-  with "network_subnets" {
-    query = query.storage_account_network_subnets
+  with "network_subnets_for_storage_account" {
+    query = query.network_subnets_for_storage_account
     args  = [self.input.storage_account_id.value]
   }
 
-  with "network_virtual_networks" {
-    query = query.storage_account_network_virtual_networks
+  with "network_virtual_networks_for_storage_account" {
+    query = query.network_virtual_networks_for_storage_account
     args  = [self.input.storage_account_id.value]
   }
 
@@ -102,63 +102,63 @@ dashboard "storage_account_detail" {
       node {
         base = node.batch_account
         args = {
-          batch_account_ids = with.batch_accounts.rows[*].batch_account_id
+          batch_account_ids = with.batch_accounts_for_storage_account.rows[*].batch_account_id
         }
       }
 
       node {
         base = node.compute_disk
         args = {
-          compute_disk_ids = with.compute_disks.rows[*].disk_id
+          compute_disk_ids = with.compute_disks_for_storage_account.rows[*].disk_id
         }
       }
 
       node {
         base = node.compute_snapshot
         args = {
-          compute_snapshot_ids = with.compute_snapshots.rows[*].snapshot_id
+          compute_snapshot_ids = with.compute_snapshots_for_storage_account.rows[*].snapshot_id
         }
       }
 
       node {
         base = node.key_vault_key
         args = {
-          key_vault_key_ids = with.key_vault_keys.rows[*].key_id
+          key_vault_key_ids = with.key_vault_keys_for_storage_account.rows[*].key_id
         }
       }
 
       node {
         base = node.key_vault_vault
         args = {
-          key_vault_vault_ids = with.key_vault_vaults.rows[*].vault_id
+          key_vault_vault_ids = with.key_vault_vaults_for_storage_account.rows[*].vault_id
         }
       }
 
       node {
         base = node.monitor_diagnostic_setting
         args = {
-          monitor_diagnostic_setting_ids = with.monitor_diagnostic_settings.rows[*].monitor_diagnostic_settings_id
+          monitor_diagnostic_setting_ids = with.monitor_diagnostic_settings_for_storage_account.rows[*].monitor_diagnostic_settings_id
         }
       }
 
       node {
         base = node.monitor_log_profile
         args = {
-          monitor_log_profile_ids = with.monitor_log_profiles.rows[*].log_profile_id
+          monitor_log_profile_ids = with.monitor_log_profiles_for_storage_account.rows[*].log_profile_id
         }
       }
 
       node {
         base = node.network_subnet
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_storage_account.rows[*].subnet_id
         }
       }
 
       node {
         base = node.network_virtual_network
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].network_id
+          network_virtual_network_ids = with.network_virtual_networks_for_storage_account.rows[*].network_id
         }
       }
 
@@ -207,7 +207,7 @@ dashboard "storage_account_detail" {
       edge {
         base = edge.compute_disk_to_storage_storage_account
         args = {
-          compute_disk_ids = with.compute_disks.rows[*].disk_id
+          compute_disk_ids = with.compute_disks_for_storage_account.rows[*].disk_id
         }
       }
 
@@ -235,7 +235,7 @@ dashboard "storage_account_detail" {
       edge {
         base = edge.network_subnet_to_network_virtual_network
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_storage_account.rows[*].subnet_id
         }
       }
 
@@ -473,7 +473,7 @@ query "storage_account_https_traffic" {
 
 # with queries
 
-query "storage_account_batch_accounts" {
+query "batch_accounts_for_storage_account" {
   sql = <<-EOQ
     select
       lower(b.id) as batch_account_id
@@ -485,7 +485,7 @@ query "storage_account_batch_accounts" {
   EOQ
 }
 
-query "storage_account_compute_disks" {
+query "compute_disks_for_storage_account" {
   sql   = <<-EOQ
     select
       lower(id) as disk_id
@@ -496,7 +496,7 @@ query "storage_account_compute_disks" {
   EOQ
 }
 
-query "storage_account_compute_snapshots" {
+query "compute_snapshots_for_storage_account" {
   sql   = <<-EOQ
     select
       lower(id) as snapshot_id
@@ -507,7 +507,7 @@ query "storage_account_compute_snapshots" {
   EOQ
 }
 
-query "storage_account_key_vault_keys" {
+query "key_vault_keys_for_storage_account" {
   sql   = <<-EOQ
     select
       lower(key.id) as key_id
@@ -522,7 +522,7 @@ query "storage_account_key_vault_keys" {
   EOQ
 }
 
-query "storage_account_key_vault_vaults" {
+query "key_vault_vaults_for_storage_account" {
   sql   = <<-EOQ
     select
       lower(k.id) as vault_id
@@ -535,7 +535,7 @@ query "storage_account_key_vault_vaults" {
   EOQ
 }
 
-query "storage_account_monitor_diagnostic_settings" {
+query "monitor_diagnostic_settings_for_storage_account" {
   sql   = <<-EOQ
     select
       lower(id) as monitor_diagnostic_settings_id
@@ -546,7 +546,7 @@ query "storage_account_monitor_diagnostic_settings" {
   EOQ
 }
 
-query "storage_account_monitor_log_profiles" {
+query "monitor_log_profiles_for_storage_account" {
   sql   = <<-EOQ
     select
       lower(id) as log_profile_id
@@ -557,7 +557,7 @@ query "storage_account_monitor_log_profiles" {
   EOQ
 }
 
-query "storage_account_network_subnets" {
+query "network_subnets_for_storage_account" {
   sql   = <<-EOQ
     select
       distinct(lower(r ->> 'id')) as subnet_id
@@ -569,7 +569,7 @@ query "storage_account_network_subnets" {
   EOQ
 }
 
-query "storage_account_network_virtual_networks" {
+query "network_virtual_networks_for_storage_account" {
   sql   = <<-EOQ
     select
       distinct lower(split_part(r ->> 'id', '/subnets', 1)) as network_id

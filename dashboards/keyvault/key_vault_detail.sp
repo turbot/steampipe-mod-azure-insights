@@ -41,18 +41,18 @@ dashboard "key_vault_detail" {
 
   }
 
-  with "key_vault_keys" {
-    query = query.key_vault_key_vault_keys
+  with "key_vault_keys_for_key_vault" {
+    query = query.key_vault_keys_for_key_vault
     args  = [self.input.key_vault_id.value]
   }
 
-  with "network_subnets" {
-    query = query.key_vault_network_subnets
+  with "network_subnets_for_key_vault" {
+    query = query.network_subnets_for_key_vault
     args  = [self.input.key_vault_id.value]
   }
 
-  with "network_virtual_networks" {
-    query = query.key_vault_network_virtual_networks
+  with "network_virtual_networks_for_key_vault" {
+    query = query.network_virtual_networks_for_key_vault
     args  = [self.input.key_vault_id.value]
   }
 
@@ -66,7 +66,7 @@ dashboard "key_vault_detail" {
       node {
         base = node.key_vault_key
         args = {
-          key_vault_key_ids = with.key_vault_keys.rows[*].key_id
+          key_vault_key_ids = with.key_vault_keys_for_key_vault.rows[*].key_id
         }
       }
 
@@ -87,14 +87,14 @@ dashboard "key_vault_detail" {
       node {
         base = node.network_subnet
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_key_vault.rows[*].subnet_id
         }
       }
 
       node {
         base = node.network_virtual_network
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+          network_virtual_network_ids = with.network_virtual_networks_for_key_vault.rows[*].virtual_network_id
         }
       }
 
@@ -122,7 +122,7 @@ dashboard "key_vault_detail" {
       edge {
         base = edge.network_subnet_to_network_virtual_network
         args = {
-          network_subnet_ids = with.network_subnets.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_key_vault.rows[*].subnet_id
         }
       }
     }
@@ -271,7 +271,7 @@ query "key_vault_soft_delete_retention_in_days" {
 }
 
 # with queries
-query "key_vault_key_vault_keys" {
+query "key_vault_keys_for_key_vault" {
   sql = <<-EOQ
     select
       lower(k.id) as key_id
@@ -283,7 +283,7 @@ query "key_vault_key_vault_keys" {
   EOQ
 }
 
-query "key_vault_network_subnets" {
+query "network_subnets_for_key_vault" {
   sql = <<-EOQ
     select
       lower(s.id) as subnet_id
@@ -296,7 +296,7 @@ query "key_vault_network_subnets" {
   EOQ
 }
 
-query "key_vault_network_virtual_networks" {
+query "network_virtual_networks_for_key_vault" {
   sql = <<-EOQ
     with subnet as (
       select

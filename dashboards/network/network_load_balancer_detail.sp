@@ -52,38 +52,39 @@ dashboard "network_load_balancer_detail" {
     }
 
   }
-  with "compute_virtual_machine_scale_set_vms" {
-    query = query.network_load_balancer_compute_virtual_machine_scale_set_vms
+
+  with "compute_virtual_machine_scale_set_vms_for_network_load_balancer" {
+    query = query.compute_virtual_machine_scale_set_vms_for_network_load_balancer
     args  = [self.input.lb_id.value]
   }
 
-  with "compute_virtual_machine_scale_sets" {
-    query = query.network_load_balancer_compute_virtual_machine_scale_sets
+  with "compute_virtual_machine_scale_sets_for_network_load_balancer" {
+    query = query.compute_virtual_machine_scale_sets_for_network_load_balancer
     args  = [self.input.lb_id.value]
   }
 
-  with "compute_virtual_machines" {
-    query = query.network_load_balancer_compute_virtual_machines
+  with "compute_virtual_machines_for_network_load_balancer" {
+    query = query.compute_virtual_machines_for_network_load_balancer
     args  = [self.input.lb_id.value]
   }
 
-  with "network_load_balancer_backend_address_pools" {
-    query = query.network_load_balancer_network_load_balancer_backend_address_pools
+  with "network_load_balancer_backend_address_pools_for_network_load_balancer" {
+    query = query.network_load_balancer_backend_address_pools_for_network_load_balancer
     args  = [self.input.lb_id.value]
   }
 
-  with "network_network_interfaces" {
-    query = query.network_load_balancer_network_network_interfaces
+  with "network_network_interfaces_for_network_load_balancer" {
+    query = query.network_network_interfaces_for_network_load_balancer
     args  = [self.input.lb_id.value]
   }
 
-  with "network_public_ips" {
-    query = query.network_load_balancer_network_public_ips
+  with "network_public_ips_for_network_load_balancer" {
+    query = query.network_public_ips_for_network_load_balancer
     args  = [self.input.lb_id.value]
   }
 
-  with "network_virtual_networks" {
-    query = query.network_load_balancer_network_virtual_networks
+  with "network_virtual_networks_for_network_load_balancer" {
+    query = query.network_virtual_networks_for_network_load_balancer
     args  = [self.input.lb_id.value]
   }
 
@@ -97,21 +98,21 @@ dashboard "network_load_balancer_detail" {
       node {
         base = node.compute_virtual_machine
         args = {
-          compute_virtual_machine_ids = with.compute_virtual_machines.rows[*].virtual_machine_id
+          compute_virtual_machine_ids = with.compute_virtual_machines_for_network_load_balancer.rows[*].virtual_machine_id
         }
       }
 
       node {
         base = node.compute_virtual_machine_scale_set
         args = {
-          compute_virtual_machine_scale_set_ids = with.compute_virtual_machine_scale_sets.rows[*].compute_virtual_machine_scale_set_id
+          compute_virtual_machine_scale_set_ids = with.compute_virtual_machine_scale_sets_for_network_load_balancer.rows[*].compute_virtual_machine_scale_set_id
         }
       }
 
       node {
         base = node.compute_virtual_machine_scale_set_vm
         args = {
-          compute_virtual_machine_scale_set_vm_ids = with.compute_virtual_machine_scale_set_vms.rows[*].virtual_machine_scale_set_vm_id
+          compute_virtual_machine_scale_set_vm_ids = with.compute_virtual_machine_scale_set_vms_for_network_load_balancer.rows[*].virtual_machine_scale_set_vm_id
         }
       }
 
@@ -125,7 +126,7 @@ dashboard "network_load_balancer_detail" {
       node {
         base = node.network_load_balancer_backend_address_pool
         args = {
-          network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools.rows[*].pool_id
+          network_load_balancer_backend_address_pool_ids = with.network_load_balancer_backend_address_pools_for_network_load_balancer.rows[*].pool_id
         }
       }
 
@@ -160,28 +161,28 @@ dashboard "network_load_balancer_detail" {
       node {
         base = node.network_network_interface
         args = {
-          network_network_interface_ids = with.network_network_interfaces.rows[*].network_interface_id
+          network_network_interface_ids = with.network_network_interfaces_for_network_load_balancer.rows[*].network_interface_id
         }
       }
 
       node {
         base = node.network_public_ip
         args = {
-          network_public_ip_ids = with.network_public_ips.rows[*].public_ip_id
+          network_public_ip_ids = with.network_public_ips_for_network_load_balancer.rows[*].public_ip_id
         }
       }
 
       node {
         base = node.network_virtual_network
         args = {
-          network_virtual_network_ids = with.network_virtual_networks.rows[*].virtual_network_id
+          network_virtual_network_ids = with.network_virtual_networks_for_network_load_balancer.rows[*].virtual_network_id
         }
       }
 
       edge {
         base = edge.compute_virtual_machine_scale_set_to_network_load_balancer
         args = {
-          compute_virtual_machine_scale_set_ids = with.compute_virtual_machine_scale_sets.rows[*].compute_virtual_machine_scale_set_id
+          compute_virtual_machine_scale_set_ids = with.compute_virtual_machine_scale_sets_for_network_load_balancer.rows[*].compute_virtual_machine_scale_set_id
         }
       }
 
@@ -446,7 +447,7 @@ query "network_load_probes_count" {
 
 # with queries
 
-query "network_load_balancer_compute_virtual_machine_scale_set_vms" {
+query "compute_virtual_machine_scale_set_vms_for_network_load_balancer" {
   sql   = <<-EOQ
     with backend_address_pools as (
       select
@@ -493,7 +494,7 @@ query "network_load_balancer_compute_virtual_machine_scale_set_vms" {
   EOQ
 }
 
-query "network_load_balancer_compute_virtual_machine_scale_sets" {
+query "compute_virtual_machine_scale_sets_for_network_load_balancer" {
   sql   = <<-EOQ
     select
       lower(vm_scale_set.id) as compute_virtual_machine_scale_set_id
@@ -507,7 +508,7 @@ query "network_load_balancer_compute_virtual_machine_scale_sets" {
   EOQ
 }
 
-query "network_load_balancer_compute_virtual_machines" {
+query "compute_virtual_machines_for_network_load_balancer" {
   sql   = <<-EOQ
     with backend_address_pools as (
       select
@@ -554,7 +555,7 @@ query "network_load_balancer_compute_virtual_machines" {
   EOQ
 }
 
-query "network_load_balancer_network_load_balancer_backend_address_pools" {
+query "network_load_balancer_backend_address_pools_for_network_load_balancer" {
   sql   = <<-EOQ
     select
       lower(p.id) as pool_id
@@ -567,7 +568,7 @@ query "network_load_balancer_network_load_balancer_backend_address_pools" {
   EOQ
 }
 
-query "network_load_balancer_network_network_interfaces" {
+query "network_network_interfaces_for_network_load_balancer" {
   sql   = <<-EOQ
   with backend_address_pools as (
     select
@@ -601,7 +602,7 @@ query "network_load_balancer_network_network_interfaces" {
   EOQ
 }
 
-query "network_load_balancer_network_public_ips" {
+query "network_public_ips_for_network_load_balancer" {
   sql   = <<-EOQ
     select
       lower(ip.id) as public_ip_id
@@ -615,7 +616,7 @@ query "network_load_balancer_network_public_ips" {
   EOQ
 }
 
-query "network_load_balancer_network_virtual_networks" {
+query "network_virtual_networks_for_network_load_balancer" {
   sql   = <<-EOQ
     with backend_address_pools as (
       select
