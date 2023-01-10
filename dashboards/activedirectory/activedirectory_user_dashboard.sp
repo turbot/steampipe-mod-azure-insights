@@ -1,7 +1,7 @@
-dashboard "azuread_user_dashboard" {
+dashboard "activedirectory_user_dashboard" {
 
   title = "Azure Active Directory User Dashboard"
-  documentation = file("./dashboards/activedirectory/docs/azuread_user_dashboard.md")
+  documentation = file("./dashboards/activedirectory/docs/activedirectory_user_dashboard.md")
 
   tags = merge(local.activedirectory_common_tags, {
     type = "Dashboard"
@@ -10,28 +10,28 @@ dashboard "azuread_user_dashboard" {
   container {
 
     card {
-      query = query.azuread_user_count
+      query = query.activedirectory_user_count
       width = 2
     }
 
     #https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-external-users
     card {
-      query = query.azuread_external_guest_user_count
+      query = query.activedirectory_external_guest_user_count
       width = 2
     }
 
     card {
-      query = query.azuread_user_with_custom_role_count
+      query = query.activedirectory_user_with_custom_role_count
       width = 2
     }
 
     card {
-      query = query.azuread_external_guest_user_with_owner_role_count
+      query = query.activedirectory_external_guest_user_with_owner_role_count
       width = 2
     }
 
     card {
-      query = query.azuread_deprecated_user_with_owner_role_count
+      query = query.activedirectory_deprecated_user_with_owner_role_count
       width = 2
     }
 
@@ -42,7 +42,7 @@ dashboard "azuread_user_dashboard" {
 
     chart {
       title = "External Guest Users With Owner Role"
-      query = query.azuread_external_guest_user_with_owner_role_status
+      query = query.activedirectory_external_guest_user_with_owner_role_status
       type  = "donut"
       width = 4
 
@@ -58,7 +58,7 @@ dashboard "azuread_user_dashboard" {
 
     chart {
       title = "Deprecated Users With Owner Role"
-      query = query.azuread_deprecated_user_with_owner_status
+      query = query.activedirectory_deprecated_user_with_owner_status
       type  = "donut"
       width = 4
 
@@ -79,21 +79,21 @@ dashboard "azuread_user_dashboard" {
 
     chart {
       title = "Users by Tenant"
-      query = query.azuread_user_by_tenant
+      query = query.activedirectory_user_by_tenant
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Users by Type"
-      query = query.azuread_user_by_user_type
+      query = query.activedirectory_user_by_user_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Users by Age"
-      sql   = query.azuread_user_by_creation_month.sql
+      sql   = query.activedirectory_user_by_creation_month.sql
       type  = "column"
       width = 4
     }
@@ -104,13 +104,13 @@ dashboard "azuread_user_dashboard" {
 
 # Card Queries
 
-query "azuread_user_count" {
+query "activedirectory_user_count" {
   sql = <<-EOQ
     select count(*) as "Users" from azuread_user;
   EOQ
 }
 
-query "azuread_external_guest_user_count" {
+query "activedirectory_external_guest_user_count" {
   sql = <<-EOQ
     select
       count(*) as "External Guest Users"
@@ -121,7 +121,7 @@ query "azuread_external_guest_user_count" {
   EOQ
 }
 
-query "azuread_external_guest_user_with_owner_role_count" {
+query "activedirectory_external_guest_user_with_owner_role_count" {
   sql = <<-EOQ
     select
       count(distinct u.display_name) as value,
@@ -136,7 +136,7 @@ query "azuread_external_guest_user_with_owner_role_count" {
   EOQ
 }
 
-query "azuread_deprecated_user_with_owner_role_count" {
+query "activedirectory_deprecated_user_with_owner_role_count" {
   sql = <<-EOQ
     select
       count(distinct
@@ -151,7 +151,7 @@ query "azuread_deprecated_user_with_owner_role_count" {
   EOQ
 }
 
-query "azuread_user_with_custom_role_count" {
+query "activedirectory_user_with_custom_role_count" {
   sql = <<-EOQ
     select
       count(distinct
@@ -167,7 +167,7 @@ query "azuread_user_with_custom_role_count" {
 
 # Assessment Queries
 
-query "azuread_deprecated_user_with_owner_status" {
+query "activedirectory_deprecated_user_with_owner_status" {
   sql = <<-EOQ
     with deprecated_account as (
       select
@@ -196,7 +196,7 @@ query "azuread_deprecated_user_with_owner_status" {
   EOQ
 }
 
-query "azuread_external_guest_user_with_owner_role_status" {
+query "activedirectory_external_guest_user_with_owner_role_status" {
   sql = <<-EOQ
     with external_guest_user_with_owner_role as (
       select
@@ -227,7 +227,7 @@ query "azuread_external_guest_user_with_owner_role_status" {
 
 # Analysis Queries
 
-query "azuread_user_by_tenant" {
+query "activedirectory_user_by_tenant" {
   sql = <<-EOQ
     with tenants as (
       select
@@ -251,7 +251,7 @@ query "azuread_user_by_tenant" {
   EOQ
 }
 
-query "azuread_user_by_user_type" {
+query "activedirectory_user_by_user_type" {
   sql = <<-EOQ
     select
       user_type as "User Type",
@@ -265,7 +265,7 @@ query "azuread_user_by_user_type" {
   EOQ
 }
 
-query "azuread_user_by_creation_month" {
+query "activedirectory_user_by_creation_month" {
   sql = <<-EOQ
     with users as (
       select

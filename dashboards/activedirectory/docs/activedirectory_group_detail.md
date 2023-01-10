@@ -4,3 +4,4 @@ This dashboard answers the following questions for each group:
 - What members are associated with the group?
 - What directory roles are attached to the group?
 - How many owners are there for the group?
+- What relationships does the group have with other resources?

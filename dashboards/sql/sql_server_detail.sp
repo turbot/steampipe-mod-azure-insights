@@ -132,13 +132,6 @@ dashboard "sql_server_detail" {
         }
       }
 
-      node {
-        base = node.sql_server_network_private_endpoint
-        args = {
-          sql_server_ids = [self.input.sql_server_id.value]
-        }
-      }
-
       edge {
         base = edge.network_subnet_to_network_virtual_network
         args = {
@@ -166,14 +159,7 @@ dashboard "sql_server_detail" {
           sql_server_ids = [self.input.sql_server_id.value]
         }
       }
-
-      edge {
-        base = edge.sql_server_to_network_private_endpoint
-        args = {
-          sql_server_ids = [self.input.sql_server_id.value]
-        }
-      }
-
+      
       edge {
         base = edge.sql_server_to_network_subnet
         args = {
