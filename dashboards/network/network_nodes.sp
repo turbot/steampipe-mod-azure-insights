@@ -169,52 +169,6 @@ node "network_load_balancer_rule" {
   param "network_load_balancer_ids" {}
 }
 
-node "network_load_balancer_virtual_machine_scale_set_network_interface" {
-  category = category.compute_virtual_machine_scale_set_network_interface
-
-  sql = <<-EOQ
-    with backend_address_pools as (
-      select
-        lb.id as lb_id,
-        p.id as backend_address_id,
-        p.backend_ip_configurations as backend_ip_configurations
-      from
-        azure_lb as lb,
-        jsonb_array_elements(backend_address_pools) as b
-        left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
-      where
-        p.backend_ip_configurations is not null
-        and lower(lb.id) = any($1)
-    ), backend_ip_configurations as (
-        select
-          lb_id,
-          backend_address_id,
-          c ->> 'id' as backend_ip_configuration_id
-        from
-          backend_address_pools,
-          jsonb_array_elements(backend_ip_configurations) as c
-    )
-    select
-      lower(nic.id) as id,
-      nic.title as title,
-      jsonb_build_object(
-        'ID', lower(nic.id),
-        'Name', nic.name,
-        'Type', nic.type,
-        'Resource Group', nic.resource_group,
-        'Subscription ID', nic.subscription_id
-      ) as properties
-    from
-      azure_compute_virtual_machine_scale_set_network_interface as nic,
-      jsonb_array_elements(ip_configurations) as c,
-      backend_ip_configurations as b
-    where
-      lower(c ->> 'id') = lower(b.backend_ip_configuration_id)
-  EOQ
-
-  param "network_load_balancer_ids" {}
-}
-
 node "network_nat_gateway" {
   category = category.network_nat_gateway
 
