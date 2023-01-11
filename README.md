@@ -13,6 +13,7 @@ Dashboards can help answer questions like:
 - Are there any publicly accessible resources?
 - Is encryption enabled and what keys are used for encryption?
 - Is versioning enabled?
+- What are the relationships between closely connected resources like compute virtual machines, disks, snapshots, and network components?
 
 Dashboards are available for Compute, Key Vault, SQL, and Storage services.
 

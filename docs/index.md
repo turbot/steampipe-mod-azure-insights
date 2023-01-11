@@ -6,7 +6,7 @@ repository: "https://github.com/turbot/steampipe-mod-azure-insights"
 
 Create dashboards and reports for your Azure resources using Steampipe.
 
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/storage_account_dashboard.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_dashboard.png" width="50%" type="thumbnail"/>
 <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_age.png" width="50%" type="thumbnail"/>
 <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/staging/docs/images/azure_activedirectory_group_detail.png" width="50%" type="thumbnail"/>
 <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/staging/docs/images/azure_network_virtual_network_detail.png" width="50%" type="thumbnail"/>
@@ -22,6 +22,7 @@ Dashboards can help answer questions like:
 - Are there any publicly accessible resources?
 - Is encryption enabled and what keys are used for encryption?
 - Is versioning enabled?
+- What are the relationships between closely connected resources like compute virtual machines, disks, snapshots, and network components?
 
 Dashboards are available for Compute, Key Vault, SQL, and Storage services.
 
