@@ -186,7 +186,7 @@ dashboard "compute_disk_detail" {
       }
 
       edge {
-        base = edge.compute_disk_to_compute_snapshot
+        base = edge.compute_snapshot_to_compute_disk
         args = {
           compute_disk_ids = [self.input.disk_id.value]
         }
@@ -207,7 +207,7 @@ dashboard "compute_disk_detail" {
       }
 
       edge {
-        base = edge.compute_snapshot_to_compute_disk
+        base = edge.compute_snapshots_to_compute_disk
         args = {
           compute_snapshot_ids = with.compute_snapshots_for_compute_disk.rows[*].compute_snapshot_id
         }

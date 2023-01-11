@@ -7,7 +7,7 @@ locals {
 category "network_application_gateway" {
   title = "Application Gateway"
   color = local.networking_color
-  icon  = "arrows_pointing_out"
+  icon  = "mediation"
 }
 
 category "network_firewall" {

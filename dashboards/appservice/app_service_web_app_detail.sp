@@ -127,7 +127,7 @@ dashboard "app_service_web_app_detail" {
       edge {
         base = edge.network_application_gateway_to_app_service_web_app
         args = {
-          app_service_web_app_ids = [self.input.web_app_id.value]
+          network_application_gateway_ids = with.network_application_gateways_for_app_service_web.rows[*].application_gateway_id
         }
       }
 
@@ -433,8 +433,8 @@ dashboard "app_service_web_app_detail" {
   query "app_service_web_app_configuration" {
     sql = <<-EOQ
     select
-      configuration -> 'properties' ->> 'linuxFxVersion' as "Linux App Framework and version",
       configuration -> 'properties' ->> 'loadBalancing' as "Load Balancing",
+      configuration -> 'properties' ->> 'linuxFxVersion' as "Linux App Framework and version",
       configuration -> 'properties' ->> 'numberOfWorkers' as "Workers",
       configuration -> 'properties' ->> 'preWarmedInstanceCount' as "Pre-warmed Instances",
       case when (configuration -> 'properties' ->> 'alwaysOn')::boolean then 'Enabled' else 'Disabled' end as "Always On",

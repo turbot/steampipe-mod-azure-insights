@@ -135,23 +135,6 @@ edge "sql_server_to_mssql_elasticpool" {
   param "sql_server_ids" {}
 }
 
-edge "sql_server_to_network_private_endpoint" {
-  title = "private endpoint"
-
-  sql = <<-EOQ
-    select
-      lower(pec ->> 'PrivateEndpointConnectionId') as to_id,
-      lower(id) as from_id
-    from
-      azure_sql_server,
-      jsonb_array_elements(private_endpoint_connections) as pec
-    where
-      lower(id) = any($1);
-  EOQ
-
-  param "sql_server_ids" {}
-}
-
 edge "sql_server_to_network_subnet" {
   title = "subnet"
 

@@ -83,7 +83,7 @@ edge "compute_disk_to_compute_disk_encryption_set" {
   param "compute_disk_ids" {}
 }
 
-edge "compute_disk_to_compute_snapshot" {
+edge "compute_snapshot_to_compute_disk" {
   title = "snapshot source for disk"
 
   sql = <<-EOQ
@@ -106,12 +106,11 @@ edge "compute_disk_to_key_vault_key" {
   sql = <<-EOQ
     select
       lower(e.active_key_source_vault_id) as from_id,
-      lower(k.id) as to_id
+      lower(v.key_id) as to_id
     from
       azure_compute_disk_encryption_set as e
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
-      left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
     where
       lower(d.id) = any($1);
   EOQ
@@ -153,7 +152,7 @@ edge "compute_disks_to_compute_snapshot" {
   param "compute_disk_ids" {}
 }
 
-edge "compute_snapshot_to_compute_disk" {
+edge "compute_snapshots_to_compute_disk" {
   title = "disk"
 
   sql = <<-EOQ

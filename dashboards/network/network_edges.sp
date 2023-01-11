@@ -44,16 +44,13 @@ edge "network_application_gateway_to_app_service_web_app" {
     with application_gateway as (
       select
         g.id as id,
-        g.name as name,
-        g.subscription_id,
-        g.resource_group,
-        g.title,
-        g.region,
         backend_address ->> 'fqdn' as app_host_name
       from
         azure_application_gateway as g,
         jsonb_array_elements(backend_address_pools) as pool,
         jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
+      where
+        lower(g.id) = any($1)
     )
     select
       lower(g.id) as from_id,
@@ -64,10 +61,9 @@ edge "network_application_gateway_to_app_service_web_app" {
       application_gateway as g
     where
       lower(g.app_host_name) = lower(trim((host_name::text), '""'))
-      and lower(a.id) = any($1);
   EOQ
 
-  param "app_service_web_app_ids" {}
+  param "network_application_gateway_ids" {}
 }
 
 edge "network_application_gateway_to_compute_virtual_machine" {
@@ -412,8 +408,6 @@ edge "network_network_interface_to_compute_virtual_machine" {
 
   param "network_network_interface_ids" {}
 }
-
-
 
 edge "network_network_interface_to_network_public_ip" {
   title = "public ip"
