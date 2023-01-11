@@ -61,6 +61,14 @@ dashboard "key_vault_key_age_report" {
       href = "${dashboard.key_vault_key_detail.url_path}?input.key_vault_key_id={{.'ID' | @uri}}"
     }
 
+    column "Vault ID" {
+      display = "none"
+    }
+
+    column "Vault Name" {
+      href = "${dashboard.key_vault_detail.url_path}?input.key_vault_id={{.'Vault ID' | @uri}}"
+    }
+
     query = query.key_vault_key_age_table
   }
 
@@ -140,12 +148,16 @@ query "key_vault_key_age_table" {
       k.subscription_id as "Subscription ID",
       k.resource_group as "Resource Group",
       k.region as "Region",
-      lower(k.id) as "ID"
+      lower(k.id) as "ID",
+      lower(v.id) as "Vault ID"
     from
-      azure_key_vault_key as k,
+      azure_key_vault_key as k
+      left join azure_key_vault as v on v.name = k.vault_name,
       azure_subscription as sub
     where
-      k.subscription_id = sub.subscription_id
+      k.subscription_id = v.subscription_id
+      and k.resource_group = v.resource_group
+      and k.subscription_id = sub.subscription_id
     order by
       k.id;
   EOQ
