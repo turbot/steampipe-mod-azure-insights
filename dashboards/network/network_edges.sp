@@ -874,7 +874,7 @@ edge "network_virtual_network_to_compute_virtual_machine" {
 }
 
 edge "network_virtual_network_to_network_load_balancer" {
-  title = "lb"
+  title = "load balancer"
 
   sql = <<-EOQ
     with subnet_list as (
