@@ -341,6 +341,8 @@ query "kubernetes_cluster_agent_pools" {
       jsonb_array_elements(c.agent_pool_profiles) p
     where
       lower(id) = $1
+    order by
+      p ->> 'name';
   EOQ
 }
 

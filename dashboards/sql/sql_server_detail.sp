@@ -308,8 +308,6 @@ query "sql_server_version" {
     where
       lower(id) = $1;
   EOQ
-
-
 }
 
 query "sql_server_auditing_enabled" {
@@ -343,7 +341,6 @@ query "sql_server_public_network_access" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "sql_server_ad_authentication_enabled" {
@@ -357,8 +354,6 @@ query "sql_server_ad_authentication_enabled" {
     where
       lower(id) = $1;
   EOQ
-
-
 }
 
 query "sql_server_vulnerability_assessment_enabled" {
@@ -403,7 +398,6 @@ query "key_vault_keys_for_sql_server" {
       attached_keys as a
       left join azure_key_vault_key as b on lower(a.key_vault_key_name) = lower(b.name);
   EOQ
-
 }
 
 query "key_vault_vaults_for_sql_server" {
@@ -424,7 +418,6 @@ query "key_vault_vaults_for_sql_server" {
           and ep ->> 'kind' = 'azurekeyvault'
       );
   EOQ
-
 }
 
 query "mssql_elasticpool_for_sql_server" {
@@ -439,7 +432,6 @@ query "mssql_elasticpool_for_sql_server" {
       and s.subscription_id = p.subscription_id
       and lower(s.id) = $1;
   EOQ
-
 }
 
 query "network_subnets_for_sql_server" {
@@ -504,7 +496,6 @@ query "sql_server_overview" {
     where
       lower(id) = $1
   EOQ
-
 }
 
 query "sql_server_tags" {
@@ -519,9 +510,7 @@ query "sql_server_tags" {
       lower(id) = $1
     order by
       tag.key;
-    EOQ
-
-
+  EOQ
 }
 
 query "sql_server_encryption" {
@@ -538,7 +527,6 @@ query "sql_server_encryption" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "sql_server_virtual_network_rules" {
@@ -568,7 +556,6 @@ query "sql_server_firewall_rule" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "sql_server_audit_policy" {
@@ -589,7 +576,6 @@ query "sql_server_audit_policy" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "sql_server_vulnerability_assessment" {
@@ -605,7 +591,6 @@ query "sql_server_vulnerability_assessment" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "sql_server_private_endpoint_connection" {
@@ -625,5 +610,4 @@ query "sql_server_private_endpoint_connection" {
     where
       lower(id) = $1;
   EOQ
-
 }

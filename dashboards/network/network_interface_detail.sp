@@ -491,6 +491,8 @@ query "network_interface_ip_configurations_details" {
       azure_network_interface,
       jsonb_array_elements(ip_configurations) as c
     where
-      lower(id) = $1;
+      lower(id) = $1
+    order by
+      c ->> 'name';
   EOQ
 }

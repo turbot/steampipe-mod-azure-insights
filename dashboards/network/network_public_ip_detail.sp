@@ -213,7 +213,6 @@ query "network_public_association" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_public_ip_address" {
@@ -226,7 +225,6 @@ query "network_public_ip_address" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_public_ip_sku_name" {
@@ -239,7 +237,6 @@ query "network_public_ip_sku_name" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # with queries

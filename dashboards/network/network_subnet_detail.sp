@@ -324,7 +324,6 @@ query "network_subnet_num_ips" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_subnet_address_prefix" {
@@ -336,7 +335,6 @@ query "network_subnet_address_prefix" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # with queries
@@ -349,18 +347,18 @@ query "api_management_for_network_subnet" {
       azure_api_management
     where
       lower(virtual_network_configuration_subnet_resource_id) = $1;
-    EOQ
+  EOQ
 }
 
 query "app_service_web_apps_for_network_subnet" {
   sql = <<-EOQ
-      select
-        lower(id) as web_app_id
-      from
-        azure_app_service_web_app
-      where
-        lower(vnet_connection -> 'properties' ->> 'vnetResourceId') = $1
-    EOQ
+    select
+      lower(id) as web_app_id
+    from
+      azure_app_service_web_app
+    where
+      lower(vnet_connection -> 'properties' ->> 'vnetResourceId') = $1
+  EOQ
 }
 
 query "documentdb_cosmosdb_account_ids_for_network_subnet" {
@@ -491,7 +489,6 @@ query "network_subnet_overview" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_subnet_association" {
@@ -611,5 +608,4 @@ query "network_subnet_association" {
     where
       lower(sub ->> 'id') = $1;
   EOQ
-
 }

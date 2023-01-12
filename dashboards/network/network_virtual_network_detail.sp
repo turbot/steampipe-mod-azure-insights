@@ -844,7 +844,6 @@ query "virtual_network_ingress_rule_sankey" {
         split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""') as to_id
       from data
   EOQ
-
 }
 
 query "virtual_network_egress_rule_sankey" {
@@ -993,7 +992,6 @@ query "virtual_network_egress_rule_sankey" {
       null as depth
     from data
   EOQ
-
 }
 
 query "virtual_network_route_tables" {

@@ -67,12 +67,6 @@ category "network_peering" {
   icon  = "sync_alt"
 }
 
-category "network_private_endpoint_connection" {
-  title = "Private Endpoint Connection"
-  color = local.networking_color
-  icon  = "matter"
-}
-
 category "network_public_ip" {
   title = "Public IP"
   color = local.networking_color

@@ -904,11 +904,3 @@ query "load_balancer_load_balancing_rules" {
       lower(id) = $1;
   EOQ
 }
-
-
-
-
-
-
-
-
