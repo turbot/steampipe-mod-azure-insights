@@ -1,4 +1,4 @@
-dashboard "azure_sql_server_encryption_report" {
+dashboard "sql_server_encryption_report" {
 
   title         = "Azure SQL Server Encryption Report"
   documentation = file("./dashboards/sql/docs/sql_server_report_encryption.md")
@@ -11,17 +11,17 @@ dashboard "azure_sql_server_encryption_report" {
   container {
 
     card {
-      query = query.azure_sql_server_count
+      query = query.sql_server_count
       width = 2
     }
 
     card {
-      query = query.azure_sql_server_default_encrypted_servers_count
+      query = query.sql_server_default_encrypted_servers_count
       width = 2
     }
 
     card {
-      query = query.azure_sql_server_customer_managed_encryption_count
+      query = query.sql_server_customer_managed_encryption_count
       width = 2
     }
 
@@ -33,19 +33,19 @@ dashboard "azure_sql_server_encryption_report" {
     }
 
     column "Name" {
-      href = "${dashboard.azure_sql_server_detail.url_path}?input.server_id={{.ID | @uri}}"
+      href = "${dashboard.sql_server_detail.url_path}?input.sql_server_id={{.ID | @uri}}"
     }
 
     column "Subscription ID" {
       display = "none"
     }
 
-    query = query.azure_sql_server_encryption_report
+    query = query.sql_server_encryption_report
   }
 
 }
 
-query "azure_sql_server_encryption_report" {
+query "sql_server_encryption_report" {
   sql = <<-EOQ
     with encryption_protector as (
       select
@@ -59,7 +59,6 @@ query "azure_sql_server_encryption_report" {
     )
     select
       s.name as "Name",
-      s.id as "ID",
       e.kind as "Kind",
       e.serverKeyName as "Server Key Name",
       e.serverKeyType as "Server Key Type",
@@ -76,7 +75,7 @@ query "azure_sql_server_encryption_report" {
   EOQ
 }
 
-query "azure_sql_server_default_encrypted_servers_count" {
+query "sql_server_default_encrypted_servers_count" {
   sql = <<-EOQ
     select
       count(*) as "Service-Managed Encryption"
@@ -88,7 +87,7 @@ query "azure_sql_server_default_encrypted_servers_count" {
   EOQ
 }
 
-query "azure_sql_server_customer_managed_encryption_count" {
+query "sql_server_customer_managed_encryption_count" {
   sql = <<-EOQ
    select
       count(*) as "Customer-Managed Encryption"

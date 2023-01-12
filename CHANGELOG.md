@@ -1,3 +1,28 @@
+## v0.5 [2023-01-12]
+
+_Dependencies_
+
+- Steampipe `v0.18.0` or higher is now required. ([#80](https://github.com/turbot/steampipe-mod-azure-insights/pull/80))
+- Azure plugin `v0.35.1` or higher is now required. ([#80](https://github.com/turbot/steampipe-mod-azure-insights/pull/80))
+- Azure Active Directory plugin `v0.8.3` or higher is now required. ([#80](https://github.com/turbot/steampipe-mod-azure-insights/pull/80))
+
+_What's new?_
+
+- Added resource relationship graphs across all the detail dashboards to highlight the relationship the resource shares with other resources. ([#79](https://github.com/turbot/steampipe-mod-azure-insights/pull/79))
+- New dashboards added: ([#79](https://github.com/turbot/steampipe-mod-azure-insights/pull/79))
+  - [Azure App Service Web App Dashboard](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.app_service_web_app_dashboard)
+  - [Azure App Service Web App Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.app_service_web_app_detail)
+  - [Azure Compute Disk Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.compute_disk_detail)
+  - [Azure Compute Snapshot Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.compute_snapshot_detail)
+  - [Azure Compute Virtual Machine Scale Set VM Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.compute_virtual_machine_scale_set_vm_detail)
+  - [Azure Key Vault Key Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.key_vault_key_detail)
+  - [Azure Kubernetes Cluster Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.kubernetes_cluster_detail)
+  - [Azure Network Firewall Detail"](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.network_firewall_detail)
+  - [Azure Network Interface Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.network_interface_detail)
+  - [Azure Network Load Balancer Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.network_load_balancer_detail)
+  - [Azure Network Public IP Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.network_public_ip_detail)
+  - [Azure Network Subnet Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.network_subnet_detail)
+
 ## v0.4 [2022-05-09]
 
 _Enhancements_

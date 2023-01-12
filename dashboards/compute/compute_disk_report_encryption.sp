@@ -1,4 +1,4 @@
-dashboard "azure_compute_disk_encryption_report" {
+dashboard "compute_disk_encryption_report" {
 
   title         = "Azure Compute Disk Encryption Report"
   documentation = file("./dashboards/compute/docs/compute_disk_report_encryption.md")
@@ -11,22 +11,22 @@ dashboard "azure_compute_disk_encryption_report" {
   container {
 
     card {
-      query = query.azure_compute_disk_count
+      query = query.compute_disk_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_disk_platform_managed_encryption_count
+      query = query.compute_disk_platform_managed_encryption_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_disk_customer_managed_encryption_count
+      query = query.compute_disk_customer_managed_encryption_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_disk_cmk_and_platfrom_managed_encryption_count
+      query = query.compute_disk_cmk_and_platfrom_managed_encryption_count
       width = 2
     }
 
@@ -41,17 +41,21 @@ dashboard "azure_compute_disk_encryption_report" {
       display = "none"
     }
 
-    query = query.azure_compute_disk_encryption_report
+    column "Name" {
+      href = "${dashboard.compute_disk_detail.url_path}?input.disk_id={{.ID | @uri}}"
+    }
+
+    query = query.compute_disk_encryption_report
   }
 
 }
 
-query "azure_compute_disk_encryption_report" {
+query "compute_disk_encryption_report" {
   sql = <<-EOQ
     select
       d.name as "Name",
       d.unique_id as "Unique ID",
-      d.id as "ID",
+      lower(d.id) as "ID",
       d.encryption_type as "Encryption Type",
       d.encryption_disk_encryption_set_id as "Disk Encryption Set ID",
       sub.title as "Subscription",
@@ -68,7 +72,7 @@ query "azure_compute_disk_encryption_report" {
   EOQ
 }
 
-query "azure_compute_disk_platform_managed_encryption_count" {
+query "compute_disk_platform_managed_encryption_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -80,7 +84,7 @@ query "azure_compute_disk_platform_managed_encryption_count" {
   EOQ
 }
 
-query "azure_compute_disk_customer_managed_encryption_count" {
+query "compute_disk_customer_managed_encryption_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -92,7 +96,7 @@ query "azure_compute_disk_customer_managed_encryption_count" {
   EOQ
 }
 
-query "azure_compute_disk_cmk_and_platfrom_managed_encryption_count" {
+query "compute_disk_cmk_and_platfrom_managed_encryption_count" {
   sql = <<-EOQ
     select
       count(*) as value,

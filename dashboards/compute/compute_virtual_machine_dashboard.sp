@@ -1,4 +1,4 @@
-dashboard "azure_compute_virtual_machine_dashboard" {
+dashboard "compute_virtual_machine_dashboard" {
 
   title         = "Azure Compute Virtual Machine Dashboard"
   documentation = file("./dashboards/compute/docs/compute_virtual_machine_dashboard.md")
@@ -10,32 +10,32 @@ dashboard "azure_compute_virtual_machine_dashboard" {
   container {
 
     card {
-      query = query.azure_compute_virtual_machine_count
+      query = query.compute_virtual_machine_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_virtual_machine_host_encryption_count
+      query = query.compute_virtual_machine_host_encryption_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_public_virtual_machine_count
+      query = query.compute_public_virtual_machine_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_virtual_machine_vulnerability_assessment_disabled_count
+      query = query.compute_virtual_machine_vulnerability_assessment_disabled_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_virtual_machine_unattached_with_network_count
+      query = query.compute_virtual_machine_unattached_with_network_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_virtual_machine_unrestricted_remote_access_count
+      query = query.compute_virtual_machine_unrestricted_remote_access_count
       width = 2
     }
 
@@ -47,7 +47,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Host Encryption Status"
-      query = query.azure_compute_virtual_machine_by_host_encryption_status
+      query = query.compute_virtual_machine_by_host_encryption_status
       type  = "donut"
       width = 2
 
@@ -63,7 +63,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Public/Private"
-      query = query.azure_compute_virtual_machine_by_public_ip
+      query = query.compute_virtual_machine_by_public_ip
       type  = "donut"
       width = 2
 
@@ -79,7 +79,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Vulnerability Assessment"
-      query = query.azure_compute_virtual_machine_by_vulnerability_assessment_solution
+      query = query.compute_virtual_machine_by_vulnerability_assessment_solution
       type  = "donut"
       width = 2
 
@@ -95,7 +95,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Network Attachment Status"
-      query = query.azure_compute_virtual_machine_by_attachment_to_network
+      query = query.compute_virtual_machine_by_attachment_to_network
       type  = "donut"
       width = 2
 
@@ -111,7 +111,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Unrestricted Remote Access"
-      query   = query.azure_compute_virtual_machine_by_remote_access
+      query   = query.compute_virtual_machine_by_remote_access
       type  = "donut"
       width = 2
 
@@ -127,7 +127,7 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Disaster Recovery Status"
-      query = query.azure_compute_virtual_machine_by_disaster_recovery_status
+      query = query.compute_virtual_machine_by_disaster_recovery_status
       type  = "donut"
       width = 2
 
@@ -149,35 +149,35 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Virtual Machines by Subscription"
-      query = query.azure_compute_virtual_machine_by_subscription
+      query = query.compute_virtual_machine_by_subscription
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Virtual Machines by Resource Group"
-      query = query.azure_compute_virtual_machine_by_resource_group
+      query = query.compute_virtual_machine_by_resource_group
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Virtual Machines by Region"
-      query = query.azure_compute_virtual_machine_by_region
+      query = query.compute_virtual_machine_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Virtual Machines by OS Type"
-      query = query.azure_compute_virtual_machine_by_os_type
+      query = query.compute_virtual_machine_by_os_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Virtual Machines by Size"
-      query = query.azure_compute_virtual_machine_by_size
+      query = query.compute_virtual_machine_by_size
       type  = "column"
       width = 4
     }
@@ -189,14 +189,14 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
     chart {
       title = "Top 10 CPU - Last 7 days"
-      query = query.azure_compute_virtual_machine_top10_cpu_past_week
+      query = query.compute_virtual_machine_top10_cpu_past_week
       type  = "line"
       width = 6
     }
 
     chart {
       title = "Average Max Daily CPU - Last 30 days"
-      query = query.azure_compute_virtual_machine_by_cpu_utilization_category
+      query = query.compute_virtual_machine_by_cpu_utilization_category
       type  = "column"
       width = 6
     }
@@ -206,13 +206,13 @@ dashboard "azure_compute_virtual_machine_dashboard" {
 
 # Card Queries
 
-query "azure_compute_virtual_machine_count" {
+query "compute_virtual_machine_count" {
   sql = <<-EOQ
     select count(*) as "Virtual Machines" from azure_compute_virtual_machine;
   EOQ
 }
 
-query "azure_compute_virtual_machine_host_encryption_count" {
+query "compute_virtual_machine_host_encryption_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -225,7 +225,7 @@ query "azure_compute_virtual_machine_host_encryption_count" {
   EOQ
 }
 
-query "azure_compute_public_virtual_machine_count" {
+query "compute_public_virtual_machine_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -238,7 +238,7 @@ query "azure_compute_public_virtual_machine_count" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_disaster_recovery_disabled_count" {
+query "compute_virtual_machine_disaster_recovery_disabled_count" {
   sql = <<-EOQ
     with vm_dr_enabled as (
       select
@@ -259,7 +259,7 @@ query "azure_compute_virtual_machine_disaster_recovery_disabled_count" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_unattached_with_network_count" {
+query "compute_virtual_machine_unattached_with_network_count" {
   sql = <<-EOQ
     with vm_with_network_interfaces as (
       select
@@ -288,7 +288,7 @@ query "azure_compute_virtual_machine_unattached_with_network_count" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_unrestricted_remote_access_count" {
+query "compute_virtual_machine_unrestricted_remote_access_count" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -333,7 +333,7 @@ query "azure_compute_virtual_machine_unrestricted_remote_access_count" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_vulnerability_assessment_disabled_count" {
+query "compute_virtual_machine_vulnerability_assessment_disabled_count" {
   sql = <<-EOQ
     with defender_enabled_vms as (
       select
@@ -371,7 +371,7 @@ query "azure_compute_virtual_machine_vulnerability_assessment_disabled_count" {
 
 # Assessment Queries
 
-query "azure_compute_virtual_machine_by_host_encryption_status" {
+query "compute_virtual_machine_by_host_encryption_status" {
   sql = <<-EOQ
     select
       encryption,
@@ -390,7 +390,7 @@ query "azure_compute_virtual_machine_by_host_encryption_status" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_by_public_ip" {
+query "compute_virtual_machine_by_public_ip" {
   sql = <<-EOQ
     with vm_visibility as (
       select
@@ -411,7 +411,7 @@ query "azure_compute_virtual_machine_by_public_ip" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_by_attachment_to_network" {
+query "compute_virtual_machine_by_attachment_to_network" {
   sql = <<-EOQ
     with vm_with_network_interfaces as (
       select
@@ -459,7 +459,7 @@ query "azure_compute_virtual_machine_by_attachment_to_network" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_by_disaster_recovery_status" {
+query "compute_virtual_machine_by_disaster_recovery_status" {
   sql = <<-EOQ
     with vm_dr_enabled as (
       select
@@ -491,7 +491,7 @@ query "azure_compute_virtual_machine_by_disaster_recovery_status" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_by_remote_access" {
+query "compute_virtual_machine_by_remote_access" {
   sql = <<-EOQ
     with network_sg as (
       select
@@ -544,7 +544,7 @@ query "azure_compute_virtual_machine_by_remote_access" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_by_vulnerability_assessment_solution" {
+query "compute_virtual_machine_by_vulnerability_assessment_solution" {
   sql = <<-EOQ
     with defender_enabled_vms as (
       select
@@ -590,7 +590,7 @@ query "azure_compute_virtual_machine_by_vulnerability_assessment_solution" {
 
 # Analysis Queries
 
-query "azure_compute_virtual_machine_by_subscription" {
+query "compute_virtual_machine_by_subscription" {
   sql = <<-EOQ
     select
       a.title as "Subscription",
@@ -607,7 +607,7 @@ query "azure_compute_virtual_machine_by_subscription" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_by_resource_group" {
+query "compute_virtual_machine_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -624,7 +624,7 @@ query "azure_compute_virtual_machine_by_resource_group" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_by_region" {
+query "compute_virtual_machine_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -638,7 +638,7 @@ query "azure_compute_virtual_machine_by_region" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_by_os_type" {
+query "compute_virtual_machine_by_os_type" {
   sql = <<-EOQ
     select
       os_type as "OS Type",
@@ -652,7 +652,7 @@ query "azure_compute_virtual_machine_by_os_type" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_by_size" {
+query "compute_virtual_machine_by_size" {
   sql = <<-EOQ
     select
       size as "Size",
@@ -666,7 +666,7 @@ query "azure_compute_virtual_machine_by_size" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_top10_cpu_past_week" {
+query "compute_virtual_machine_top10_cpu_past_week" {
   sql = <<-EOQ
     with top_n as (
       select
@@ -698,7 +698,7 @@ query "azure_compute_virtual_machine_top10_cpu_past_week" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_by_cpu_utilization_category" {
+query "compute_virtual_machine_by_cpu_utilization_category" {
   sql = <<-EOQ
     with cpu_buckets as (
       select

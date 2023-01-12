@@ -14,9 +14,12 @@ mod "azure_insights" {
   }
 
   require {
-    steampipe = "0.13.1"
+    steampipe = "0.18.0"
     plugin "azure" {
-      version = "0.23.2"
+      version = "0.35.1"
+    }
+    plugin "azuread" {
+      version = "0.8.3"
     }
   }
 }

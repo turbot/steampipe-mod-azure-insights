@@ -1,4 +1,4 @@
-dashboard "azure_compute_disk_dashboard" {
+dashboard "compute_disk_dashboard" {
 
   title         = "Azure Compute Disk Dashboard"
   documentation = file("./dashboards/compute/docs/compute_disk_dashboard.md")
@@ -11,18 +11,18 @@ dashboard "azure_compute_disk_dashboard" {
 
     # Analysis
     card {
-      query = query.azure_compute_disk_count
+      query = query.compute_disk_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_disk_storage_total
+      query = query.compute_disk_storage_total
       width = 2
     }
 
     # Assessments
     card {
-      query = query.azure_compute_disk_unattached_count
+      query = query.compute_disk_unattached_count
       width = 2
     }
 
@@ -34,7 +34,7 @@ dashboard "azure_compute_disk_dashboard" {
 
     chart {
       title = "Attached With Network"
-      query = query.azure_compute_disk_by_attachment
+      query = query.compute_disk_by_attachment
       type  = "donut"
       width = 2
 
@@ -56,49 +56,49 @@ dashboard "azure_compute_disk_dashboard" {
 
     chart {
       title = "Disks by Subscription"
-      query = query.azure_compute_disk_by_subscription
+      query = query.compute_disk_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Disks by Resource Group"
-      query = query.azure_compute_disk_by_resource_group
+      query = query.compute_disk_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Disks by Region"
-      query = query.azure_compute_disk_by_region
+      query = query.compute_disk_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Disks by Age"
-      query = query.azure_compute_disk_by_age
+      query = query.compute_disk_by_age
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Disks by Encryption Type"
-      query = query.azure_compute_disk_by_encryption_type
+      query = query.compute_disk_by_encryption_type
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Disks by OS Type"
-      query = query.azure_compute_disk_by_os_type
+      query = query.compute_disk_by_os_type
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Disks by SKU Tier"
-      query = query.azure_compute_disk_by_sku_tier
+      query = query.compute_disk_by_sku_tier
       type  = "column"
       width = 3
     }
@@ -108,7 +108,7 @@ dashboard "azure_compute_disk_dashboard" {
   container {
     chart {
       title = "Storage by Subscription (GB)"
-      sql   = query.azure_compute_disk_storage_by_subscription.sql
+      sql   = query.compute_disk_storage_by_subscription.sql
       type  = "column"
       width = 3
 
@@ -119,7 +119,7 @@ dashboard "azure_compute_disk_dashboard" {
 
     chart {
       title = "Storage by Resource Group (GB)"
-      sql   = query.azure_compute_disk_storage_by_resource_group.sql
+      sql   = query.compute_disk_storage_by_resource_group.sql
       type  = "column"
       width = 3
 
@@ -130,7 +130,7 @@ dashboard "azure_compute_disk_dashboard" {
 
     chart {
       title = "Storage by Region (GB)"
-      sql   = query.azure_compute_disk_storage_by_region.sql
+      sql   = query.compute_disk_storage_by_region.sql
       type  = "column"
       width = 3
 
@@ -141,7 +141,7 @@ dashboard "azure_compute_disk_dashboard" {
 
     chart {
       title = "Storage by Age (GB)"
-      sql   = query.azure_compute_disk_storage_by_age.sql
+      sql   = query.compute_disk_storage_by_age.sql
       type  = "column"
       width = 3
 
@@ -157,31 +157,31 @@ dashboard "azure_compute_disk_dashboard" {
 
     chart {
       title = "Top 10 Average Read IOPS - Last 7 days"
-      query = query.azure_compute_disk_top_10_read_ops_avg
+      query = query.compute_disk_top_10_read_ops_avg
       type  = "line"
       width = 6
     }
 
     chart {
       title = "Top 10 Average Write IOPS - Last 7 days"
-      query = query.azure_compute_disk_top_10_write_ops_avg
+      query = query.compute_disk_top_10_write_ops_avg
       type  = "column"
       width = 6
     }
 
   }
-  
+
 }
 
 # Card Queries
 
-query "azure_compute_disk_count" {
+query "compute_disk_count" {
   sql = <<-EOQ
     select count(*) as "Disks" from azure_compute_disk;
   EOQ
 }
 
-query "azure_compute_disk_storage_total" {
+query "compute_disk_storage_total" {
   sql = <<-EOQ
     select
       sum(disk_size_gb) as "Total Storage (GB)"
@@ -190,7 +190,7 @@ query "azure_compute_disk_storage_total" {
   EOQ
 }
 
-query "azure_compute_disk_unattached_count" {
+query "compute_disk_unattached_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -205,7 +205,7 @@ query "azure_compute_disk_unattached_count" {
 
 # Assessment Queries
 
-query "azure_compute_disk_by_attachment" {
+query "compute_disk_by_attachment" {
   sql = <<-EOQ
     select
       attachment,
@@ -228,7 +228,7 @@ query "azure_compute_disk_by_attachment" {
 
 # Analysis Queries
 
-query "azure_compute_disk_by_subscription" {
+query "compute_disk_by_subscription" {
   sql = <<-EOQ
     select
       sub.title as "Subscription",
@@ -245,7 +245,7 @@ query "azure_compute_disk_by_subscription" {
   EOQ
 }
 
-query "azure_compute_disk_by_resource_group" {
+query "compute_disk_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -262,7 +262,7 @@ query "azure_compute_disk_by_resource_group" {
   EOQ
 }
 
-query "azure_compute_disk_by_region" {
+query "compute_disk_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -276,7 +276,7 @@ query "azure_compute_disk_by_region" {
   EOQ
 }
 
-query "azure_compute_disk_by_age" {
+query "compute_disk_by_age" {
   sql = <<-EOQ
     with disks as (
       select
@@ -321,7 +321,7 @@ query "azure_compute_disk_by_age" {
   EOQ
 }
 
-query "azure_compute_disk_by_encryption_type" {
+query "compute_disk_by_encryption_type" {
   sql = <<-EOQ
     select
       encryption_type as "Encryption Type",
@@ -335,7 +335,7 @@ query "azure_compute_disk_by_encryption_type" {
   EOQ
 }
 
-query "azure_compute_disk_by_os_type" {
+query "compute_disk_by_os_type" {
   sql = <<-EOQ
     select
       os_type as "OS Type",
@@ -349,7 +349,7 @@ query "azure_compute_disk_by_os_type" {
   EOQ
 }
 
-query "azure_compute_disk_by_sku_tier" {
+query "compute_disk_by_sku_tier" {
   sql = <<-EOQ
     select
       sku_tier as "SKU Tier",
@@ -363,7 +363,7 @@ query "azure_compute_disk_by_sku_tier" {
   EOQ
 }
 
-query "azure_compute_disk_storage_by_subscription" {
+query "compute_disk_storage_by_subscription" {
   sql = <<-EOQ
     select
       sub.title as "Subscription",
@@ -380,7 +380,7 @@ query "azure_compute_disk_storage_by_subscription" {
   EOQ
 }
 
-query "azure_compute_disk_storage_by_resource_group" {
+query "compute_disk_storage_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -397,7 +397,7 @@ query "azure_compute_disk_storage_by_resource_group" {
   EOQ
 }
 
-query "azure_compute_disk_storage_by_region" {
+query "compute_disk_storage_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -411,7 +411,7 @@ query "azure_compute_disk_storage_by_region" {
   EOQ
 }
 
-query "azure_compute_disk_storage_by_age" {
+query "compute_disk_storage_by_age" {
   sql = <<-EOQ
     with disks as (
       select
@@ -457,7 +457,7 @@ query "azure_compute_disk_storage_by_age" {
   EOQ
 }
 
-query "azure_compute_disk_top_10_read_ops_avg" {
+query "compute_disk_top_10_read_ops_avg" {
   sql = <<-EOQ
     with top_n as (
       select
@@ -489,7 +489,7 @@ query "azure_compute_disk_top_10_read_ops_avg" {
   EOQ
 }
 
-query "azure_compute_disk_top_10_write_ops_avg" {
+query "compute_disk_top_10_write_ops_avg" {
   sql = <<-EOQ
     with top_n as (
       select
