@@ -1,4 +1,4 @@
-dashboard "azure_compute_snapshot_dashboard" {
+dashboard "compute_snapshot_dashboard" {
 
   title         = "Azure Compute Snapshot Dashboard"
   documentation = file("./dashboards/compute/docs/compute_snapshot_dashboard.md")
@@ -11,27 +11,27 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     # Analysis
     card {
-      query = query.azure_compute_snapshot_count
+      query = query.compute_snapshot_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_snapshot_storage_total
+      query = query.compute_snapshot_storage_total
       width = 2
     }
 
     card {
-      query = query.azure_compute_snapshot_unrestricted_network_access_count
+      query = query.compute_snapshot_unrestricted_network_access_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_snapshot_incremental_disabled_count
+      query = query.compute_snapshot_incremental_disabled_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_snapshot_encryption_setting_collection_disabled_count
+      query = query.compute_snapshot_encryption_setting_collection_disabled_count
       width = 2
     }
 
@@ -43,7 +43,7 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     chart {
       title = "Network Access Status"
-      query = query.azure_compute_snapshot_by_network_access_policy_status
+      query = query.compute_snapshot_by_network_access_policy_status
       type  = "donut"
       width = 2
 
@@ -59,7 +59,7 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     chart {
       title = "Incremental Status"
-      query = query.azure_compute_snapshot_incremental_status
+      query = query.compute_snapshot_incremental_status
       type  = "donut"
       width = 2
 
@@ -75,7 +75,7 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     chart {
       title = "Encryption Setting Collection Status"
-      query = query.azure_compute_snapshot_encryption_setting_collection_status
+      query = query.compute_snapshot_encryption_setting_collection_status
       type  = "donut"
       width = 2
 
@@ -97,35 +97,35 @@ dashboard "azure_compute_snapshot_dashboard" {
 
     chart {
       title = "Snapshots by Subscription"
-      query = query.azure_compute_snapshot_by_subscription
+      query = query.compute_snapshot_by_subscription
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Resource Group"
-      query = query.azure_compute_snapshot_by_resource_group
+      query = query.compute_snapshot_by_resource_group
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Region"
-      query = query.azure_compute_snapshot_by_region
+      query = query.compute_snapshot_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by Encryption Type"
-      query = query.azure_compute_snapshot_by_encryption_type
+      query = query.compute_snapshot_by_encryption_type
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Snapshots by OS Type"
-      query = query.azure_compute_snapshot_by_os_type
+      query = query.compute_snapshot_by_os_type
       type  = "column"
       width = 4
     }
@@ -135,13 +135,13 @@ dashboard "azure_compute_snapshot_dashboard" {
 
 # Card Queries
 
-query "azure_compute_snapshot_count" {
+query "compute_snapshot_count" {
   sql = <<-EOQ
     select count(*) as "Snapshots" from azure_compute_snapshot;
   EOQ
 }
 
-query "azure_compute_snapshot_unrestricted_network_access_count" {
+query "compute_snapshot_unrestricted_network_access_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -154,7 +154,7 @@ query "azure_compute_snapshot_unrestricted_network_access_count" {
   EOQ
 }
 
-query "azure_compute_snapshot_storage_total" {
+query "compute_snapshot_storage_total" {
   sql = <<-EOQ
     select
       sum(disk_size_gb) as "Total Storage (GB)"
@@ -163,7 +163,7 @@ query "azure_compute_snapshot_storage_total" {
   EOQ
 }
 
-query "azure_compute_snapshot_incremental_disabled_count" {
+query "compute_snapshot_incremental_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -177,7 +177,7 @@ query "azure_compute_snapshot_incremental_disabled_count" {
 }
 
 # https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.management.compute.models.encryptionsettingscollection.-ctor?view=azure-dotnet
-query "azure_compute_snapshot_encryption_setting_collection_disabled_count" {
+query "compute_snapshot_encryption_setting_collection_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -192,7 +192,7 @@ query "azure_compute_snapshot_encryption_setting_collection_disabled_count" {
 
 # Assessment Queries
 
-query "azure_compute_snapshot_by_network_access_policy_status" {
+query "compute_snapshot_by_network_access_policy_status" {
   sql = <<-EOQ
     select
       status,
@@ -213,7 +213,7 @@ query "azure_compute_snapshot_by_network_access_policy_status" {
   EOQ
 }
 
-query "azure_compute_snapshot_incremental_status" {
+query "compute_snapshot_incremental_status" {
   sql = <<-EOQ
     select
       status,
@@ -232,7 +232,7 @@ query "azure_compute_snapshot_incremental_status" {
   EOQ
 }
 
-query "azure_compute_snapshot_encryption_setting_collection_status" {
+query "compute_snapshot_encryption_setting_collection_status" {
   sql = <<-EOQ
     select
       status,
@@ -253,7 +253,7 @@ query "azure_compute_snapshot_encryption_setting_collection_status" {
 
 # Analysis Queries
 
-query "azure_compute_snapshot_by_subscription" {
+query "compute_snapshot_by_subscription" {
   sql = <<-EOQ
     select
       sub.title as "Subscription",
@@ -270,7 +270,7 @@ query "azure_compute_snapshot_by_subscription" {
   EOQ
 }
 
-query "azure_compute_snapshot_by_resource_group" {
+query "compute_snapshot_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -287,7 +287,7 @@ query "azure_compute_snapshot_by_resource_group" {
   EOQ
 }
 
-query "azure_compute_snapshot_by_region" {
+query "compute_snapshot_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -301,7 +301,7 @@ query "azure_compute_snapshot_by_region" {
   EOQ
 }
 
-query "azure_compute_snapshot_by_encryption_type" {
+query "compute_snapshot_by_encryption_type" {
   sql = <<-EOQ
     select
       encryption_type as "Encryption Type",
@@ -315,7 +315,7 @@ query "azure_compute_snapshot_by_encryption_type" {
   EOQ
 }
 
-query "azure_compute_snapshot_by_os_type" {
+query "compute_snapshot_by_os_type" {
   sql = <<-EOQ
     select
       os_type as "OS Type",

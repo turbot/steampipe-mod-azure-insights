@@ -1,4 +1,4 @@
-dashboard "azure_compute_disk_age_report" {
+dashboard "compute_disk_age_report" {
 
   title         = "Azure Compute Disk Age Report"
   documentation = file("./dashboards/compute/docs/compute_disk_report_age.md")
@@ -11,38 +11,38 @@ dashboard "azure_compute_disk_age_report" {
   container {
 
     card {
-      query = query.azure_compute_disk_count
+      query = query.compute_disk_count
       width = 2
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_compute_disk_24_hours_count
+      query = query.compute_disk_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_compute_disk_30_days_count
+      query = query.compute_disk_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_compute_disk_30_90_days_count
+      query = query.compute_disk_30_90_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.azure_compute_disk_90_365_days_count
+      query = query.compute_disk_90_365_days_count
     }
 
     card {
       width = 2
       type  = "info"
-      query = query.azure_compute_disk_1_year_count
+      query = query.compute_disk_1_year_count
     }
 
   }
@@ -56,12 +56,16 @@ dashboard "azure_compute_disk_age_report" {
       display = "none"
     }
 
-    query = query.azure_compute_disk_age_table
+    column "Name" {
+      href = "${dashboard.compute_disk_detail.url_path}?input.disk_id={{.ID | @uri}}"
+    }
+
+    query = query.compute_disk_age_table
   }
 
 }
 
-query "azure_compute_disk_24_hours_count" {
+query "compute_disk_24_hours_count" {
   sql   = <<-EOQ
     select
       count(*) as value,
@@ -74,7 +78,7 @@ query "azure_compute_disk_24_hours_count" {
   EOQ
 }
 
-query "azure_compute_disk_30_days_count" {
+query "compute_disk_30_days_count" {
   sql   = <<-EOQ
     select
       count(*) as value,
@@ -87,7 +91,7 @@ query "azure_compute_disk_30_days_count" {
   EOQ
 }
 
-query "azure_compute_disk_30_90_days_count" {
+query "compute_disk_30_90_days_count" {
   sql   = <<-EOQ
     select
       count(*) as value,
@@ -100,7 +104,7 @@ query "azure_compute_disk_30_90_days_count" {
   EOQ
 }
 
-query "azure_compute_disk_90_365_days_count" {
+query "compute_disk_90_365_days_count" {
   sql   = <<-EOQ
     select
       count(*) as value,
@@ -113,7 +117,7 @@ query "azure_compute_disk_90_365_days_count" {
   EOQ
 }
 
-query "azure_compute_disk_1_year_count" {
+query "compute_disk_1_year_count" {
   sql   = <<-EOQ
     select
       count(*) as value,
@@ -126,7 +130,7 @@ query "azure_compute_disk_1_year_count" {
   EOQ
 }
 
-query "azure_compute_disk_age_table" {
+query "compute_disk_age_table" {
   sql = <<-EOQ
     select
       d.name as "Name",
@@ -138,7 +142,7 @@ query "azure_compute_disk_age_table" {
       d.subscription_id as "Subscription ID",
       d.resource_group as "Resource Group",
       d.region as "Region",
-      d.id as "ID"
+      lower(d.id) as "ID"
     from
       azure_compute_disk as d,
       azure_subscription as sub

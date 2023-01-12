@@ -1,6 +1,6 @@
-dashboard "azure_key_vault_key_age_report" {
+dashboard "key_vault_key_age_report" {
 
-  title = "Azure Key Vault Key Age Report"
+  title         = "Azure Key Vault Key Age Report"
   documentation = file("./dashboards/keyvault/docs/key_vault_key_report_age.md")
 
 
@@ -13,37 +13,37 @@ dashboard "azure_key_vault_key_age_report" {
 
     card {
       width = 2
-      query = query.azure_key_vault_key_count
+      query = query.key_vault_key_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_key_vault_key_24_hours_count
+      query = query.key_vault_key_24_hours_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_key_vault_key_30_days_count
+      query = query.key_vault_key_30_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_key_vault_key_30_90_days_count
+      query = query.key_vault_key_30_90_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_key_vault_key_90_365_days_count
+      query = query.key_vault_key_90_365_days_count
     }
 
     card {
       type  = "info"
       width = 2
-      query = query.azure_key_vault_key_1_year_count
+      query = query.key_vault_key_1_year_count
     }
 
   }
@@ -57,12 +57,24 @@ dashboard "azure_key_vault_key_age_report" {
       display = "none"
     }
 
-    query = query.azure_key_vault_key_age_table
+    column "Name" {
+      href = "${dashboard.key_vault_key_detail.url_path}?input.key_vault_key_id={{.'ID' | @uri}}"
+    }
+
+    column "Vault ID" {
+      display = "none"
+    }
+
+    column "Vault Name" {
+      href = "${dashboard.key_vault_detail.url_path}?input.key_vault_id={{.'Vault ID' | @uri}}"
+    }
+
+    query = query.key_vault_key_age_table
   }
 
 }
 
-query "azure_key_vault_key_24_hours_count" {
+query "key_vault_key_24_hours_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -74,7 +86,7 @@ query "azure_key_vault_key_24_hours_count" {
   EOQ
 }
 
-query "azure_key_vault_key_30_days_count" {
+query "key_vault_key_30_days_count" {
   sql = <<-EOQ
      select
       count(*) as value,
@@ -86,7 +98,7 @@ query "azure_key_vault_key_30_days_count" {
   EOQ
 }
 
-query "azure_key_vault_key_30_90_days_count" {
+query "key_vault_key_30_90_days_count" {
   sql = <<-EOQ
      select
       count(*) as value,
@@ -98,7 +110,7 @@ query "azure_key_vault_key_30_90_days_count" {
   EOQ
 }
 
-query "azure_key_vault_key_90_365_days_count" {
+query "key_vault_key_90_365_days_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -110,7 +122,7 @@ query "azure_key_vault_key_90_365_days_count" {
   EOQ
 }
 
-query "azure_key_vault_key_1_year_count" {
+query "key_vault_key_1_year_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -122,7 +134,7 @@ query "azure_key_vault_key_1_year_count" {
   EOQ
 }
 
-query "azure_key_vault_key_age_table" {
+query "key_vault_key_age_table" {
   sql = <<-EOQ
     select
       k.name as "Name",
@@ -136,12 +148,16 @@ query "azure_key_vault_key_age_table" {
       k.subscription_id as "Subscription ID",
       k.resource_group as "Resource Group",
       k.region as "Region",
-      k.id as "ID"
+      lower(k.id) as "ID",
+      lower(v.id) as "Vault ID"
     from
-      azure_key_vault_key as k,
+      azure_key_vault_key as k
+      left join azure_key_vault as v on v.name = k.vault_name,
       azure_subscription as sub
     where
-      k.subscription_id = sub.subscription_id
+      k.subscription_id = v.subscription_id
+      and k.resource_group = v.resource_group
+      and k.subscription_id = sub.subscription_id
     order by
       k.id;
   EOQ

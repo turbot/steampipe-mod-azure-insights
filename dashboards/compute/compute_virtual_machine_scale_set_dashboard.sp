@@ -1,4 +1,4 @@
-dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
+dashboard "compute_virtual_machine_scale_set_dashboard" {
 
   title         = "Azure Compute Virtual Machine Scale Set Dashboard"
   documentation = file("./dashboards/compute/docs/compute_virtual_machine_scale_set_dashboard.md")
@@ -11,23 +11,23 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
     # Analysis
     card {
-      query = query.azure_compute_virtual_machine_scale_set_count
+      query = query.compute_virtual_machine_scale_set_count
       width = 2
     }
 
     card {
-      query = query.azure_compute_virtual_machine_scale_set_host_encryption_count
+      query = query.compute_virtual_machine_scale_set_host_encryption_count
       width = 2
     }
 
     # Assessments
     card {
-      query   = query.azure_compute_virtual_machine_scale_set_logging_disabled
+      query   = query.compute_virtual_machine_scale_set_logging_disabled
       width = 2
     }
 
     card {
-      query = query.azure_compute_virtual_machine_scale_set_log_analytics_agent_installed_count
+      query = query.compute_virtual_machine_scale_set_log_analytics_agent_installed_count
       width = 2
     }
   }
@@ -38,7 +38,7 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
     chart {
       title = "Host Encryption Status"
-      query = query.azure_compute_virtual_machine_scale_set_by_host_encryption_status
+      query = query.compute_virtual_machine_scale_set_by_host_encryption_status
       type  = "donut"
       width = 2
 
@@ -54,7 +54,7 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
     chart {
       title = "Logging Status"
-      query = query.azure_compute_virtual_machine_scale_set_by_logging_status
+      query = query.compute_virtual_machine_scale_set_by_logging_status
       type  = "donut"
       width = 2
 
@@ -70,7 +70,7 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
     chart {
       title = "Log Analytic Agent Status"
-      query = query.azure_compute_virtual_machine_scale_set_by_log_analytics_agent_installed_status
+      query = query.compute_virtual_machine_scale_set_by_log_analytics_agent_installed_status
       type  = "donut"
       width = 2
 
@@ -92,28 +92,28 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
     chart {
       title = "Scale Sets by Subscription"
-      query = query.azure_compute_virtual_machine_scale_set_by_subscription
+      query = query.compute_virtual_machine_scale_set_by_subscription
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Scale Sets by Resource Group"
-      query = query.azure_compute_virtual_machine_scale_set_by_resource_group
+      query = query.compute_virtual_machine_scale_set_by_resource_group
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Scale Sets by Region"
-      query = query.azure_compute_virtual_machine_scale_set_by_region
+      query = query.compute_virtual_machine_scale_set_by_region
       type  = "column"
       width = 3
     }
 
     chart {
       title = "Scale Sets by Tier"
-      query = query.azure_compute_virtual_machine_scale_set_by_tier
+      query = query.compute_virtual_machine_scale_set_by_tier
       type  = "column"
       width = 3
     }
@@ -123,13 +123,13 @@ dashboard "azure_compute_virtual_machine_scale_set_dashboard" {
 
 # Card Queries
 
-query "azure_compute_virtual_machine_scale_set_count" {
+query "compute_virtual_machine_scale_set_count" {
   sql = <<-EOQ
     select count(*) as "Virtual Machine Scale Sets" from azure_compute_virtual_machine_scale_set;
   EOQ
 }
 
-query "azure_compute_virtual_machine_scale_set_host_encryption_count" {
+query "compute_virtual_machine_scale_set_host_encryption_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -143,7 +143,7 @@ query "azure_compute_virtual_machine_scale_set_host_encryption_count" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_scale_set_logging_disabled" {
+query "compute_virtual_machine_scale_set_logging_disabled" {
   sql = <<-EOQ
     with logging_details as (
       select
@@ -170,7 +170,7 @@ query "azure_compute_virtual_machine_scale_set_logging_disabled" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_scale_set_log_analytics_agent_installed_count" {
+query "compute_virtual_machine_scale_set_log_analytics_agent_installed_count" {
   sql = <<-EOQ
     with agent_installed_vm_scale_set as (
       select
@@ -198,7 +198,7 @@ query "azure_compute_virtual_machine_scale_set_log_analytics_agent_installed_cou
 
 # Assessment Queries
 
-query "azure_compute_virtual_machine_scale_set_by_host_encryption_status" {
+query "compute_virtual_machine_scale_set_by_host_encryption_status" {
   sql = <<-EOQ
     select
       encryption,
@@ -217,7 +217,7 @@ query "azure_compute_virtual_machine_scale_set_by_host_encryption_status" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_scale_set_by_logging_status" {
+query "compute_virtual_machine_scale_set_by_logging_status" {
   sql = <<-EOQ
     with logging_details as (
       select
@@ -252,7 +252,7 @@ query "azure_compute_virtual_machine_scale_set_by_logging_status" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_scale_set_by_log_analytics_agent_installed_status" {
+query "compute_virtual_machine_scale_set_by_log_analytics_agent_installed_status" {
   sql = <<-EOQ
     with agent_installed_vm_scale_set as (
       select
@@ -289,7 +289,7 @@ query "azure_compute_virtual_machine_scale_set_by_log_analytics_agent_installed_
 
 # Analysis Queries
 
-query "azure_compute_virtual_machine_scale_set_by_subscription" {
+query "compute_virtual_machine_scale_set_by_subscription" {
   sql = <<-EOQ
     select
       a.title as "Subscription",
@@ -306,7 +306,7 @@ query "azure_compute_virtual_machine_scale_set_by_subscription" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_scale_set_by_resource_group" {
+query "compute_virtual_machine_scale_set_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -323,7 +323,7 @@ query "azure_compute_virtual_machine_scale_set_by_resource_group" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_scale_set_by_region" {
+query "compute_virtual_machine_scale_set_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -337,7 +337,7 @@ query "azure_compute_virtual_machine_scale_set_by_region" {
   EOQ
 }
 
-query "azure_compute_virtual_machine_scale_set_by_tier" {
+query "compute_virtual_machine_scale_set_by_tier" {
   sql = <<-EOQ
     select
       sku_tier as "Tier",

@@ -1,4 +1,4 @@
-dashboard "azure_sql_database_dashboard" {
+dashboard "sql_database_dashboard" {
 
   title         = "Azure SQL Database Dashboard"
   documentation = file("./dashboards/sql/docs/sql_database_dashboard.md")
@@ -10,22 +10,22 @@ dashboard "azure_sql_database_dashboard" {
   container {
 
     card {
-      query = query.azure_sql_database_count
+      query = query.sql_database_count
       width = 2
     }
 
     card {
-      query = query.azure_sql_database_transparent_data_encryption_disabled_count
+      query = query.sql_database_transparent_data_encryption_disabled_count
       width = 2
     }
 
     card {
-      query = query.azure_sql_database_vulnerability_assessment_disabled_count
+      query = query.sql_database_vulnerability_assessment_disabled_count
       width = 2
     }
 
     card {
-      query = query.azure_sql_database_geo_redundant_backup_disabled_count
+      query = query.sql_database_geo_redundant_backup_disabled_count
       width = 2
     }
 
@@ -37,7 +37,7 @@ dashboard "azure_sql_database_dashboard" {
 
     chart {
       title = "TDE Status"
-      query = query.azure_sql_database_tde_status
+      query = query.sql_database_tde_status
       type  = "donut"
       width = 2
 
@@ -53,7 +53,7 @@ dashboard "azure_sql_database_dashboard" {
 
     chart {
       title = "Vulnerability Assessment Status"
-      query = query.azure_sql_database_vulnerability_assessment_status
+      query = query.sql_database_vulnerability_assessment_status
       type  = "donut"
       width = 2
 
@@ -69,7 +69,7 @@ dashboard "azure_sql_database_dashboard" {
 
     chart {
       title = "Geo-Redundant Backup Status"
-      query = query.azure_sql_database_geo_redundant_backup_status
+      query = query.sql_database_geo_redundant_backup_status
       type  = "donut"
       width = 2
 
@@ -91,28 +91,28 @@ dashboard "azure_sql_database_dashboard" {
 
     chart {
       title = "Databases by Subscription"
-      query = query.azure_sql_database_by_subscription
+      query = query.sql_database_by_subscription
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Databases by Resource Group"
-      query = query.azure_sql_database_by_resource_group
+      query = query.sql_database_by_resource_group
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Databases by Age"
-      query = query.azure_sql_database_by_creation_month
+      query = query.sql_database_by_creation_month
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Databases by Region"
-      query = query.azure_sql_database_by_region
+      query = query.sql_database_by_region
       type  = "column"
       width = 4
     }
@@ -120,14 +120,14 @@ dashboard "azure_sql_database_dashboard" {
 
     chart {
       title = "Databases by Status"
-      query = query.azure_sql_database_by_status
+      query = query.sql_database_by_status
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Databases by Edition"
-      query = query.azure_sql_database_by_edition
+      query = query.sql_database_by_edition
       type  = "column"
       width = 4
     }
@@ -138,13 +138,13 @@ dashboard "azure_sql_database_dashboard" {
 
 # Card Queries
 
-query "azure_sql_database_count" {
+query "sql_database_count" {
   sql = <<-EOQ
     select count(*) as "Databases" from azure_sql_database where name <> 'master';
   EOQ
 }
 
-query "azure_sql_database_transparent_data_encryption_disabled_count" {
+query "sql_database_transparent_data_encryption_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -158,7 +158,7 @@ query "azure_sql_database_transparent_data_encryption_disabled_count" {
   EOQ
 }
 
-query "azure_sql_database_vulnerability_assessment_disabled_count" {
+query "sql_database_vulnerability_assessment_disabled_count" {
   sql = <<-EOQ
     with sql_database_va as (
       select
@@ -179,7 +179,7 @@ query "azure_sql_database_vulnerability_assessment_disabled_count" {
   EOQ
 }
 
-query "azure_sql_database_geo_redundant_backup_disabled_count" {
+query "sql_database_geo_redundant_backup_disabled_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -197,7 +197,7 @@ query "azure_sql_database_geo_redundant_backup_disabled_count" {
 
 # Assessment Queries
 
-query "azure_sql_database_tde_status" {
+query "sql_database_tde_status" {
   sql = <<-EOQ
     select
       tde_status,
@@ -218,7 +218,7 @@ query "azure_sql_database_tde_status" {
   EOQ
 }
 
-query "azure_sql_database_vulnerability_assessment_status" {
+query "sql_database_vulnerability_assessment_status" {
   sql = <<-EOQ
     with vulnerability_assessment_enabled as (
       select
@@ -251,7 +251,7 @@ query "azure_sql_database_vulnerability_assessment_status" {
   EOQ
 }
 
-query "azure_sql_database_geo_redundant_backup_status" {
+query "sql_database_geo_redundant_backup_status" {
   sql = <<-EOQ
     select
       geo_redundant_backup_status,
@@ -278,7 +278,7 @@ query "azure_sql_database_geo_redundant_backup_status" {
 
 # Analysis Queries
 
-query "azure_sql_database_by_subscription" {
+query "sql_database_by_subscription" {
   sql = <<-EOQ
     select
       s.title as "Subscription",
@@ -296,7 +296,7 @@ query "azure_sql_database_by_subscription" {
   EOQ
 }
 
-query "azure_sql_database_by_resource_group" {
+query "sql_database_by_resource_group" {
   sql = <<-EOQ
     select
       resource_group || ' [' || sub.title || ']' as "Resource Group",
@@ -314,7 +314,7 @@ query "azure_sql_database_by_resource_group" {
   EOQ
 }
 
-query "azure_sql_database_by_region" {
+query "sql_database_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -330,7 +330,7 @@ query "azure_sql_database_by_region" {
   EOQ
 }
 
-query "azure_sql_database_by_creation_month" {
+query "sql_database_by_creation_month" {
   sql = <<-EOQ
     with databases as (
       select
@@ -376,7 +376,7 @@ query "azure_sql_database_by_creation_month" {
   EOQ
 }
 
-query "azure_sql_database_by_status" {
+query "sql_database_by_status" {
   sql = <<-EOQ
     select
       status as "Status",
@@ -392,7 +392,7 @@ query "azure_sql_database_by_status" {
   EOQ
 }
 
-query "azure_sql_database_by_edition" {
+query "sql_database_by_edition" {
   sql = <<-EOQ
     select
       edition as "Edition",
