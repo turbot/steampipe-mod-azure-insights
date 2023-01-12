@@ -13,7 +13,7 @@ category "storage_container" {
 category "storage_queue" {
   title = "Storage Queue"
   color = local.storage_color
-  icon  = "shelves"
+  icon  = "format_list_bulleted_add"
 }
 
 category "storage_share_file" {
