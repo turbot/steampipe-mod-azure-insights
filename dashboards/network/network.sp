@@ -27,7 +27,7 @@ category "network_load_balancer" {
 category "network_load_balancer_backend_address_pool" {
   title = "Backend Address Pool"
   color = local.networking_color
-  icon  = "table_rows"
+  icon  = "directions"
 }
 
 category "network_load_balancer_nat_rule" {
