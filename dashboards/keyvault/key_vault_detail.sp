@@ -226,7 +226,6 @@ query "key_vault_purge_protection_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "key_vault_public_network_access_enabled" {
@@ -240,7 +239,6 @@ query "key_vault_public_network_access_enabled" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "key_vault_soft_delete_status" {
@@ -254,7 +252,6 @@ query "key_vault_soft_delete_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "key_vault_soft_delete_retention_in_days" {
@@ -267,7 +264,6 @@ query "key_vault_soft_delete_retention_in_days" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # with queries
@@ -287,12 +283,12 @@ query "network_subnets_for_key_vault" {
   sql = <<-EOQ
     select
       lower(s.id) as subnet_id
-      from
-        azure_key_vault as v,
-        jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
-        left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
-      where
-        lower(v.id) = $1;
+    from
+      azure_key_vault as v,
+      jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
+      left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
+    where
+      lower(v.id) = $1;
   EOQ
 }
 
@@ -310,11 +306,11 @@ query "network_virtual_networks_for_key_vault" {
     )
     select
       lower(n.id) as virtual_network_id
-      from
-        azure_virtual_network as n,
-        jsonb_array_elements(subnets) as s
-      where
-        lower(s ->> 'id') in (select id from subnet)
+    from
+      azure_virtual_network as n,
+      jsonb_array_elements(subnets) as s
+    where
+      lower(s ->> 'id') in (select id from subnet)
   EOQ
 }
 
@@ -337,7 +333,6 @@ query "key_vault_overview" {
     where
       lower(id) = $1
   EOQ
-
 }
 
 query "key_vault_tags" {
@@ -352,8 +347,7 @@ query "key_vault_tags" {
       lower(id) = $1
     order by
       tag.key;
-    EOQ
-
+  EOQ
 }
 
 query "key_vault_access_policies" {
@@ -371,7 +365,6 @@ query "key_vault_access_policies" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "key_vault_sku" {
@@ -384,7 +377,6 @@ query "key_vault_sku" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "key_vault_network_acls" {
@@ -399,7 +391,6 @@ query "key_vault_network_acls" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "key_vault_usage" {
@@ -413,5 +404,4 @@ query "key_vault_usage" {
     where
       lower(id) = $1;
   EOQ
-
 }

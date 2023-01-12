@@ -393,7 +393,6 @@ query "network_load_balancer_sku_name" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_load_balancer_sku_tier" {
@@ -406,7 +405,6 @@ query "network_load_balancer_sku_tier" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_load_balancer_backend_pool_count" {
@@ -419,7 +417,6 @@ query "network_load_balancer_backend_pool_count" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_load_balancer_rules_count" {
@@ -432,7 +429,6 @@ query "network_load_balancer_rules_count" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_load_nat_rules_count" {
@@ -445,7 +441,6 @@ query "network_load_nat_rules_count" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_load_probes_count" {
@@ -458,13 +453,12 @@ query "network_load_probes_count" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # with queries
 
 query "compute_virtual_machine_scale_set_network_interfaces_for_network_load_balancer" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with backend_address_pools as (
       select
         lb.id as lb_id,
@@ -498,7 +492,7 @@ query "compute_virtual_machine_scale_set_network_interfaces_for_network_load_bal
 }
 
 query "compute_virtual_machine_scale_set_vms_for_network_load_balancer" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with backend_address_pools as (
       select
         lb.id as lb_id,
@@ -545,7 +539,7 @@ query "compute_virtual_machine_scale_set_vms_for_network_load_balancer" {
 }
 
 query "compute_virtual_machine_scale_sets_for_network_load_balancer" {
-  sql   = <<-EOQ
+  sql  = <<-EOQ
     select
       lower(vm_scale_set.id) as compute_virtual_machine_scale_set_id
     from
@@ -559,7 +553,7 @@ query "compute_virtual_machine_scale_sets_for_network_load_balancer" {
 }
 
 query "compute_virtual_machines_for_network_load_balancer" {
-  sql   = <<-EOQ
+  sql  = <<-EOQ
     with backend_address_pools as (
       select
         lb.id as lb_id,
@@ -619,7 +613,7 @@ query "network_load_balancer_backend_address_pools_for_network_load_balancer" {
 }
 
 query "network_network_interfaces_for_network_load_balancer" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
   with backend_address_pools as (
     select
       lb.id as lb_id,
@@ -653,7 +647,7 @@ query "network_network_interfaces_for_network_load_balancer" {
 }
 
 query "network_public_ips_for_network_load_balancer" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(ip.id) as public_ip_id
     from
@@ -667,7 +661,7 @@ query "network_public_ips_for_network_load_balancer" {
 }
 
 query "network_virtual_networks_for_network_load_balancer" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with backend_address_pools as (
       select
         lb.id as lb_id,
@@ -731,7 +725,6 @@ query "network_load_balancer_tags" {
     order by
       tag.key;
     EOQ
-
 }
 
 query "load_balancer_associated_resources" {
@@ -789,9 +782,7 @@ query "load_balancer_associated_resources" {
     where
       lower(split_part( b ->> 'id', '/backendAddressPools' , 1)) = $1
 
-
     -- Compute Virtual Machine
-
     union all
     select
       name as "Name",
@@ -803,8 +794,7 @@ query "load_balancer_associated_resources" {
       azure_compute_virtual_machine
     where
       lower(id) in (select lower(virtual_machine_id) from network_interface)
-    EOQ
-
+  EOQ
 }
 
 query "network_load_balancer_backend_pools" {
@@ -817,8 +807,7 @@ query "network_load_balancer_backend_pools" {
       jsonb_array_elements(backend_address_pools) as p
     where
       lower(id) = $1;
-    EOQ
-
+  EOQ
 }
 
 query "load_balancer_frontend_ip_configurations" {
@@ -833,8 +822,7 @@ query "load_balancer_frontend_ip_configurations" {
       jsonb_array_elements(frontend_ip_configurations) as c
     where
       lower(id) = $1;
-    EOQ
-
+  EOQ
 }
 
 query "load_balancer_probe" {
@@ -851,8 +839,7 @@ query "load_balancer_probe" {
       jsonb_array_elements(probes) as p
     where
       lower(id) = $1;
-    EOQ
-
+  EOQ
 }
 
 query "load_balancer_inbound_nat_rules" {
@@ -872,8 +859,7 @@ query "load_balancer_inbound_nat_rules" {
       jsonb_array_elements(inbound_nat_rules) as p
     where
       lower(id) = $1;
-    EOQ
-
+  EOQ
 }
 
 query "load_balancer_outbound_rules" {
@@ -893,8 +879,7 @@ query "load_balancer_outbound_rules" {
       jsonb_array_elements(outbound_rules) as r
     where
       lower(id) = $1;
-    EOQ
-
+  EOQ
 }
 
 query "load_balancer_load_balancing_rules" {
@@ -917,8 +902,7 @@ query "load_balancer_load_balancing_rules" {
       jsonb_array_elements(load_balancing_rules) as r
     where
       lower(id) = $1;
-    EOQ
-
+  EOQ
 }
 
 

@@ -288,7 +288,6 @@ query "compute_virtual_machine_scale_set_scale_set_name" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_sku_name" {
@@ -301,7 +300,6 @@ query "compute_virtual_machine_scale_set_sku_name" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # With Queries
@@ -399,39 +397,39 @@ query "network_load_balancers_for_compute_virtual_machine_scale_set_vm" {
 
 query "network_security_groups_for_compute_virtual_machine_scale_set_vm" {
   sql = <<-EOQ
-      select
-        lower(nsg.id) as nsg_id
-      from
-        azure_compute_virtual_machine_scale_set_vm as vm
-        left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
-        left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.network_security_group ->> 'id')
-      where
-        lower(vm.id) = $1
-        and lower(nsg.id) is not null;
+    select
+      lower(nsg.id) as nsg_id
+    from
+      azure_compute_virtual_machine_scale_set_vm as vm
+      left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
+      left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.network_security_group ->> 'id')
+    where
+      lower(vm.id) = $1
+      and lower(nsg.id) is not null;
   EOQ
 }
 
 query "network_subnets_for_compute_virtual_machine_scale_set_vm" {
   sql = <<-EOQ
-      with ip_configs as (
-        select
-          nic.ip_configurations as ip_config,
-          lower(vm.id) as vm_id,
-          lower(nic.id) as nic_i
-        from
-          azure_compute_virtual_machine_scale_set_vm as vm
-          left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
-        where
-        lower(vm.id) = $1
-      )
+    with ip_configs as (
       select
-        lower(s.id) as subnet_id
+        nic.ip_configurations as ip_config,
+        lower(vm.id) as vm_id,
+        lower(nic.id) as nic_i
       from
-        ip_configs,
-        jsonb_array_elements(ip_config) as c
-        left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+        azure_compute_virtual_machine_scale_set_vm as vm
+        left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
       where
-        lower(s.id) is not null;
+      lower(vm.id) = $1
+    )
+    select
+      lower(s.id) as subnet_id
+    from
+      ip_configs,
+      jsonb_array_elements(ip_config) as c
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
+    where
+      lower(s.id) is not null;
   EOQ
 }
 
@@ -483,7 +481,6 @@ query "compute_virtual_machine_scale_set_vm_overview" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_vm_tags" {
@@ -498,8 +495,7 @@ query "compute_virtual_machine_scale_set_vm_tags" {
       lower(id) = $1
     order by
       tag.key;
-    EOQ
-
+  EOQ
 }
 
 query "compute_virtual_machine_scale_set_vm_image_reference" {
@@ -514,7 +510,6 @@ query "compute_virtual_machine_scale_set_vm_image_reference" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_vm_os_disks" {
@@ -530,7 +525,6 @@ query "compute_virtual_machine_scale_set_vm_os_disks" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_vm_data_disks" {
@@ -548,7 +542,6 @@ query "compute_virtual_machine_scale_set_vm_data_disks" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_vm_network_interface" {
@@ -568,5 +561,4 @@ query "compute_virtual_machine_scale_set_vm_network_interface" {
     where
       lower(id) = $1;
   EOQ
-
 }

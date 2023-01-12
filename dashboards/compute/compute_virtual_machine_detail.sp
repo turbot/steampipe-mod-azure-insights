@@ -409,7 +409,6 @@ query "compute_virtual_machine_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_encryption_status" {
@@ -423,7 +422,6 @@ query "compute_virtual_machine_encryption_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_disaster_recovery_status" {
@@ -447,7 +445,6 @@ query "compute_virtual_machine_disaster_recovery_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_ingress_access" {
@@ -477,7 +474,6 @@ query "compute_virtual_machine_ingress_access" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "azure_compute_virtual_machine_egress_access" {
@@ -507,7 +503,6 @@ query "azure_compute_virtual_machine_egress_access" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_vulnerability_assessment_solution" {
@@ -544,7 +539,6 @@ query "compute_virtual_machine_vulnerability_assessment_solution" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # With Queries
@@ -716,7 +710,6 @@ query "network_public_ips_for_compute_virtual_machine" {
     where
       p.id is not null;
   EOQ
-
 }
 
 query "network_security_groups_for_compute_virtual_machine" {
@@ -816,7 +809,6 @@ query "compute_virtual_machine_overview" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_tags" {
@@ -832,7 +824,6 @@ query "compute_virtual_machine_tags" {
     order by
       tag.key;
     EOQ
-
 }
 
 query "compute_virtual_machine_storage_profile" {
@@ -849,7 +840,6 @@ query "compute_virtual_machine_storage_profile" {
     where
       lower(vm.id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_image" {
@@ -866,7 +856,6 @@ query "compute_virtual_machine_image" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_security_groups" {
@@ -883,7 +872,6 @@ query "compute_virtual_machine_security_groups" {
     where
       lower(vm.id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_data_disks" {
@@ -901,7 +889,6 @@ query "compute_virtual_machine_data_disks" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_network_interfaces" {
@@ -930,7 +917,6 @@ query "compute_virtual_machine_network_interfaces" {
       left join azure_network_interface as i on lower(i.id) = lower(vi.network_id)
       left join jsonb_array_elements(i.ip_configurations) as ip_config on true;
   EOQ
-
 }
 
 query "compute_virtual_machine_guest_configuration_assignments" {
@@ -950,5 +936,4 @@ query "compute_virtual_machine_guest_configuration_assignments" {
     where
       lower(id) = $1;
   EOQ
-
 }

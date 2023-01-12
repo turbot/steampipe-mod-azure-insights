@@ -308,7 +308,6 @@ query "compute_snapshot_sku_name" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_snapshot_incremental" {
@@ -321,7 +320,6 @@ query "compute_snapshot_incremental" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_snapshot_create_option" {
@@ -334,7 +332,6 @@ query "compute_snapshot_create_option" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_snapshot_network_access_policy" {
@@ -474,7 +471,6 @@ query "compute_snapshot_overview" {
     where
       lower(id) = $1
   EOQ
-
 }
 
 query "compute_snapshot_tags" {
@@ -488,8 +484,7 @@ query "compute_snapshot_tags" {
       lower(id) = $1
     order by
       tags ->> 'Key';
-    EOQ
-
+  EOQ
 }
 
 query "compute_snapshot_source_details" {
@@ -522,7 +517,6 @@ query "compute_snapshot_source_details" {
       d.id is not null
       and lower(s.id) = $1
   EOQ
-
 }
 
 query "compute_disk_encryption_details" {
@@ -543,5 +537,4 @@ query "compute_disk_encryption_details" {
     where
       lower(s.id) = $1;
   EOQ
-
 }

@@ -183,7 +183,6 @@ query "sql_database_server" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
 }
 
 query "sql_database_zone_redundant" {
@@ -197,7 +196,6 @@ query "sql_database_zone_redundant" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
 }
 
 query "sql_database_status" {
@@ -211,7 +209,6 @@ query "sql_database_status" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
 }
 
 query "azure_sql_database_edition" {
@@ -225,7 +222,6 @@ query "azure_sql_database_edition" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
 }
 
 query "sql_database_transparent_data_encryption" {
@@ -240,7 +236,6 @@ query "sql_database_transparent_data_encryption" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
 }
 
 query "sql_database_vulnerability_assessment_enabled" {
@@ -264,7 +259,6 @@ query "sql_database_vulnerability_assessment_enabled" {
       d.name <> 'master'
       and lower(d.id) = $1;
   EOQ
-
 }
 
 query "sql_database_geo_redundant_backup_enabled" {
@@ -287,7 +281,6 @@ query "sql_database_geo_redundant_backup_enabled" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
 }
 
 # with queries
@@ -337,7 +330,6 @@ query "sql_database_overview" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
 }
 
 query "sql_database_tags" {
@@ -353,8 +345,7 @@ query "sql_database_tags" {
       and lower(id) = $1
     order by
       tag.key;
-    EOQ
-
+  EOQ
 }
 
 query "sql_database_retention" {
@@ -372,7 +363,6 @@ query "sql_database_retention" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
 }
 
 query "sql_database_vulnerability_assessment" {
@@ -389,5 +379,4 @@ query "sql_database_vulnerability_assessment" {
       name <> 'master'
       and lower(id) = $1;
   EOQ
-
 }

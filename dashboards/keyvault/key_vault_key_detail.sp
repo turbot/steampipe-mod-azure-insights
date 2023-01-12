@@ -289,7 +289,6 @@ query "key_vault_key_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "key_vault_key_type" {
@@ -302,7 +301,6 @@ query "key_vault_key_type" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "key_vault_key_size" {
@@ -315,7 +313,6 @@ query "key_vault_key_size" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # with queries
@@ -465,7 +462,6 @@ query "key_vault_key_overview" {
     where
       lower(id) = $1
   EOQ
-
 }
 
 query "key_vault_key_tags" {
@@ -479,8 +475,7 @@ query "key_vault_key_tags" {
       lower(id) = $1
     order by
       tags ->> 'Key';
-    EOQ
-
+  EOQ
 }
 
 query "key_vault_key_age" {
@@ -494,5 +489,4 @@ query "key_vault_key_age" {
     where
       lower(id) = $1;
   EOQ
-
 }

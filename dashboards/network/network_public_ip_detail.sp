@@ -245,7 +245,7 @@ query "network_public_ip_sku_name" {
 # with queries
 
 query "api_management_for_network_public_ip" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with public_ip_api_management as (
       select
         id,
@@ -270,7 +270,7 @@ query "api_management_for_network_public_ip" {
 }
 
 query "compute_virtual_machines_for_network_public_ip" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with vm_network_interface as (
       select
         id,
@@ -296,7 +296,7 @@ query "compute_virtual_machines_for_network_public_ip" {
 }
 
 query "network_firewalls_for_network_public_ip" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(f.id) as network_firewall_id
     from
@@ -309,7 +309,7 @@ query "network_firewalls_for_network_public_ip" {
 }
 
 query "network_load_balancers_for_network_public_ip" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(lb.id) as load_balancer_id
     from
@@ -322,7 +322,7 @@ query "network_load_balancers_for_network_public_ip" {
 }
 
 query "network_network_interfaces_for_network_public_ip" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with network_interface_public_ip as (
       select
         id,
@@ -350,7 +350,6 @@ query "azure_network_public_ip_ddos_settings_protected_ip" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # table queries
@@ -372,7 +371,6 @@ query "network_public_ip_overview" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_public_ip_tags" {
@@ -387,12 +385,10 @@ query "network_public_ip_tags" {
     order by
       tags ->> 'Key';
   EOQ
-
 }
 
 query "network_public_ip_association_details" {
   sql = <<-EOQ
-
     with network_interface_public_ip as (
       select
         id,
@@ -435,5 +431,4 @@ query "network_public_ip_association_details" {
     where
       lower(p.id) = $1
   EOQ
-
 }

@@ -331,7 +331,6 @@ query "compute_virtual_machine_scale_set_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_encryption_status" {
@@ -349,7 +348,6 @@ query "compute_virtual_machine_scale_set_encryption_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_logging_status" {
@@ -383,7 +381,6 @@ query "compute_virtual_machine_scale_set_logging_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_log_analytics_agent" {
@@ -411,7 +408,6 @@ query "compute_virtual_machine_scale_set_log_analytics_agent" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # With Queries
@@ -617,7 +613,6 @@ query "compute_virtual_machine_scale_set_overview" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_tags" {
@@ -632,8 +627,7 @@ query "compute_virtual_machine_scale_set_tags" {
       lower(id) = $1
     order by
       tag.key;
-    EOQ
-
+  EOQ
 }
 
 query "compute_virtual_machine_scale_set_sku" {
@@ -647,7 +641,6 @@ query "compute_virtual_machine_scale_set_sku" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_image_reference" {
@@ -663,7 +656,6 @@ query "compute_virtual_machine_scale_set_image_reference" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_os_disks" {
@@ -679,7 +671,6 @@ query "compute_virtual_machine_scale_set_os_disks" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_network_interface" {
@@ -703,7 +694,6 @@ query "compute_virtual_machine_scale_set_network_interface" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_virtual_machine_scale_set_data_disks" {
@@ -721,5 +711,4 @@ query "compute_virtual_machine_scale_set_data_disks" {
     where
       lower(id) = $1;
   EOQ
-
 }

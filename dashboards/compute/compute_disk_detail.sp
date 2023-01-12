@@ -317,7 +317,6 @@ query "compute_disk_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_disk_network_access_policy" {
@@ -331,7 +330,6 @@ query "compute_disk_network_access_policy" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_disk_size" {
@@ -357,7 +355,6 @@ query "compute_disk_os_type" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_disk_sku_name" {
@@ -370,7 +367,6 @@ query "compute_disk_sku_name" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # With Queries
@@ -473,6 +469,7 @@ query "key_vault_vaults_for_compute_disk" {
     where
       lower(d.id) = $1;
   EOQ
+
 }
 
 query "storage_storage_accounts_for_compute_disk" {
@@ -506,7 +503,6 @@ query "compute_disk_overview" {
     where
       lower(id) = $1
   EOQ
-
 }
 
 query "compute_disk_tags" {
@@ -520,8 +516,7 @@ query "compute_disk_tags" {
       lower(id) = $1
     order by
       tags ->> 'Key';
-    EOQ
-
+  EOQ
 }
 
 query "compute_disk_associated_virtual_machine_details" {
@@ -549,7 +544,6 @@ query "compute_disk_associated_virtual_machine_details" {
         lower(managed_disk_id) = $1
     )
   EOQ
-
 }
 
 query "compute_disk_encryption_set_details" {
@@ -570,5 +564,4 @@ query "compute_disk_encryption_set_details" {
     where
       lower(d.id) = $1;
   EOQ
-
 }

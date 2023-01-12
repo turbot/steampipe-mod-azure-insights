@@ -248,7 +248,6 @@ query "network_interface_private_ip_address" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_interface_public_ip_address" {
@@ -271,7 +270,6 @@ query "network_interface_public_ip_address" {
     where
       lower(api.id) = lower(pip.public_ip_address);
   EOQ
-
 }
 
 query "network_interface_ip_forwarding_enabled" {
@@ -285,7 +283,6 @@ query "network_interface_ip_forwarding_enabled" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_interface_accelerated_networking_enabled" {
@@ -299,7 +296,6 @@ query "network_interface_accelerated_networking_enabled" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # with queries
@@ -325,7 +321,7 @@ query "compute_virtual_machines_for_network_interface" {
 
 
 query "network_public_ips_for_network_interface" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with network_interface_public_ip as (
       select
         id,
@@ -345,7 +341,7 @@ query "network_public_ips_for_network_interface" {
 }
 
 query "network_security_groups_for_network_interface" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     with network_security_group_id as (
       select
         network_security_group_id as sid,
@@ -366,7 +362,7 @@ query "network_security_groups_for_network_interface" {
 }
 
 query "network_subnets_for_network_interface" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(s.id) as subnet_id
     from
@@ -380,7 +376,7 @@ query "network_subnets_for_network_interface" {
 }
 
 query "network_virtual_networks_for_network_interface" {
-  sql   = <<-EOQ
+  sql  = <<-EOQ
     with subnet_list as(
       select
         ni.id as network_interface_id,
@@ -422,7 +418,6 @@ query "network_interface_overview" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "azure_network_private_ip" {
@@ -439,20 +434,18 @@ query "azure_network_private_ip" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_interface_tags" {
   sql = <<-EOQ
-  select
-    jsonb_object_keys(tags) as "Key",
-    tags ->> jsonb_object_keys(tags) as "Value"
-  from
-    azure_network_interface
-  where
-    id = $1;
+    select
+      jsonb_object_keys(tags) as "Key",
+      tags ->> jsonb_object_keys(tags) as "Value"
+    from
+      azure_network_interface
+    where
+      id = $1;
   EOQ
-
 }
 
 query "network_interface_attached_virtual_machine" {
@@ -467,7 +460,6 @@ query "network_interface_attached_virtual_machine" {
       vm.id is not null
       and lower(ni.id) = $1;
   EOQ
-
 }
 
 query "network_interface_attached_nsg" {
@@ -482,7 +474,6 @@ query "network_interface_attached_nsg" {
       nsg.id is not null
       and lower(ni.id) = $1;
   EOQ
-
 }
 
 
@@ -502,5 +493,4 @@ query "network_interface_ip_configurations_details" {
     where
       lower(id) = $1;
   EOQ
-
 }

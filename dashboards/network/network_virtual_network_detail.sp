@@ -390,7 +390,6 @@ query "virtual_network_subnets_count" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "virtual_network_num_ips" {
@@ -410,7 +409,6 @@ query "virtual_network_num_ips" {
     from
       cidrs;
   EOQ
-
 }
 
 query "virtual_network_ddos_protection" {
@@ -424,7 +422,6 @@ query "virtual_network_ddos_protection" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # with queries
@@ -483,35 +480,35 @@ query "network_application_gateways_for_network_virtual_network" {
 }
 
 query "network_load_balancer_backend_address_pools_for_network_virtual_network" {
-    sql   = <<-EOQ
-      with subnet_list as (
-        select
-          lower(s ->> 'id') as subnet_id
-        from
-          azure_virtual_network as v,
-          jsonb_array_elements(v.subnets) as s
-        where
-          lower(v.id) = $1
-      ),
-      nic_subnet_list as (
-        select
-          lower(nic.id) as nic_id,
-          lower(ip_config ->> 'id') as ip_config_id,
-          ip_config -> 'properties' -> 'subnet' ->> 'id',
-          title
-        from
-          azure_network_interface as nic,
-          jsonb_array_elements(ip_configurations) as ip_config
-        where
-          lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list)
-      )
+  sql   = <<-EOQ
+    with subnet_list as (
       select
-        lower(p.id) as pool_id
+        lower(s ->> 'id') as subnet_id
       from
-        azure_lb_backend_address_pool as p,
-        jsonb_array_elements(p.backend_ip_configurations) as c
+        azure_virtual_network as v,
+        jsonb_array_elements(v.subnets) as s
       where
-        lower(c ->> 'id') in (select ip_config_id from nic_subnet_list);
+        lower(v.id) = $1
+    ),
+    nic_subnet_list as (
+      select
+        lower(nic.id) as nic_id,
+        lower(ip_config ->> 'id') as ip_config_id,
+        ip_config -> 'properties' -> 'subnet' ->> 'id',
+        title
+      from
+        azure_network_interface as nic,
+        jsonb_array_elements(ip_configurations) as ip_config
+      where
+        lower(ip_config -> 'properties' -> 'subnet' ->> 'id') in (select subnet_id from subnet_list)
+    )
+    select
+      lower(p.id) as pool_id
+    from
+      azure_lb_backend_address_pool as p,
+      jsonb_array_elements(p.backend_ip_configurations) as c
+    where
+      lower(c ->> 'id') in (select ip_config_id from nic_subnet_list);
   EOQ
 }
 
@@ -673,7 +670,6 @@ query "virtual_network_overview" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "virtual_network_tags" {
@@ -688,8 +684,7 @@ query "virtual_network_tags" {
       lower(id) = $1
     order by
       tag.key;
-    EOQ
-
+  EOQ
 }
 
 query "virtual_network_subnet_details" {
@@ -704,152 +699,150 @@ query "virtual_network_subnet_details" {
     from
       azure_virtual_network,
       jsonb_array_elements(subnets) as s
-  where
-    lower(id) = $1
+    where
+      lower(id) = $1
   EOQ
-
 }
 
 query "virtual_network_ingress_rule_sankey" {
   sql = <<-EOQ
-  with subnets as (
-    select
-      s ->> 'name' as "subnet_name",
-      s -> 'properties' ->>  'addressPrefix' as  addressPrefix,
-      s ->> 'id' as "subnet_id",
-      s -> 'properties' -> 'networkSecurityGroup' ->> 'id' as "networkSecurityGroup",
-      name as vnet_name
-    from
-      azure_virtual_network,
-      jsonb_array_elements(subnets) as s
-    where
-      lower(id) = $1
-  ),network_security_group as (
+    with subnets as (
       select
-        id,
-        default_security_rules,
-        security_rules,
-        s
+        s ->> 'name' as "subnet_name",
+        s -> 'properties' ->>  'addressPrefix' as  addressPrefix,
+        s ->> 'id' as "subnet_id",
+        s -> 'properties' -> 'networkSecurityGroup' ->> 'id' as "networkSecurityGroup",
+        name as vnet_name
       from
-      azure_network_security_group as sg,
-      jsonb_array_elements(subnets) as s
-  ),
-  network_security_group_rule as (
-    select
-      network_security_group.id as nsgid,
-      (default_security_rules || security_rules) as all_rules,
-      subnets.subnet_id as "subnet_id",
-      subnets.subnet_name as "subnet_name",
-      subnets.addressPrefix as addressPrefix,
-      subnets.vnet_name as vnet_name
-    from
-    subnets left join network_security_group on network_security_group.s ->> 'id' = subnets.subnet_id
-  ),
-  data as (
-    select
-      subnet_name,
-      subnet_id,
-      nsgid,
-      vnet_name,
-      addressPrefix,
-      sip as cidr_block,
-      r -> 'properties' -> 'priority' as rule_priority,
-      r ->> 'name' as rule_name,
-      r -> 'properties' ->> 'access' as rule_action,
-      case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny ' end ||
-      case
-        when (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
-        when (r -> 'properties' ->> 'protocol' = 'ICMP') then 'All ICMP'
-        when (r -> 'properties' ->> 'protocol' = 'UDP') then 'All UDP'
-        when (r -> 'properties' ->> 'protocol' = 'TCP')
-          and (
-            dport in ('22', '3389', '*')
-            or (
-              dport like '%-%'
-              and (
-                (
-                  split_part(dport, '-', 1) :: integer <= 3389
-                  and split_part(dport, '-', 2) :: integer >= 3389
-                )
-                or (
-                  split_part(dport, '-', 1) :: integer <= 22
-                  and split_part(dport, '-', 2) :: integer >= 22
+        azure_virtual_network,
+        jsonb_array_elements(subnets) as s
+      where
+        lower(id) = $1
+    ),network_security_group as (
+        select
+          id,
+          default_security_rules,
+          security_rules,
+          s
+        from
+        azure_network_security_group as sg,
+        jsonb_array_elements(subnets) as s
+    ),
+    network_security_group_rule as (
+      select
+        network_security_group.id as nsgid,
+        (default_security_rules || security_rules) as all_rules,
+        subnets.subnet_id as "subnet_id",
+        subnets.subnet_name as "subnet_name",
+        subnets.addressPrefix as addressPrefix,
+        subnets.vnet_name as vnet_name
+      from
+      subnets left join network_security_group on network_security_group.s ->> 'id' = subnets.subnet_id
+    ),
+    data as (
+      select
+        subnet_name,
+        subnet_id,
+        nsgid,
+        vnet_name,
+        addressPrefix,
+        sip as cidr_block,
+        r -> 'properties' -> 'priority' as rule_priority,
+        r ->> 'name' as rule_name,
+        r -> 'properties' ->> 'access' as rule_action,
+        case when r -> 'properties' ->> 'access' = 'Allow' then 'Allow ' else 'Deny ' end ||
+        case
+          when (r -> 'properties' ->> 'protocol' = '*') then 'All Traffic'
+          when (r -> 'properties' ->> 'protocol' = 'ICMP') then 'All ICMP'
+          when (r -> 'properties' ->> 'protocol' = 'UDP') then 'All UDP'
+          when (r -> 'properties' ->> 'protocol' = 'TCP')
+            and (
+              dport in ('22', '3389', '*')
+              or (
+                dport like '%-%'
+                and (
+                  (
+                    split_part(dport, '-', 1) :: integer <= 3389
+                    and split_part(dport, '-', 2) :: integer >= 3389
+                  )
+                  or (
+                    split_part(dport, '-', 1) :: integer <= 22
+                    and split_part(dport, '-', 2) :: integer >= 22
+                  )
                 )
               )
-            )
-        ) then 'All TCP'
-        else concat('Procotol: ', r -> 'properties' ->> 'protocol')
-      end as rule_description
-      from network_security_group_rule,
-    jsonb_array_elements(all_rules) as r,
-    jsonb_array_elements_text(r -> 'properties' -> 'sourceAddressPrefixes' || (r -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip,
-    jsonb_array_elements_text(r -> 'properties' -> 'destinationPortRanges' || (r -> 'properties' -> 'destinationPortRange') :: jsonb) dport
-    where r -> 'properties' ->> 'direction' = 'Inbound'
-  )
+          ) then 'All TCP'
+          else concat('Procotol: ', r -> 'properties' ->> 'protocol')
+        end as rule_description
+        from network_security_group_rule,
+      jsonb_array_elements(all_rules) as r,
+      jsonb_array_elements_text(r -> 'properties' -> 'sourceAddressPrefixes' || (r -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip,
+      jsonb_array_elements_text(r -> 'properties' -> 'destinationPortRanges' || (r -> 'properties' -> 'destinationPortRange') :: jsonb) dport
+      where r -> 'properties' ->> 'direction' = 'Inbound'
+    )
 
-    -- CIDR Nodes
-    select
-      distinct cidr_block as id,
-      cidr_block as title,
-      'cidr_block' as category,
-      null as from_id,
-      null as to_id
-    from data
+      -- CIDR Nodes
+      select
+        distinct cidr_block as id,
+        cidr_block as title,
+        'cidr_block' as category,
+        null as from_id,
+        null as to_id
+      from data
 
-    -- Rule Nodes
-    union select
-      concat(trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name) as id,
-      concat(rule_priority, ': ', rule_description) as title,
-      'rule' as category,
-      null as from_id,
-      null as to_id
-    from data
+      -- Rule Nodes
+      union select
+        concat(trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name) as id,
+        concat(rule_priority, ': ', rule_description) as title,
+        'rule' as category,
+        null as from_id,
+        null as to_id
+      from data
 
-    -- NSG Nodes
-    union select
-      distinct concat ( trim((split_part(nsgid, '/', 9)), '""')) as id,
-      concat (trim((split_part(nsgid, '/', 9)), '""')) as title,
-      'nsg' as category,
-      null as from_id,
-      null as to_id
-    from data
+      -- NSG Nodes
+      union select
+        distinct concat ( trim((split_part(nsgid, '/', 9)), '""')) as id,
+        concat (trim((split_part(nsgid, '/', 9)), '""')) as title,
+        'nsg' as category,
+        null as from_id,
+        null as to_id
+      from data
 
-    -- Subnet Nodes
-    union select
-      distinct split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""') as id,
-      split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""')  as title,
-      'subnet' as category,
-      null as from_id,
-      null as to_id
-    from data
+      -- Subnet Nodes
+      union select
+        distinct split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""') as id,
+        split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""')  as title,
+        'subnet' as category,
+        null as from_id,
+        null as to_id
+      from data
 
-     -- ip -> rule edge
-    union select
-      null as id,
-      null as title,
-      rule_action as category,
-      cidr_block as from_id,
-      concat(trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name)  as to_id
-    from data
+      -- ip -> rule edge
+      union select
+        null as id,
+        null as title,
+        rule_action as category,
+        cidr_block as from_id,
+        concat(trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name)  as to_id
+      from data
 
-    -- rule -> NSG edge
-    union select
-      null as id,
-      null as title,
-      rule_action as category,
-      concat( trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name) as from_id,
-      concat ( trim((split_part(nsgid, '/', 9)), '""'))  as to_id
-    from data
+      -- rule -> NSG edge
+      union select
+        null as id,
+        null as title,
+        rule_action as category,
+        concat( trim((split_part(nsgid, '/', 9)), '""'), '_', rule_name) as from_id,
+        concat ( trim((split_part(nsgid, '/', 9)), '""'))  as to_id
+      from data
 
-    -- nsg -> subnet edge
-    union select
-      null as id,
-      null as title,
-      'attached' as category,
-      concat ( trim((split_part(nsgid, '/', 9)), '""')) as from_id,
-      split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""') as to_id
-    from data
-
+      -- nsg -> subnet edge
+      union select
+        null as id,
+        null as title,
+        'attached' as category,
+        concat ( trim((split_part(nsgid, '/', 9)), '""')) as from_id,
+        split_part(subnet_id, '/', 10) || '/' || trim((split_part(subnet_id, '/', 11)), '""') as to_id
+      from data
   EOQ
 
 }
@@ -1024,36 +1017,33 @@ query "virtual_network_route_tables" {
     from
       route_table as r left join azure_route_table as rt on lower(rt.id) = lower(r.id)
   EOQ
-
 }
 
 query "virtual_network_routes" {
   sql = <<-EOQ
-
-  with route_tables as (
-    select
-      distinct (s -> 'properties' -> 'routeTable' ->> 'id')  as id
-    from
-      azure_virtual_network,
-      jsonb_array_elements(subnets) as s
-    where
-      lower(id) = $1
-  ),
-   data as (
-    select
-      *
-    from
-      route_tables as t left join azure_route_table as rt on lower(t.id) = lower(rt.id)
-  ) select
-      r ->> 'name' as "Name",
-      r -> 'properties' ->> 'addressPrefix' as  "Address Prefix",
-      r -> 'properties' ->> 'nextHopType' as  "Next Hop Type",
-      r ->> 'id' as  "Route ID"
-    from
-      data,
-      jsonb_array_elements(routes) as r;
+    with route_tables as (
+      select
+        distinct (s -> 'properties' -> 'routeTable' ->> 'id')  as id
+      from
+        azure_virtual_network,
+        jsonb_array_elements(subnets) as s
+      where
+        lower(id) = $1
+    ),
+    data as (
+      select
+        *
+      from
+        route_tables as t left join azure_route_table as rt on lower(t.id) = lower(rt.id)
+    ) select
+        r ->> 'name' as "Name",
+        r -> 'properties' ->> 'addressPrefix' as  "Address Prefix",
+        r -> 'properties' ->> 'nextHopType' as  "Next Hop Type",
+        r ->> 'id' as  "Route ID"
+      from
+        data,
+        jsonb_array_elements(routes) as r;
   EOQ
-
 }
 
 query "virtual_network_nsg" {
@@ -1079,7 +1069,6 @@ query "virtual_network_nsg" {
     from
       all_nsg as n left join azure_network_security_group as nsg on lower(nsg.id) = lower(n.nsg_id)
   EOQ
-
 }
 
 query "virtual_network_peering_connection" {
@@ -1100,7 +1089,6 @@ query "virtual_network_peering_connection" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "virtual_network_address_prefixes" {
@@ -1114,5 +1102,4 @@ query "virtual_network_address_prefixes" {
     where
       lower(id) = $1
   EOQ
-
 }

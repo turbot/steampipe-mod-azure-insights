@@ -204,7 +204,6 @@ query "kubernetes_cluster_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "kubernetes_cluster_version" {
@@ -217,7 +216,6 @@ query "kubernetes_cluster_version" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "kubernetes_cluster_node_pool_count" {
@@ -230,7 +228,6 @@ query "kubernetes_cluster_node_pool_count" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "kubernetes_cluster_disk_encryption_status" {
@@ -244,7 +241,6 @@ query "kubernetes_cluster_disk_encryption_status" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # with queries
@@ -311,7 +307,6 @@ query "kubernetes_cluster_overview" {
     where
       lower(id) = $1
   EOQ
-
 }
 
 query "kubernetes_cluster_tags" {
@@ -326,8 +321,7 @@ query "kubernetes_cluster_tags" {
       lower(id) = $1
     order by
       tag.key;
-    EOQ
-
+  EOQ
 }
 
 query "kubernetes_cluster_agent_pools" {
@@ -348,7 +342,6 @@ query "kubernetes_cluster_agent_pools" {
     where
       lower(id) = $1
   EOQ
-
 }
 
 query "kubernetes_cluster_disk_encryption_details" {
@@ -368,5 +361,4 @@ query "kubernetes_cluster_disk_encryption_details" {
       lower(c.disk_encryption_set_id) = lower(e.id)
       and lower(c.id) = $1;
   EOQ
-
 }

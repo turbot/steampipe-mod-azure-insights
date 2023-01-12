@@ -195,107 +195,108 @@ dashboard "app_service_web_app_detail" {
 
   query "app_service_web_app_input" {
     sql = <<-EOQ
-    select
-      wa.title as label,
-      lower(wa.id) as value,
-      json_build_object(
-        'subscription', s.display_name,
-        'resource_group', wa.resource_group,
-        'region', wa.region
-      ) as tags
-    from
-      azure_app_service_web_app as wa,
-      azure_subscription as s
-    where
-      lower(wa.subscription_id) = lower(s.subscription_id)
-    order by
-      wa.title;
-  EOQ
+      select
+        wa.title as label,
+        lower(wa.id) as value,
+        json_build_object(
+          'subscription', s.display_name,
+          'resource_group', wa.resource_group,
+          'region', wa.region
+        ) as tags
+      from
+        azure_app_service_web_app as wa,
+        azure_subscription as s
+      where
+        lower(wa.subscription_id) = lower(s.subscription_id)
+      order by
+        wa.title;
+    EOQ
   }
 
   # Card Queries
 
   query "app_service_web_app_state" {
     sql = <<-EOQ
-    select
-      'State' as label,
-      state as value
-    from
-      azure_app_service_web_app
-    where
-      lower(id) = $1;
-  EOQ
+      select
+        'State' as label,
+        state as value
+      from
+        azure_app_service_web_app
+      where
+        lower(id) = $1;
+    EOQ
 
   }
 
   query "app_service_web_app_kind" {
     sql = <<-EOQ
-    select
-      'Kind' as label,
-      kind as value
-    from
-      azure_app_service_web_app
-    where
-      lower(id) = $1;
-  EOQ
+      select
+        'Kind' as label,
+        kind as value
+      from
+        azure_app_service_web_app
+      where
+        lower(id) = $1;
+    EOQ
 
   }
 
   query "app_service_web_app_ftps_state" {
     sql = <<-EOQ
-    select
-      'FTP' as label,
-      configuration -> 'properties' ->> 'ftpsState' as value,
-      case when configuration -> 'properties' ->> 'ftpsState' = 'AllAllowed' then 'alert' else 'ok' end as type
-    from
-      azure_app_service_web_app
-    where
-      lower(id) = $1;
-  EOQ
+      select
+        'FTP' as label,
+        configuration -> 'properties' ->> 'ftpsState' as value,
+        case when configuration -> 'properties' ->> 'ftpsState' = 'AllAllowed' then 'alert' else 'ok' end as type
+      from
+        azure_app_service_web_app
+      where
+        lower(id) = $1;
+    EOQ
 
   }
 
   query "app_service_web_app_https" {
     sql = <<-EOQ
-    select
-      'HTTPS' as label,
-      case when https_only then 'Enabled' else 'Disabled' end as value,
-      case when https_only then 'ok' else 'alert' end as type
-    from
-      azure_app_service_web_app
-    where
-      lower(id) = $1;
-  EOQ
+      select
+        'HTTPS' as label,
+        case when https_only then 'Enabled' else 'Disabled' end as value,
+        case when https_only then 'ok' else 'alert' end as type
+      from
+        azure_app_service_web_app
+      where
+        lower(id) = $1;
+    EOQ
 
   }
 
   query "app_service_web_app_http_logging" {
     sql = <<-EOQ
-    select
-      'HTTP Logging' as label,
-      case when (configuration -> 'properties' -> 'httpLoggingEnabled')::boolean then 'Enabled' else 'Disabled' end as value,
-      case when (configuration -> 'properties' -> 'httpLoggingEnabled')::boolean then 'ok' else 'alert' end as type
-    from
-      azure_app_service_web_app
-    where
-      lower(id) = $1;
-  EOQ
+      select
+        'HTTP Logging' as label,
+        case when (configuration -> 'properties' -> 'httpLoggingEnabled')::boolean then 'Enabled' else 'Disabled' end as value,
+        case when (configuration -> 'properties' -> 'httpLoggingEnabled')::boolean then 'ok' else 'alert' end as type
+      from
+        azure_app_service_web_app
+      where
+        lower(id) = $1;
+    EOQ
 
   }
 
   query "app_service_web_app_tls_version" {
     sql = <<-EOQ
-    select
-      'TLS Version' as label,
-      configuration -> 'properties' ->> 'minTlsVersion' as value,
-      case when (configuration -> 'properties' ->> 'minTlsVersion')::decimal >= 1.2 then 'ok' else 'alert' end as type
-    from
-      azure_app_service_web_app
-    where
-      lower(id) = $1;
-  EOQ
+      select
+        'TLS Version' as label,
+        configuration -> 'properties' ->> 'minTlsVersion' as value,
+        case when (configuration -> 'properties' ->> 'minTlsVersion')::decimal >= 1.2 then 'ok' else 'alert' end as type
+      from
+        azure_app_service_web_app
+      where
+        lower(id) = $1;
+    EOQ
 
   }
+
   # With Queries
 
   query "network_application_gateways_for_app_service_web" {
@@ -323,133 +324,134 @@ dashboard "app_service_web_app_detail" {
 
   query "network_subnets_for_app_service_web" {
     sql = <<-EOQ
-    select
-      lower(id) as subnet_id
-    from
-      azure_subnet
-    where
-      lower(id) in (
-        select
-          lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
-        from
-          azure_app_service_web_app
-        where
-          lower(id) = $1
-      );
+      select
+        lower(id) as subnet_id
+      from
+        azure_subnet
+      where
+        lower(id) in (
+          select
+            lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
+          from
+            azure_app_service_web_app
+          where
+            lower(id) = $1
+        );
     EOQ
   }
 
   query "network_virtual_networks_for_app_service_web" {
     sql = <<-EOQ
-    select
-      lower(id) as virtual_network_id
-    from
-      azure_virtual_network,
-        jsonb_array_elements(subnets) as sub
-    where
-      lower(sub ->> 'id') in (
-        select
-          lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
-        from
-          azure_app_service_web_app
-        where
-          lower(id) = $1
+      select
+        lower(id) as virtual_network_id
+      from
+        azure_virtual_network,
+          jsonb_array_elements(subnets) as sub
+      where
+        lower(sub ->> 'id') in (
+          select
+            lower(vnet_connection -> 'properties' ->> 'vnetResourceId')
+          from
+            azure_app_service_web_app
+          where
+            lower(id) = $1
         );
     EOQ
   }
+
   # Table Queries
 
   query "app_service_web_app_overview" {
     sql = <<-EOQ
-    select
-      name as "Name",
-      default_site_hostname as "Default Site Hostname",
-      cloud_environment as "Cloud Environment",
-      case when enabled::boolean then 'Online' else 'Offline' end as "Status",
-      type as "Type",
-      region as "Region",
-      resource_group as "Resource Group",
-      subscription_id as "Subscription ID",
-      id as "ID"
-    from
-      azure_app_service_web_app
-    where
-      lower(id) = $1;
-  EOQ
+      select
+        name as "Name",
+        default_site_hostname as "Default Site Hostname",
+        cloud_environment as "Cloud Environment",
+        case when enabled::boolean then 'Online' else 'Offline' end as "Status",
+        type as "Type",
+        region as "Region",
+        resource_group as "Resource Group",
+        subscription_id as "Subscription ID",
+        id as "ID"
+      from
+        azure_app_service_web_app
+      where
+        lower(id) = $1;
+    EOQ
 
   }
 
   query "app_service_web_app_tags" {
     sql = <<-EOQ
-    select
-      tag.key as "Key",
-      tag.value as "Value"
-    from
-      azure_app_service_web_app,
-      jsonb_each_text(tags) as tag
-    where
-      lower(id) = $1
-    order by
-      tag.key;
+      select
+        tag.key as "Key",
+        tag.value as "Value"
+      from
+        azure_app_service_web_app,
+        jsonb_each_text(tags) as tag
+      where
+        lower(id) = $1
+      order by
+        tag.key;
     EOQ
 
   }
 
   query "app_service_web_app_ip_security_restrictions" {
     sql = <<-EOQ
-    select
-      r ->> 'name' as "Name",
-      r ->> 'priority' as "Priority",
-      r ->> 'ipAddress' as "IP Address",
-      r ->> 'action' as "Action",
-      r ->> 'description' as "Description"
-    from
-      azure_app_service_web_app,
-      jsonb_array_elements(configuration -> 'properties' -> 'ipSecurityRestrictions') as r
-    where
-      lower(id) = $1;
-  EOQ
+      select
+        r ->> 'name' as "Name",
+        r ->> 'priority' as "Priority",
+        r ->> 'ipAddress' as "IP Address",
+        r ->> 'action' as "Action",
+        r ->> 'description' as "Description"
+      from
+        azure_app_service_web_app,
+        jsonb_array_elements(configuration -> 'properties' -> 'ipSecurityRestrictions') as r
+      where
+        lower(id) = $1;
+    EOQ
 
   }
 
   query "app_service_web_app_diagnostic_logs_configuration" {
     sql = <<-EOQ
-    select
-      diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'azureBlobStorage' ->> 'level' as "Application logging (Blob)",
-      diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'azureTableStorage' ->> 'level' as "Application logging (Table)",
-      diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'fileSystem' ->> 'level' as "Application logging (Filesystem)",
-      case when (diagnostic_logs_configuration -> 'properties' -> 'detailedErrorMessages' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Detailed Error Messages",
-      case when (diagnostic_logs_configuration -> 'properties' -> 'failedRequestsTracing' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Failed Requests Tracing",
-      case when (diagnostic_logs_configuration -> 'properties' -> 'httpLogs' -> 'azureBlobStorage' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Web server logging (Storage)",
-      case when (diagnostic_logs_configuration -> 'properties' -> 'httpLogs' -> 'fileSystem' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Web server logging (Filesystem)"
-    from
-      azure_app_service_web_app
-    where
-      lower(id) = $1;
-  EOQ
+      select
+        diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'azureBlobStorage' ->> 'level' as "Application logging (Blob)",
+        diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'azureTableStorage' ->> 'level' as "Application logging (Table)",
+        diagnostic_logs_configuration -> 'properties' -> 'applicationLogs' -> 'fileSystem' ->> 'level' as "Application logging (Filesystem)",
+        case when (diagnostic_logs_configuration -> 'properties' -> 'detailedErrorMessages' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Detailed Error Messages",
+        case when (diagnostic_logs_configuration -> 'properties' -> 'failedRequestsTracing' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Failed Requests Tracing",
+        case when (diagnostic_logs_configuration -> 'properties' -> 'httpLogs' -> 'azureBlobStorage' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Web server logging (Storage)",
+        case when (diagnostic_logs_configuration -> 'properties' -> 'httpLogs' -> 'fileSystem' -> 'enabled')::boolean then 'Enabled' else 'Disabled' end as "Web server logging (Filesystem)"
+      from
+        azure_app_service_web_app
+      where
+        lower(id) = $1;
+    EOQ
 
   }
 
   query "app_service_web_app_configuration" {
     sql = <<-EOQ
-    select
-      configuration -> 'properties' ->> 'loadBalancing' as "Load Balancing",
-      configuration -> 'properties' ->> 'linuxFxVersion' as "Linux App Framework and version",
-      configuration -> 'properties' ->> 'numberOfWorkers' as "Workers",
-      configuration -> 'properties' ->> 'preWarmedInstanceCount' as "Pre-warmed Instances",
-      case when (configuration -> 'properties' ->> 'alwaysOn')::boolean then 'Enabled' else 'Disabled' end as "Always On",
-      case when (configuration -> 'properties' ->> 'autoHealEnabled')::boolean then 'Enabled' else 'Disabled' end as "Auto Heal",
-      case when (configuration -> 'properties' ->> 'detailedErrorLoggingEnabled')::boolean then 'Enabled' else 'Disabled' end as "Detailed Error Logging",
-      case when (configuration -> 'properties' ->> 'http20Enabled')::boolean then 'Enabled' else 'Disabled' end as "HTTP 20",
-      case when (configuration -> 'properties' ->> 'httpLoggingEnabled')::boolean then 'Enabled' else 'Disabled' end as "HTTP Logging",
-      case when (configuration -> 'properties' ->> 'localMySqlEnabled')::boolean then 'Enabled' else 'Disabled' end as "Local MySQL",
-      configuration -> 'properties' ->> 'logsDirectorySizeLimit' as "HTTP Logs Directory Size Limit",
-      configuration -> 'properties' ->> 'managedPipelineMode' as "Managed Pipeline Mode",
-      case when (configuration -> 'properties' ->> 'remoteDebuggingEnabled')::boolean then 'Enabled' else 'Disabled' end as "Remote Debugging",
-      case when (configuration -> 'properties' ->> 'requestTracingEnabled')::boolean then 'Enabled' else 'Disabled' end as "Request Tracing"
-    from
-      azure_app_service_web_app
-    where
-      lower(id) = $1;
-  EOQ
+      select
+        configuration -> 'properties' ->> 'loadBalancing' as "Load Balancing",
+        configuration -> 'properties' ->> 'linuxFxVersion' as "Linux App Framework and version",
+        configuration -> 'properties' ->> 'numberOfWorkers' as "Workers",
+        configuration -> 'properties' ->> 'preWarmedInstanceCount' as "Pre-warmed Instances",
+        case when (configuration -> 'properties' ->> 'alwaysOn')::boolean then 'Enabled' else 'Disabled' end as "Always On",
+        case when (configuration -> 'properties' ->> 'autoHealEnabled')::boolean then 'Enabled' else 'Disabled' end as "Auto Heal",
+        case when (configuration -> 'properties' ->> 'detailedErrorLoggingEnabled')::boolean then 'Enabled' else 'Disabled' end as "Detailed Error Logging",
+        case when (configuration -> 'properties' ->> 'http20Enabled')::boolean then 'Enabled' else 'Disabled' end as "HTTP 20",
+        case when (configuration -> 'properties' ->> 'httpLoggingEnabled')::boolean then 'Enabled' else 'Disabled' end as "HTTP Logging",
+        case when (configuration -> 'properties' ->> 'localMySqlEnabled')::boolean then 'Enabled' else 'Disabled' end as "Local MySQL",
+        configuration -> 'properties' ->> 'logsDirectorySizeLimit' as "HTTP Logs Directory Size Limit",
+        configuration -> 'properties' ->> 'managedPipelineMode' as "Managed Pipeline Mode",
+        case when (configuration -> 'properties' ->> 'remoteDebuggingEnabled')::boolean then 'Enabled' else 'Disabled' end as "Remote Debugging",
+        case when (configuration -> 'properties' ->> 'requestTracingEnabled')::boolean then 'Enabled' else 'Disabled' end as "Request Tracing"
+      from
+        azure_app_service_web_app
+      where
+        lower(id) = $1;
+    EOQ
   }

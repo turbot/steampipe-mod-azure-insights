@@ -18,6 +18,7 @@ edge "sql_database_to_mssql_elasticpool" {
       lower(db.id) = any($1)
       and lower(sp.name) = lower(db.elastic_pool_name);
   EOQ
+  
   param "sql_database_ids" {}
 }
 

@@ -175,7 +175,6 @@ query "network_firewall_sku_name" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_firewall_sku_tier" {
@@ -188,7 +187,6 @@ query "network_firewall_sku_tier" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_firewall_threat_intel_mode" {
@@ -201,8 +199,8 @@ query "network_firewall_threat_intel_mode" {
     where
       lower(id) = $1;
   EOQ
-
 }
+
 # with queries
 
 query "network_public_ips_for_network_firewall" {
@@ -275,7 +273,6 @@ query "network_firewall_overview" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "network_firewall_tags" {
@@ -290,8 +287,7 @@ query "network_firewall_tags" {
       lower(id) = $1
     order by
       tag.key;
-    EOQ
-
+  EOQ
 }
 
 query "network_firewall_ip_configurations" {
@@ -306,6 +302,5 @@ query "network_firewall_ip_configurations" {
       jsonb_array_elements(ip_configurations) as c
     where
       lower(id) = $1;
-    EOQ
-
+  EOQ
 }

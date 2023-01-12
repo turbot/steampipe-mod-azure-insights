@@ -401,6 +401,7 @@ query "storage_account_input" {
       sa.title;
   EOQ
 }
+
 # card queries
 
 query "storage_account_kind" {
@@ -413,7 +414,6 @@ query "storage_account_kind" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "storage_account_access_tier" {
@@ -426,7 +426,6 @@ query "storage_account_access_tier" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "storage_account_blob_soft_delete" {
@@ -440,7 +439,6 @@ query "storage_account_blob_soft_delete" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "storage_account_blob_public_access" {
@@ -454,7 +452,6 @@ query "storage_account_blob_public_access" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "storage_account_https_traffic" {
@@ -468,7 +465,6 @@ query "storage_account_https_traffic" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 # with queries
@@ -486,7 +482,7 @@ query "batch_accounts_for_storage_account" {
 }
 
 query "compute_disks_for_storage_account" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(id) as disk_id
     from
@@ -497,7 +493,7 @@ query "compute_disks_for_storage_account" {
 }
 
 query "compute_snapshots_for_storage_account" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(id) as snapshot_id
     from
@@ -508,7 +504,7 @@ query "compute_snapshots_for_storage_account" {
 }
 
 query "key_vault_keys_for_storage_account" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(key.id) as key_id
     from
@@ -523,7 +519,7 @@ query "key_vault_keys_for_storage_account" {
 }
 
 query "key_vault_vaults_for_storage_account" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(k.id) as vault_id
     from
@@ -536,7 +532,7 @@ query "key_vault_vaults_for_storage_account" {
 }
 
 query "monitor_diagnostic_settings_for_storage_account" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(id) as monitor_diagnostic_settings_id
     from
@@ -547,7 +543,7 @@ query "monitor_diagnostic_settings_for_storage_account" {
 }
 
 query "monitor_log_profiles_for_storage_account" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       lower(id) as log_profile_id
     from
@@ -558,7 +554,7 @@ query "monitor_log_profiles_for_storage_account" {
 }
 
 query "network_subnets_for_storage_account" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       distinct(lower(r ->> 'id')) as subnet_id
     from
@@ -570,7 +566,7 @@ query "network_subnets_for_storage_account" {
 }
 
 query "network_virtual_networks_for_storage_account" {
-  sql   = <<-EOQ
+  sql = <<-EOQ
     select
       distinct lower(split_part(r ->> 'id', '/subnets', 1)) as network_id
     from
@@ -598,7 +594,6 @@ query "storage_account_overview" {
     where
       lower(id) = $1
   EOQ
-
 }
 
 query "storage_account_tags" {
@@ -613,8 +608,7 @@ query "storage_account_tags" {
       lower(id) = $1
     order by
       tag.key;
-    EOQ
-
+  EOQ
 }
 
 query "storage_account_blob_encryption_service" {
@@ -626,8 +620,7 @@ query "storage_account_blob_encryption_service" {
       azure_storage_account
     where
       lower(id) = $1
-    EOQ
-
+  EOQ
 }
 
 query "storage_account_file_encryption_service" {
@@ -639,8 +632,7 @@ query "storage_account_file_encryption_service" {
       azure_storage_account
     where
       lower(id) = $1
-    EOQ
-
+  EOQ
 }
 
 query "storage_account_sku" {
@@ -652,8 +644,7 @@ query "storage_account_sku" {
       azure_storage_account
     where
       lower(id) = $1
-    EOQ
-
+  EOQ
 }
 
 query "storage_account_virtual_network_rules" {
@@ -667,8 +658,7 @@ query "storage_account_virtual_network_rules" {
       jsonb_array_elements(virtual_network_rules) as vnr
     where
       lower(id) = $1
-    EOQ
-
+  EOQ
 }
 
 query "storage_account_blob_configurations" {
@@ -685,8 +675,7 @@ query "storage_account_blob_configurations" {
       azure_storage_account
     where
       lower(id) = $1
-    EOQ
-
+  EOQ
 }
 
 query "storage_account_queue_logging" {
@@ -702,8 +691,7 @@ query "storage_account_queue_logging" {
       azure_storage_account
     where
       lower(id) = $1
-    EOQ
-
+  EOQ
 }
 
 query "storage_account_blob_logging" {
@@ -718,6 +706,5 @@ query "storage_account_blob_logging" {
       azure_storage_account
     where
       lower(id) = $1
-    EOQ
-
+  EOQ
 }
