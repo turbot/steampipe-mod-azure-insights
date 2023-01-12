@@ -238,7 +238,6 @@ dashboard "app_service_web_app_detail" {
       where
         lower(id) = $1;
     EOQ
-
   }
 
   query "app_service_web_app_ftps_state" {
@@ -252,7 +251,6 @@ dashboard "app_service_web_app_detail" {
       where
         lower(id) = $1;
     EOQ
-
   }
 
   query "app_service_web_app_https" {
@@ -266,7 +264,6 @@ dashboard "app_service_web_app_detail" {
       where
         lower(id) = $1;
     EOQ
-
   }
 
   query "app_service_web_app_http_logging" {
@@ -280,7 +277,6 @@ dashboard "app_service_web_app_detail" {
       where
         lower(id) = $1;
     EOQ
-
   }
 
   query "app_service_web_app_tls_version" {
@@ -294,7 +290,6 @@ dashboard "app_service_web_app_detail" {
       where
         lower(id) = $1;
     EOQ
-
   }
 
   # With Queries
@@ -378,7 +373,6 @@ dashboard "app_service_web_app_detail" {
       where
         lower(id) = $1;
     EOQ
-
   }
 
   query "app_service_web_app_tags" {
@@ -394,7 +388,6 @@ dashboard "app_service_web_app_detail" {
       order by
         tag.key;
     EOQ
-
   }
 
   query "app_service_web_app_ip_security_restrictions" {
@@ -411,7 +404,6 @@ dashboard "app_service_web_app_detail" {
       where
         lower(id) = $1;
     EOQ
-
   }
 
   query "app_service_web_app_diagnostic_logs_configuration" {
@@ -429,7 +421,6 @@ dashboard "app_service_web_app_detail" {
       where
         lower(id) = $1;
     EOQ
-
   }
 
   query "app_service_web_app_configuration" {

@@ -43,10 +43,10 @@ dashboard "app_service_web_app_dashboard" {
       width = 2
 
       series "count" {
-        point "Online" {
+        point "online" {
           color = "ok"
         }
-        point "Offline" {
+        point "offline" {
           color = "alert"
         }
       }
@@ -190,7 +190,7 @@ query "app_service_web_app_by_status" {
       count(*)
     from (
       select
-        case when enabled::boolean then 'Online' else 'Offline' end as status
+        case when enabled::boolean then 'online' else 'offline' end as status
       from
         azure_app_service_web_app
     ) as wa

@@ -352,7 +352,9 @@ query "activedirectory_subscription_roles_for_user" {
       scope as "Scope",
       assignmnet_id as "Role Assignmnet ID"
     from
-      subscription_roles;
+      subscription_roles
+    order by
+      role_name;
   EOQ
 
   param "id" {}
@@ -377,6 +379,8 @@ query "activedirectory_user_sign_in_report" {
   param "id" {}
 }
 
+# with queries
+
 query "activedirectory_groups_for_activedirectory_user" {
 
   sql = <<-EOQ
@@ -398,7 +402,6 @@ query "activedirectory_groups_for_activedirectory_user" {
       ag.tenant_id = au.tenant_id
       and au.id = $1
   EOQ
-
 }
 
 query "subscription_role_definitions_for_activedirectory_user" {
@@ -416,7 +419,6 @@ query "subscription_role_definitions_for_activedirectory_user" {
       and d.id is not null
       and u.id = $1
   EOQ
-
 }
 
 query "resource_group_role_definitions_for_activedirectory_user" {
@@ -435,7 +437,6 @@ query "resource_group_role_definitions_for_activedirectory_user" {
        and d.id is not null
       and u.id = $1
   EOQ
-
 }
 
 query "activedirectory_directory_roles_for_activedirectory_user" {
@@ -459,7 +460,6 @@ query "activedirectory_directory_roles_for_activedirectory_user" {
       r.tenant_id = au.tenant_id
       and au.id = $1;
   EOQ
-
 }
 
 query "subscriptions_for_activedirectory_user" {
@@ -476,7 +476,6 @@ query "subscriptions_for_activedirectory_user" {
       and d.id is not null
       and u.id = $1
   EOQ
-
 }
 
 query "resource_groups_for_activedirectory_user" {
@@ -495,5 +494,4 @@ query "resource_groups_for_activedirectory_user" {
       and r.subscription_id = d.subscription_id
       and u.id = $1
   EOQ
-
 }

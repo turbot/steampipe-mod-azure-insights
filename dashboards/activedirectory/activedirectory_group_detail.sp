@@ -243,7 +243,7 @@ dashboard "activedirectory_group_detail" {
     column "Display Name" {
       href = "{{ .link }}"
     }
-    
+
     query = query.activedirectory_group_owners
     args = {
       id = self.input.group_id.value
@@ -434,7 +434,6 @@ query "activedirectory_users_for_activedirectory_group" {
       au.id is not null
       and ag.id = $1
   EOQ
-
 }
 
 query "target_activedirectory_groups_for_activedirectory_group" {
@@ -458,7 +457,6 @@ query "target_activedirectory_groups_for_activedirectory_group" {
       g.id is not null
       and ag.id = $1;
   EOQ
-
 }
 
 query "subscription_role_definitions_for_activedirectory_group" {
@@ -475,7 +473,6 @@ query "subscription_role_definitions_for_activedirectory_group" {
       and  d.id is not null
       and g.id = $1
   EOQ
-
 }
 
 query "resource_group_role_definitions_for_activedirectory_group" {
@@ -492,7 +489,6 @@ query "resource_group_role_definitions_for_activedirectory_group" {
       and  d.id is not null
       and g.id = $1
   EOQ
-
 }
 
 query "subscriptions_for_activedirectory_group" {
@@ -509,7 +505,6 @@ query "subscriptions_for_activedirectory_group" {
       and d.id is not null
       and g.id = $1
   EOQ
-
 }
 
 query "activedirectory_directory_roles_for_activedirectory_group" {
@@ -533,7 +528,6 @@ query "activedirectory_directory_roles_for_activedirectory_group" {
       r.tenant_id = g.tenant_id
       and g.id = $1;
   EOQ
-
 }
 
 query "resource_groups_for_activedirectory_group" {
@@ -552,5 +546,4 @@ query "resource_groups_for_activedirectory_group" {
       and r.subscription_id = d.subscription_id
       and g.id = $1
   EOQ
-
 }

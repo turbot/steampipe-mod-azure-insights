@@ -342,7 +342,6 @@ query "compute_disk_size" {
     where
       lower(id) = $1;
   EOQ
-
 }
 
 query "compute_disk_os_type" {
@@ -469,7 +468,6 @@ query "key_vault_vaults_for_compute_disk" {
     where
       lower(d.id) = $1;
   EOQ
-
 }
 
 query "storage_storage_accounts_for_compute_disk" {
