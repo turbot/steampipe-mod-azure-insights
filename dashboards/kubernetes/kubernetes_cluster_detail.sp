@@ -300,8 +300,7 @@ query "kubernetes_cluster_overview" {
       identity ->> 'type' as "Identity Type",
       region as "Region",
       resource_group as "Resource Group",
-      subscription_id as "Subscription ID",
-      id as "ID"
+      subscription_id as "Subscription ID"
     from
       azure_kubernetes_cluster
     where
@@ -331,8 +330,7 @@ query "kubernetes_cluster_agent_pools" {
       p ->> 'count' as "Node Count",
       p ->> 'enableAutoScaling' as "Autoscaling Enabled",
       p ->> 'enableNodePublicIP' as "Is Public",
-      p ->> 'osDiskSizeGB' as "OS Disk Size(GB)",
-      p ->> 'osDiskType' as "OS Disk Type",
+      p ->> 'osDiskSizeGB' as "OS Disk Size (GB)",
       p ->> 'osDiskType' as "OS Disk Type",
       p ->> 'osType' as "OS Type",
       p ->> 'vmSize' as "VM Size"

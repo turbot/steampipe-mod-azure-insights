@@ -432,7 +432,7 @@ query "activedirectory_users_for_activedirectory_group" {
       left join azuread_user as au on ag.m_id = au.id
     where
       au.id is not null
-      and ag.id = $1
+      and ag.id = $1;
   EOQ
 }
 
@@ -471,7 +471,7 @@ query "subscription_role_definitions_for_activedirectory_group" {
       (a.scope like '/subscriptions/%' and a.scope not like '%/resourceGroups/%')
       and (a.scope like '/subscriptions/%' and a.scope not like '%/resourcegroups/%')
       and  d.id is not null
-      and g.id = $1
+      and g.id = $1;
   EOQ
 }
 
@@ -487,7 +487,7 @@ query "resource_group_role_definitions_for_activedirectory_group" {
       ((a.scope like '%/resourceGroups/%')
       or (a.scope like '%/resourcegroups/%'))
       and  d.id is not null
-      and g.id = $1
+      and g.id = $1;
   EOQ
 }
 
@@ -503,7 +503,7 @@ query "subscriptions_for_activedirectory_group" {
     where
       a.scope like '/subscriptions/%'
       and d.id is not null
-      and g.id = $1
+      and g.id = $1;
   EOQ
 }
 
@@ -544,6 +544,6 @@ query "resource_groups_for_activedirectory_group" {
       (a.scope like '%/resourceGroups/%')
       and d.id is not null
       and r.subscription_id = d.subscription_id
-      and g.id = $1
+      and g.id = $1;
   EOQ
 }

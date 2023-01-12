@@ -18,7 +18,7 @@ edge "activedirectory_group_to_activedirectory_directory_role" {
       assigned_role as ar
       left join azuread_group as g on g.id = ar.m_id
     where
-     g.id = any($1)
+     g.id = any($1);
   EOQ
 
   param "activedirectory_group_ids" {}
@@ -42,7 +42,7 @@ edge "activedirectory_group_to_activedirectory_group" {
       group_details as ag
       left join azuread_group as g on ag.m_id = g.id
     where
-      ag.id = any($1)
+      ag.id = any($1);
   EOQ
 
   param "activedirectory_group_ids" {}
@@ -69,7 +69,7 @@ edge "activedirectory_group_to_activedirectory_user" {
       left join azuread_user as au on au.id = ag.m_id
     where
       ag.tenant_id = au.tenant_id
-      and ag.id = any($1)
+      and ag.id = any($1);
   EOQ
 
   param "activedirectory_group_ids" {}
@@ -88,7 +88,7 @@ edge "activedirectory_group_to_subscription" {
       left join azure_role_definition as d on d.id = a.role_definition_id
     where
       d.id is not null
-      and g.id = any($1)
+      and g.id = any($1);
    EOQ
 
   param "activedirectory_group_ids" {}
@@ -114,7 +114,7 @@ edge "activedirectory_user_to_activedirectory_directory_role" {
       assigned_role as ar
       left join azuread_user as au on au.id = ar.m_id
     where
-     au.id = any($1)
+     au.id = any($1);
   EOQ
 
   param "activedirectory_user_ids" {}
@@ -133,7 +133,7 @@ edge "activedirectory_user_to_subscription" {
       left join azure_role_definition as d on d.id = a.role_definition_id
     where
       d.id is not null
-      and u.id = any($1)
+      and u.id = any($1);
   EOQ
 
   param "activedirectory_user_ids" {}
