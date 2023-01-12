@@ -28,10 +28,11 @@ brew tap turbot/tap
 brew install steampipe
 ```
 
-Install the Azure plugin with [Steampipe](https://steampipe.io):
+Install the Azure and the Azure Active Directory plugins with [Steampipe](https://steampipe.io):
 
 ```sh
 steampipe plugin install azure
+steampipe plugin install azuread
 ```
 
 Clone:
