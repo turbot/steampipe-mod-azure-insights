@@ -16,25 +16,25 @@ dashboard "compute_virtual_machine_scale_set_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.compute_virtual_machine_scale_set_status
       args  = [self.input.vm_scale_set_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.compute_virtual_machine_scale_set_encryption_status
       args  = [self.input.vm_scale_set_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.compute_virtual_machine_scale_set_logging_status
       args  = [self.input.vm_scale_set_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.compute_virtual_machine_scale_set_log_analytics_agent
       args  = [self.input.vm_scale_set_id.value]
     }

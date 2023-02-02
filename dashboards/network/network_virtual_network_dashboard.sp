@@ -11,12 +11,12 @@ dashboard "network_virtual_network_dashboard" {
 
     card {
       query = query.virtual_network_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.virtual_network_ddos_protection_enabled
-      width = 2
+      width = 3
     }
 
   }

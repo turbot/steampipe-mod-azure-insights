@@ -16,25 +16,25 @@ dashboard "network_interface_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.network_interface_private_ip_address
       args  = [self.input.nic_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.network_interface_public_ip_address
       args  = [self.input.nic_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.network_interface_ip_forwarding_enabled
       args  = [self.input.nic_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.network_interface_accelerated_networking_enabled
       args  = [self.input.nic_id.value]
     }

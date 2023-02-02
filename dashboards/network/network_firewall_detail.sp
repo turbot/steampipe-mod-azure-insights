@@ -16,19 +16,19 @@ dashboard "network_firewall_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.network_firewall_sku_name
       args  = [self.input.firewall_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.network_firewall_sku_tier
       args  = [self.input.firewall_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.network_firewall_threat_intel_mode
       args  = [self.input.firewall_id.value]
     }

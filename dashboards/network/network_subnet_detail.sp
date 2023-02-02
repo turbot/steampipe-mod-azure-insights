@@ -16,13 +16,13 @@ dashboard "network_subnet_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.network_subnet_num_ips
       args  = [self.input.subnet_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.network_subnet_address_prefix
       args  = [self.input.subnet_id.value]
     }
