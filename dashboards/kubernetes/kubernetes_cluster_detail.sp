@@ -16,25 +16,25 @@ dashboard "kubernetes_cluster_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.kubernetes_cluster_status
       args  = [self.input.cluster_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.kubernetes_cluster_version
       args  = [self.input.cluster_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.kubernetes_cluster_node_pool_count
       args  = [self.input.cluster_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.kubernetes_cluster_disk_encryption_status
       args  = [self.input.cluster_id.value]
     }

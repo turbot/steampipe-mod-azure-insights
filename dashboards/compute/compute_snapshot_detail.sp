@@ -16,25 +16,25 @@ dashboard "compute_snapshot_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.compute_snapshot_sku_name
       args  = [self.input.id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.compute_snapshot_incremental
       args  = [self.input.id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.compute_snapshot_create_option
       args  = [self.input.id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.compute_snapshot_network_access_policy
       args  = [self.input.id.value]
     }

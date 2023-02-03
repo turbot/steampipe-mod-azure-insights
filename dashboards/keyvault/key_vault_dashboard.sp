@@ -11,22 +11,22 @@ dashboard "key_vault_dashboard" {
 
     card {
       query = query.key_vault_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.key_vault_purge_protection_enabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.key_vault_soft_delete_enabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.key_vault_public_network_access_enabled_count
-      width = 2
+      width = 3
     }
   }
 

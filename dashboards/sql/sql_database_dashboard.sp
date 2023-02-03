@@ -11,22 +11,22 @@ dashboard "sql_database_dashboard" {
 
     card {
       query = query.sql_database_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.sql_database_transparent_data_encryption_disabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.sql_database_vulnerability_assessment_disabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.sql_database_geo_redundant_backup_disabled_count
-      width = 2
+      width = 3
     }
 
   }

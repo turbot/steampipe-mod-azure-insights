@@ -12,22 +12,22 @@ dashboard "app_service_web_app_dashboard" {
     # Analysis
     card {
       query = query.app_service_web_app_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.app_service_web_app_offline_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.app_service_web_app_https_disabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.app_service_web_app_http_logging_count
-      width = 2
+      width = 3
     }
 
   }

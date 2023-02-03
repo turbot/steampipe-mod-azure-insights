@@ -16,19 +16,19 @@ dashboard "key_vault_key_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.key_vault_key_type
       args  = [self.input.key_vault_key_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.key_vault_key_size
       args  = [self.input.key_vault_key_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.key_vault_key_status
       args  = [self.input.key_vault_key_id.value]
     }

@@ -16,25 +16,25 @@ dashboard "key_vault_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.key_vault_soft_delete_retention_in_days
       args  = [self.input.key_vault_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.key_vault_public_network_access_enabled
       args  = [self.input.key_vault_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.key_vault_purge_protection_status
       args  = [self.input.key_vault_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.key_vault_soft_delete_status
       args  = [self.input.key_vault_id.value]
     }

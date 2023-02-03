@@ -16,19 +16,19 @@ dashboard "network_virtual_network_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.virtual_network_num_ips
       args  = [self.input.vn_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.virtual_network_subnets_count
       args  = [self.input.vn_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.virtual_network_ddos_protection
       args  = [self.input.vn_id.value]
     }

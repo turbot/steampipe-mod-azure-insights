@@ -12,23 +12,23 @@ dashboard "compute_virtual_machine_scale_set_dashboard" {
     # Analysis
     card {
       query = query.compute_virtual_machine_scale_set_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.compute_virtual_machine_scale_set_host_encryption_count
-      width = 2
+      width = 3
     }
 
     # Assessments
     card {
       query   = query.compute_virtual_machine_scale_set_logging_disabled
-      width = 2
+      width = 3
     }
 
     card {
       query = query.compute_virtual_machine_scale_set_log_analytics_agent_installed_count
-      width = 2
+      width = 3
     }
   }
 

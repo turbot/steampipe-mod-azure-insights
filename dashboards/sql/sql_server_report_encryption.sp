@@ -12,17 +12,17 @@ dashboard "sql_server_encryption_report" {
 
     card {
       query = query.sql_server_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.sql_server_default_encrypted_servers_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.sql_server_customer_managed_encryption_count
-      width = 2
+      width = 3
     }
 
   }

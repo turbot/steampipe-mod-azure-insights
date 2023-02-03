@@ -16,13 +16,13 @@ dashboard "compute_virtual_machine_scale_set_vm_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.compute_virtual_machine_scale_set_scale_set_name
       args  = [self.input.scale_set_vm_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.compute_virtual_machine_scale_set_sku_name
       args  = [self.input.scale_set_vm_id.value]
     }

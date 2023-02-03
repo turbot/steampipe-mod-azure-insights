@@ -12,22 +12,22 @@ dashboard "compute_disk_encryption_report" {
 
     card {
       query = query.compute_disk_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.compute_disk_platform_managed_encryption_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.compute_disk_customer_managed_encryption_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.compute_disk_cmk_and_platfrom_managed_encryption_count
-      width = 2
+      width = 3
     }
 
   }
