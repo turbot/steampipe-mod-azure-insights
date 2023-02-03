@@ -16,19 +16,15 @@ dashboard "activedirectory_group_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.activedirectory_group_type
-      args = {
-        id = self.input.group_id.value
-      }
+      args = [self.input.group_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.activedirectory_group_members_attached_count
-      args = {
-        id = self.input.group_id.value
-      }
+      args = [self.input.group_id.value]
     }
 
   }
@@ -193,9 +189,7 @@ dashboard "activedirectory_group_detail" {
         type  = "line"
         width = 6
         query = query.activedirectory_group_overview
-        args = {
-          id = self.input.group_id.value
-        }
+        args = [self.input.group_id.value]
 
       }
 
@@ -203,9 +197,7 @@ dashboard "activedirectory_group_detail" {
         title = "Directory Roles"
         width = 6
         query = query.activedirectory_group_directory_roles
-        args = {
-          id = self.input.group_id.value
-        }
+        args = [self.input.group_id.value]
 
       }
 
@@ -226,9 +218,7 @@ dashboard "activedirectory_group_detail" {
     }
 
     query = query.activedirectory_group_members_attached
-    args = {
-      id = self.input.group_id.value
-    }
+    args = [self.input.group_id.value]
 
   }
 
@@ -245,9 +235,7 @@ dashboard "activedirectory_group_detail" {
     }
 
     query = query.activedirectory_group_owners
-    args = {
-      id = self.input.group_id.value
-    }
+    args = [self.input.group_id.value]
 
   }
 
@@ -279,8 +267,6 @@ query "activedirectory_group_type" {
     where
       id = $1;
   EOQ
-
-  param "id" {}
 }
 
 query "activedirectory_group_members_attached_count" {
@@ -294,8 +280,6 @@ query "activedirectory_group_members_attached_count" {
     where
       id = $1;
   EOQ
-
-  param "id" {}
 }
 
 query "activedirectory_group_overview" {
@@ -314,8 +298,6 @@ query "activedirectory_group_overview" {
     where
       id = $1;
   EOQ
-
-  param "id" {}
 }
 
 query "activedirectory_group_directory_roles" {
@@ -331,8 +313,6 @@ query "activedirectory_group_directory_roles" {
     order by
       dr.display_name;
   EOQ
-
-  param "id" {}
 }
 
 query "activedirectory_group_members_attached" {
@@ -369,8 +349,6 @@ query "activedirectory_group_members_attached" {
     order by
       "Display Name";
   EOQ
-
-  param "id" {}
 }
 
 query "activedirectory_group_owners" {
@@ -407,8 +385,6 @@ query "activedirectory_group_owners" {
     order by
       "Display Name";
   EOQ
-
-  param "id" {}
 }
 
 # with queries

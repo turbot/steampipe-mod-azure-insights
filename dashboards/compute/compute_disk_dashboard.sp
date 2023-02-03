@@ -12,18 +12,18 @@ dashboard "compute_disk_dashboard" {
     # Analysis
     card {
       query = query.compute_disk_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.compute_disk_storage_total
-      width = 2
+      width = 3
     }
 
     # Assessments
     card {
       query = query.compute_disk_unattached_count
-      width = 2
+      width = 3
     }
 
   }

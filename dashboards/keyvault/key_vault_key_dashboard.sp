@@ -11,17 +11,17 @@ dashboard "key_vault_key_dashboard" {
 
     card {
       query = query.key_vault_key_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.key_vault_key_enabled_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.key_vault_key_expiration_set_count
-      width = 2
+      width = 3
     }
 
   }

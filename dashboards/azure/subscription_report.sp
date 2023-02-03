@@ -12,7 +12,7 @@ dashboard "subscription_report" {
 
     card {
       query = query.subscription_count
-      width = 2
+      width = 3
     }
 
   }

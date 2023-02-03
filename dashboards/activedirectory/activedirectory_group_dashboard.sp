@@ -11,22 +11,22 @@ dashboard "activedirectory_group_dashboard" {
 
     card {
       query = query.activedirectory_group_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.activedirectory_security_group_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.activedirectory_microsoft_365_group_count
-      width = 2
+      width = 3
     }
 
     card {
       query = query.activedirectory_group_with_no_members_count
-      width = 2
+      width = 3
     }
 
   }

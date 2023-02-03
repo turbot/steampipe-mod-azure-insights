@@ -16,11 +16,9 @@ dashboard "activedirectory_user_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.activedirectory_user_type
-      args = {
-        id = self.input.user_id.value
-      }
+      args = [self.input.user_id.value]
     }
 
   }
@@ -163,9 +161,7 @@ dashboard "activedirectory_user_detail" {
       type  = "line"
       width = 6
       query = query.activedirectory_user_overview
-      args = {
-        id = self.input.user_id.value
-      }
+      args = [self.input.user_id.value]
 
     }
 
@@ -176,9 +172,7 @@ dashboard "activedirectory_user_detail" {
       table {
         title = "Last 5 Sign-ins"
         query = query.activedirectory_user_sign_in_report
-        args = {
-          id = self.input.user_id.value
-        }
+        args = [self.input.user_id.value]
       }
 
     }
@@ -193,18 +187,14 @@ dashboard "activedirectory_user_detail" {
       title = "Azure Active Directory Role Assignments"
       width = 6
       query = query.activedirectory_directory_roles_for_user
-      args = {
-        id = self.input.user_id.value
-      }
+      args = [self.input.user_id.value]
     }
 
     table {
       title = "Azure Role Assignments"
       width = 6
       query = query.activedirectory_subscription_roles_for_user
-      args = {
-        id = self.input.user_id.value
-      }
+      args = [self.input.user_id.value]
     }
   }
 
@@ -217,9 +207,7 @@ dashboard "activedirectory_user_detail" {
     }
 
     query = query.activedirectory_groups_for_user
-    args = {
-      id = self.input.user_id.value
-    }
+    args = [self.input.user_id.value]
 
   }
 
@@ -251,8 +239,6 @@ query "activedirectory_user_type" {
     where
       id = $1;
   EOQ
-
-  param "id" {}
 }
 
 query "activedirectory_user_overview" {
@@ -270,8 +256,6 @@ query "activedirectory_user_overview" {
     where
       id = $1
   EOQ
-
-  param "id" {}
 }
 
 query "activedirectory_groups_for_user" {
@@ -289,8 +273,6 @@ query "activedirectory_groups_for_user" {
     order by
       g.display_name ;
   EOQ
-
-  param "id" {}
 }
 
 query "activedirectory_directory_roles_for_user" {
@@ -328,8 +310,6 @@ query "activedirectory_directory_roles_for_user" {
     order by
       role_name;
     EOQ
-
-  param "id" {}
 }
 
 query "activedirectory_subscription_roles_for_user" {
@@ -356,8 +336,6 @@ query "activedirectory_subscription_roles_for_user" {
     order by
       role_name;
   EOQ
-
-  param "id" {}
 }
 
 query "activedirectory_user_sign_in_report" {
@@ -375,8 +353,6 @@ query "activedirectory_user_sign_in_report" {
       created_date_time desc
     limit 5;
   EOQ
-
-  param "id" {}
 }
 
 # with queries

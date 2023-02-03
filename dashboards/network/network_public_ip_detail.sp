@@ -16,19 +16,19 @@ dashboard "network_public_ip_detail" {
   container {
 
     card {
-      width = 2
+      width = 3
       query = query.network_public_association
       args  = [self.input.public_ip_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.network_public_ip_address
       args  = [self.input.public_ip_id.value]
     }
 
     card {
-      width = 2
+      width = 3
       query = query.network_public_ip_sku_name
       args  = [self.input.public_ip_id.value]
     }
