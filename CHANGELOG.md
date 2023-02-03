@@ -1,3 +1,9 @@
+## v0.6 [2023-02-03]
+
+_Enhancements_
+
+- Updated the `card` width across all the dashboards to enhance readability. ([#83](https://github.com/turbot/steampipe-mod-azure-insights/pull/83))
+
 ## v0.5 [2023-01-12]
 
 _Dependencies_
