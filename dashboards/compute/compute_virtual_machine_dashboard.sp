@@ -297,8 +297,16 @@ query "compute_virtual_machine_unrestricted_remote_access_count" {
       from
         azure_network_security_group as nsg,
         jsonb_array_elements(security_rules) as sg,
-        jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb) as dport,
-        jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip
+        jsonb_array_elements_text(
+          case
+            when jsonb_array_length(sg -> 'properties' -> 'destinationPortRanges') > 0 then (sg -> 'properties' -> 'destinationPortRanges')
+            else jsonb_build_array(sg -> 'properties' -> 'destinationPortRange')
+          end ) as dport,
+        jsonb_array_elements_text(
+          case
+            when jsonb_array_length(sg -> 'properties' -> 'sourceAddressPrefixes') > 0 then (sg -> 'properties' -> 'sourceAddressPrefixes')
+            else jsonb_build_array(sg -> 'properties' -> 'sourceAddressPrefix')
+          end) as sip
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Inbound'
@@ -500,8 +508,16 @@ query "compute_virtual_machine_by_remote_access" {
       from
         azure_network_security_group as nsg,
         jsonb_array_elements(security_rules) as sg,
-        jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb) as dport,
-        jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip
+        jsonb_array_elements_text(
+          case
+            when jsonb_array_length(sg -> 'properties' -> 'destinationPortRanges') > 0 then (sg -> 'properties' -> 'destinationPortRanges')
+            else jsonb_build_array(sg -> 'properties' -> 'destinationPortRange')
+          end ) as dport,
+        jsonb_array_elements_text(
+          case
+            when jsonb_array_length(sg -> 'properties' -> 'sourceAddressPrefixes') > 0 then (sg -> 'properties' -> 'sourceAddressPrefixes')
+            else jsonb_build_array(sg -> 'properties' -> 'sourceAddressPrefix')
+          end) as sip
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Inbound'
