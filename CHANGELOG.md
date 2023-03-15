@@ -2,7 +2,7 @@
 
 _Bug fixes_
 
-- Fixed `Azure Compute Virtual Machine Dashboard`, `Azure Compute Virtual Machine Detail`, `Azure Network Security Group Dashboard`, `Azure Network Security Group Detail` and `Azure Virtual Network Detail` dashboards to correct;y reflect the configured network security group rules. ([#88](https://github.com/turbot/steampipe-mod-azure-insights/pull/88))
+- Fixed `Azure Compute Virtual Machine Dashboard`, `Azure Compute Virtual Machine Detail`, `Azure Network Security Group Dashboard`, `Azure Network Security Group Detail` and `Azure Virtual Network Detail` dashboards to correctly reflect the configured network security group rules. ([#88](https://github.com/turbot/steampipe-mod-azure-insights/pull/88))
 
 ## v0.6 [2023-02-03]
 
