@@ -343,8 +343,16 @@ query "network_security_group_unrestricted_ingress_remote_access" {
       from
         azure_network_security_group nsg,
         jsonb_array_elements(security_rules || default_security_rules ) sg,
-        jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb) dport,
-        jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) sip
+        jsonb_array_elements_text(
+          case
+            when jsonb_array_length(sg -> 'properties' -> 'destinationPortRanges') > 0 then (sg -> 'properties' -> 'destinationPortRanges')
+            else jsonb_build_array(sg -> 'properties' -> 'destinationPortRange')
+          end ) as dport,
+        jsonb_array_elements_text(
+          case
+            when jsonb_array_length(sg -> 'properties' -> 'sourceAddressPrefixes') > 0 then (sg -> 'properties' -> 'sourceAddressPrefixes')
+            else jsonb_build_array(sg -> 'properties' -> 'sourceAddressPrefix')
+          end ) as sip
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Inbound'
@@ -380,8 +388,16 @@ query "network_security_group_unrestricted_egress_remote_access" {
       from
         azure_network_security_group nsg,
         jsonb_array_elements(security_rules || default_security_rules) sg,
-        jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb) dport,
-        jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) sip
+        jsonb_array_elements_text(
+          case
+            when jsonb_array_length(sg -> 'properties' -> 'destinationPortRanges') > 0 then (sg -> 'properties' -> 'destinationPortRanges')
+            else jsonb_build_array(sg -> 'properties' -> 'destinationPortRange')
+          end ) as dport,
+        jsonb_array_elements_text(
+          case
+            when jsonb_array_length(sg -> 'properties' -> 'sourceAddressPrefixes') > 0 then (sg -> 'properties' -> 'sourceAddressPrefixes')
+            else jsonb_build_array(sg -> 'properties' -> 'sourceAddressPrefix')
+          end ) as sip
       where
         sg -> 'properties' ->> 'access' = 'Allow'
         and sg -> 'properties' ->> 'direction' = 'Outbound'
@@ -577,18 +593,18 @@ query "security_group_flow_logs" {
 query "network_security_group_ingress_rules" {
   sql = <<-EOQ
     select
-        sg -> 'properties' ->> 'access' as "Access",
-        sg -> 'properties' ->> 'protocol' as "Protocol",
-        sip as "Source Address Prefixes",
-        dport as "Destination Port Range"
-      from
-        azure_network_security_group nsg,
-        jsonb_array_elements(security_rules || default_security_rules) sg,
-        jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb) dport,
-        jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) sip
-      where
-        sg -> 'properties' ->> 'direction' = 'Inbound'
-        and lower(nsg.id) = $1;
+      sg -> 'properties' ->> 'access' as "Access",
+      sg -> 'properties' ->> 'protocol' as "Protocol",
+      case when dports is not null then dports else  (sg -> 'properties' ->> 'destinationPortRange') end as "Destination Port Range",
+      case when sip is not null then sip else  (sg -> 'properties' ->> 'sourceAddressPrefix') end as "Source Address Prefixes"
+    from
+      azure_network_security_group nsg,
+      jsonb_array_elements(security_rules || default_security_rules) sg
+      left join jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges') as dports on true
+      left join  jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes')  as sip on true
+    where
+      sg -> 'properties' ->> 'direction' = 'Inbound'
+      and lower(nsg.id) = $1;
   EOQ
 
 }
@@ -598,13 +614,13 @@ query "network_security_group_egress_rules" {
     select
       sg -> 'properties' ->> 'access' as "Access",
       sg -> 'properties' ->> 'protocol' as "Protocol",
-      sip as "Source Address Prefixes",
-      dport as "Destination Port Range"
+      case when dports is not null then dports else  (sg -> 'properties' ->> 'destinationPortRange') end as "Destination Port Range",
+      case when sip is not null then sip else  (sg -> 'properties' ->> 'sourceAddressPrefix') end as "Source Address Prefixes"
     from
       azure_network_security_group nsg,
-      jsonb_array_elements(security_rules || default_security_rules) sg,
-      jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges' || (sg -> 'properties' -> 'destinationPortRange') :: jsonb) dport,
-      jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes' || (sg -> 'properties' -> 'sourceAddressPrefix') :: jsonb) sip
+      jsonb_array_elements(security_rules || default_security_rules) sg
+     left join jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges') as dports on true
+      left join  jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes')  as sip on true
     where
       sg -> 'properties' ->> 'direction' = 'Outbound'
       and lower(nsg.id) = $1;
@@ -674,9 +690,21 @@ query "network_security_group_ingress_rule_sankey" {
         from
           azure_network_security_group,
           jsonb_array_elements(default_security_rules || security_rules) as r,
-          jsonb_array_elements_text(r -> 'properties' -> 'sourceAddressPrefixes' || (r -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip,
-          jsonb_array_elements_text(r -> 'properties' -> 'destinationPortRanges' || (r -> 'properties' -> 'destinationPortRange') :: jsonb) dport,
-          jsonb_array_elements_text(r -> 'properties' -> 'sourcePortRanges' || (r -> 'properties' -> 'sourcePortRange') :: jsonb) sport
+          jsonb_array_elements_text(
+            case
+              when jsonb_array_length(r -> 'properties' -> 'destinationPortRanges') > 0 then (r -> 'properties' -> 'destinationPortRanges')
+              else jsonb_build_array(r -> 'properties' -> 'destinationPortRange')
+            end ) as dport,
+          jsonb_array_elements_text(
+            case
+              when jsonb_array_length(r -> 'properties' -> 'sourceAddressPrefixes') > 0 then (r -> 'properties' -> 'sourceAddressPrefixes')
+              else jsonb_build_array(r -> 'properties' -> 'sourceAddressPrefix')
+            end) as sip,
+          jsonb_array_elements_text(
+            case
+              when jsonb_array_length(r -> 'properties' -> 'sourcePortRanges') > 0 then (r -> 'properties' -> 'sourcePortRanges')
+              else jsonb_build_array(r -> 'properties' -> 'sourcePortRange')
+            end) as sport
         where
           r -> 'properties' ->> 'direction' = 'Inbound'
           and lower(id) = $1
@@ -802,9 +830,21 @@ query "network_security_group_egress_rule_sankey" {
         from
           azure_network_security_group,
           jsonb_array_elements(default_security_rules || security_rules) as r,
-          jsonb_array_elements_text(r -> 'properties' -> 'sourceAddressPrefixes' || (r -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip,
-          jsonb_array_elements_text(r -> 'properties' -> 'destinationPortRanges' || (r -> 'properties' -> 'destinationPortRange') :: jsonb) dport,
-          jsonb_array_elements_text(r -> 'properties' -> 'sourcePortRanges' || (r -> 'properties' -> 'sourcePortRange') :: jsonb) sport
+          jsonb_array_elements_text(
+            case
+              when jsonb_array_length(r -> 'properties' -> 'destinationPortRanges') > 0 then (r -> 'properties' -> 'destinationPortRanges')
+              else jsonb_build_array(r -> 'properties' -> 'destinationPortRange')
+            end ) as dport,
+          jsonb_array_elements_text(
+            case
+              when jsonb_array_length(r -> 'properties' -> 'sourceAddressPrefixes') > 0 then (r -> 'properties' -> 'sourceAddressPrefixes')
+              else jsonb_build_array(r -> 'properties' -> 'sourceAddressPrefix')
+            end) as sip,
+          jsonb_array_elements_text(
+            case
+              when jsonb_array_length(r -> 'properties' -> 'sourcePortRanges') > 0 then (r -> 'properties' -> 'sourcePortRanges')
+              else jsonb_build_array(r -> 'properties' -> 'sourcePortRange')
+            end) as sport
         where
           r -> 'properties' ->> 'direction' = 'Outbound'
           and lower(id) = $1
