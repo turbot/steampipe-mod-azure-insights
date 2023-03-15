@@ -917,8 +917,16 @@ query "virtual_network_egress_rule_sankey" {
         end as rule_description
         from network_security_group_rule,
       jsonb_array_elements(all_rules) as r,
-      jsonb_array_elements_text(r -> 'properties' -> 'sourceAddressPrefixes' || (r -> 'properties' -> 'sourceAddressPrefix') :: jsonb) as sip,
-      jsonb_array_elements_text(r -> 'properties' -> 'destinationPortRanges' || (r -> 'properties' -> 'destinationPortRange') :: jsonb) dport
+      jsonb_array_elements_text(
+        case
+          when jsonb_array_length(r -> 'properties' -> 'destinationPortRanges') > 0 then (r -> 'properties' -> 'destinationPortRanges')
+          else jsonb_build_array(r -> 'properties' -> 'destinationPortRange')
+        end ) as dport,
+      jsonb_array_elements_text(
+        case
+          when jsonb_array_length(r -> 'properties' -> 'sourceAddressPrefixes') > 0 then (r -> 'properties' -> 'sourceAddressPrefixes')
+          else jsonb_build_array(r -> 'properties' -> 'sourceAddressPrefix')
+        end) as sip
       where r -> 'properties' ->> 'direction' = 'Outbound'
     )
 
