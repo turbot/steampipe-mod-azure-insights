@@ -22,6 +22,12 @@ dashboard "cosmosdb_account_detail" {
 
     card {
       width = 2
+      query = query.cosmosdb_account_database_count
+      args  = [self.input.cosmosdb_account_id.value]
+    }
+
+    card {
+      width = 2
       query = query.cosmosdb_account_free_tier
       args  = [self.input.cosmosdb_account_id.value]
     }
@@ -239,6 +245,13 @@ dashboard "cosmosdb_account_detail" {
         query = query.cosmosdb_account_private_endpoint_connection
         args  = [self.input.cosmosdb_account_id.value]
       }
+
+      table {
+        title = "Database Details"
+        width = 12
+        query = query.cosmosdb_account_database_details
+        args  = [self.input.cosmosdb_account_id.value]
+      }
     }
   }
 
@@ -273,6 +286,20 @@ query "cosmosdb_account_server" {
       azure_cosmosdb_account
     where
       lower(id) = $1;
+  EOQ
+}
+
+query "cosmosdb_account_database_count" {
+  sql = <<-EOQ
+    select
+      'Database Count' as label,
+      count(*) as value
+    from
+      azure_cosmosdb_account a,
+      azure_cosmosdb_mongo_database d
+    where
+      a.name = d.account_name
+      and lower(a.id) = $1;
   EOQ
 }
 
@@ -524,5 +551,21 @@ query "cosmosdb_account_firewall_policies" {
       jsonb_array_elements(ip_rules) as ip
     where
       lower(id) = $1;
+  EOQ
+}
+
+query "cosmosdb_account_database_details" {
+  sql = <<-EOQ
+    select
+      d.name as "Name",
+      d.account_name as "Account Name",
+      d.throughput_settings ->> 'Throughput' as "Throughput",
+      a.kind as "Database Server",
+      d.id as "ID"
+    from
+      azure_cosmosdb_mongo_database as d
+      join azure_cosmosdb_account as a on d.account_name = a.name
+    where
+      lower(a.id) = $1;
   EOQ
 }
