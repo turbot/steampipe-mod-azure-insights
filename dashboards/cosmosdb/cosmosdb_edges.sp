@@ -92,3 +92,21 @@ edge "cosmosdb_account_to_cosmosdb_mongo_database" {
 
   param "cosmosdb_account_ids" {}
 }
+
+edge "cosmosdb_account_to_cosmosdb_sql_database" {
+  title = "database"
+
+  sql = <<-EOQ
+    select
+      lower(a.id) as from_id,
+      lower(d.id) as to_id
+    from
+      azure_cosmosdb_account a,
+      azure_cosmosdb_sql_database d
+    where
+      d.account_name = a.name
+      and lower(a.id) = any($1);
+  EOQ
+
+  param "cosmosdb_account_ids" {}
+}

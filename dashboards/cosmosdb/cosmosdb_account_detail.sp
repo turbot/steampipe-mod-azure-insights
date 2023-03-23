@@ -70,6 +70,11 @@ dashboard "cosmosdb_account_detail" {
     args  = [self.input.cosmosdb_account_id.value]
   }
 
+  with "cosmosdb_sql_database_for_cosmosdb_account" {
+    query = query.cosmosdb_sql_database_for_cosmosdb_account
+    args  = [self.input.cosmosdb_account_id.value]
+  }
+
   container {
     graph {
       title = "Relationships"
@@ -111,6 +116,13 @@ dashboard "cosmosdb_account_detail" {
       }
 
       node {
+        base = node.cosmosdb_sql_database
+        args = {
+          cosmosdb_sql_database_ids = with.cosmosdb_sql_database_for_cosmosdb_account.rows[*].sql_database_id
+        }
+      }
+
+      node {
         base = node.cosmosdb_account
         args = {
           cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
@@ -148,6 +160,13 @@ dashboard "cosmosdb_account_detail" {
 
       edge {
         base = edge.cosmosdb_account_to_cosmosdb_mongo_database
+        args = {
+          cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.cosmosdb_account_to_cosmosdb_sql_database
         args = {
           cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
         }
@@ -366,6 +385,19 @@ query "cosmosdb_mongo_database_for_cosmosdb_account" {
     from
       azure_cosmosdb_account a,
       azure_cosmosdb_mongo_database d
+    where
+      d.account_name = a.name
+      and lower(a.id) = $1;
+  EOQ
+}
+
+query "cosmosdb_sql_database_for_cosmosdb_account" {
+  sql = <<-EOQ
+    select
+      lower(d.id) as sql_database_id
+    from
+      azure_cosmosdb_account a,
+      azure_cosmosdb_sql_database d
     where
       d.account_name = a.name
       and lower(a.id) = $1;

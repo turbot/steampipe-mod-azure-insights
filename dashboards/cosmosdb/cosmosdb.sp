@@ -15,3 +15,9 @@ category "cosmosdb_mongo_database" {
   color = local.database_color
   icon  = "circle_stack"
 }
+
+category "cosmosdb_sql_database" {
+  title = "Cosmos DB SQL Database"
+  color = local.database_color
+  icon  = "circle_stack"
+}
