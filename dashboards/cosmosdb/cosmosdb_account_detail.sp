@@ -28,7 +28,13 @@ dashboard "cosmosdb_account_detail" {
 
     card {
       width = 2
-      query = query.cosmosdb_account_free_tier
+      query = query.cosmosdb_account_public_access
+      args  = [self.input.cosmosdb_account_id.value]
+    }
+
+    card {
+      width = 2
+      query = query.cosmosdb_account_encryption
       args  = [self.input.cosmosdb_account_id.value]
     }
 
@@ -40,13 +46,7 @@ dashboard "cosmosdb_account_detail" {
 
     card {
       width = 2
-      query = query.cosmosdb_account_public_access
-      args  = [self.input.cosmosdb_account_id.value]
-    }
-
-    card {
-      width = 2
-      query = query.cosmosdb_account_encryption
+      query = query.cosmosdb_account_analytical_storage
       args  = [self.input.cosmosdb_account_id.value]
     }
   }
@@ -303,12 +303,12 @@ query "cosmosdb_account_database_count" {
   EOQ
 }
 
-query "cosmosdb_account_free_tier" {
+query "cosmosdb_account_analytical_storage" {
   sql = <<-EOQ
     select
-      'Free Tier' as label,
-      case when enable_free_tier then 'Enabled' else 'Disabled' end as value,
-      case when enable_free_tier then 'ok' else 'alert' end as type
+      'Storage Analytics' as label,
+      case when enable_analytical_storage then 'Enabled' else 'Disabled' end as value,
+      case when enable_analytical_storage then 'ok' else 'alert' end as type
     from
       azure_cosmosdb_account
     where
