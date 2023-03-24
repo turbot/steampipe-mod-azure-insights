@@ -232,15 +232,22 @@ dashboard "cosmosdb_account_detail" {
 
       table {
         title = "CORS Rules"
-        width = 6
+        width = 4
         query = query.cosmosdb_account_cors_rules
         args  = [self.input.cosmosdb_account_id.value]
       }
 
       table {
         title = "Consistency Policy"
-        width = 6
+        width = 4
         query = query.cosmosdb_account_consistency_policy
+        args  = [self.input.cosmosdb_account_id.value]
+      }
+
+      table {
+        title = "Capabilities"
+        width = 4
+        query = query.cosmosdb_account_capabilities
         args  = [self.input.cosmosdb_account_id.value]
       }
 
@@ -606,6 +613,19 @@ query "cosmosdb_account_consistency_policy" {
       consistency_policy_max_staleness_prefix as "Max Staleness Prefix"
     from
       azure_cosmosdb_account
+    where
+      lower(id) = $1;
+  EOQ
+}
+
+query "cosmosdb_account_capabilities" {
+  sql = <<-EOQ
+    select
+      c ->> 'name' as "Capability",
+      'Enabled' as "State"
+    from
+      azure_cosmosdb_account,
+      jsonb_array_elements(capabilities) c
     where
       lower(id) = $1;
   EOQ
