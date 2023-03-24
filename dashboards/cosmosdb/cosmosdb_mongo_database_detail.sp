@@ -24,7 +24,7 @@ dashboard "cosmosdb_mongo_database_detail" {
 
     card {
       width = 2
-      query = query.cosmosdb_mongo_database_zone_redundant
+      query = query.cosmosdb_mongo_database_throughput
       args  = [self.input.cosmosdb_mongo_database_id.value]
     }
 
@@ -161,10 +161,10 @@ query "cosmosdb_mongo_database_collection_count" {
   EOQ
 }
 
-query "cosmosdb_mongo_database_zone_redundant" {
+query "cosmosdb_mongo_database_throughput" {
   sql = <<-EOQ
     select
-      'Throughput' as label,
+      'Throughput - RU/s' as label,
       throughput_settings ->> 'Throughput' as value
     from
       azure_cosmosdb_mongo_database
@@ -239,9 +239,9 @@ query "cosmosdb_mongo_database_throughput_settings" {
   sql = <<-EOQ
     select
       throughput_settings ->> 'Name' as "Name",
-      throughput_settings ->> 'Throughput' as "Throughput", 
-      throughput_settings ->> 'MaxThroughput' as "Maximum Throughput",
-      throughput_settings ->> 'MinimumThroughput' as "Minimum Throughput",
+      throughput_settings ->> 'ResourceThroughput' as "Throughput - RU/s", 
+      throughput_settings ->> 'AutoscaleSettingsMaxThroughput' as "Maximum Throughput - RU/s",
+      throughput_settings ->> 'ResourceMinimumThroughput' as "Minimum Throughput - RU/s",
       throughput_settings ->> 'ID' as "ID"
     from
       azure_cosmosdb_mongo_database
@@ -256,7 +256,7 @@ query "cosmosdb_mongo_database_collection_details" {
       c.name as "Name",
       c.account_name as "Account Name",
       c.analytical_storage_ttl as "Analytical Storage TTL",
-      c.throughput_settings ->> 'Throughput' as "Throughput",
+      c.throughput_settings ->> 'Throughput' as "Throughput - RU/s",
       c.shard_key as "Shard Key",
       c.id as "ID"
     from

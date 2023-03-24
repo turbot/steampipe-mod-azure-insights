@@ -301,7 +301,7 @@ query "cosmosdb_account_private_link_status" {
         distinct s.id
       from
         azure_cosmosdb_account as s,
-        jsonb_array_elements(private_endpoint_connections_t) as connection
+        jsonb_array_elements(private_endpoint_connections) as connection
       where
         connection ->> 'PrivateLinkServiceConnectionStateStatus' = 'Approved'
     ),

@@ -216,8 +216,6 @@ dashboard "cosmosdb_account_detail" {
 
     container {
 
-      width = 12
-
       table {
         title = "Encryption Details"
         width = 6
@@ -229,6 +227,20 @@ dashboard "cosmosdb_account_detail" {
         title = "Backup Policy"
         width = 6
         query = query.cosmosdb_account_backup_policy
+        args  = [self.input.cosmosdb_account_id.value]
+      }
+
+      table {
+        title = "CORS Rules"
+        width = 6
+        query = query.cosmosdb_account_cors_rules
+        args  = [self.input.cosmosdb_account_id.value]
+      }
+
+      table {
+        title = "Consistency Policy"
+        width = 6
+        query = query.cosmosdb_account_consistency_policy
         args  = [self.input.cosmosdb_account_id.value]
       }
 
@@ -535,7 +547,7 @@ query "cosmosdb_account_private_endpoint_connection" {
       c ->> 'PrivateEndpointConnectionId' as "Private Endpoint Connection ID"
     from
       azure_cosmosdb_account,
-      jsonb_array_elements(private_endpoint_connections_t) as c
+      jsonb_array_elements(private_endpoint_connections) as c
     where
       lower(id) = $1;
   EOQ
@@ -559,7 +571,7 @@ query "cosmosdb_account_database_details" {
     select
       d.name as "Name",
       d.account_name as "Account Name",
-      d.throughput_settings ->> 'Throughput' as "Throughput",
+      d.throughput_settings ->> 'Throughput' as "Throughput - RU/s",
       a.kind as "Database Server",
       d.id as "ID"
     from
@@ -567,5 +579,34 @@ query "cosmosdb_account_database_details" {
       join azure_cosmosdb_account as a on d.account_name = a.name
     where
       lower(a.id) = $1;
+  EOQ
+}
+
+query "cosmosdb_account_cors_rules" {
+  sql = <<-EOQ
+    select
+      c ->> 'allowedHeaders' as "Allowed Headers",
+      c ->> 'allowedMethods' as "Allowed Methods",
+      c ->> 'allowedOrigins' as "Allowed Origins",
+      c ->> 'exposedHeaders' as "Exposed Headers",
+      c ->> 'maxAgeInSeconds' as "Max Age - Seconds"
+    from
+      azure_cosmosdb_account,
+      jsonb_array_elements(cors) as c
+    where
+      lower(id) = $1;
+  EOQ
+}
+
+query "cosmosdb_account_consistency_policy" {
+  sql = <<-EOQ
+    select
+      default_consistency_level as "Default Consistency Level",
+      consistency_policy_max_interval as "Max Interval - Seconds",
+      consistency_policy_max_staleness_prefix as "Max Staleness Prefix"
+    from
+      azure_cosmosdb_account
+    where
+      lower(id) = $1;
   EOQ
 }
