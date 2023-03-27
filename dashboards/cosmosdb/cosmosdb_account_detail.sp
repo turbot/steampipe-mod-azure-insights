@@ -81,6 +81,15 @@ dashboard "cosmosdb_account_detail" {
     args  = [self.input.cosmosdb_account_id.value]
   }
 
+  with "child_cosmosdb_restorable_database_account_for_cosmosdb_account" {
+    query = query.child_cosmosdb_restorable_database_account_for_cosmosdb_account
+    args  = [self.input.cosmosdb_account_id.value]
+  }
+  with "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
+    query = query.parent_cosmosdb_restorable_database_account_for_cosmosdb_account
+    args  = [self.input.cosmosdb_account_id.value]
+  }
+
   container {
     graph {
       title = "Relationships"
@@ -135,6 +144,20 @@ dashboard "cosmosdb_account_detail" {
         }
       }
 
+      node {
+        base = node.cosmosdb_restorable_database_account
+        args = {
+          restorable_database_account_ids = with.child_cosmosdb_restorable_database_account_for_cosmosdb_account.rows[*].restorable_database_account_id
+        }
+      }
+
+      node {
+        base = node.cosmosdb_restorable_database_account
+        args = {
+          restorable_database_account_ids = with.parent_cosmosdb_restorable_database_account_for_cosmosdb_account.rows[*].restorable_database_account_id
+        }
+      }
+
 
       edge {
         base = edge.network_subnet_to_network_virtual_network
@@ -175,6 +198,20 @@ dashboard "cosmosdb_account_detail" {
         base = edge.cosmosdb_account_to_cosmosdb_sql_database
         args = {
           cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.cosmosdb_account_to_cosmosdb_restorable_database_account
+        args = {
+          cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
+        }
+      }
+
+      edge {
+        base = edge.cosmosdb_restorable_database_account_to_cosmosdb_account
+        args = {
+          restorable_database_account_ids = with.parent_cosmosdb_restorable_database_account_for_cosmosdb_account.rows[*].restorable_database_account_id
         }
       }
     }
@@ -446,6 +483,33 @@ query "cosmosdb_sql_database_for_cosmosdb_account" {
       azure_cosmosdb_sql_database d
     where
       d.account_name = a.name
+      and lower(a.id) = $1;
+  EOQ
+}
+
+query "child_cosmosdb_restorable_database_account_for_cosmosdb_account" {
+  sql = <<-EOQ
+    select
+      lower(ra.id) as restorable_database_account_id
+    from
+      azure_cosmosdb_restorable_database_account ra,
+      azure_cosmosdb_account a
+    where
+      ra.account_name =  a.name
+      and ra.subscription_id = a.subscription_id
+      and lower(a.id) = $1;
+  EOQ
+}
+
+query "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
+  sql = <<-EOQ
+    select
+      lower(ra.id) as restorable_database_account_id
+    from
+      azure_cosmosdb_restorable_database_account ra,
+      azure_cosmosdb_account a
+    where
+      ra.id =  a.restore_parameters ->> 'restoreSource'
       and lower(a.id) = $1;
   EOQ
 }

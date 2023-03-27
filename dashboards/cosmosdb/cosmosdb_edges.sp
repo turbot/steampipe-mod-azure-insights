@@ -128,3 +128,40 @@ edge "cosmosdb_account_to_cosmosdb_sql_database" {
 
   param "cosmosdb_account_ids" {}
 }
+
+edge "cosmosdb_account_to_cosmosdb_restorable_database_account" {
+  title = "database account"
+
+  sql = <<-EOQ
+    select
+      lower(a.id) as from_id,
+      lower(ra.id) as to_id
+    from
+      azure_cosmosdb_restorable_database_account ra,
+      azure_cosmosdb_account a
+    where
+      ra.account_name =  a.name
+      and ra.subscription_id = a.subscription_id
+      and lower(a.id) = any($1);
+  EOQ
+
+  param "cosmosdb_account_ids" {}
+}
+
+edge "cosmosdb_restorable_database_account_to_cosmosdb_account" {
+  title = "restored from"
+
+  sql = <<-EOQ
+    select
+      lower(ra.id) as from_id,
+      lower(a.id) as to_id
+    from
+      azure_cosmosdb_restorable_database_account ra,
+      azure_cosmosdb_account a
+    where
+      ra.id =  a.restore_parameters ->> 'restoreSource'
+      and lower(ra.id) = any($1);
+  EOQ
+
+  param "restorable_database_account_ids" {}
+}

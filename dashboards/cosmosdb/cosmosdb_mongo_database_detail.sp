@@ -165,7 +165,7 @@ query "cosmosdb_mongo_database_throughput" {
   sql = <<-EOQ
     select
       'Throughput - RU/s' as label,
-      throughput_settings ->> 'Throughput' as value
+      throughput_settings ->> 'ResourceThroughput' as value
     from
       azure_cosmosdb_mongo_database
     where

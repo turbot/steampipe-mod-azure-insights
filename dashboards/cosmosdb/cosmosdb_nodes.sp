@@ -46,7 +46,7 @@ node "cosmosdb_mongo_database" {
 
 // /subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.DocumentDB/databaseAccounts/demo-insight-mongo-acc/mongodbDatabases/test-mongo-db/collections/test
 node "cosmosdb_mongo_collection" {
-  category = category.cosmosdb_mongo_database
+  category = category.cosmosdb_mongo_collection
 
   sql = <<-EOQ
     select
@@ -91,4 +91,27 @@ node "cosmosdb_sql_database" {
   EOQ
 
   param "cosmosdb_sql_database_ids" {}
+}
+
+node "cosmosdb_restorable_database_account" {
+  category = category.cosmosdb_restorable_database_account
+
+  sql = <<-EOQ
+    select
+      lower(id) as id,
+      title as title,
+      jsonb_build_object(
+        'Name', name,
+        'ID', lower(id),
+        'Type', type,
+        'Resource Group', resource_group,
+        'Subscription ID', subscription_id
+      ) as properties
+    from
+      azure_cosmosdb_restorable_database_account
+    where
+      lower(id) = any($1);
+  EOQ
+
+  param "restorable_database_account_ids" {}
 }
