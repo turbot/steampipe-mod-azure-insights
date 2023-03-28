@@ -33,6 +33,11 @@ dashboard "cosmosdb_account_dashboard" {
       query = query.cosmosdb_account_analytical_storage_disabled_count
       width = 2
     }
+
+    card {
+      query = query.cosmosdb_account_private_link_disabled_count
+      width = 2
+    }
   }
 
   container {
@@ -213,6 +218,37 @@ query "cosmosdb_account_analytical_storage_disabled_count" {
       azure_cosmosdb_account
     where
       not enable_analytical_storage;
+  EOQ
+}
+
+query "cosmosdb_account_private_link_disabled_count" {
+  sql = <<-EOQ
+    with private_link_enabled as (
+      select
+        distinct s.id
+      from
+        azure_cosmosdb_account as s,
+        jsonb_array_elements(private_endpoint_connections) as connection
+      where
+        connection ->> 'PrivateLinkServiceConnectionStateStatus' = 'Approved'
+    ),
+    private_link_status as (
+      select
+        case
+          when va.id is not null then 'enabled'
+          else 'disabled' end as private_link
+      from
+        azure_cosmosdb_account as s
+        left join private_link_enabled as va on s.id = va.id
+    )
+    select
+      count(*) as value,
+      'Private Link Disabled' as label,
+      case count(*) when 0 then 'ok' else 'alert' end as "type"
+    from
+      private_link_status
+    where
+      private_link = 'disabled';
   EOQ
 }
 
