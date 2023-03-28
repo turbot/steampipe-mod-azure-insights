@@ -186,7 +186,7 @@ query "cosmosdb_account_for_cosmosdb_mongo_database" {
       d.resource_group = a.resource_group
       and d.subscription_id = a.subscription_id
       and account_name = a.name
-      and lower(d.id) = $1
+      and lower(d.id) = $1;
   EOQ
 }
 
@@ -196,9 +196,11 @@ query "cosmosdb_mongo_collection_for_cosmosdb_mongo_database" {
       lower(c.id) as collection_id
     from
       azure_cosmosdb_mongo_database as d
-      join azure_cosmosdb_mongo_collection as c on d.name = c.database_name
+      join azure_cosmosdb_mongo_collection as c 
+        on c.database_name = d.name
+        and c.account_name = (select account_name from azure_cosmosdb_mongo_database where lower(id) = $1)
     where
-      lower(d.id) = $1
+      lower(d.id) = $1;
   EOQ
 }
 
