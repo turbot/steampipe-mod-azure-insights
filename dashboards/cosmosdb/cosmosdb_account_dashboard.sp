@@ -43,7 +43,7 @@ dashboard "cosmosdb_account_dashboard" {
       title = "Public/Private Status"
       query = query.cosmosdb_account_public_status
       type  = "donut"
-      width = 2
+      width = 4
 
       series "count" {
         point "private" {
@@ -59,7 +59,7 @@ dashboard "cosmosdb_account_dashboard" {
       title = "CMK Encryption Status"
       query = query.cosmosdb_account_cmk_encryption_status
       type  = "donut"
-      width = 2
+      width = 4
 
       series "count" {
         point "enabled" {
@@ -75,7 +75,7 @@ dashboard "cosmosdb_account_dashboard" {
       title = "Automatic Failover Status"
       query = query.cosmosdb_account_automatic_failover_status
       type  = "donut"
-      width = 2
+      width = 4
 
       series "count" {
         point "enabled" {
@@ -91,7 +91,7 @@ dashboard "cosmosdb_account_dashboard" {
       title = "Storage Analytics Status"
       query = query.cosmosdb_account_analytical_storage_status
       type  = "donut"
-      width = 2
+      width = 4
 
       series "count" {
         point "enabled" {
@@ -107,7 +107,7 @@ dashboard "cosmosdb_account_dashboard" {
       title = "Private Link Status"
       query = query.cosmosdb_account_private_link_status
       type  = "donut"
-      width = 2
+      width = 4
 
       series "count" {
         point "enabled" {

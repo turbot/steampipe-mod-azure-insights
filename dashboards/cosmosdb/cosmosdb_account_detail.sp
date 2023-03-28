@@ -520,7 +520,7 @@ query "cosmosdb_account_overview" {
       select
         id,
         string_agg(
-          r ->>'locationName', ',' order by r ->> 'failoverPriority' asc
+          r ->>'locationName', ', ' order by r ->> 'failoverPriority' asc
         ) as reads
       from
         azure_cosmosdb_account,
@@ -533,7 +533,7 @@ query "cosmosdb_account_overview" {
       select
         id,
         string_agg(
-          w ->>'locationName', ',' order by w ->> 'failoverPriority' asc
+          w ->>'locationName', ', ' order by w ->> 'failoverPriority' asc
         ) as writes
       from
         azure_cosmosdb_account,
