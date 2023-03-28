@@ -516,18 +516,48 @@ query "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
 
 query "cosmosdb_account_overview" {
   sql = <<-EOQ
-    select
+    with read_locations_agg as (
+      select
+        id,
+        string_agg(
+          r ->>'locationName', ',' order by r ->> 'failoverPriority' asc
+        ) as reads
+      from
+        azure_cosmosdb_account,
+        jsonb_array_elements(read_locations) r
+      where
+        lower(id) = $1
+      group by
+        id
+    ), write_locations_agg as (
+      select
+        id,
+        string_agg(
+          w ->>'locationName', ',' order by w ->> 'failoverPriority' asc
+        ) as writes
+      from
+        azure_cosmosdb_account,
+        jsonb_array_elements(write_locations) w
+      where
+        lower(id) = $1
+      group by
+        id
+    ) select
       name as "Name",
       server_version as "Server Version",
       database_account_offer_type as "Offer Type",
+      writes as "Write Regions",
+      reads as "Read Regions",
       region as "Region",
       resource_group as "Resource Group",
       subscription_id as "Subscription ID",
-      id as "ID"
+      a.id as "ID"
     from
-      azure_cosmosdb_account
+      azure_cosmosdb_account a,
+      read_locations_agg,
+      write_locations_agg
     where
-      lower(id) = $1;
+      lower(a.id) = $1;
   EOQ
 }
 
