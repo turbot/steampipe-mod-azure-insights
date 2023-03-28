@@ -29,28 +29,28 @@ dashboard "cosmosdb_mongo_database_dashboard" {
       title = "Databases by Subscription"
       query = query.cosmosdb_mongo_database_by_subscription
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Databases by Resource Group"
       query = query.cosmosdb_mongo_database_by_resource_group
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Databases by Region"
       query = query.cosmosdb_mongo_database_by_region
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Databases by Account"
       query = query.cosmosdb_mongo_database_by_account
       type  = "column"
-      width = 4
+      width = 3
     }
 
   }

@@ -134,28 +134,28 @@ dashboard "cosmosdb_account_dashboard" {
       title = "Accounts by Subscription"
       query = query.cosmosdb_account_by_subscription
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Accounts by Resource Group"
       query = query.cosmosdb_account_by_resource_group
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Accounts by Region"
       query = query.cosmosdb_account_by_region
       type  = "column"
-      width = 4
+      width = 3
     }
 
     chart {
       title = "Accounts by Kind"
       query = query.cosmosdb_account_by_kind
       type  = "column"
-      width = 4
+      width = 3
     }
   }
 
