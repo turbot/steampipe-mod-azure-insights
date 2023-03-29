@@ -16,25 +16,19 @@ dashboard "cosmosdb_account_detail" {
 
     card {
       width = 2
-      query = query.cosmosdb_account_server
-      args  = [self.input.cosmosdb_account_id.value]
-    }
-
-    card {
-      width = 2
       query = query.cosmosdb_account_database_count
       args  = [self.input.cosmosdb_account_id.value]
     }
 
     card {
       width = 2
-      query = query.cosmosdb_account_public_access
+      query = query.cosmosdb_account_encryption
       args  = [self.input.cosmosdb_account_id.value]
     }
 
     card {
       width = 2
-      query = query.cosmosdb_account_encryption
+      query = query.cosmosdb_account_public_access
       args  = [self.input.cosmosdb_account_id.value]
     }
 
@@ -47,6 +41,12 @@ dashboard "cosmosdb_account_detail" {
     card {
       width = 2
       query = query.cosmosdb_account_analytical_storage
+      args  = [self.input.cosmosdb_account_id.value]
+    }
+
+    card {
+      width = 2
+      query = query.cosmosdb_account_private_link
       args  = [self.input.cosmosdb_account_id.value]
     }
   }
@@ -85,8 +85,19 @@ dashboard "cosmosdb_account_detail" {
     query = query.child_cosmosdb_restorable_database_account_for_cosmosdb_account
     args  = [self.input.cosmosdb_account_id.value]
   }
+
+  with "child_cosmosdb_account_for_cosmosdb_account" {
+    query = query.child_cosmosdb_account_for_cosmosdb_account
+    args  = [self.input.cosmosdb_account_id.value]
+  }
+
   with "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
     query = query.parent_cosmosdb_restorable_database_account_for_cosmosdb_account
+    args  = [self.input.cosmosdb_account_id.value]
+  }
+
+  with "parent_cosmosdb_account_for_cosmosdb_account" {
+    query = query.parent_cosmosdb_account_for_cosmosdb_account
     args  = [self.input.cosmosdb_account_id.value]
   }
 
@@ -141,6 +152,20 @@ dashboard "cosmosdb_account_detail" {
         base = node.cosmosdb_account
         args = {
           cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
+        }
+      }
+
+      node {
+        base = node.cosmosdb_account
+        args = {
+          cosmosdb_account_ids = with.child_cosmosdb_account_for_cosmosdb_account.rows[*].account_id
+        }
+      }
+
+      node {
+        base = node.cosmosdb_account
+        args = {
+          cosmosdb_account_ids = with.parent_cosmosdb_account_for_cosmosdb_account.rows[*].account_id
         }
       }
 
@@ -209,9 +234,23 @@ dashboard "cosmosdb_account_detail" {
       }
 
       edge {
+        base = edge.cosmosdb_account_to_cosmosdb_restorable_database_account
+        args = {
+          cosmosdb_account_ids = with.parent_cosmosdb_account_for_cosmosdb_account.rows[*].account_id
+        }
+      }
+
+      edge {
         base = edge.cosmosdb_restorable_database_account_to_cosmosdb_account
         args = {
           restorable_database_account_ids = with.parent_cosmosdb_restorable_database_account_for_cosmosdb_account.rows[*].restorable_database_account_id
+        }
+      }
+
+      edge {
+        base = edge.cosmosdb_restorable_database_account_to_cosmosdb_account
+        args = {
+          restorable_database_account_ids = with.child_cosmosdb_restorable_database_account_for_cosmosdb_account.rows[*].restorable_database_account_id
         }
       }
     }
@@ -333,18 +372,6 @@ query "cosmosdb_account_input" {
   EOQ
 }
 
-query "cosmosdb_account_server" {
-  sql = <<-EOQ
-    select
-      'Server Name' as label,
-      kind as value
-    from
-      azure_cosmosdb_account
-    where
-      lower(id) = $1;
-  EOQ
-}
-
 query "cosmosdb_account_database_count" {
   sql = <<-EOQ
     select
@@ -402,12 +429,38 @@ query "cosmosdb_account_encryption" {
   sql = <<-EOQ
     select
       'Encryption' as label,
-      case when key_vault_key_uri is not null then 'Enabled' else 'Disabled' end as value,
-      case when key_vault_key_uri is not null then 'ok' else 'alert' end as type
+      case when key_vault_key_uri is null then 'Platform-Managed' else 'Customer-Managed' end as value,
+      case when key_vault_key_uri is null then 'alert' else 'ok' end as type
     from
       azure_cosmosdb_account
     where
       lower(id) = $1;
+  EOQ
+}
+
+query "cosmosdb_account_private_link" {
+  sql = <<-EOQ
+    with private_link_enabled as (
+      select
+        distinct s.id
+      from
+        azure_cosmosdb_account as s,
+        jsonb_array_elements(private_endpoint_connections) as connection
+      where
+        connection ->> 'PrivateLinkServiceConnectionStateStatus' = 'Approved'
+    ) select
+      'Private Link' as label,
+      case
+        when va.id is not null then 'Enabled'
+        else 'Disabled' end as value,
+      case
+        when va.id is not null then 'ok'
+        else 'alert' end as type
+    from
+      azure_cosmosdb_account as s
+      left join private_link_enabled as va on s.id = va.id
+    where
+      lower(s.id) = $1;
   EOQ
 }
 
@@ -501,6 +554,29 @@ query "child_cosmosdb_restorable_database_account_for_cosmosdb_account" {
   EOQ
 }
 
+query "child_cosmosdb_account_for_cosmosdb_account" {
+  sql = <<-EOQ
+    with child_rda as (
+      select
+        lower(ra.id) as id
+      from
+        azure_cosmosdb_restorable_database_account ra,
+        azure_cosmosdb_account a
+      where
+        ra.account_name =  a.name
+        and ra.subscription_id = a.subscription_id
+        and lower(a.id) = $1
+    )
+    select
+      lower(a.id) as account_id
+    from
+      azure_cosmosdb_account a,
+      child_rda ra
+    where
+      ra.id =  a.restore_parameters ->> 'restoreSource';
+  EOQ
+}
+
 query "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
   sql = <<-EOQ
     select
@@ -511,6 +587,31 @@ query "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
     where
       ra.id =  a.restore_parameters ->> 'restoreSource'
       and lower(a.id) = $1;
+  EOQ
+}
+
+query "parent_cosmosdb_account_for_cosmosdb_account" {
+  sql = <<-EOQ
+    with parent_rda as (
+      select
+        lower(ra.id) as id,
+        ra.subscription_id,
+        ra.account_name
+      from
+        azure_cosmosdb_restorable_database_account ra,
+        azure_cosmosdb_account a
+      where
+        ra.id =  a.restore_parameters ->> 'restoreSource'
+        and lower(a.id) = $1
+    )
+    select
+      lower(a.id) as account_id
+    from
+      parent_rda ra,
+      azure_cosmosdb_account a
+    where
+      ra.account_name =  a.name
+      and ra.subscription_id = a.subscription_id;
   EOQ
 }
 

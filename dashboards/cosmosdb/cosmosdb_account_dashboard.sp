@@ -15,22 +15,17 @@ dashboard "cosmosdb_account_dashboard" {
     }
 
     card {
+      query = query.cosmosdb_account_pmk_encrypted_count
+      width = 2
+    }
+
+    card {
       query = query.cosmosdb_account_public_count
       width = 2
     }
 
     card {
-      query = query.cosmosdb_account_cmk_unencrypted_count
-      width = 2
-    }
-
-    card {
       query = query.cosmosdb_account_automatic_failover_disabled_count
-      width = 2
-    }
-
-    card {
-      query = query.cosmosdb_account_analytical_storage_disabled_count
       width = 2
     }
 
@@ -45,12 +40,28 @@ dashboard "cosmosdb_account_dashboard" {
     title = "Assessments"
 
     chart {
+      title = "Encryption Status"
+      query = query.cosmosdb_account_encryption_status
+      type  = "donut"
+      width = 3
+
+      series "accounts" {
+        point "cmk" {
+          color = "ok"
+        }
+        point "pmk" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
       title = "Public/Private Status"
       query = query.cosmosdb_account_public_status
       type  = "donut"
-      width = 4
+      width = 3
 
-      series "count" {
+      series "accounts" {
         point "private" {
           color = "ok"
         }
@@ -61,44 +72,12 @@ dashboard "cosmosdb_account_dashboard" {
     }
 
     chart {
-      title = "CMK Encryption Status"
-      query = query.cosmosdb_account_cmk_encryption_status
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
       title = "Automatic Failover Status"
       query = query.cosmosdb_account_automatic_failover_status
       type  = "donut"
-      width = 4
+      width = 3
 
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
-      title = "Storage Analytics Status"
-      query = query.cosmosdb_account_analytical_storage_status
-      type  = "donut"
-      width = 4
-
-      series "count" {
+      series "accounts" {
         point "enabled" {
           color = "ok"
         }
@@ -112,9 +91,9 @@ dashboard "cosmosdb_account_dashboard" {
       title = "Private Link Status"
       query = query.cosmosdb_account_private_link_status
       type  = "donut"
-      width = 4
+      width = 3
 
-      series "count" {
+      series "accounts" {
         point "enabled" {
           color = "ok"
         }
@@ -182,11 +161,11 @@ query "cosmosdb_account_public_count" {
   EOQ
 }
 
-query "cosmosdb_account_cmk_unencrypted_count" {
+query "cosmosdb_account_pmk_encrypted_count" {
   sql = <<-EOQ
     select
       count(*) as value,
-      'CMK Unencrypted' as label,
+      'PMK Encrypted' as label,
       case count(*) when 0 then 'ok' else 'alert' end as "type"
     from
       azure_cosmosdb_account
@@ -205,19 +184,6 @@ query "cosmosdb_account_automatic_failover_disabled_count" {
       azure_cosmosdb_account
     where
       not enable_automatic_failover;
-  EOQ
-}
-
-query "cosmosdb_account_analytical_storage_disabled_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'Storage Analytics Disabled' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      azure_cosmosdb_account
-    where
-      not enable_analytical_storage;
   EOQ
 }
 
@@ -258,7 +224,7 @@ query "cosmosdb_account_public_status" {
   sql = <<-EOQ
     select
       public_network,
-      count(*)
+      count(*) as accounts
     from (
       select
         case when public_network_access = 'Enabled' then 'public'
@@ -273,41 +239,22 @@ query "cosmosdb_account_public_status" {
   EOQ
 }
 
-query "cosmosdb_account_cmk_encryption_status" {
+query "cosmosdb_account_encryption_status" {
   sql = <<-EOQ
     select
-      cmk_encryption,
-      count(*)
+      encryption,
+      count(*) as accounts
     from (
       select
-        case when key_vault_key_uri is null then 'disabled'
-        else 'enabled'
-        end cmk_encryption
+        case when key_vault_key_uri is null then 'pmk'
+        else 'cmk'
+        end encryption
       from
         azure_cosmosdb_account) as s
     group by
-      cmk_encryption
+      encryption
     order by
-      cmk_encryption;
-  EOQ
-}
-
-query "cosmosdb_account_analytical_storage_status" {
-  sql = <<-EOQ
-    select
-      analytical_storage,
-      count(*)
-    from (
-      select
-        case when not enable_analytical_storage then 'disabled'
-        else 'enabled'
-        end analytical_storage
-      from
-        azure_cosmosdb_account) as s
-    group by
-      analytical_storage
-    order by
-      analytical_storage;
+      encryption;
   EOQ
 }
 
@@ -315,7 +262,7 @@ query "cosmosdb_account_automatic_failover_status" {
   sql = <<-EOQ
     select
       automatic_failover,
-      count(*)
+      count(*) as accounts
     from (
       select
         case when not enable_automatic_failover then 'disabled'
@@ -352,7 +299,7 @@ query "cosmosdb_account_private_link_status" {
     )
     select
       private_link_enabled,
-      count(*)
+      count(*) as accounts
     from
       private_link_status
     group by
