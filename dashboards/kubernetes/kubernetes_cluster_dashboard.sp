@@ -109,7 +109,7 @@ dashboard "kubernetes_cluster_dashboard" {
     }
 
     chart {
-      title = "Auto Scaling"
+      title = "Auto Scaling Status"
       query = query.kubernetes_cluster_auto_scaler_profile_status
       type  = "donut"
       width = 4
