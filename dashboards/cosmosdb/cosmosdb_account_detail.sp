@@ -40,12 +40,6 @@ dashboard "cosmosdb_account_detail" {
 
     card {
       width = 2
-      query = query.cosmosdb_account_analytical_storage
-      args  = [self.input.cosmosdb_account_id.value]
-    }
-
-    card {
-      width = 2
       query = query.cosmosdb_account_private_link
       args  = [self.input.cosmosdb_account_id.value]
     }
@@ -297,6 +291,14 @@ dashboard "cosmosdb_account_detail" {
         width = 6
         query = query.cosmosdb_account_encryption_details
         args  = [self.input.cosmosdb_account_id.value]
+
+        column "Name" {
+          href = "${dashboard.key_vault_detail.url_path}?input.key_vault_id={{.lower_id | @uri}}"
+        }
+
+        column "lower_id" {
+          display = "none"
+        }
       }
 
       table {
@@ -332,6 +334,14 @@ dashboard "cosmosdb_account_detail" {
         width = 12
         query = query.cosmosdb_account_virtual_network_rules
         args  = [self.input.cosmosdb_account_id.value]
+
+        column "Name" {
+          href = "${dashboard.network_virtual_network_detail.url_path}?input.vn_id={{.lower_id | @uri}}"
+        }
+
+        column "lower_id" {
+          display = "none"
+        }
       }
 
       table {
@@ -346,6 +356,14 @@ dashboard "cosmosdb_account_detail" {
         width = 12
         query = query.cosmosdb_account_database_details
         args  = [self.input.cosmosdb_account_id.value]
+
+        column "Name" {
+          href = "${dashboard.cosmosdb_mongo_database_detail.url_path}?input.cosmosdb_mongo_database_id={{.lower_id | @uri}}"
+        }
+
+        column "lower_id" {
+          display = "none"
+        }
       }
     }
   }
@@ -386,19 +404,6 @@ query "cosmosdb_account_database_count" {
   EOQ
 }
 
-query "cosmosdb_account_analytical_storage" {
-  sql = <<-EOQ
-    select
-      'Storage Analytics' as label,
-      case when enable_analytical_storage then 'Enabled' else 'Disabled' end as value,
-      case when enable_analytical_storage then 'ok' else 'alert' end as type
-    from
-      azure_cosmosdb_account
-    where
-      lower(id) = $1;
-  EOQ
-}
-
 query "cosmosdb_account_automatic_failover" {
   sql = <<-EOQ
     select
@@ -415,9 +420,9 @@ query "cosmosdb_account_automatic_failover" {
 query "cosmosdb_account_public_access" {
   sql = <<-EOQ
     select
-      'Publicly Accessible' as label,
+      'Public Access' as label,
       case when public_network_access = 'Enabled' then 'Enabled' else 'Disabled' end as value,
-      case when public_network_access = 'Enabled' then 'ok' else 'alert' end as type
+      case when public_network_access = 'Enabled' then 'alert' else 'ok' end as type
     from
       azure_cosmosdb_account
     where
@@ -682,6 +687,7 @@ query "cosmosdb_account_virtual_network_rules" {
     select
       split_part(r ->> 'id', '/', 9) as "Name",
       split_part(r ->> 'id', '/subnets', 1) as "ID",
+      lower(split_part(r ->> 'id', '/subnets', 1)) as lower_id,
       r ->> 'id' as "Virtual Network Subnet ID",
       r ->> 'ignoreMissingVnetServiceEndpoint' as "Ignore Missing VNet Service Endpoint"
     from
@@ -699,7 +705,9 @@ query "cosmosdb_account_encryption_details" {
       vault_name as "Vault Name",
       key_type as "Key Type",
       key_size as "Key Size",
-      key_uri_with_version as "Key URI"
+      key_uri_with_version as "Key URI",
+      k.id as "ID",
+      lower(k.id) as lower_id
     from
       azure_cosmosdb_account a,
       azure_key_vault_key k
@@ -739,13 +747,11 @@ query "cosmosdb_account_failover_policy" {
 query "cosmosdb_account_private_endpoint_connection" {
   sql = <<-EOQ
     select
-      c ->> 'PrivateEndpointConnectionName' as "Private Endpoint Connection Name",
+      split_part(c ->> 'PrivateEndpointConnectionId', 'privateEndpointConnections/', 2) as "Private Endpoint Connection Name",
       c ->> 'PrivateEndpointConnectionType' as "Private Endpoint Connection Type",
-      c ->> 'PrivateEndpointId' as "Private Endpoint ID",
       c ->> 'PrivateLinkServiceConnectionStateActionsRequired' as "Private Link Service Connection State Actions Required",
-      c ->> 'PrivateLinkServiceConnectionStateDescription' as "Private Link Service Connection State Description",
       c ->> 'PrivateLinkServiceConnectionStateStatus' as "Private Link Service Connection State Status",
-      c ->> 'ProvisioningState' as "Provisioning State",
+      c ->> 'PrivateEndpointId' as "Private Endpoint ID",
       c ->> 'PrivateEndpointConnectionId' as "Private Endpoint Connection ID"
     from
       azure_cosmosdb_account,
@@ -775,7 +781,8 @@ query "cosmosdb_account_database_details" {
       d.account_name as "Account Name",
       d.throughput_settings ->> 'Throughput' as "Throughput - RU/s",
       a.kind as "Database Server",
-      d.id as "ID"
+      d.id as "ID",
+      lower(d.id) as lower_id
     from
       azure_cosmosdb_mongo_database as d
       join azure_cosmosdb_account as a on d.account_name = a.name

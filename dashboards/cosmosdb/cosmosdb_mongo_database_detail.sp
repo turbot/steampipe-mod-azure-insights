@@ -265,6 +265,7 @@ query "cosmosdb_mongo_database_collection_details" {
       azure_cosmosdb_mongo_database as d
       join azure_cosmosdb_mongo_collection as c on d.name = c.database_name
     where
-      lower(d.id) = $1;
+      lower(d.id) = $1
+      and c.account_name in (select account_name from azure_cosmosdb_mongo_database where lower(id) = $1);
   EOQ
 }

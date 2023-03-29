@@ -15,12 +15,12 @@ dashboard "kubernetes_cluster_dashboard" {
     }
 
     card {
-      query = query.kubernetes_cluster_disk_unencrypted_count
+      query = query.kubernetes_cluster_public_access_disabled_count
       width = 2
     }
 
     card {
-      query = query.kubernetes_cluster_public_access_disabled_count
+      query = query.kubernetes_cluster_disk_unencrypted_count
       width = 2
     }
 

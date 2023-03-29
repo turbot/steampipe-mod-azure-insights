@@ -64,6 +64,7 @@ node "cosmosdb_mongo_collection" {
       azure_cosmosdb_mongo_database d
     where
       c.database_name = d.name
+      and c.account_name in (select account_name from azure_cosmosdb_mongo_database where lower(id) = any($1))
       and lower(d.id) = any($1)
   EOQ
 
