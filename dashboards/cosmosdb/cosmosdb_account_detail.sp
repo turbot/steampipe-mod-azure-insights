@@ -573,7 +573,7 @@ query "child_cosmosdb_account_for_cosmosdb_account" {
       azure_cosmosdb_account a,
       child_rda ra
     where
-      ra.id =  a.restore_parameters ->> 'restoreSource';
+      ra.id =  lower(a.restore_parameters ->> 'restoreSource');
   EOQ
 }
 
