@@ -293,7 +293,8 @@ dashboard "cosmosdb_account_detail" {
         args  = [self.input.cosmosdb_account_id.value]
 
         column "Name" {
-          href = "${dashboard.key_vault_detail.url_path}?input.key_vault_id={{.lower_id | @uri}}"
+          // href = "${dashboard.key_vault_detail.url_path}?input.key_vault_id={{.lower_id | @uri}}"
+          href = "{{ if .'lower_id' == '' then null else '${dashboard.key_vault_detail.url_path}?input.key_vault_id=' + (.'lower_id' | @uri) end }}"
         }
 
         column "lower_id" {
@@ -336,7 +337,8 @@ dashboard "cosmosdb_account_detail" {
         args  = [self.input.cosmosdb_account_id.value]
 
         column "Name" {
-          href = "${dashboard.network_virtual_network_detail.url_path}?input.vn_id={{.lower_id | @uri}}"
+          // href = "${dashboard.network_virtual_network_detail.url_path}?input.vn_id={{.lower_id | @uri}}"
+          href = "{{ if .'lower_id' == '' then null else '${dashboard.network_virtual_network_detail.url_path}?input.vn_id=' + (.'lower_id' | @uri) end }}"
         }
 
         column "lower_id" {
