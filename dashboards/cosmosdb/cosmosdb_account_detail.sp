@@ -694,7 +694,22 @@ query "cosmosdb_account_virtual_network_rules" {
       azure_cosmosdb_account,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      lower(id) = $1;
+      lower(id) = $1
+      
+    union
+    
+    select
+      'Public Network Access' as "Name",
+      '' as "ID",
+      '' as lower_id,
+      '' as "Virtual Network Subnet ID",
+      '' as "Ignore Missing VNet Service Endpoint"
+    from
+      azure_cosmosdb_account
+    where
+      public_network_access = 'Enabled'
+      and (jsonb_array_length(virtual_network_rules) = 0 or virtual_network_rules is null)
+      and lower(id) = $1;
   EOQ
 }
 
@@ -713,7 +728,23 @@ query "cosmosdb_account_encryption_details" {
       azure_key_vault_key k
     where
       a.key_vault_key_uri = k.key_uri
-      and lower(a.id) = $1;
+      and lower(a.id) = $1
+
+    union
+
+    select
+      'Plaform-Managed Encryption' as "Name",
+      '' as "Vault Name",
+      '' as "Key Type",
+      0 as "Key Size",
+      '' as "Key URI",
+      '' as "ID",
+      '' as lower_id
+    from
+      azure_cosmosdb_account
+    where
+      key_vault_key_uri is null
+      and lower(id) = $1;
   EOQ
 }
 
