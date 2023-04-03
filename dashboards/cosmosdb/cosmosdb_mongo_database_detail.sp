@@ -164,7 +164,7 @@ query "cosmosdb_mongo_database_collection_count" {
 query "cosmosdb_mongo_database_throughput" {
   sql = <<-EOQ
     select
-      'Throughput - RU/s' as label,
+      'Throughput - (RU/s)' as label,
       throughput_settings ->> 'ResourceThroughput' as value
     from
       azure_cosmosdb_mongo_database
@@ -241,9 +241,9 @@ query "cosmosdb_mongo_database_throughput_settings" {
   sql = <<-EOQ
     select
       throughput_settings ->> 'Name' as "Name",
-      throughput_settings ->> 'ResourceThroughput' as "Throughput - RU/s", 
-      throughput_settings ->> 'AutoscaleSettingsMaxThroughput' as "Maximum Throughput - RU/s",
-      throughput_settings ->> 'ResourceMinimumThroughput' as "Minimum Throughput - RU/s",
+      throughput_settings ->> 'ResourceThroughput' as "Throughput - (RU/s)", 
+      throughput_settings ->> 'AutoscaleSettingsMaxThroughput' as "Maximum Throughput - (RU/s)",
+      throughput_settings ->> 'ResourceMinimumThroughput' as "Minimum Throughput - (RU/s)",
       throughput_settings ->> 'ID' as "ID"
     from
       azure_cosmosdb_mongo_database
@@ -258,7 +258,7 @@ query "cosmosdb_mongo_database_collection_details" {
       c.name as "Name",
       c.account_name as "Account Name",
       c.analytical_storage_ttl as "Analytical Storage TTL",
-      c.throughput_settings ->> 'Throughput' as "Throughput - RU/s",
+      c.throughput_settings ->> 'Throughput' as "Throughput - (RU/s)",
       c.shard_key as "Shard Key",
       c.id as "ID"
     from

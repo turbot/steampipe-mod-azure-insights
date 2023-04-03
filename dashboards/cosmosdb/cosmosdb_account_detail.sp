@@ -812,7 +812,7 @@ query "cosmosdb_account_database_details" {
     select
       d.name as "Name",
       d.account_name as "Account Name",
-      d.throughput_settings ->> 'Throughput' as "Throughput - RU/s",
+      d.throughput_settings ->> 'Throughput' as "Throughput - (RU/s)",
       a.kind as "Database Server",
       d.id as "ID",
       lower(d.id) as lower_id
@@ -831,7 +831,7 @@ query "cosmosdb_account_cors_rules" {
       c ->> 'allowedMethods' as "Allowed Methods",
       c ->> 'allowedOrigins' as "Allowed Origins",
       c ->> 'exposedHeaders' as "Exposed Headers",
-      c ->> 'maxAgeInSeconds' as "Max Age - Seconds"
+      c ->> 'maxAgeInSeconds' as "Max Age - (seconds)"
     from
       azure_cosmosdb_account,
       jsonb_array_elements(cors) as c
@@ -844,7 +844,7 @@ query "cosmosdb_account_consistency_policy" {
   sql = <<-EOQ
     select
       default_consistency_level as "Default Consistency Level",
-      consistency_policy_max_interval as "Max Interval - Seconds",
+      consistency_policy_max_interval as "Max Interval - (seconds)",
       consistency_policy_max_staleness_prefix as "Max Staleness Prefix"
     from
       azure_cosmosdb_account
