@@ -45,26 +45,6 @@ dashboard "cosmosdb_account_detail" {
     }
   }
 
-  with "key_vault_keys_for_cosmosdb_account" {
-    query = query.key_vault_keys_for_cosmosdb_account
-    args  = [self.input.cosmosdb_account_id.value]
-  }
-
-  with "key_vault_vaults_for_cosmosdb_account" {
-    query = query.key_vault_vaults_for_cosmosdb_account
-    args  = [self.input.cosmosdb_account_id.value]
-  }
-
-  with "network_subnets_for_cosmosdb_account" {
-    query = query.network_subnets_for_cosmosdb_account
-    args  = [self.input.cosmosdb_account_id.value]
-  }
-
-  with "network_virtual_networks_for_cosmosdb_account" {
-    query = query.network_virtual_networks_for_cosmosdb_account
-    args  = [self.input.cosmosdb_account_id.value]
-  }
-
   with "cosmosdb_mongo_database_for_cosmosdb_account" {
     query = query.cosmosdb_mongo_database_for_cosmosdb_account
     args  = [self.input.cosmosdb_account_id.value]
@@ -85,8 +65,23 @@ dashboard "cosmosdb_account_detail" {
     args  = [self.input.cosmosdb_account_id.value]
   }
 
-  with "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
-    query = query.parent_cosmosdb_restorable_database_account_for_cosmosdb_account
+  with "key_vault_keys_for_cosmosdb_account" {
+    query = query.key_vault_keys_for_cosmosdb_account
+    args  = [self.input.cosmosdb_account_id.value]
+  }
+
+  with "key_vault_vaults_for_cosmosdb_account" {
+    query = query.key_vault_vaults_for_cosmosdb_account
+    args  = [self.input.cosmosdb_account_id.value]
+  }
+
+  with "network_subnets_for_cosmosdb_account" {
+    query = query.network_subnets_for_cosmosdb_account
+    args  = [self.input.cosmosdb_account_id.value]
+  }
+
+  with "network_virtual_networks_for_cosmosdb_account" {
+    query = query.network_virtual_networks_for_cosmosdb_account
     args  = [self.input.cosmosdb_account_id.value]
   }
 
@@ -95,10 +90,57 @@ dashboard "cosmosdb_account_detail" {
     args  = [self.input.cosmosdb_account_id.value]
   }
 
+  with "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
+    query = query.parent_cosmosdb_restorable_database_account_for_cosmosdb_account
+    args  = [self.input.cosmosdb_account_id.value]
+  }
+
   container {
     graph {
       title = "Relationships"
       type  = "graph"
+
+      node {
+        base = node.cosmosdb_account
+        args = {
+          cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
+        }
+      }
+
+      node {
+        base = node.cosmosdb_account
+        args = {
+          cosmosdb_account_ids = with.child_cosmosdb_account_for_cosmosdb_account.rows[*].account_id
+        }
+      }
+
+      node {
+        base = node.cosmosdb_account
+        args = {
+          cosmosdb_account_ids = with.parent_cosmosdb_account_for_cosmosdb_account.rows[*].account_id
+        }
+      }
+
+      node {
+        base = node.cosmosdb_mongo_database
+        args = {
+          cosmosdb_mongo_database_ids = with.cosmosdb_mongo_database_for_cosmosdb_account.rows[*].mongo_database_id
+        }
+      }
+
+      node {
+        base = node.cosmosdb_restorable_database_account
+        args = {
+          restorable_database_account_ids = with.child_cosmosdb_restorable_database_account_for_cosmosdb_account.rows[*].restorable_database_account_id
+        }
+      }
+
+      node {
+        base = node.cosmosdb_restorable_database_account
+        args = {
+          restorable_database_account_ids = with.parent_cosmosdb_restorable_database_account_for_cosmosdb_account.rows[*].restorable_database_account_id
+        }
+      }
 
       node {
         base = node.key_vault_key
@@ -128,10 +170,10 @@ dashboard "cosmosdb_account_detail" {
         }
       }
 
-      node {
-        base = node.cosmosdb_mongo_database
+      edge {
+        base = edge.network_subnet_to_network_virtual_network
         args = {
-          cosmosdb_mongo_database_ids = with.cosmosdb_mongo_database_for_cosmosdb_account.rows[*].mongo_database_id
+          network_subnet_ids = with.network_subnets_for_cosmosdb_account.rows[*].subnet_id
         }
       }
 
@@ -142,44 +184,31 @@ dashboard "cosmosdb_account_detail" {
         }
       }
 
-      node {
-        base = node.cosmosdb_account
+      edge {
+        base = edge.cosmosdb_account_to_cosmosdb_mongo_database
         args = {
           cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
         }
       }
 
-      node {
-        base = node.cosmosdb_account
+      edge {
+        base = edge.cosmosdb_account_to_cosmosdb_restorable_database_account
         args = {
-          cosmosdb_account_ids = with.child_cosmosdb_account_for_cosmosdb_account.rows[*].account_id
+          cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
         }
       }
 
-      node {
-        base = node.cosmosdb_account
+      edge {
+        base = edge.cosmosdb_account_to_cosmosdb_restorable_database_account
         args = {
           cosmosdb_account_ids = with.parent_cosmosdb_account_for_cosmosdb_account.rows[*].account_id
         }
       }
 
-      node {
-        base = node.cosmosdb_restorable_database_account
-        args = {
-          restorable_database_account_ids = with.child_cosmosdb_restorable_database_account_for_cosmosdb_account.rows[*].restorable_database_account_id
-        }
-      }
-
-      node {
-        base = node.cosmosdb_restorable_database_account
-        args = {
-          restorable_database_account_ids = with.parent_cosmosdb_restorable_database_account_for_cosmosdb_account.rows[*].restorable_database_account_id
-        }
-      }
       edge {
-        base = edge.network_subnet_to_network_virtual_network
+        base = edge.cosmosdb_account_to_cosmosdb_sql_database
         args = {
-          network_subnet_ids = with.network_subnets_for_cosmosdb_account.rows[*].subnet_id
+          cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
         }
       }
 
@@ -201,34 +230,6 @@ dashboard "cosmosdb_account_detail" {
         base = edge.cosmosdb_account_to_network_subnet
         args = {
           cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
-        }
-      }
-
-      edge {
-        base = edge.cosmosdb_account_to_cosmosdb_mongo_database
-        args = {
-          cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
-        }
-      }
-
-      edge {
-        base = edge.cosmosdb_account_to_cosmosdb_sql_database
-        args = {
-          cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
-        }
-      }
-
-      edge {
-        base = edge.cosmosdb_account_to_cosmosdb_restorable_database_account
-        args = {
-          cosmosdb_account_ids = [self.input.cosmosdb_account_id.value]
-        }
-      }
-
-      edge {
-        base = edge.cosmosdb_account_to_cosmosdb_restorable_database_account
-        args = {
-          cosmosdb_account_ids = with.parent_cosmosdb_account_for_cosmosdb_account.rows[*].account_id
         }
       }
 
@@ -467,6 +468,71 @@ query "cosmosdb_account_private_link" {
   EOQ
 }
 
+// Graph Queries
+
+query "cosmosdb_mongo_database_for_cosmosdb_account" {
+  sql = <<-EOQ
+    select
+      lower(d.id) as mongo_database_id
+    from
+      azure_cosmosdb_account a,
+      azure_cosmosdb_mongo_database d
+    where
+      d.account_name = a.name
+      and lower(a.id) = $1;
+  EOQ
+}
+
+query "cosmosdb_sql_database_for_cosmosdb_account" {
+  sql = <<-EOQ
+    select
+      lower(d.id) as sql_database_id
+    from
+      azure_cosmosdb_account a,
+      azure_cosmosdb_sql_database d
+    where
+      d.account_name = a.name
+      and lower(a.id) = $1;
+  EOQ
+}
+
+query "child_cosmosdb_account_for_cosmosdb_account" {
+  sql = <<-EOQ
+    with child_rda as (
+      select
+        lower(ra.id) as id
+      from
+        azure_cosmosdb_restorable_database_account ra,
+        azure_cosmosdb_account a
+      where
+        ra.account_name =  a.name
+        and ra.subscription_id = a.subscription_id
+        and lower(a.id) = $1
+    )
+    select
+      lower(a.id) as account_id
+    from
+      azure_cosmosdb_account a,
+      child_rda ra
+    where
+      ra.id =  lower(a.restore_parameters ->> 'restoreSource');
+  EOQ
+}
+
+query "child_cosmosdb_restorable_database_account_for_cosmosdb_account" {
+  sql = <<-EOQ
+    select
+      lower(ra.id) as restorable_database_account_id
+    from
+      azure_cosmosdb_restorable_database_account ra,
+      azure_cosmosdb_account a
+    where
+      ra.account_name =  a.name
+      and ra.subscription_id = a.subscription_id
+      and lower(a.id) = $1;
+  EOQ
+}
+
 query "key_vault_keys_for_cosmosdb_account" {
   sql = <<-EOQ
     select
@@ -517,82 +583,6 @@ query "network_virtual_networks_for_cosmosdb_account" {
   EOQ
 }
 
-query "cosmosdb_mongo_database_for_cosmosdb_account" {
-  sql = <<-EOQ
-    select
-      lower(d.id) as mongo_database_id
-    from
-      azure_cosmosdb_account a,
-      azure_cosmosdb_mongo_database d
-    where
-      d.account_name = a.name
-      and lower(a.id) = $1;
-  EOQ
-}
-
-query "cosmosdb_sql_database_for_cosmosdb_account" {
-  sql = <<-EOQ
-    select
-      lower(d.id) as sql_database_id
-    from
-      azure_cosmosdb_account a,
-      azure_cosmosdb_sql_database d
-    where
-      d.account_name = a.name
-      and lower(a.id) = $1;
-  EOQ
-}
-
-query "child_cosmosdb_restorable_database_account_for_cosmosdb_account" {
-  sql = <<-EOQ
-    select
-      lower(ra.id) as restorable_database_account_id
-    from
-      azure_cosmosdb_restorable_database_account ra,
-      azure_cosmosdb_account a
-    where
-      ra.account_name =  a.name
-      and ra.subscription_id = a.subscription_id
-      and lower(a.id) = $1;
-  EOQ
-}
-
-query "child_cosmosdb_account_for_cosmosdb_account" {
-  sql = <<-EOQ
-    with child_rda as (
-      select
-        lower(ra.id) as id
-      from
-        azure_cosmosdb_restorable_database_account ra,
-        azure_cosmosdb_account a
-      where
-        ra.account_name =  a.name
-        and ra.subscription_id = a.subscription_id
-        and lower(a.id) = $1
-    )
-    select
-      lower(a.id) as account_id
-    from
-      azure_cosmosdb_account a,
-      child_rda ra
-    where
-      ra.id =  lower(a.restore_parameters ->> 'restoreSource');
-  EOQ
-}
-
-query "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
-  sql = <<-EOQ
-    select
-      lower(ra.id) as restorable_database_account_id
-    from
-      azure_cosmosdb_restorable_database_account ra,
-      azure_cosmosdb_account a
-    where
-      ra.id =  a.restore_parameters ->> 'restoreSource'
-      and lower(a.id) = $1;
-  EOQ
-}
-
 query "parent_cosmosdb_account_for_cosmosdb_account" {
   sql = <<-EOQ
     with parent_rda as (
@@ -615,6 +605,19 @@ query "parent_cosmosdb_account_for_cosmosdb_account" {
     where
       ra.account_name =  a.name
       and ra.subscription_id = a.subscription_id;
+  EOQ
+}
+
+query "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
+  sql = <<-EOQ
+    select
+      lower(ra.id) as restorable_database_account_id
+    from
+      azure_cosmosdb_restorable_database_account ra,
+      azure_cosmosdb_account a
+    where
+      ra.id =  a.restore_parameters ->> 'restoreSource'
+      and lower(a.id) = $1;
   EOQ
 }
 
