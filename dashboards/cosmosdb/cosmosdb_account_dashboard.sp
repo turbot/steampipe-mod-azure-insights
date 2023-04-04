@@ -15,11 +15,6 @@ dashboard "cosmosdb_account_dashboard" {
     }
 
     card {
-      query = query.cosmosdb_account_pmk_encrypted_count
-      width = 2
-    }
-
-    card {
       query = query.cosmosdb_account_public_count
       width = 2
     }
@@ -38,22 +33,6 @@ dashboard "cosmosdb_account_dashboard" {
   container {
 
     title = "Assessments"
-
-    chart {
-      title = "Encryption Status"
-      query = query.cosmosdb_account_encryption_status
-      type  = "donut"
-      width = 3
-
-      series "accounts" {
-        point "cmk" {
-          color = "ok"
-        }
-        point "pmk" {
-          color = "alert"
-        }
-      }
-    }
 
     chart {
       title = "Public/Private Status"
@@ -113,28 +92,35 @@ dashboard "cosmosdb_account_dashboard" {
       title = "Accounts by Subscription"
       query = query.cosmosdb_account_by_subscription
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Accounts by Resource Group"
       query = query.cosmosdb_account_by_resource_group
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Accounts by Region"
       query = query.cosmosdb_account_by_region
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Accounts by Kind"
       query = query.cosmosdb_account_by_kind
       type  = "column"
-      width = 3
+      width = 4
+    }
+
+    chart {
+      title = "Accounts by Encryption Type"
+      query = query.cosmosdb_account_by_encryption_type
+      type  = "column"
+      width = 4
     }
   }
 
@@ -236,25 +222,6 @@ query "cosmosdb_account_public_status" {
       public_network
     order by
       public_network;
-  EOQ
-}
-
-query "cosmosdb_account_encryption_status" {
-  sql = <<-EOQ
-    select
-      encryption,
-      count(*) as accounts
-    from (
-      select
-        case when key_vault_key_uri is null then 'pmk'
-        else 'cmk'
-        end encryption
-      from
-        azure_cosmosdb_account) as s
-    group by
-      encryption
-    order by
-      encryption;
   EOQ
 }
 
@@ -368,5 +335,24 @@ query "cosmosdb_account_by_kind" {
       kind
     order by
       kind;
+  EOQ
+}
+
+query "cosmosdb_account_by_encryption_type" {
+  sql = <<-EOQ
+    select
+      encryption as "Encryption",
+      count(*) as "Accounts"
+    from (
+      select
+        case when key_vault_key_uri is null then 'Platform-Managed'
+        else 'Customer-Managed'
+        end encryption
+      from
+        azure_cosmosdb_account) as s
+    group by
+      "Encryption"
+    order by
+      "Encryption";
   EOQ
 }

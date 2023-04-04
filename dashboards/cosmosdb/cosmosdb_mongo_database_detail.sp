@@ -102,12 +102,19 @@ dashboard "cosmosdb_mongo_database_detail" {
       }
 
       table {
-        title = "Throughput Settings"
+        title = "Account Details"
         width = 6
-        query = query.cosmosdb_mongo_database_throughput_settings
+        query = query.cosmosdb_mongo_database_account_details
         args  = [self.input.cosmosdb_mongo_database_id.value]
-      }
 
+        column "lower_id" {
+          display = "none"
+        }
+
+        column "Name" {
+          href = "/azure_insights.dashboard.cosmosdb_account_detail?input.cosmosdb_account_id={{ .'lower_id' | @uri }}"
+        }
+      }
     }
 
     container {
@@ -116,6 +123,12 @@ dashboard "cosmosdb_mongo_database_detail" {
       table {
         title = "Collection Details"
         query = query.cosmosdb_mongo_database_collection_details
+        args  = [self.input.cosmosdb_mongo_database_id.value]
+      }
+
+      table {
+        title = "Throughput Settings"
+        query = query.cosmosdb_mongo_database_throughput_settings
         args  = [self.input.cosmosdb_mongo_database_id.value]
       }
 
@@ -267,5 +280,25 @@ query "cosmosdb_mongo_database_collection_details" {
     where
       lower(d.id) = $1
       and c.account_name in (select account_name from azure_cosmosdb_mongo_database where lower(id) = $1);
+  EOQ
+}
+
+query "cosmosdb_mongo_database_account_details" {
+  sql = <<-EOQ
+    select
+      a.name as "Name",
+      a.kind as "Kind",
+      a.server_version as "Server Version",
+      database_account_offer_type as "Offer Type",
+      a.id as "ID",
+      lower(a.id) as lower_id
+    from
+      azure_cosmosdb_mongo_database d,
+      azure_cosmosdb_account as a
+    where
+      d.resource_group = a.resource_group
+      and d.subscription_id = a.subscription_id
+      and account_name = a.name
+      and lower(d.id) = $1;
   EOQ
 }
