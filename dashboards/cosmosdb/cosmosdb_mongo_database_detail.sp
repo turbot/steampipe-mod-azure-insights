@@ -85,20 +85,26 @@ dashboard "cosmosdb_mongo_database_detail" {
   container {
 
     container {
-      width = 6
 
       table {
         title = "Overview"
         type  = "line"
-        width = 6
+        width = 3
         query = query.cosmosdb_mongo_database_overview
         args  = [self.input.cosmosdb_mongo_database_id.value]
       }
 
       table {
         title = "Tags"
-        width = 6
+        width = 3
         query = query.cosmosdb_mongo_database_tags
+        args  = [self.input.cosmosdb_mongo_database_id.value]
+      }
+
+      table {
+        title = "Throughput Settings"
+        width = 6
+        query = query.cosmosdb_mongo_database_throughput_settings
         args  = [self.input.cosmosdb_mongo_database_id.value]
       }
 
@@ -106,12 +112,6 @@ dashboard "cosmosdb_mongo_database_detail" {
 
     container {
       width = 12
-
-      table {
-        title = "Throughput Settings"
-        query = query.cosmosdb_mongo_database_throughput_settings
-        args  = [self.input.cosmosdb_mongo_database_id.value]
-      }
 
       table {
         title = "Collection Details"

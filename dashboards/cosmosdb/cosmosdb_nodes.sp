@@ -44,7 +44,6 @@ node "cosmosdb_mongo_database" {
   param "cosmosdb_mongo_database_ids" {}
 }
 
-// /subscriptions/d46d7416-f95f-4771-bbb5-529d4c76659c/resourceGroups/demo/providers/Microsoft.DocumentDB/databaseAccounts/demo-insight-mongo-acc/mongodbDatabases/test-mongo-db/collections/test
 node "cosmosdb_mongo_collection" {
   category = category.cosmosdb_mongo_collection
 

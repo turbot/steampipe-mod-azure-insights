@@ -45,22 +45,6 @@ dashboard "kubernetes_cluster_dashboard" {
     title = "Assessments"
 
     chart {
-      title = "Disk Encryption Status"
-      query = query.kubernetes_cluster_disk_by_encryption_status
-      type  = "donut"
-      width = 4
-
-      series "count" {
-        point "enabled" {
-          color = "ok"
-        }
-        point "disabled" {
-          color = "alert"
-        }
-      }
-    }
-
-    chart {
       title = "Public/Private Status"
       query = query.kubernetes_cluster_disk_public_status
       type  = "donut"
@@ -71,6 +55,22 @@ dashboard "kubernetes_cluster_dashboard" {
           color = "ok"
         }
         point "public" {
+          color = "alert"
+        }
+      }
+    }
+
+    chart {
+      title = "Disk Encryption Status"
+      query = query.kubernetes_cluster_disk_by_encryption_status
+      type  = "donut"
+      width = 4
+
+      series "count" {
+        point "enabled" {
+          color = "ok"
+        }
+        point "disabled" {
           color = "alert"
         }
       }
@@ -130,20 +130,6 @@ dashboard "kubernetes_cluster_dashboard" {
     title = "Analysis"
 
     chart {
-      title = "Clusters by Kubernetes Version"
-      query = query.kubernetes_cluster_by_kubernetes_version
-      type  = "column"
-      width = 4
-    }
-
-    chart {
-      title = "Clusters by SKU"
-      query = query.kubernetes_cluster_by_sku_name
-      type  = "column"
-      width = 4
-    }
-
-    chart {
       title = "Clusters by Subscription"
       query = query.kubernetes_cluster_by_subscription
       type  = "column"
@@ -160,6 +146,20 @@ dashboard "kubernetes_cluster_dashboard" {
     chart {
       title = "Clusters by Region"
       query = query.kubernetes_cluster_by_region
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Clusters by Kubernetes Version"
+      query = query.kubernetes_cluster_by_kubernetes_version
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Clusters by SKU"
+      query = query.kubernetes_cluster_by_sku_name
       type  = "column"
       width = 4
     }
