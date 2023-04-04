@@ -14,8 +14,6 @@ dashboard "cosmosdb_mongo_database_detail" {
   }
 
   container {
-
-
     card {
       width = 2
       query = query.cosmosdb_mongo_database_collection_count
