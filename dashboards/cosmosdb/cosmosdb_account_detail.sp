@@ -176,8 +176,6 @@ dashboard "cosmosdb_account_detail" {
           restorable_database_account_ids = with.parent_cosmosdb_restorable_database_account_for_cosmosdb_account.rows[*].restorable_database_account_id
         }
       }
-
-
       edge {
         base = edge.network_subnet_to_network_virtual_network
         args = {
