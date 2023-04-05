@@ -36,6 +36,7 @@ dashboard "kubernetes_cluster_detail" {
     card {
       query = query.kubernetes_cluster_public_access_status
       width = 2
+      args  = [self.input.cluster_id.value]
     }
 
     card {
