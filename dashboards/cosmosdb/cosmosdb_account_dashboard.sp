@@ -147,19 +147,6 @@ query "cosmosdb_account_public_count" {
   EOQ
 }
 
-query "cosmosdb_account_pmk_encrypted_count" {
-  sql = <<-EOQ
-    select
-      count(*) as value,
-      'PMK Encrypted' as label,
-      case count(*) when 0 then 'ok' else 'alert' end as "type"
-    from
-      azure_cosmosdb_account
-    where
-      key_vault_key_uri is null;
-  EOQ
-}
-
 query "cosmosdb_account_automatic_failover_disabled_count" {
   sql = <<-EOQ
     select

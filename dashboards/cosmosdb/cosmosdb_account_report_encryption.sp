@@ -40,8 +40,8 @@ dashboard "cosmosdb_account_encryption_report" {
       href = "${dashboard.cosmosdb_account_detail.url_path}?input.cosmosdb_account_id={{.'Account ID' | @uri}}"
     }
 
-    column "Account Key Name" {
-      href = "{{ if .'Account Key Name' == '' then null else '${dashboard.key_vault_detail.url_path}?input.key_vault_id=' + (.'Account Key Name' | @uri) end }}"
+    column "Key Name" {
+      href = "{{ if .'Key ID' == '' then null else '${dashboard.key_vault_key_detail.url_path}?input.key_vault_key_id=' + (.'Key ID' | @uri) end }}"
     }
 
     column "Subscription ID" {
