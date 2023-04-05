@@ -1,3 +1,9 @@
+## v0.9 [2023-04-05]
+
+_Bug fixes_
+
+- Added missing `args` to public access card in `Azure Kubernetes Cluster Detail` dashboard.
+
 ## v0.8 [2023-04-05]
 
 _Dependencies_
