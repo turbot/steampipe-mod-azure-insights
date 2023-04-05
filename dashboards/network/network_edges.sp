@@ -602,7 +602,7 @@ edge "network_subnet_to_app_service_web_app" {
   param "network_subnet_ids" {}
 }
 
-edge "network_subnet_to_documentdb_cosmosdb_account" {
+edge "network_subnet_to_cosmosdb_account" {
   title = "cosmosdb"
 
   sql = <<-EOQ
