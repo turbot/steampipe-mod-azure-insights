@@ -58,7 +58,7 @@ query "cosmosdb_account_encryption_report" {
     select
       a.name as "Account Name",
       a.kind as "Kind",
-      k.name as "Account Key Name",
+      k.name as "Key Name",
       case when a.key_vault_key_uri is null then 'Platform-Managed' else 'Customer Managed' end as "Account Key Type",
       s.title as "Subscription",
       a.subscription_id as "Subscription ID",
