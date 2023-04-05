@@ -1,3 +1,18 @@
+## v0.8 [2023-04-05]
+
+_Dependencies_
+
+- Azure plugin `v0.40.1` or higher is now required. ([#94](https://github.com/turbot/steampipe-mod-azure-insights/pull/94))
+
+_What's new?_
+
+- New dashboards added: ([#93](https://github.com/turbot/steampipe-mod-azure-insights/pull/93))
+  - [Azure CosmosDB Account Dashboard](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.cosmosdb_account_dashboard)
+  - [Azure CosmosDB Account Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.cosmosdb_account_detail)
+  - [Azure CosmosDB Account Encryption Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.cosmosdb_account_encryption_report)
+  - [Azure CosmosDB Mongo Database Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.cosmosdb_mongo_database_detail)
+  - [Azure Kubernetes Cluster Dashboard](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.kubernetes_cluster_dashboard)
+
 ## v0.7 [2023-03-15]
 
 _Bug fixes_
