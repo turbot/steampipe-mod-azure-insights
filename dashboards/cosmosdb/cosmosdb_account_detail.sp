@@ -392,7 +392,7 @@ query "cosmosdb_account_input" {
 query "cosmosdb_account_database_count" {
   sql = <<-EOQ
     select
-      'Database Count' as label,
+      'Databases' as label,
       count(*) as value
     from
       azure_cosmosdb_account a,

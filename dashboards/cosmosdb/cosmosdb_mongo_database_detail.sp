@@ -161,7 +161,7 @@ query "cosmosdb_mongo_database_input" {
 query "cosmosdb_mongo_database_collection_count" {
   sql = <<-EOQ
     select
-      'Collection Count' as label,
+      'Collections' as label,
       count(*) as value
     from
       azure_cosmosdb_mongo_database d,
