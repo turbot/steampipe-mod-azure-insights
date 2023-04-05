@@ -34,6 +34,11 @@ dashboard "kubernetes_cluster_detail" {
     }
 
     card {
+      query = query.kubernetes_cluster_public_access_status
+      width = 2
+    }
+
+    card {
       width = 3
       query = query.kubernetes_cluster_disk_encryption_status
       args  = [self.input.cluster_id.value]
@@ -236,6 +241,21 @@ query "kubernetes_cluster_disk_encryption_status" {
       'Disk Encryption' as label,
       case when disk_encryption_set_id is null then 'Disabled' else 'Enabled' end as value,
       case when disk_encryption_set_id is null then 'alert' else 'ok' end as type
+    from
+      azure_kubernetes_cluster
+    where
+      lower(id) = $1;
+  EOQ
+}
+
+query "kubernetes_cluster_public_access_status" {
+  sql = <<-EOQ
+    select
+      'Public Access' as label,
+      case when api_server_access_profile ->> 'authorizedIPRanges' is null
+        and api_server_access_profile ->> 'enablePrivateCluster' = 'false' then 'Enabled' else 'Disabled' end as value,
+      case when api_server_access_profile ->> 'authorizedIPRanges' is null
+        and api_server_access_profile ->> 'enablePrivateCluster' = 'false' then 'alert' else 'ok' end as type
     from
       azure_kubernetes_cluster
     where

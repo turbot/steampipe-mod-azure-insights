@@ -39,8 +39,8 @@ dashboard "network_subnet_detail" {
     args  = [self.input.subnet_id.value]
   }
 
-  with "documentdb_cosmosdb_account_ids_for_network_subnet" {
-    query = query.documentdb_cosmosdb_account_ids_for_network_subnet
+  with "cosmosdb_account_ids_for_network_subnet" {
+    query = query.cosmosdb_account_ids_for_network_subnet
     args  = [self.input.subnet_id.value]
   }
 
@@ -99,9 +99,9 @@ dashboard "network_subnet_detail" {
       }
 
       node {
-        base = node.documentdb_cosmosdb_account
+        base = node.cosmosdb_account
         args = {
-          documentdb_cosmosdb_account_ids = with.documentdb_cosmosdb_account_ids_for_network_subnet.rows[*].cosmosdb_account_id
+          cosmosdb_account_ids = with.cosmosdb_account_ids_for_network_subnet.rows[*].cosmosdb_account_id
         }
       }
 
@@ -190,7 +190,7 @@ dashboard "network_subnet_detail" {
       }
 
       edge {
-        base = edge.network_subnet_to_documentdb_cosmosdb_account
+        base = edge.network_subnet_to_cosmosdb_account
         args = {
           network_subnet_ids = [self.input.subnet_id.value]
         }
@@ -361,7 +361,7 @@ query "app_service_web_apps_for_network_subnet" {
   EOQ
 }
 
-query "documentdb_cosmosdb_account_ids_for_network_subnet" {
+query "cosmosdb_account_ids_for_network_subnet" {
   sql = <<-EOQ
     select
       lower(id) as cosmosdb_account_id
