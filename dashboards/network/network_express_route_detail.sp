@@ -22,6 +22,27 @@ dashboard "network_express_route_detail" {
       query = query.network_express_route_peerings
       args  = [self.input.er_id.value]
     }
+
+    table {
+      title = "Primary Peer"
+      width = 4
+      query = query.network_express_route_peerings_primary
+      args  = [self.input.er_id.value]
+    }
+
+    table {
+      title = "Secondary Peer"
+      width = 4
+      query = query.network_express_route_peerings_secondary
+      args  = [self.input.er_id.value]
+    }
+
+    table {
+      title = "Service Key"
+      width = 4
+      query = query.network_express_service_key
+      args  = [self.input.er_id.value]
+    }
   }
 
   container {
@@ -29,6 +50,7 @@ dashboard "network_express_route_detail" {
     title = "Tag Details"
 
     table {
+      title = "Tags"
       width = 3
       query = query.network_express_route_tags
       args  = [self.input.er_id.value]
@@ -76,6 +98,20 @@ query "network_express_route_tags" {
   EOQ
 }
 
+query "network_express_service_key" {
+  sql = <<-EOQ
+    select
+      name,
+      service_key
+    from
+      azure_express_route_circuit
+    where
+      lower(id) = $1
+    order by
+      name;
+  EOQ
+}
+
 query "network_express_route_peerings" {
   sql = <<-EOQ
     select
@@ -85,12 +121,38 @@ query "network_express_route_peerings" {
       replace(jsonb_path_query(peerings, '$.properties.gatewayManagerEtag')::text, '"', '') as "Gateway Manager Etag",
       replace(jsonb_path_query(peerings, '$.properties.peerASN')::text, '"', '') as "Peer ASN",
       replace(jsonb_path_query(peerings, '$.properties.peeringType')::text, '"', '') as "Peering Type",
-      replace(jsonb_path_query(peerings, '$.properties.primaryAzurePort')::text, '"', '') as "Primary Azure Port",
-      replace(jsonb_path_query(peerings, '$.properties.primaryPeerAddressPrefix')::text, '"', '') as "Primary Peer Address Prefix",
-      replace(jsonb_path_query(peerings, '$.properties.secondaryAzurePort')::text, '"', '') as "Secondary Azure Port",
-      replace(jsonb_path_query(peerings, '$.properties.secondaryPeerAddressPrefix')::text, '"', '') as "Secondary Peer Address Prefix",
       replace(jsonb_path_query(peerings, '$.properties.state')::text, '"', '') as "State",
       replace(jsonb_path_query(peerings, '$.properties.vlanId')::text, '"', '') as "VlanId"
+    from
+      azure_express_route_circuit
+    where
+      lower(id) = $1
+    order by
+      name;
+  EOQ
+}
+
+query "network_express_route_peerings_primary" {
+  sql = <<-EOQ
+    select
+      name,
+      replace(jsonb_path_query(peerings, '$.properties.primaryAzurePort')::text, '"', '') as "Primary Azure Port",
+      replace(jsonb_path_query(peerings, '$.properties.primaryPeerAddressPrefix')::text, '"', '') as "Primary Peer Address Prefix"
+    from
+      azure_express_route_circuit
+    where
+      lower(id) = $1
+    order by
+      name;
+  EOQ
+}
+
+query "network_express_route_peerings_secondary" {
+  sql = <<-EOQ
+    select
+      name,
+      replace(jsonb_path_query(peerings, '$.properties.secondaryAzurePort')::text, '"', '') as "Secondary Azure Port",
+      replace(jsonb_path_query(peerings, '$.properties.secondaryPeerAddressPrefix')::text, '"', '') as "Secondary Peer Address Prefix"
     from
       azure_express_route_circuit
     where
