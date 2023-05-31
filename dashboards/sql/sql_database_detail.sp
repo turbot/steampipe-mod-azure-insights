@@ -164,7 +164,6 @@ query "sql_database_input" {
       azure_subscription as sub
     where
       lower(d.subscription_id) = lower(sub.subscription_id)
-      and name <> 'master'
     order by
       d.title;
   EOQ
@@ -180,8 +179,7 @@ query "sql_database_server" {
     from
       azure_sql_database
     where
-      name <> 'master'
-      and lower(id) = $1;
+      lower(id) = $1;
   EOQ
 }
 
@@ -193,8 +191,7 @@ query "sql_database_zone_redundant" {
     from
       azure_sql_database
     where
-      name <> 'master'
-      and lower(id) = $1;
+      lower(id) = $1;
   EOQ
 }
 
@@ -206,8 +203,7 @@ query "sql_database_status" {
     from
       azure_sql_database
     where
-      name <> 'master'
-      and lower(id) = $1;
+      lower(id) = $1;
   EOQ
 }
 
@@ -219,8 +215,7 @@ query "azure_sql_database_edition" {
     from
       azure_sql_database
     where
-      name <> 'master'
-      and lower(id) = $1;
+      lower(id) = $1;
   EOQ
 }
 
@@ -233,8 +228,7 @@ query "sql_database_transparent_data_encryption" {
     from
       azure_sql_database
     where
-      name <> 'master'
-      and lower(id) = $1;
+      lower(id) = $1;
   EOQ
 }
 
@@ -256,8 +250,7 @@ query "sql_database_vulnerability_assessment_enabled" {
     from
       azure_sql_database as d left join sql_database_va as v on lower(v.id) = lower(d.id)
     where
-      d.name <> 'master'
-      and lower(d.id) = $1;
+      lower(d.id) = $1;
   EOQ
 }
 
@@ -278,8 +271,7 @@ query "sql_database_geo_redundant_backup_enabled" {
     from
       azure_sql_database
     where
-      name <> 'master'
-      and lower(id) = $1;
+      lower(id) = $1;
   EOQ
 }
 
@@ -327,8 +319,7 @@ query "sql_database_overview" {
     from
       azure_sql_database
     where
-      name <> 'master'
-      and lower(id) = $1;
+      lower(id) = $1;
   EOQ
 }
 
@@ -341,8 +332,7 @@ query "sql_database_tags" {
       azure_sql_database,
       jsonb_each_text(tags) as tag
     where
-      name <> 'master'
-      and lower(id) = $1
+      lower(id) = $1
     order by
       tag.key;
   EOQ
@@ -360,8 +350,7 @@ query "sql_database_retention" {
     from
       azure_sql_database
     where
-      name <> 'master'
-      and lower(id) = $1;
+      lower(id) = $1;
   EOQ
 }
 
@@ -376,7 +365,6 @@ query "sql_database_vulnerability_assessment" {
       azure_sql_database,
       jsonb_array_elements(vulnerability_assessments) as a
     where
-      name <> 'master'
-      and lower(id) = $1;
+      lower(id) = $1;
   EOQ
 }

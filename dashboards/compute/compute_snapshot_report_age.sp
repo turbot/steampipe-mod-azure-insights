@@ -73,8 +73,7 @@ query "compute_snapshot_24_hours_count" {
     from
       azure_compute_snapshot
     where
-      time_created > now() - '1 days' :: interval
-      and name <> 'master';
+      time_created > now() - '1 days' :: interval;
   EOQ
 }
 
@@ -86,8 +85,7 @@ query "compute_snapshot_30_days_count" {
     from
       azure_compute_snapshot
     where
-      time_created between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
-      and name <> 'master';
+      time_created between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval;
   EOQ
 }
 
@@ -99,8 +97,7 @@ query "compute_snapshot_30_90_days_count" {
     from
       azure_compute_snapshot
     where
-      time_created between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval
-      and name <> 'master';
+      time_created between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval;
   EOQ
 }
 
@@ -112,8 +109,7 @@ query "compute_snapshot_90_365_days_count" {
     from
       azure_compute_snapshot
     where
-      time_created between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
-      and name <> 'master';
+      time_created between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval);
   EOQ
 }
 
@@ -125,8 +121,7 @@ query "compute_snapshot_1_year_count" {
     from
       azure_compute_snapshot
     where
-      time_created <= now() - '1 year' :: interval
-      and name <> 'master';
+      time_created <= now() - '1 year' :: interval;
   EOQ
 }
 
