@@ -150,7 +150,6 @@ query "cosmosdb_mongo_database_input" {
       azure_subscription as sub
     where
       lower(d.subscription_id) = lower(sub.subscription_id)
-      and name <> 'master'
     order by
       d.title;
   EOQ
@@ -207,7 +206,7 @@ query "cosmosdb_mongo_collection_for_cosmosdb_mongo_database" {
       lower(c.id) as collection_id
     from
       azure_cosmosdb_mongo_database as d
-      join azure_cosmosdb_mongo_collection as c 
+      join azure_cosmosdb_mongo_collection as c
         on c.database_name = d.name
         and c.account_name = (select account_name from azure_cosmosdb_mongo_database where lower(id) = $1)
     where
@@ -252,7 +251,7 @@ query "cosmosdb_mongo_database_throughput_settings" {
   sql = <<-EOQ
     select
       throughput_settings ->> 'Name' as "Name",
-      throughput_settings ->> 'ResourceThroughput' as "Throughput - (RU/s)", 
+      throughput_settings ->> 'ResourceThroughput' as "Throughput - (RU/s)",
       throughput_settings ->> 'AutoscaleSettingsMaxThroughput' as "Maximum Throughput - (RU/s)",
       throughput_settings ->> 'ResourceMinimumThroughput' as "Minimum Throughput - (RU/s)",
       throughput_settings ->> 'ID' as "ID"
