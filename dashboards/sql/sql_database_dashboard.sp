@@ -140,7 +140,10 @@ dashboard "sql_database_dashboard" {
 
 query "sql_database_count" {
   sql = <<-EOQ
-    select count(*) as "Databases" from azure_sql_database where name <> 'master';
+    select
+      count(*) as "Databases"
+    from
+      azure_sql_database;
   EOQ
 }
 
@@ -153,8 +156,7 @@ query "sql_database_transparent_data_encryption_disabled_count" {
     from
       azure_sql_database
     where
-      transparent_data_encryption ->> 'status' <> 'Enabled'
-      and name <> 'master';
+      transparent_data_encryption ->> 'status' <> 'Enabled';
   EOQ
 }
 
@@ -174,8 +176,7 @@ query "sql_database_vulnerability_assessment_disabled_count" {
       'Vulnerability Assessment Disabled' as label,
       case count(*) when 0 then 'ok' else 'alert' end as type
     from
-     azure_sql_database as d where d.id not in (select id from sql_database_va)
-     and d.name <> 'master';
+      azure_sql_database as d where d.id not in (select id from sql_database_va);
   EOQ
 }
 
@@ -190,8 +191,7 @@ query "sql_database_geo_redundant_backup_disabled_count" {
     where
       not (retention_policy_property ->> 'monthlyRetention' <> 'PT0S'
       or retention_policy_property ->> 'weeklyRetention' <> 'PT0S'
-      or retention_policy_property ->> 'yearlyRetention' <> 'PT0S')
-      and name <> 'master';
+      or retention_policy_property ->> 'yearlyRetention' <> 'PT0S');
   EOQ
 }
 
@@ -208,9 +208,7 @@ query "sql_database_tde_status" {
         else 'enabled'
         end tde_status
       from
-        azure_sql_database
-      where
-        name <> 'master') as s
+        azure_sql_database) as s
     group by
       tde_status
     order by
@@ -228,7 +226,6 @@ query "sql_database_vulnerability_assessment_status" {
         jsonb_array_elements(vulnerability_assessments) as va
       where
         va -> 'properties' -> 'recurringScans' ->> 'isEnabled' = 'true'
-        and s.name <> 'master'
     ),
     vulnerability_assessment_status as (
       select
@@ -238,8 +235,6 @@ query "sql_database_vulnerability_assessment_status" {
       from
         azure_sql_database as s
         left join vulnerability_assessment_enabled as va on s.id = va.id
-      where
-        s.name <> 'master'
     )
     select
       vulnerability_assessment_status,
@@ -266,9 +261,7 @@ query "sql_database_geo_redundant_backup_status" {
           else 'disabled'
         end geo_redundant_backup_status
       from
-        azure_sql_database
-      where
-        name <> 'master') as s
+        azure_sql_database) as s
     group by
       geo_redundant_backup_status
     order by
@@ -288,7 +281,6 @@ query "sql_database_by_subscription" {
       azure_subscription as s
     where
       s.subscription_id = d.subscription_id
-      and d.name <> 'master'
     group by
       s.title
     order by
@@ -305,8 +297,7 @@ query "sql_database_by_resource_group" {
       azure_sql_database as d,
       azure_subscription as sub
     where
-       d.subscription_id = sub.subscription_id
-       and d.name <> 'master'
+      d.subscription_id = sub.subscription_id
     group by
       resource_group, sub.title
     order by
@@ -321,8 +312,6 @@ query "sql_database_by_region" {
       count(*) as "Databases"
     from
       azure_sql_database
-    where
-      name <> 'master'
     group by
       region
     order by
@@ -340,7 +329,6 @@ query "sql_database_by_creation_month" {
           'YYYY-MM') as creation_month
       from
         azure_sql_database
-      where name <> 'master'
     ),
     months as (
       select
@@ -383,8 +371,6 @@ query "sql_database_by_status" {
       count(status) as "Databases"
     from
       azure_sql_database
-    where
-      name <> 'master'
     group by
       status
     order by
@@ -399,8 +385,6 @@ query "sql_database_by_edition" {
       count(edition) as "Databases"
     from
       azure_sql_database
-    where
-      name <> 'master'
     group by
       edition
     order by

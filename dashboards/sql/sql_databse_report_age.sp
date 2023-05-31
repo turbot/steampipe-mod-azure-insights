@@ -73,8 +73,7 @@ query "sql_database_24_hours_count" {
     from
       azure_sql_database
     where
-      creation_date > now() - '1 days' :: interval
-      and name <> 'master';
+      creation_date > now() - '1 days' :: interval;
   EOQ
 }
 
@@ -86,8 +85,7 @@ query "sql_database_30_days_count" {
     from
       azure_sql_database
     where
-      creation_date between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval
-      and name <> 'master';
+      creation_date between symmetric now() - '1 days' :: interval and now() - '30 days' :: interval;
   EOQ
 }
 
@@ -99,8 +97,7 @@ query "sql_database_30_90_days_count" {
     from
       azure_sql_database
     where
-      creation_date between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval
-      and name <> 'master';
+      creation_date between symmetric now() - '30 days' :: interval and now() - '90 days' :: interval;
   EOQ
 }
 
@@ -112,8 +109,7 @@ query "sql_database_90_365_days_count" {
     from
       azure_sql_database
     where
-      creation_date between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval)
-      and name <> 'master';
+      creation_date between symmetric (now() - '90 days'::interval) and (now() - '365 days'::interval);
   EOQ
 }
 
@@ -125,8 +121,7 @@ query "sql_database_1_year_count" {
     from
       azure_sql_database
     where
-      creation_date <= now() - '1 year' :: interval
-      and name <> 'master';
+      creation_date <= now() - '1 year' :: interval;
   EOQ
 }
 
@@ -148,7 +143,6 @@ query "sql_database_age_table" {
       azure_subscription as sub
     where
       d.subscription_id = sub.subscription_id
-      and d.name <> 'master'
     order by
       d.name;
   EOQ
