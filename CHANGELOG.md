@@ -2,7 +2,7 @@
 
 _Bug fixes_
 
-- Added deatils of sql master database in `Azure SQL Database Detail`, `Azure SQL Database Dasboard`, and `Azure SQL Database Age Report` dashboards. ([#102](https://github.com/turbot/steampipe-mod-azure-insights/pull/102))
+- Fixed `Azure SQL Database Detail`, `Azure SQL Database Dashboard`, and `Azure SQL Database Age Report` dashboards to include the Azure SQL master database information. ([#102](https://github.com/turbot/steampipe-mod-azure-insights/pull/102))
 - Fixed dashboard localhost URLs in README and index doc. ([#100](https://github.com/turbot/steampipe-mod-azure-insights/pull/100))
 
 ## v0.9 [2023-04-05]
