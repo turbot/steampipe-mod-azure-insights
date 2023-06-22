@@ -159,6 +159,7 @@ query "key_vault_key_age_table" {
       and k.resource_group = v.resource_group
       and k.subscription_id = sub.subscription_id
     order by
+      k.created_at,
       k.id;
   EOQ
 }

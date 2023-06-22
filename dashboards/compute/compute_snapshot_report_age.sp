@@ -143,6 +143,7 @@ query "compute_snapshot_age_table" {
     where
       s.subscription_id = sub.subscription_id
     order by
+      s.time_created,
       s.name;
   EOQ
 }

@@ -139,6 +139,7 @@ query "activedirectory_user_age_table" {
     from
       azuread_user as u
     order by
+      u.created_date_time,
       u.display_name;
   EOQ
 }

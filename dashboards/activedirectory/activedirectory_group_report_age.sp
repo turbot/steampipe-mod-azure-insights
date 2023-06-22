@@ -139,6 +139,7 @@ query "activedirectory_group_age_table" {
     from
       azuread_group as g
     order by
+      g.created_date_time,
       g.display_name;
   EOQ
 }

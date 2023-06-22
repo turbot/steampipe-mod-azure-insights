@@ -144,6 +144,7 @@ query "compute_disk_age_table" {
     where
       d.subscription_id = sub.subscription_id
     order by
+      d.time_created,
       d.name;
   EOQ
 }
