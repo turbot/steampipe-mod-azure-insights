@@ -130,12 +130,12 @@ query "activedirectory_group_age_table" {
   sql = <<-EOQ
     select
       g.display_name as "Display Name",
+      g.id as "ID",
       now()::date - g.created_date_time::date as "Age in Days",
       g.created_date_time as "Create Time",
       g.expiration_date_time as "Expiration Time",
       g.renewed_date_time as "Last Renewed Time",
-      g.tenant_id as "Tenant ID",
-      g.id as "ID"
+      g.tenant_id as "Tenant ID"
     from
       azuread_group as g
     order by

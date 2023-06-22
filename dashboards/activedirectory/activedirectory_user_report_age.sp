@@ -130,12 +130,12 @@ query "activedirectory_user_age_table" {
   sql = <<-EOQ
     select
       u.display_name as "Display Name",
-      u.given_name as "Given Name",
+      u.id as "ID",
       now()::date - u.created_date_time::date as "Age in Days",
       u.created_date_time as "Create Time",
       u.user_type as "User Type",
       u.tenant_id as "Tenant ID",
-      u.id as "ID"
+      u.given_name as "Given Name"
     from
       azuread_user as u
     order by

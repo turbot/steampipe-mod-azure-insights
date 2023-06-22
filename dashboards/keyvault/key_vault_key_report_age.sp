@@ -138,6 +138,7 @@ query "key_vault_key_age_table" {
   sql = <<-EOQ
     select
       k.name as "Name",
+      lower(k.id) as "ID",
       now()::date - k.created_at::date as "Age in Days",
       k.created_at as "Creation Date",
       k.vault_name as "Vault Name",
@@ -148,7 +149,6 @@ query "key_vault_key_age_table" {
       k.subscription_id as "Subscription ID",
       k.resource_group as "Resource Group",
       k.region as "Region",
-      lower(k.id) as "ID",
       lower(v.id) as "Vault ID"
     from
       azure_key_vault_key as k
@@ -160,6 +160,6 @@ query "key_vault_key_age_table" {
       and k.subscription_id = sub.subscription_id
     order by
       k.created_at,
-      k.id;
+      k.name;
   EOQ
 }
