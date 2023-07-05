@@ -14,6 +14,33 @@ dashboard "network_express_route_dashboard" {
       width = 3
     }
 
+    card {
+      query = query.express_route_circuit_no_peerings_count
+      width = 3
+    }
+
+  }
+
+  container {
+
+    title = "Assessments"
+
+    chart {
+      title = "With Peering"
+      query = query.express_route_circuit_by_peerings
+      type  = "donut"
+      width = 2
+
+      series "count" {
+        point "with peering" {
+          color = "ok"
+        }
+        point "without peering" {
+          color = "alert"
+        }
+      }
+    }
+
   }
 
   container {
@@ -46,17 +73,9 @@ dashboard "network_express_route_dashboard" {
       query = query.express_route_circuit_by_sku_tier
       type  = "column"
       width = 3
-    } 
-  }
-
-  container {
-
-    table {
-      title = "Service Provider Properties"
-      width = 12
-      query = query.network_express_route_service_provider_properties
     }
   }
+
 
 }
 
@@ -68,7 +87,41 @@ query "express_route_circuit_count" {
   EOQ
 }
 
-# Analysis Queries
+query "express_route_circuit_no_peerings_count" {
+  sql = <<-EOQ
+    select
+      count(*) as value,
+      'No Peerings' as label,
+      case when count(*) = 0 then 'ok' else 'alert' end as type
+    from
+      azure_express_route_circuit
+    where
+      jsonb_array_length(peerings) = 0
+  EOQ
+}
+
+query "express_route_circuit_by_peerings" {
+  sql = <<-EOQ
+    select
+      peering,
+      count(*)
+    from (
+      select
+        case when jsonb_array_length(peerings) = 0 then
+          'without peering'
+        else
+          'with peering'
+        end as peering
+      from
+        azure_express_route_circuit) as cd
+    group by
+      peering
+    order by
+      peering;
+  EOQ
+}
+
+# Assessment Queries
 
 query "express_route_circuit_by_subscription" {
   sql = <<-EOQ
@@ -126,23 +179,5 @@ query "express_route_circuit_by_sku_tier" {
       sku_tier
     order by
       sku_tier;
-  EOQ
-}
-
-query "network_express_route_service_provider_properties" {
-  sql = <<-EOQ
-    select
-      sub.title as "Subscription",
-      n.name as "Name",
-      n.sku_tier as "Sku Tier",
-      n.sku_family as "Sku Family",
-      n.service_provider_properties -> 'peeringLocation' as "Peering Location",
-      n.service_provider_properties -> 'bandwidthInMbps' as "Bandwidth In Mbps",
-      n.service_provider_properties -> 'serviceProviderName' as "Service Provider Name"
-    from
-      azure_express_route_circuit as n,
-      azure_subscription as sub
-    order by
-      name;
   EOQ
 }
