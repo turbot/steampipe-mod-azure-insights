@@ -72,17 +72,16 @@ dashboard "network_express_route_detail" {
       width = 6
 
       table {
-        title = "Service Provider Properties"
-        query = query.network_express_route_service_provider_properties
-        args  = [self.input.er_id.value]
-      }
-
-      table {
         title = "SKU"
         query = query.network_express_route_sku_details
         args  = [self.input.er_id.value]
       }
 
+      table {
+        title = "Service Provider Properties"
+        query = query.network_express_route_service_provider_properties
+        args  = [self.input.er_id.value]
+      }
     }
 
   }
@@ -174,7 +173,7 @@ query "network_express_route_allow_classic_operations" {
   sql = <<-EOQ
     select
       'Classic Operations' as label,
-      case when allow_classic_operations then 'enabled' else 'disabled' end as value
+      case when allow_classic_operations then 'Enabled' else 'Disabled' end as value
     from
       azure_express_route_circuit
     where
@@ -186,7 +185,7 @@ query "network_express_route_global_reach" {
   sql = <<-EOQ
     select
       'Global Reach' as label,
-      case when global_reach_enabled then 'enabled' else 'disabled' end as value
+      case when global_reach_enabled then 'Enabled' else 'Disabled' end as value
     from
       azure_express_route_circuit
     where
@@ -261,14 +260,14 @@ query "network_express_route_sku_details" {
 query "network_express_route_peerings" {
   sql = <<-EOQ
     select
-      name,
+      name as "Name",
       replace(jsonb_path_query(peerings, '$.properties.azureASN')::text, '"', '') as "Azure ASN",
       replace(jsonb_path_query(peerings, '$.properties.connections')::text, '"', '') as "Connections",
       replace(jsonb_path_query(peerings, '$.properties.gatewayManagerEtag')::text, '"', '') as "Gateway Manager Etag",
       replace(jsonb_path_query(peerings, '$.properties.peerASN')::text, '"', '') as "Peer ASN",
       replace(jsonb_path_query(peerings, '$.properties.peeringType')::text, '"', '') as "Peering Type",
       replace(jsonb_path_query(peerings, '$.properties.state')::text, '"', '') as "State",
-      replace(jsonb_path_query(peerings, '$.properties.vlanId')::text, '"', '') as "VlanId"
+      replace(jsonb_path_query(peerings, '$.properties.vlanId')::text, '"', '') as "Vlan ID"
     from
       azure_express_route_circuit
     where
@@ -281,7 +280,7 @@ query "network_express_route_peerings" {
 query "network_express_route_peerings_primary" {
   sql = <<-EOQ
     select
-      name,
+      name as "Name",
       replace(jsonb_path_query(peerings, '$.properties.primaryAzurePort')::text, '"', '') as "Primary Azure Port",
       replace(jsonb_path_query(peerings, '$.properties.primaryPeerAddressPrefix')::text, '"', '') as "Primary Peer Address Prefix"
     from
@@ -296,7 +295,7 @@ query "network_express_route_peerings_primary" {
 query "network_express_route_peerings_secondary" {
   sql = <<-EOQ
     select
-      name,
+      name as "Name",
       replace(jsonb_path_query(peerings, '$.properties.secondaryAzurePort')::text, '"', '') as "Secondary Azure Port",
       replace(jsonb_path_query(peerings, '$.properties.secondaryPeerAddressPrefix')::text, '"', '') as "Secondary Peer Address Prefix"
     from

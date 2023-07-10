@@ -35,7 +35,7 @@ dashboard "network_express_route_dashboard" {
         point "with peering" {
           color = "ok"
         }
-        point "without peering" {
+        point "no peering" {
           color = "alert"
         }
       }
@@ -51,31 +51,38 @@ dashboard "network_express_route_dashboard" {
       title = "Express Route Circuits by Subscription"
       query = query.express_route_circuit_by_subscription
       type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Express Route Circuits by Region"
       query = query.express_route_circuit_by_region
       type  = "column"
-      width = 3
-    }
-
-    chart {
-      title = "Express Route Circuits by Provisioning State"
-      query = query.virtual_network_by_provisioning_state
-      type  = "column"
-      width = 3
+      width = 4
     }
 
     chart {
       title = "Express Route Circuits by Sku Tier"
       query = query.express_route_circuit_by_sku_tier
       type  = "column"
-      width = 3
+      width = 4
     }
-  }
 
+    chart {
+      title = "Express Route Circuits by Provisioning State"
+      query = query.express_route_circuit_by_provisioning_state
+      type  = "column"
+      width = 4
+    }
+
+    chart {
+      title = "Express Route Circuits by Service Provider Provisioning State"
+      query = query.express_route_circuit_by_service_provider_provisioning_state
+      type  = "column"
+      width = 4
+    }
+
+  }
 
 }
 
@@ -83,7 +90,7 @@ dashboard "network_express_route_dashboard" {
 
 query "express_route_circuit_count" {
   sql = <<-EOQ
-    select count(*) as ExpressRoutes from azure_express_route_circuit;
+    select count(*) as "Express Routes" from azure_express_route_circuit;
   EOQ
 }
 
@@ -108,7 +115,7 @@ query "express_route_circuit_by_peerings" {
     from (
       select
         case when jsonb_array_length(peerings) = 0 then
-          'without peering'
+          'no peering'
         else
           'with peering'
         end as peering
@@ -179,5 +186,19 @@ query "express_route_circuit_by_sku_tier" {
       sku_tier
     order by
       sku_tier;
+  EOQ
+}
+
+query "express_route_circuit_by_service_provider_provisioning_state" {
+  sql = <<-EOQ
+    select
+      service_provider_provisioning_state as "Service Provider Provisioning State",
+      count(*) as "Express Route Circuits"
+    from
+      azure_express_route_circuit
+    group by
+      service_provider_provisioning_state
+    order by
+      service_provider_provisioning_state;
   EOQ
 }
