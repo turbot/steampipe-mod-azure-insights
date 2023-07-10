@@ -1,7 +1,7 @@
-dashboard "network_express_route_dashboard" {
+dashboard "network_express_route_circuit_dashboard" {
 
-  title         = "Azure Express Route Circuit Dashboard"
-  documentation = file("./dashboards/network/docs/network_express_route_dashboard.md")
+  title         = "Azure Network Express Route Circuit Dashboard"
+  documentation = file("./dashboards/network/docs/network_express_route_circuit_dashboard.md")
 
   tags = merge(local.network_common_tags, {
     type = "Dashboard"
@@ -10,12 +10,12 @@ dashboard "network_express_route_dashboard" {
   container {
 
     card {
-      query = query.express_route_circuit_count
+      query = query.network_express_route_circuit_count
       width = 3
     }
 
     card {
-      query = query.express_route_circuit_no_peerings_count
+      query = query.network_express_route_circuit_no_peerings_count
       width = 3
     }
 
@@ -27,7 +27,7 @@ dashboard "network_express_route_dashboard" {
 
     chart {
       title = "With Peering"
-      query = query.express_route_circuit_by_peerings
+      query = query.network_express_route_circuit_by_peerings
       type  = "donut"
       width = 3
 
@@ -49,35 +49,35 @@ dashboard "network_express_route_dashboard" {
 
     chart {
       title = "Express Route Circuits by Subscription"
-      query = query.express_route_circuit_by_subscription
+      query = query.network_express_route_circuit_by_subscription
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Express Route Circuits by Region"
-      query = query.express_route_circuit_by_region
+      query = query.network_express_route_circuit_by_region
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Express Route Circuits by Sku Tier"
-      query = query.express_route_circuit_by_sku_tier
+      query = query.network_express_route_circuit_by_sku_tier
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Express Route Circuits by Provisioning State"
-      query = query.express_route_circuit_by_provisioning_state
+      query = query.network_express_route_circuit_by_provisioning_state
       type  = "column"
       width = 4
     }
 
     chart {
       title = "Express Route Circuits by Service Provider Provisioning State"
-      query = query.express_route_circuit_by_service_provider_provisioning_state
+      query = query.network_express_route_circuit_by_service_provider_provisioning_state
       type  = "column"
       width = 4
     }
@@ -88,13 +88,16 @@ dashboard "network_express_route_dashboard" {
 
 # Card Queries
 
-query "express_route_circuit_count" {
+query "network_express_route_circuit_count" {
   sql = <<-EOQ
-    select count(*) as "Express Routes" from azure_express_route_circuit;
+    select
+      count(*) as "Express Routes"
+    from
+      azure_express_route_circuit;
   EOQ
 }
 
-query "express_route_circuit_no_peerings_count" {
+query "network_express_route_circuit_no_peerings_count" {
   sql = <<-EOQ
     select
       count(*) as value,
@@ -103,11 +106,11 @@ query "express_route_circuit_no_peerings_count" {
     from
       azure_express_route_circuit
     where
-      jsonb_array_length(peerings) = 0
+      jsonb_array_length(peerings) = 0;
   EOQ
 }
 
-query "express_route_circuit_by_peerings" {
+query "network_express_route_circuit_by_peerings" {
   sql = <<-EOQ
     select
       peering,
@@ -130,7 +133,7 @@ query "express_route_circuit_by_peerings" {
 
 # Assessment Queries
 
-query "express_route_circuit_by_subscription" {
+query "network_express_route_circuit_by_subscription" {
   sql = <<-EOQ
     select
       sub.title as "Subscription",
@@ -147,7 +150,7 @@ query "express_route_circuit_by_subscription" {
   EOQ
 }
 
-query "express_route_circuit_by_region" {
+query "network_express_route_circuit_by_region" {
   sql = <<-EOQ
     select
       region as "Region",
@@ -161,7 +164,7 @@ query "express_route_circuit_by_region" {
   EOQ
 }
 
-query "express_route_circuit_by_provisioning_state" {
+query "network_express_route_circuit_by_provisioning_state" {
   sql = <<-EOQ
     select
       provisioning_state as "Provisioning State",
@@ -175,7 +178,7 @@ query "express_route_circuit_by_provisioning_state" {
   EOQ
 }
 
-query "express_route_circuit_by_sku_tier" {
+query "network_express_route_circuit_by_sku_tier" {
   sql = <<-EOQ
     select
       sku_tier as "Sku Tier",
@@ -189,7 +192,7 @@ query "express_route_circuit_by_sku_tier" {
   EOQ
 }
 
-query "express_route_circuit_by_service_provider_provisioning_state" {
+query "network_express_route_circuit_by_service_provider_provisioning_state" {
   sql = <<-EOQ
     select
       service_provider_provisioning_state as "Service Provider Provisioning State",

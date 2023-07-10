@@ -1,15 +1,15 @@
-dashboard "network_express_route_detail" {
+dashboard "network_express_route_circuit_detail" {
 
-  title         = "Azure Express Route Circuit Detail"
-  documentation = file("./dashboards/network/docs/network_express_route_detail.md")
+  title         = "Azure Network Express Route Circuit Detail"
+  documentation = file("./dashboards/network/docs/network_express_route_circuit_detail.md")
 
   tags = merge(local.network_common_tags, {
     type = "Detail"
   })
 
-  input "er_id" {
+  input "erc_id" {
     title = "Select an Express Route Circuit:"
-    query = query.express_route_circuit_input
+    query = query.network_express_route_circuit_input
     width = 4
   }
 
@@ -17,32 +17,32 @@ dashboard "network_express_route_detail" {
 
     card {
       width = 2
-      query = query.network_express_route_sku
-      args  = [self.input.er_id.value]
+      query = query.network_express_route_circuit_sku_name
+      args  = [self.input.erc_id.value]
     }
 
     card {
       width = 2
-      query = query.network_express_route_service_provider
-      args  = [self.input.er_id.value]
+      query = query.network_express_route_circuit_service_provider
+      args  = [self.input.erc_id.value]
     }
 
     card {
       width = 2
-      query = query.network_express_route_allow_classic_operations
-      args  = [self.input.er_id.value]
+      query = query.network_express_route_circuit_allow_classic_operations
+      args  = [self.input.erc_id.value]
     }
 
     card {
       width = 2
-      query = query.network_express_route_global_reach
-      args  = [self.input.er_id.value]
+      query = query.network_express_route_circuit_global_reach
+      args  = [self.input.erc_id.value]
     }
 
     card {
       width = 2
-      query = query.network_express_route_peering_count
-      args  = [self.input.er_id.value]
+      query = query.network_express_route_circuit_peering_count
+      args  = [self.input.erc_id.value]
     }
 
   }
@@ -56,15 +56,15 @@ dashboard "network_express_route_detail" {
         title = "Overview"
         type  = "line"
         width = 6
-        query = query.network_express_route_overview
-        args  = [self.input.er_id.value]
+        query = query.network_express_route_circuit_overview
+        args  = [self.input.erc_id.value]
       }
 
       table {
         title = "Tags"
         width = 6
-        query = query.network_express_route_tags
-        args  = [self.input.er_id.value]
+        query = query.network_express_route_circuit_tags
+        args  = [self.input.erc_id.value]
       }
     }
 
@@ -73,14 +73,14 @@ dashboard "network_express_route_detail" {
 
       table {
         title = "SKU"
-        query = query.network_express_route_sku_details
-        args  = [self.input.er_id.value]
+        query = query.network_express_route_circuit_sku_details
+        args  = [self.input.erc_id.value]
       }
 
       table {
         title = "Service Provider Properties"
-        query = query.network_express_route_service_provider_properties
-        args  = [self.input.er_id.value]
+        query = query.network_express_route_circuit_service_provider_properties
+        args  = [self.input.erc_id.value]
       }
     }
 
@@ -91,28 +91,28 @@ dashboard "network_express_route_detail" {
 
     table {
       width = 12
-      query = query.network_express_route_peerings
-      args  = [self.input.er_id.value]
+      query = query.network_express_route_circuit_peerings
+      args  = [self.input.erc_id.value]
     }
 
     table {
       title = "Primary Peer"
       width = 6
-      query = query.network_express_route_peerings_primary
-      args  = [self.input.er_id.value]
+      query = query.network_express_route_circuit_peerings_primary
+      args  = [self.input.erc_id.value]
     }
 
     table {
       title = "Secondary Peer"
       width = 6
-      query = query.network_express_route_peerings_secondary
-      args  = [self.input.er_id.value]
+      query = query.network_express_route_circuit_peerings_secondary
+      args  = [self.input.erc_id.value]
     }
   }
 
 }
 
-query "express_route_circuit_input" {
+query "network_express_route_circuit_input" {
   sql = <<-EOQ
     select
       n.title as label,
@@ -132,7 +132,31 @@ query "express_route_circuit_input" {
   EOQ
 }
 
-query "network_express_route_peering_count" {
+query "network_express_route_circuit_sku_name" {
+  sql = <<-EOQ
+    select
+      'SKU Name' as label,
+      sku_name as value
+    from
+      azure_express_route_circuit
+    where
+      lower(id) = $1;
+  EOQ
+}
+
+query "network_express_route_circuit_service_provider" {
+  sql = <<-EOQ
+    select
+      'Service Provider' as label,
+      service_provider_properties ->> 'serviceProviderName' as value
+    from
+      azure_express_route_circuit
+    where
+      lower(id) = $1;
+  EOQ
+}
+
+query "network_express_route_circuit_peering_count" {
   sql = <<-EOQ
     select
       'Peerings' as label,
@@ -145,35 +169,12 @@ query "network_express_route_peering_count" {
   EOQ
 }
 
-query "network_express_route_sku" {
-  sql = <<-EOQ
-    select
-      'SKU' as label,
-      sku_tier as value
-    from
-      azure_express_route_circuit
-    where
-      lower(id) = $1;
-  EOQ
-}
-
-query "network_express_route_service_provider" {
-  sql = <<-EOQ
-    select
-      'Service Provider' as label,
-      service_provider_properties ->> 'serviceProviderName' as value
-    from
-      azure_express_route_circuit
-    where
-      lower(id) = $1;
-  EOQ
-}
-
-query "network_express_route_allow_classic_operations" {
+query "network_express_route_circuit_allow_classic_operations" {
   sql = <<-EOQ
     select
       'Classic Operations' as label,
-      case when allow_classic_operations then 'Enabled' else 'Disabled' end as value
+      case when allow_classic_operations then 'Enabled' else 'Disabled' end as value,
+      case when allow_classic_operations then 'ok' else 'alert' end as type
     from
       azure_express_route_circuit
     where
@@ -181,11 +182,12 @@ query "network_express_route_allow_classic_operations" {
   EOQ
 }
 
-query "network_express_route_global_reach" {
+query "network_express_route_circuit_global_reach" {
   sql = <<-EOQ
     select
       'Global Reach' as label,
-      case when global_reach_enabled then 'Enabled' else 'Disabled' end as value
+      case when global_reach_enabled then 'Enabled' else 'Disabled' end as value,
+      case when global_reach_enabled then 'ok' else 'alert' end as type
     from
       azure_express_route_circuit
     where
@@ -196,7 +198,7 @@ query "network_express_route_global_reach" {
 # table queries
 
 
-query "network_express_route_overview" {
+query "network_express_route_circuit_overview" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -211,11 +213,11 @@ query "network_express_route_overview" {
     from
       azure_express_route_circuit
     where
-      lower(id) = $1
+      lower(id) = $1;
   EOQ
 }
 
-query "network_express_route_tags" {
+query "network_express_route_circuit_tags" {
   sql = <<-EOQ
     select
       tag.key as "Key",
@@ -231,20 +233,7 @@ query "network_express_route_tags" {
   EOQ
 }
 
-query "network_express_route_service_provider_properties" {
-  sql = <<-EOQ
-    select
-      service_provider_properties ->> 'serviceProviderName' as "Name",
-      service_provider_properties ->> 'bandwidthInMbps' as "Bandwidth In Mbps",
-      service_provider_properties ->> 'peeringLocation' as "Peering Location"
-    from
-      azure_express_route_circuit
-    where
-      lower(id) = $1;
-  EOQ
-}
-
-query "network_express_route_sku_details" {
+query "network_express_route_circuit_sku_details" {
   sql = <<-EOQ
     select
       sku_name as "Name",
@@ -257,7 +246,20 @@ query "network_express_route_sku_details" {
   EOQ
 }
 
-query "network_express_route_peerings" {
+query "network_express_route_circuit_service_provider_properties" {
+  sql = <<-EOQ
+    select
+      service_provider_properties ->> 'serviceProviderName' as "Name",
+      service_provider_properties ->> 'bandwidthInMbps' as "Bandwidth In Mbps",
+      service_provider_properties ->> 'peeringLocation' as "Peering Location"
+    from
+      azure_express_route_circuit
+    where
+      lower(id) = $1;
+  EOQ
+}
+
+query "network_express_route_circuit_peerings" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -277,7 +279,7 @@ query "network_express_route_peerings" {
   EOQ
 }
 
-query "network_express_route_peerings_primary" {
+query "network_express_route_circuit_peerings_primary" {
   sql = <<-EOQ
     select
       name as "Name",
@@ -292,7 +294,7 @@ query "network_express_route_peerings_primary" {
   EOQ
 }
 
-query "network_express_route_peerings_secondary" {
+query "network_express_route_circuit_peerings_secondary" {
   sql = <<-EOQ
     select
       name as "Name",
