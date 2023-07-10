@@ -29,7 +29,7 @@ dashboard "network_express_route_dashboard" {
       title = "With Peering"
       query = query.express_route_circuit_by_peerings
       type  = "donut"
-      width = 2
+      width = 3
 
       series "count" {
         point "with peering" {
