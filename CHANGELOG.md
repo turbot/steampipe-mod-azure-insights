@@ -2,7 +2,7 @@
 
 _What's new?_
 
-- New dashboards added: ([#105](https://github.com/turbot/steampipe-mod-azure-insights/pull/105))
+- New dashboards added: ([#105](https://github.com/turbot/steampipe-mod-azure-insights/pull/105)) (Thanks [@jonesy1234](https://github.com/jonesy1234) for the contribution!)
   - [Azure Network Express Route Circuit Dashboard](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.network_express_route_circuit_dashboard)
   - [Azure Network Express Route Circuit Detail](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.network_express_route_circuit_detail)
 
