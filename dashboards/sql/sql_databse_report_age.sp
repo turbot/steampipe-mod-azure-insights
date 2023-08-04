@@ -144,6 +144,7 @@ query "sql_database_age_table" {
     where
       d.subscription_id = sub.subscription_id
     order by
+      d.creation_date,
       d.name;
   EOQ
 }

@@ -146,6 +146,7 @@ query "storage_account_age_table" {
     where
       a.subscription_id = sub.subscription_id
     order by
+      a.creation_time,
       a.name;
   EOQ
 }
