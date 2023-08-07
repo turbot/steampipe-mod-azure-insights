@@ -1,4 +1,10 @@
-# v0.11 [2023-07-13]
+## v0.12 [2023-08-07]
+
+_Bug fixes_
+
+- Updated the Age Report dashboards to order by the creation time of the resource. ([#106](https://github.com/turbot/steampipe-mod-azure-insights/pull/106))
+
+## v0.11 [2023-07-13]
 
 _What's new?_
 
