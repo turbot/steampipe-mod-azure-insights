@@ -14,9 +14,6 @@ mod "azure_insights" {
   }
 
   require {
-    steampipe {
-      min_version = "0.18.0"
-    }
     plugin "azure" {
       min_version = "0.40.1"
     }
