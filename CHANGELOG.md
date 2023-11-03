@@ -1,3 +1,9 @@
+## v0.13 [2023-11-03]
+
+_Breaking changes_
+
+- Updated the plugin dependency section of the mod to use `min_version` instead of `version`. ([#115](https://github.com/turbot/steampipe-mod-azure-insights/pull/115))
+
 ## v0.12 [2023-08-07]
 
 _Bug fixes_
