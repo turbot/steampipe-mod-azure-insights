@@ -141,7 +141,7 @@ dashboard "sql_server_detail" {
       edge {
         base = edge.network_subnet_to_network_virtual_network
         args = {
-          network_subnet_ids = with.network_virtual_networks_for_sql_server.rows[*].subnet_id
+          network_subnet_ids = with.network_subnets_for_sql_server.rows[*].subnet_id
         }
       }
 
