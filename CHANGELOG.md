@@ -1,3 +1,9 @@
+## v0.14 [2024-01-09]
+
+_Bug fixes_
+
+- Fixed the broken `network_subnet_to_network_virtual_network` edge of the relationship graph in the `sql_server_detail` dashboard page to correctly reference the `network_subnets_for_sql_server` query. ([#118](https://github.com/turbot/steampipe-mod-azure-insights/pull/118))
+
 ## v0.13 [2023-11-03]
 
 _Breaking changes_
