@@ -3,6 +3,8 @@
 > [!IMPORTANT]
 > Steampipe mods are [migrating to Powerpipe format](https://powerpipe.io) to gain new features. This mod currently works with both Steampipe and Powerpipe, but will only support Powerpipe from v1.x onward.
 
+An Azure dashboarding tool that can be used to view dashboards and reports across all of your Azure accounts.
+
 ![image](https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_dashboard.png)
 
 ## Overview
