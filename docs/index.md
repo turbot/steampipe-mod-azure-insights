@@ -2,12 +2,18 @@
 
 Create dashboards and reports for your Azure resources using Powerpipe and Steampipe.
 
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_dashboard.png" width="50%" type="thumbnail"/>
+<!-- <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_dashboard.png" width="50%" type="thumbnail"/>
 <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_age.png" width="50%" type="thumbnail"/>
 <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_user_detail.png" width="50%" type="thumbnail"/>
 <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_network_virtual_network_detail.png" width="50%" type="thumbnail"/>
 <img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_compute_virtual_machine_detail.png" width="50%" type="thumbnail"/>
-<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_keyvault_dashboard.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_keyvault_dashboard.png" width="50%" type="thumbnail"/> -->
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/add-new-checks/docs/images/azure_storage_account_dashboard.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/add-new-checks/docs/images/azure_storage_account_age.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/add-new-checks/docs/images/azure_user_detail.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/add-new-checks/docs/images/azure_network_virtual_network_detail.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/add-new-checks/docs/images/azure_compute_virtual_machine_detail.png" width="50%" type="thumbnail"/>
+<img src="https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/add-new-checks/docs/images/azure_keyvault_dashboard.png" width="50%" type="thumbnail"/>
 
 ## Overview
 
@@ -26,7 +32,7 @@ Dashboards are available for Compute, Key Vault, SQL, and Storage services.
 
 - **[Dashboards →](https://hub.powerpipe.io/mods/turbot/azure_insights/dashboards)**
 
-## Getting started
+## Getting Started
 
 ### Installation
 
@@ -52,7 +58,7 @@ Finally, install the mod:
 mkdir dashboards
 cd dashboards
 powerpipe mod init
-powerpipe mod install github.com/turbot/powerpipe-mod-azure-insights
+powerpipe mod install github.com/turbot/steampipe-mod-azure-insights
 ```
 
 ### Browsing Dashboards
@@ -69,7 +75,7 @@ Start the dashboard server:
 powerpipe server
 ```
 
-Browse and view your dashboards at **https://localhost:9033**.
+Browse and view your dashboards at **http://localhost:9033**.
 
 ## Open Source & Contributing
 
