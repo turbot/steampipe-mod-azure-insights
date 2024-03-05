@@ -5,8 +5,7 @@
 
 An Azure dashboarding tool that can be used to view dashboards and reports across all of your Azure accounts.
 
-<!-- ![image](https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_dashboard.png) -->
-![image](https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/add-new-checks/docs/images/azure_storage_account_dashboard.png)
+![image](https://raw.githubusercontent.com/turbot/steampipe-mod-azure-insights/main/docs/images/azure_storage_account_dashboard.png)
 
 ## Overview
 
