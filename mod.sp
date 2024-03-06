@@ -1,15 +1,15 @@
 mod "azure_insights" {
-  # hub metadata
+  # Hub metadata
   title         = "Azure Insights"
-  description   = "Create dashboards and reports for your Azure resources using Steampipe."
+  description   = "Create dashboards and reports for your Azure resources using Powerpipe and Steampipe."
   color         = "#0089D6"
   documentation = file("./docs/index.md")
   icon          = "/images/mods/turbot/azure-insights.svg"
   categories    = ["azure", "dashboard", "public cloud"]
 
   opengraph {
-    title       = "Steampipe Mod for Azure Insights"
-    description = "Create dashboards and reports for your Azure resources using Steampipe."
+    title       = "Powerpipe Mod for Azure Insights"
+    description = "Create dashboards and reports for your Azure resources using Powerpipe and Steampipe."
     image       = "/images/mods/turbot/azure-insights-social-graphic.png"
   }
 
