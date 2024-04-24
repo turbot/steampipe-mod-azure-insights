@@ -388,7 +388,8 @@ query "virtual_network_subnets_count" {
     from
       azure_virtual_network
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -403,6 +404,7 @@ query "virtual_network_num_ips" {
         jsonb_array_elements(address_prefixes) as a
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     )
     select
       sum(num_ips) as "IP Addresses"
@@ -420,7 +422,8 @@ query "virtual_network_ddos_protection" {
     from
       azure_virtual_network
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -438,6 +441,7 @@ query "compute_virtual_machines_for_network_virtual_network" {
         jsonb_array_elements(subnets) as sub
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     ),
     virtual_machine_nic_list as (
       select
@@ -468,6 +472,7 @@ query "network_application_gateways_for_network_virtual_network" {
         jsonb_array_elements(v.subnets) as s
       where
         lower(v.id) = $1
+        and v.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(g.id) as application_gateway_id
@@ -489,6 +494,7 @@ query "network_load_balancer_backend_address_pools_for_network_virtual_network" 
         jsonb_array_elements(v.subnets) as s
       where
         lower(v.id) = $1
+        and v.subscription_id = split_part($1, '/', 3)
     ),
     nic_subnet_list as (
       select
@@ -522,6 +528,7 @@ query "network_load_balancers_for_network_virtual_network" {
         jsonb_array_elements(v.subnets) as s
       where
         lower(v.id) = $1
+        and v.subscription_id = split_part($1, '/', 3)
     ),
     nic_subnet_list as (
       select
@@ -565,6 +572,7 @@ query "network_nat_gateways_for_network_virtual_network" {
         jsonb_array_elements(v.subnets) as s
       where
         lower(v.id) = $1
+        and v.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(g.id) as nat_gateway_id
@@ -586,6 +594,7 @@ query "network_route_tables_for_network_virtual_network" {
         jsonb_array_elements(v.subnets) as s
       where
         lower(v.id) = $1
+        and v.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(r.id) as route_table_id
@@ -607,6 +616,7 @@ query "network_security_groups_for_network_virtual_network" {
         jsonb_array_elements(v.subnets) as s
       where
         lower(v.id) = $1
+        and v.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(nsg.id) as nsg_id,
@@ -628,7 +638,8 @@ query "network_subnets_for_network_virtual_network" {
       jsonb_array_elements(subnets) as s
       left join azure_subnet as sub on lower(sub.id) = lower(s ->> 'id')
     where
-      lower(v.id) = $1;
+      lower(v.id) = $1
+      and v.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -642,6 +653,7 @@ query "sql_servers_for_network_virtual_network" {
         jsonb_array_elements(v.subnets) as s
       where
         lower(v.id) = $1
+        and v.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(s.id) as sql_server_id
@@ -668,7 +680,8 @@ query "virtual_network_overview" {
     from
       azure_virtual_network
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -682,6 +695,7 @@ query "virtual_network_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
   EOQ
@@ -701,6 +715,7 @@ query "virtual_network_subnet_details" {
       jsonb_array_elements(subnets) as s
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
   EOQ
 }
 
@@ -718,6 +733,7 @@ query "virtual_network_ingress_rule_sankey" {
         jsonb_array_elements(subnets) as s
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     ),network_security_group as (
         select
           id,
@@ -859,6 +875,7 @@ query "virtual_network_egress_rule_sankey" {
         azure_virtual_network,
         jsonb_array_elements(subnets) as s
         where lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     ),network_security_group as (
         select
           id,
@@ -1012,6 +1029,7 @@ query "virtual_network_route_tables" {
         jsonb_array_elements(subnets) as s
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
         and (s -> 'properties' -> 'routeTable' ->> 'id') is not null
       order by
         s -> 'properties' -> 'routeTable' ->> 'id'
@@ -1035,6 +1053,7 @@ query "virtual_network_routes" {
         jsonb_array_elements(subnets) as s
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     ),
     data as (
       select
@@ -1065,6 +1084,7 @@ query "virtual_network_nsg" {
       where
       (s -> 'properties' -> 'networkSecurityGroup' -> 'id') is not null
       and lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     )
     select
       nsg.name as "Name",
@@ -1093,7 +1113,8 @@ query "virtual_network_peering_connection" {
       azure_virtual_network,
       jsonb_array_elements(network_peerings) as np
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -1107,5 +1128,6 @@ query "virtual_network_address_prefixes" {
       jsonb_array_elements(address_prefixes) as p
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
