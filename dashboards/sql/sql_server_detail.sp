@@ -294,7 +294,8 @@ query "sql_server_state" {
     from
       azure_sql_server
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -306,7 +307,8 @@ query "sql_server_version" {
     from
       azure_sql_server
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -339,7 +341,8 @@ query "sql_server_public_network_access" {
     from
       azure_sql_server
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -352,7 +355,8 @@ query "sql_server_ad_authentication_enabled" {
     from
       azure_sql_server
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -373,7 +377,8 @@ query "sql_server_vulnerability_assessment_enabled" {
       case when v.id is not null then 'ok' else 'alert' end as type
     from
       azure_sql_server as s left join sql_server_va as v on lower(s.id) = lower(v.id)
-      where lower(s.id) = $1;
+      where lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -390,6 +395,7 @@ query "key_vault_keys_for_sql_server" {
         jsonb_array_elements(encryption_protector) as ep
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
         and ep ->> 'kind' = 'azurekeyvault'
     )
     select
@@ -415,6 +421,7 @@ query "key_vault_vaults_for_sql_server" {
           jsonb_array_elements(encryption_protector) as ep
         where
           lower(id) = $1
+          and subscription_id = split_part($1, '/', 3)
           and ep ->> 'kind' = 'azurekeyvault'
       );
   EOQ
@@ -430,7 +437,8 @@ query "mssql_elasticpool_for_sql_server" {
     where
       s.resource_group = p.resource_group
       and s.subscription_id = p.subscription_id
-      and lower(s.id) = $1;
+      and lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -442,7 +450,8 @@ query "network_subnets_for_sql_server" {
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -462,6 +471,7 @@ query "network_virtual_networks_for_sql_server" {
           jsonb_array_elements(virtual_network_rules) as vnr
         where
           lower(id) = $1
+          and subscription_id = split_part($1, '/', 3)
       );
   EOQ
 }
@@ -494,6 +504,7 @@ query "sql_server_overview" {
       azure_sql_server
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -507,6 +518,7 @@ query "sql_server_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
   EOQ
@@ -524,7 +536,8 @@ query "sql_server_encryption" {
       azure_sql_server,
       jsonb_array_elements(encryption_protector) as ep
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -539,7 +552,8 @@ query "sql_server_virtual_network_rules" {
       azure_sql_server,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -553,7 +567,8 @@ query "sql_server_firewall_rule" {
       azure_sql_server,
       jsonb_array_elements(firewall_rules) as r
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -573,7 +588,8 @@ query "sql_server_audit_policy" {
       azure_sql_server,
       jsonb_array_elements(server_audit_policy) as p
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -588,7 +604,8 @@ query "sql_server_vulnerability_assessment" {
       azure_sql_server,
       jsonb_array_elements(server_vulnerability_assessment) as a
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -607,6 +624,7 @@ query "sql_server_private_endpoint_connection" {
       azure_sql_server,
       jsonb_array_elements(private_endpoint_connections) as c
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }

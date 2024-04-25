@@ -14,8 +14,7 @@ node "cosmosdb_account" {
       ) as properties
     from
       azure_cosmosdb_account
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "cosmosdb_account_ids" {}
@@ -37,8 +36,7 @@ node "cosmosdb_mongo_database" {
       ) as properties
     from
       azure_cosmosdb_mongo_database
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "cosmosdb_mongo_database_ids" {}
@@ -61,10 +59,10 @@ node "cosmosdb_mongo_collection" {
     from
       azure_cosmosdb_mongo_collection c,
       azure_cosmosdb_mongo_database d
+      join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3)
     where
       c.database_name = d.name
-      and c.account_name in (select account_name from azure_cosmosdb_mongo_database where lower(id) = any($1))
-      and lower(d.id) = any($1)
+      and c.account_name in (select account_name from azure_cosmosdb_mongo_database where lower(id) = any($1));
   EOQ
 
   param "cosmosdb_mongo_database_ids" {}
@@ -86,8 +84,7 @@ node "cosmosdb_sql_database" {
       ) as properties
     from
       azure_cosmosdb_sql_database
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "cosmosdb_sql_database_ids" {}
@@ -109,8 +106,7 @@ node "cosmosdb_restorable_database_account" {
       ) as properties
     from
       azure_cosmosdb_restorable_database_account
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "restorable_database_account_ids" {}

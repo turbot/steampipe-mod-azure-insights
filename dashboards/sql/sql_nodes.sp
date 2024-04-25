@@ -14,8 +14,7 @@ node "mssql_elasticpool" {
       ) as properties
     from
       azure_mssql_elasticpool
-    where
-      lower(id) = any($1)
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "mssql_elasticpool_ids" {}
@@ -42,8 +41,7 @@ node "sql_database" {
       ) as properties
     from
       azure_sql_database
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "sql_database_ids" {}
@@ -67,8 +65,7 @@ node "sql_server" {
       ) as properties
     from
       azure_sql_server
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "sql_server_ids" {}

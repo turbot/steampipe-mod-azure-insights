@@ -16,8 +16,7 @@ node "storage_storage_account" {
       ) as properties
     from
       azure_storage_account
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "storage_account_ids" {}

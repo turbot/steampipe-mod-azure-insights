@@ -6,11 +6,11 @@ edge "cosmosdb_account_to_key_vault" {
       lower(a.id) as from_id,
       lower(split_part(k.id, '/keys/', 1)) as to_id
     from
-      azure_cosmosdb_account a,
+      azure_cosmosdb_account a
+      join unnest($1::text[]) as i on lower(a.id) = i and a.subscription_id = split_part(i, '/', 3),
       azure_key_vault_key k
     where
-      a.key_vault_key_uri = k.key_uri
-      and lower(a.id) = any($1);
+      a.key_vault_key_uri = k.key_uri;
   EOQ
 
   param "cosmosdb_account_ids" {}
@@ -24,11 +24,11 @@ edge "cosmosdb_account_to_key_vault_key" {
       lower(split_part(k.id, '/keys/', 1)) as from_id,
       lower(k.id) as to_id
     from
-      azure_cosmosdb_account a,
+      azure_cosmosdb_account a
+      join unnest($1::text[]) as i on lower(a.id) = i and a.subscription_id = split_part(i, '/', 3),
       azure_key_vault_key k
     where
-      a.key_vault_key_uri = k.key_uri
-      and lower(a.id) = any($1);
+      a.key_vault_key_uri = k.key_uri;
   EOQ
 
   param "cosmosdb_account_ids" {}
@@ -51,8 +51,7 @@ edge "cosmosdb_account_to_key_vault_key_version" {
     from
       azure_key_vault_key_version as v
       left join cosmosdb_account as s on lower(v.key_uri_with_version) = lower(s.uri)
-    where
-      lower(s.id) = any($1);
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "cosmosdb_account_ids" {}
@@ -66,10 +65,9 @@ edge "cosmosdb_account_to_network_subnet" {
       lower(id) as from_id,
       lower(r ->> 'id') as to_id
     from
-      azure_cosmosdb_account a,
-      jsonb_array_elements(virtual_network_rules) as r
-    where
-      lower(a.id) = any($1);
+      azure_cosmosdb_account a
+      join unnest($1::text[]) as i on lower(a.id) = i and a.subscription_id = split_part(i, '/', 3),
+      jsonb_array_elements(virtual_network_rules) as r;
   EOQ
 
   param "cosmosdb_account_ids" {}
@@ -83,11 +81,11 @@ edge "cosmosdb_account_to_cosmosdb_mongo_database" {
       lower(a.id) as from_id,
       lower(d.id) as to_id
     from
-      azure_cosmosdb_account a,
+      azure_cosmosdb_account a
+      join unnest($1::text[]) as i on lower(a.id) = i and a.subscription_id = split_part(i, '/', 3),
       azure_cosmosdb_mongo_database d
     where
-      d.account_name = a.name
-      and lower(a.id) = any($1);
+      d.account_name = a.name;
   EOQ
 
   param "cosmosdb_account_ids" {}
@@ -101,11 +99,11 @@ edge "cosmosdb_mongo_database_to_cosmosdb_mongo_collection" {
       lower(d.id) as from_id,
       lower(c.id) as to_id
     from
-      azure_cosmosdb_mongo_database d,
+      azure_cosmosdb_mongo_database d
+    join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3),
       azure_cosmosdb_mongo_collection c
     where
-      d.name = c.database_name
-      and lower(d.id) = any($1);
+      d.name = c.database_name;
   EOQ
 
   param "cosmosdb_mongo_database_ids" {}
@@ -119,11 +117,11 @@ edge "cosmosdb_account_to_cosmosdb_sql_database" {
       lower(a.id) as from_id,
       lower(d.id) as to_id
     from
-      azure_cosmosdb_account a,
+      azure_cosmosdb_account a
+      join unnest($1::text[]) as i on lower(a.id) = i and a.subscription_id = split_part(i, '/', 3),
       azure_cosmosdb_sql_database d
     where
-      d.account_name = a.name
-      and lower(a.id) = any($1);
+      d.account_name = a.name;
   EOQ
 
   param "cosmosdb_account_ids" {}
@@ -156,11 +154,11 @@ edge "cosmosdb_restorable_database_account_to_cosmosdb_account" {
       lower(ra.id) as from_id,
       lower(a.id) as to_id
     from
-      azure_cosmosdb_restorable_database_account ra,
+      azure_cosmosdb_restorable_database_account ra
+      join unnest($1::text[]) as i on lower(ra.id) = i and ra.subscription_id = split_part(i, '/', 3),
       azure_cosmosdb_account a
     where
-      ra.id =  a.restore_parameters ->> 'restoreSource'
-      and lower(ra.id) = any($1);
+      ra.id =  a.restore_parameters ->> 'restoreSource';
   EOQ
 
   param "restorable_database_account_ids" {}
