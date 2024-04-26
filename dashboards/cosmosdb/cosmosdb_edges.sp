@@ -41,6 +41,7 @@ edge "cosmosdb_account_to_key_vault_key_version" {
     with cosmosdb_account as (
       select
         key_vault_key_uri as uri,
+        subscription_id,
         id
       from
         azure_cosmosdb_account
@@ -100,7 +101,7 @@ edge "cosmosdb_mongo_database_to_cosmosdb_mongo_collection" {
       lower(c.id) as to_id
     from
       azure_cosmosdb_mongo_database d
-    join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3),
+      join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3),
       azure_cosmosdb_mongo_collection c
     where
       d.name = c.database_name;

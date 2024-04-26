@@ -15,8 +15,7 @@ node "api_management" {
       ) as properties
     from
       azure_api_management
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "api_management_ids" {}

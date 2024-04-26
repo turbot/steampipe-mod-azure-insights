@@ -98,6 +98,7 @@ edge "sql_server_to_key_vault_key_version" {
     with sql_server as (
       select
         ep ->> 'uri' as uri,
+        subscription_id,
         id
       from
         azure_sql_server,
@@ -110,8 +111,8 @@ edge "sql_server_to_key_vault_key_version" {
       lower(v.id) as to_id
     from
       azure_key_vault_key_version as v
-      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 9)
-      left join sql_server as s on lower(v.key_uri_with_version) = lower(s.uri);
+      left join sql_server as s on lower(v.key_uri_with_version) = lower(s.uri)
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 9);
   EOQ
 
   param "sql_server_ids" {}

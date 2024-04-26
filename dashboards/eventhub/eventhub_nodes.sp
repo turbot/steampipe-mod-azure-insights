@@ -16,8 +16,7 @@ node "eventhub_namespace" {
       ) as properties
     from
       azure_eventhub_namespace
-    where
-      id = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "eventhub_namespace_ids" {}
