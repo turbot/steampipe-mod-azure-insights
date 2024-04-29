@@ -410,7 +410,7 @@ query "activedirectory_users_for_activedirectory_group" {
         azuread_group
     )
     select
-      au.id as activedirectory_user_id
+      au.id || '/' || au.tenant_id as activedirectory_user_id
     from
       group_details as ag
       left join azuread_user as au on ag.m_id = au.id
@@ -434,7 +434,7 @@ query "target_activedirectory_groups_for_activedirectory_group" {
         azuread_group
     )
     select
-      g.id as activedirectory_group_id
+      g.id || '/' || g.tenant_id as activedirectory_group_id
     from
       group_details as ag
       left join azuread_group as g on ag.m_id = g.id
@@ -448,7 +448,7 @@ query "target_activedirectory_groups_for_activedirectory_group" {
 query "subscription_role_definitions_for_activedirectory_group" {
   sql = <<-EOQ
     select
-      d.id as role_definition_id
+      d.id || '/' || d.subscription_id as role_definition_id
     from
       azuread_group as g
       left join azure_role_assignment as a on a.principal_id = g.id
@@ -465,7 +465,7 @@ query "subscription_role_definitions_for_activedirectory_group" {
 query "resource_group_role_definitions_for_activedirectory_group" {
   sql = <<-EOQ
     select
-      d.id as role_definition_id
+      d.id || '/' || d.subscription_id as role_definition_id
     from
       azuread_group as g
       left join azure_role_assignment as a on a.principal_id = g.id
@@ -509,7 +509,7 @@ query "activedirectory_directory_roles_for_activedirectory_group" {
         azuread_directory_role
     )
     select
-      r.id as directory_role_id
+      r.id || '/' || r.tenant_id as directory_role_id
     from
       assigned_role as r
       left join azuread_group as g on g.id = r.m_id

@@ -375,7 +375,7 @@ query "activedirectory_groups_for_activedirectory_user" {
         azuread_group
     )
     select
-      ag.id as activedirectory_group_id
+      ag.id || '/' || ag.tenant_id as activedirectory_group_id
     from
       group_details as ag
       left join azuread_user as au on au.id = ag.m_id
@@ -389,7 +389,7 @@ query "subscription_role_definitions_for_activedirectory_user" {
 
   sql = <<-EOQ
     select
-      d.id as role_definition_id
+      d.id || '/' || d.subscription_id as role_definition_id
     from
       azuread_user as u
       left join azure_role_assignment as a on a.principal_id = u.id
@@ -407,7 +407,7 @@ query "resource_group_role_definitions_for_activedirectory_user" {
 
   sql = <<-EOQ
     select
-      d.id as role_definition_id,
+      d.id || '/' || d.subscription_id as role_definition_id,
       a.scope
     from
       azuread_user as u
@@ -435,7 +435,7 @@ query "activedirectory_directory_roles_for_activedirectory_user" {
         azuread_directory_role
     )
     select
-      r.id as directory_role_id
+      r.id || '/' || r.tenant_id as directory_role_id
     from
       assigned_role as r
       left join azuread_user as au on au.id = r.m_id

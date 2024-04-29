@@ -14,7 +14,8 @@ node "resource_group" {
       ) as properties
     from
       azure_resource_group
-      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
+    where
+      subscription_id = any($1);
   EOQ
 
   param "resource_group_ids" {}
