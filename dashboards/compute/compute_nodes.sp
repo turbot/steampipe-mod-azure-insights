@@ -16,8 +16,7 @@ node "compute_disk" {
       ) as properties
     from
       azure_compute_disk
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_disk_ids" {}
@@ -41,8 +40,7 @@ node "compute_disk_access" {
       ) as properties
     from
       azure_compute_disk_access
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_disk_access_ids" {}
@@ -64,8 +62,7 @@ node "compute_disk_encryption_set" {
       ) as properties
     from
       azure_compute_disk_encryption_set
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_disk_encryption_set_ids" {}
@@ -87,8 +84,7 @@ node "compute_image" {
       ) as properties
     from
       azure_compute_image
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_image_ids" {}
@@ -112,8 +108,7 @@ node "compute_snapshot" {
       ) as properties
     from
       azure_compute_snapshot
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_snapshot_ids" {}
@@ -139,8 +134,7 @@ node "compute_virtual_machine" {
       ) as properties
     from
       azure_compute_virtual_machine
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_virtual_machine_ids" {}
@@ -156,11 +150,10 @@ node "compute_virtual_machine_application_gateway_backend_address_pool" {
         nic.id,
         nic.ip_configurations as ip_configurations
       from
-        azure_compute_virtual_machine as vm,
+        azure_compute_virtual_machine as vm
+        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
-      where
-        lower(vm.id) = any($1)
     ),
     vm_application_gateway_backend_address_pool as (
       select
@@ -210,8 +203,7 @@ node "compute_virtual_machine_scale_set" {
       ) as properties
     from
       azure_compute_virtual_machine_scale_set
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_virtual_machine_scale_set_ids" {}
@@ -234,8 +226,7 @@ node "compute_virtual_machine_scale_set_network_interface" {
       ) as properties
     from
       azure_compute_virtual_machine_scale_set_network_interface
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_virtual_machine_scale_set_network_interface_ids" {}
@@ -260,8 +251,7 @@ node "compute_virtual_machine_scale_set_vm" {
       ) as properties
     from
       azure_compute_virtual_machine_scale_set_vm
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_virtual_machine_scale_set_vm_ids" {}

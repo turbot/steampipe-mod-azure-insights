@@ -7,12 +7,12 @@ edge "resource_group_to_role_definition" {
       a.scope as from_id
     from
       azure_role_definition as d
+      join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3)
       left join azure_role_assignment as a on a.role_definition_id = d.id
       left join azure_resource_group as r on r.id = a.scope
     where
       (a.scope like '%/resourceGroups/%')
-      or (a.scope like '%/resourcegroups/%')
-      and d.id = any($1);
+      or (a.scope like '%/resourcegroups/%');
   EOQ
 
   param "role_definition_ids" {}
@@ -27,9 +27,8 @@ edge "subscription_to_resource_group" {
       g.id as to_id
     from
       azure_resource_group as g
-    where
-      g.subscription_id = any($1)
-   EOQ
+      join unnest($1::text[]) as i on lower(g.id) = i and g.subscription_id = split_part(i, '/', 3);
+  EOQ
 
   param "subscription_ids" {}
 }
@@ -43,11 +42,11 @@ edge "subscription_to_role_definition" {
       d.subscription_id as from_id
     from
       azure_role_definition as d
+      join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3)
       left join azure_role_assignment as a on a.role_definition_id = d.id
     where
       (a.scope like '/subscriptions/%' and a.scope not like '%/resourceGroups/%')
-      and (a.scope like '/subscriptions/%' and a.scope not like '%/resourcegroups/%')
-      and d.id = any($1)
+      and (a.scope like '/subscriptions/%' and a.scope not like '%/resourcegroups/%');
   EOQ
 
   param "role_definition_ids" {}

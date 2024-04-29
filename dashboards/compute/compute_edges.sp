@@ -24,8 +24,7 @@ edge "compute_disk_encryption_set_to_key_vault_vault" {
     from
       azure_compute_disk_encryption_set as e
       left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
-    where
-      lower(e.id) = any($1);
+      join unnest($1::text[]) as i on lower(e.id) = i and e.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_disk_encryption_set_ids" {}
@@ -57,8 +56,7 @@ edge "compute_disk_to_compute_disk_access" {
     from
       azure_compute_disk_access as a
       left join azure_compute_disk as d on lower(d.disk_access_id) = lower(a.id)
-    where
-      lower(d.id) = any($1);
+      join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_disk_ids" {}
@@ -74,8 +72,7 @@ edge "compute_disk_to_compute_disk_encryption_set" {
     from
       azure_compute_disk_encryption_set as e
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
-    where
-      lower(d.id) = any($1);
+      join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_disk_ids" {}
@@ -91,8 +88,7 @@ edge "compute_snapshot_to_compute_disk" {
     from
       azure_compute_disk as d
       left join azure_compute_snapshot as s on lower(s.id) = lower(d.creation_data_source_resource_id)
-    where
-      lower(d.id) = any($1);
+      join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_disk_ids" {}
@@ -109,8 +105,7 @@ edge "compute_disk_to_key_vault_key" {
       azure_compute_disk_encryption_set as e
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
-    where
-      lower(d.id) = any($1);
+      join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_disk_ids" {}
@@ -126,8 +121,7 @@ edge "compute_disk_to_storage_storage_account" {
     from
       azure_compute_disk as d
       left join azure_storage_account as a on lower(a.id) = lower(d.creation_data_storage_account_id)
-    where
-      lower(d.id) = any($1);
+      join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_disk_ids" {}
@@ -143,8 +137,7 @@ edge "compute_disks_to_compute_snapshot" {
     from
       azure_compute_disk as d
       left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
-    where
-      lower(d.id) = any($1);
+      join unnest($1::text[]) as i on lower(d.id) = i and d.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_disk_ids" {}
@@ -160,8 +153,7 @@ edge "compute_snapshots_to_compute_disk" {
     from
       azure_compute_snapshot as s
       left join azure_compute_disk as d on lower(s.source_resource_id) = lower(d.id)
-    where
-      lower(s.id) = any($1);
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_snapshot_ids" {}
@@ -177,8 +169,7 @@ edge "compute_snapshot_to_compute_disk_access" {
     from
       azure_compute_disk_access as a
       left join azure_compute_snapshot as s on lower(s.disk_access_id) = lower(a.id)
-    where
-      lower(s.id) = any($1);
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_snapshot_ids" {}
@@ -194,8 +185,7 @@ edge "compute_snapshot_to_compute_disk_encryption_set" {
     from
       azure_compute_disk_encryption_set as e
       left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
-    where
-      lower(s.id) = any($1);
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_snapshot_ids" {}
@@ -211,8 +201,7 @@ edge "compute_snapshot_to_compute_disks" {
     from
       azure_compute_disk as d
       left join azure_compute_snapshot as s on lower(d.creation_data_source_resource_id) = lower(s.id)
-    where
-      lower(s.id) = any($1);
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_snapshot_ids" {}
@@ -227,8 +216,7 @@ edge "compute_snapshot_to_compute_snapshot" {
       lower(s.id) as to_id
     from
       azure_compute_snapshot as s
-    where
-      lower(s.source_resource_id) = any($1);
+      join unnest($1::text[]) as i on lower(s.source_resource_id) = i and s.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_snapshot_ids" {}
@@ -245,8 +233,7 @@ edge "compute_snapshot_to_key_vault_key" {
       azure_compute_disk_encryption_set as e
       left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
-    where
-      lower(s.id) = any($1);
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_snapshot_ids" {}
@@ -261,8 +248,7 @@ edge "compute_snapshot_to_storage_storage_account" {
       lower(storage_account_id) as to_id
     from
       azure_compute_snapshot
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_snapshot_ids" {}
@@ -278,8 +264,7 @@ edge "compute_virtual_machine_scale_set_network_interface_to_compute_virtual_mac
         virtual_machine ->> 'id' as virtual_machine_id
       from
         azure_compute_virtual_machine_scale_set_network_interface as nic
-      where
-        lower(id) = any($1)
+        join unnest($1::text[]) as i on lower(nic.id) = i and nic.subscription_id = split_part(i, '/', 3)
     )
     select
       lower(nic.nic_id) as from_id,
@@ -301,10 +286,9 @@ edge "compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_net
         n ->> 'name' as nic_name,
         lower(s.id) as scale_set_id
       from
-        azure_compute_virtual_machine_scale_set as s,
+        azure_compute_virtual_machine_scale_set as s
+        join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') n
-      where
-        lower(s.id) = any($1)
     )
     select
       (select lower(scale_set_id) from nic_list ) as from_id,
@@ -327,9 +311,8 @@ edge "compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vm"
       lower(vm.id) as to_id
     from
       azure_compute_virtual_machine_scale_set_vm as vm
-      left join azure_compute_virtual_machine_scale_set as s on s.name = vm.scale_set_name
-    where
-      lower(vm.id) = any($1);
+      join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3)
+      left join azure_compute_virtual_machine_scale_set as s on s.name = vm.scale_set_name;
   EOQ
 
   param "compute_virtual_machine_scale_set_vm_ids" {}
@@ -345,8 +328,7 @@ edge "compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vms
     from
       azure_compute_virtual_machine_scale_set_vm as vm
       left join azure_compute_virtual_machine_scale_set as s on s.name = vm.scale_set_name and vm.resource_group = s.resource_group
-    where
-      lower(s.id) = any($1);
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_virtual_machine_scale_set_ids" {}
@@ -361,12 +343,11 @@ edge "compute_virtual_machine_scale_set_to_network_application_gateway" {
         lower(b ->> 'id') as backend_address_pool_id,
         lower(s.id ) as scale_set_id
       from
-        azure_compute_virtual_machine_scale_set as s,
+        azure_compute_virtual_machine_scale_set as s
+        join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations' ) as p,
         jsonb_array_elements(p -> 'properties' -> 'ipConfigurations' ) as c,
         jsonb_array_elements(c -> 'properties' -> 'applicationGatewayBackendAddressPools' ) as b
-      where
-        lower(s.id) = any($1)
     )
     select
       lower(pool.scale_set_id) as from_id,
@@ -388,12 +369,11 @@ edge "compute_virtual_machine_scale_set_to_network_load_balancer" {
       lower(vm_scale_set.id) as from_id,
       lower(split_part( b ->> 'id', '/backendAddressPools' , 1)) as to_id
     from
-      azure_compute_virtual_machine_scale_set as vm_scale_set ,
+      azure_compute_virtual_machine_scale_set as vm_scale_set
+      join unnest($1::text[]) as i on lower(vm_scale_set.id) = i and vm_scale_set.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') as p,
       jsonb_array_elements(p -> 'properties' -> 'ipConfigurations') as c,
-      jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools') as b
-    where
-      lower(vm_scale_set.id) = any($1)
+      jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools') as b;
   EOQ
 
   param "compute_virtual_machine_scale_set_ids" {}
@@ -407,13 +387,12 @@ edge "compute_virtual_machine_scale_set_to_network_load_balancer_backend_address
       lower(s.id) as from_id,
       lower(b ->> 'id') as to_id
     from
-      azure_compute_virtual_machine_scale_set as s,
+      azure_compute_virtual_machine_scale_set as s
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations' ) as p,
       jsonb_array_elements(p -> 'properties' -> 'ipConfigurations' ) as c,
       jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools' ) as b
-      left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(b ->> 'id')
-    where
-      lower(s.id) = any($1);
+      left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(b ->> 'id');
   EOQ
 
   param "compute_virtual_machine_scale_set_ids" {}
@@ -428,7 +407,8 @@ edge "compute_virtual_machine_scale_set_to_network_security_group" {
         lower(n -> 'properties' -> 'networkSecurityGroup' ->> 'id') as nsg_id,
         nic.id as nic_id
       from
-        azure_compute_virtual_machine_scale_set as s,
+        azure_compute_virtual_machine_scale_set as s
+        join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') n
         left join azure_compute_virtual_machine_scale_set_network_interface as nic on nic.name = n ->> 'name'
       where
@@ -456,11 +436,10 @@ edge "compute_virtual_machine_scale_set_to_network_subnet" {
         lower(s.id) as scale_set_id,
         n ->> 'name' as nic_name
       from
-        azure_compute_virtual_machine_scale_set as s,
+        azure_compute_virtual_machine_scale_set as s
+        join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') as n,
         jsonb_array_elements(n -> 'properties' -> 'ipConfigurations') as c
-      where
-        lower(s.id) = any($1)
     ), nic_id as (
         select
           lower(nic.id) as network_interface_id
@@ -494,11 +473,10 @@ edge "compute_virtual_machine_scale_set_vm_to_compute_disk" {
       lower(vm.id) as from_id,
       lower(d.id) as to_id
     from
-      azure_compute_virtual_machine_scale_set_vm as vm,
+      azure_compute_virtual_machine_scale_set_vm as vm
+      join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(virtual_machine_storage_profile -> 'dataDisks') as disk
-      left join azure_compute_disk as d on lower(d.id) = lower(disk -> 'managedDisk' ->> 'id')
-    where
-      lower(vm.id) = any($1);
+      left join azure_compute_disk as d on lower(d.id) = lower(disk -> 'managedDisk' ->> 'id');
   EOQ
 
   param "compute_virtual_machine_scale_set_vm_ids" {}
@@ -513,9 +491,8 @@ edge "compute_virtual_machine_scale_set_vm_to_compute_virtual_machine_scale_set_
       lower(nic.id) as to_id
     from
       azure_compute_virtual_machine_scale_set_vm as vm
-      left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
-    where
-      lower(vm.id) = any($1);
+      join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3)
+      left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id');
   EOQ
 
   param "compute_virtual_machine_scale_set_vm_ids" {}
@@ -530,10 +507,9 @@ edge "compute_virtual_machine_scale_set_vm_to_network_load_balancer" {
         nic.id as nic_id,
         c ->> 'id' as config_id
       from
-        azure_compute_virtual_machine_scale_set_network_interface as nic,
+        azure_compute_virtual_machine_scale_set_network_interface as nic
+        join unnest($1::text[]) as i on lower(nic.virtual_machine ->> 'id') = i and nic.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(ip_configurations) as c
-      where
-        lower(nic.virtual_machine ->> 'id') = any($1)
     ),
     backend_address_pool as (
       select
@@ -565,10 +541,9 @@ edge "compute_virtual_machine_scale_set_vm_to_network_load_balancer_backend_addr
         nic.id as nic_id,
         c ->> 'id' as config_id
       from
-        azure_compute_virtual_machine_scale_set_network_interface as nic,
+        azure_compute_virtual_machine_scale_set_network_interface as nic
+        join unnest($1::text[]) as i on lower(nic.virtual_machine ->> 'id') = i and nic.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(ip_configurations) as c
-      where
-        lower(nic.virtual_machine ->> 'id') = any($1)
     )
     select
       lower(nic.nic_id) as from_id,
@@ -595,8 +570,7 @@ edge "compute_virtual_machine_scale_set_vm_to_network_security_group" {
       azure_compute_virtual_machine_scale_set_vm as vm
       left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
       left join azure_network_security_group as nsg on lower(nsg.id) = lower(nic.network_security_group ->> 'id')
-    where
-      lower(vm.id) = any($1);
+      join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_virtual_machine_scale_set_vm_ids" {}
@@ -615,8 +589,7 @@ edge "compute_virtual_machine_scale_set_vm_to_network_subnet" {
       from
         azure_compute_virtual_machine_scale_set_vm as vm
         left join azure_compute_virtual_machine_scale_set_network_interface as nic on lower(vm.id) = lower(nic.virtual_machine ->> 'id')
-      where
-        lower(vm.id) = any($1)
+        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3)
     )
     select
       coalesce(
@@ -640,6 +613,7 @@ edge "compute_virtual_machine_to_compute_data_disk" {
     with vm_disk_id as (
       select
         id,
+        subscription_id,
         jsonb_array_elements(data_disks)->'managedDisk'->>'id' as d_id
       from
         azure_compute_virtual_machine
@@ -650,8 +624,7 @@ edge "compute_virtual_machine_to_compute_data_disk" {
     from
       azure_compute_disk as d
       left join vm_disk_id as v on lower(d.id) = lower(v.d_id)
-    where
-      lower(v.id) = any($1);
+      join unnest($1::text[]) as i on lower(v.id) = i and v.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_virtual_machine_ids" {}
@@ -666,8 +639,7 @@ edge "compute_virtual_machine_to_compute_disk" {
       lower(m.managed_disk_id) to_id
     from
       azure_compute_virtual_machine as m
-    where
-      lower(m.id) = any($1)
+      join unnest($1::text[]) as i on lower(m.id) = i and m.subscription_id = split_part(i, '/', 3)
     union
     select
       lower(m.id) as from_id,
@@ -692,8 +664,7 @@ edge "compute_virtual_machine_to_compute_image" {
     from
       azure_compute_image as i
       left join azure_compute_virtual_machine as v on lower(i.id) = lower(v.image_id)
-    where
-      lower(v.id) = any($1);
+      join unnest($1::text[]) as p on lower(v.id) = p and v.subscription_id = split_part(p, '/', 3);
   EOQ
 
   param "compute_virtual_machine_ids" {}
@@ -709,8 +680,7 @@ edge "compute_virtual_machine_to_compute_os_disk" {
     from
       azure_compute_virtual_machine as vm
       left join azure_compute_disk as d on lower(d.managed_by) = lower(vm.id)
-    where
-      lower(vm.id) = any($1);
+      join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_virtual_machine_ids" {}
@@ -723,6 +693,7 @@ edge "compute_virtual_machine_to_network_network_interface" {
     with network_interface_id as (
       select
         id,
+        subscription_id,
         jsonb_array_elements(network_interfaces)->>'id' as n_id
       from
         azure_compute_virtual_machine
@@ -733,8 +704,7 @@ edge "compute_virtual_machine_to_network_network_interface" {
     from
       network_interface_id as vn
       left join azure_network_interface as n on lower(vn.n_id) = lower(n.id)
-    where
-      lower(vn.id) = any($1);
+      join unnest($1::text[]) as i on lower(vn.id) = i and vn.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_virtual_machine_ids" {}
@@ -750,11 +720,10 @@ edge "compute_virtual_machine_to_network_public_ip" {
         nic.id as nic_id,
         nic.ip_configurations as ip_configuration
       from
-        azure_compute_virtual_machine as vm,
+        azure_compute_virtual_machine as vm
+        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on lower(nic.id) = lower(n ->> 'id')
-      where
-        lower(vm.id) = any($1)
     )
     select
       lower(n.nic_id) as from_id,
@@ -778,8 +747,7 @@ edge "compute_virtual_machine_to_network_security_group" {
         jsonb_array_elements(network_interfaces)->>'id' as n_id
       from
         azure_compute_virtual_machine
-      where
-        lower(id) = any($1)
+        join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3)
     )
     select
       lower(s.id) as to_id,
@@ -803,8 +771,7 @@ edge "compute_virtual_machine_to_network_subnet" {
         jsonb_array_elements(network_interfaces)->>'id' as nic_id
       from
         azure_compute_virtual_machine
-      where
-        lower(id) = any($1)
+        join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3)
     )
     select
       coalesce(
@@ -833,8 +800,7 @@ edge "compute_virtual_machine_to_network_virtual_network" {
         jsonb_array_elements(network_interfaces)->>'id' as nic_id
       from
         azure_compute_virtual_machine
-      where
-        lower(id) = any($1)
+        join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3)
     ), subnet_id as (
         select
           s.id as id,

@@ -8,10 +8,10 @@ edge "network_application_gateway_backend_address_pool_to_compute_virtual_machin
         nic.id,
         nic.ip_configurations as ip_configurations
       from
-        azure_compute_virtual_machine as vm,
+        azure_compute_virtual_machine as vm
+        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
-        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3)
     ),
     vm_application_gateway_backend_address_pool as (
       select
@@ -45,10 +45,10 @@ edge "network_application_gateway_to_app_service_web_app" {
         g.id as id,
         backend_address ->> 'fqdn' as app_host_name
       from
-        azure_application_gateway as g,
+        azure_application_gateway as g
+        join unnest($1::text[]) as i on lower(g.id) = i and g.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(backend_address_pools) as pool,
         jsonb_array_elements(pool -> 'properties' -> 'backendAddresses') as backend_address
-        join unnest($1::text[]) as i on lower(g.id) = i and g.subscription_id = split_part(i, '/', 3)
     )
     select
       lower(g.id) as from_id,
@@ -73,10 +73,10 @@ edge "network_application_gateway_to_compute_virtual_machine" {
         nic.id,
         nic.ip_configurations as ip_configurations
       from
-        azure_compute_virtual_machine as vm,
+        azure_compute_virtual_machine as vm
+        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
-        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3)
     ),
     vm_application_gateway_backend_address_pool as (
       select
@@ -143,10 +143,10 @@ edge "network_load_balancer_backend_address_pool_to_compute_virtual_machine" {
         nic.id,
         nic.ip_configurations as ip_configurations
       from
-        azure_compute_virtual_machine as vm,
+        azure_compute_virtual_machine as vm
+        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
-        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3)
     ),
     loadBalancerBackendAddressPools as (
       select
@@ -260,10 +260,10 @@ edge "network_load_balancer_to_backend_address_pool" {
       lower(lb.id) as from_id,
       lower(p.id) as to_id
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(backend_address_pools) as b
-      left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
-      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3);
+      left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -279,10 +279,10 @@ edge "network_load_balancer_to_compute_virtual_machine_backend_address_pool" {
         nic.id,
         nic.ip_configurations as ip_configurations
       from
-        azure_compute_virtual_machine as vm,
+        azure_compute_virtual_machine as vm
+        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(network_interfaces) as n
         left join azure_network_interface as nic on nic.id = n ->> 'id'
-        join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3)
     ),
     loadBalancerBackendAddressPools as (
       select
@@ -313,10 +313,10 @@ edge "network_load_balancer_to_network_load_balancer_nat_rule" {
       lower(lb.id) as from_id,
       lower(r.id) as to_id
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(inbound_nat_rules) as nat_rule
-      left join azure_lb_nat_rule as r on lower(r.id) = lower(nat_rule ->> 'id')
-      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3);
+      left join azure_lb_nat_rule as r on lower(r.id) = lower(nat_rule ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -330,10 +330,10 @@ edge "network_load_balancer_to_network_load_balancer_probe" {
       lower(lb.id) as from_id,
       lower(p.id) as to_id
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(probes) as probe
-      left join azure_lb_probe as p on lower(p.id) = lower(probe ->> 'id')
-      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3);
+      left join azure_lb_probe as p on lower(p.id) = lower(probe ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -894,8 +894,8 @@ edge "network_load_balancer_backend_address_pool_to_network_load_balancer" {
       lower(p ->> 'id') as from_id,
       lower(lb.id) as to_id
     from
-      azure_lb as lb,
-      jsonb_array_elements(backend_address_pools) as p
+      azure_lb as lb
+      cross join lateral jsonb_array_elements(lb.backend_address_pools) as p
       join unnest($1::text[]) as i on lower(p ->> 'id') = i and lb.subscription_id = split_part(i, '/', 3);
   EOQ
 

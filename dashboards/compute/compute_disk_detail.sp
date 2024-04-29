@@ -315,7 +315,8 @@ query "compute_disk_status" {
     from
       azure_compute_disk
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -328,7 +329,8 @@ query "compute_disk_network_access_policy" {
     from
       azure_compute_disk
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -340,7 +342,8 @@ query "compute_disk_size" {
     from
       azure_compute_disk
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -352,7 +355,8 @@ query "compute_disk_os_type" {
     from
       azure_compute_disk
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -364,7 +368,8 @@ query "compute_disk_sku_name" {
     from
       azure_compute_disk
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -378,7 +383,8 @@ query "compute_disk_accesses_for_compute_disk" {
       azure_compute_disk_access as a
       left join azure_compute_disk as d on lower(d.disk_access_id) = lower(a.id)
     where
-      lower(d.id) = $1;
+      lower(d.id) = $1
+      and d.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -390,7 +396,8 @@ query "compute_disk_encryption_sets_for_compute_disk" {
       azure_compute_disk_encryption_set as e
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
     where
-      lower(d.id) = $1;
+      lower(d.id) = $1
+      and d.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -404,6 +411,7 @@ query "compute_snapshots_for_compute_disk" {
     where
       s.id is not null
       and lower(d.id) = $1
+      and d.subscription_id = split_part($1, '/', 3)
     union
     select
       lower(s.id) as compute_snapshot_id
@@ -412,7 +420,7 @@ query "compute_snapshots_for_compute_disk" {
       left join azure_compute_snapshot as s on lower(s.id) = lower(d.creation_data_source_resource_id)
     where
       s.id is not null
-      and lower(d.id) = $1
+      and lower(d.id) = $1;
   EOQ
 }
 
@@ -425,7 +433,8 @@ query "source_compute_disks_for_compute_disk" {
       left join azure_compute_disk d2 on d1.creation_data_source_resource_id = d2.id
     where
       lower(d1.id) = $1
-      and lower(d2.id) is not null;
+      and lower(d2.id) is not null
+      and d2.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -438,7 +447,8 @@ query "compute_virtual_machines_for_compute_disk" {
       jsonb_array_elements(data_disks) as data_disk
     where
       lower(data_disk -> 'managedDisk' ->> 'id') = lower($1)
-      or lower(m.managed_disk_id) = $1;
+      or lower(m.managed_disk_id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -453,7 +463,8 @@ query "key_vault_keys_for_compute_disk" {
       left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
       left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
     where
-      lower(d.id) = $1;
+      lower(d.id) = $1
+      and d.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -466,7 +477,8 @@ query "key_vault_vaults_for_compute_disk" {
       left join azure_compute_disk as d on lower(d.encryption_disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
     where
-      lower(d.id) = $1;
+      lower(d.id) = $1
+      and d.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -480,6 +492,7 @@ query "storage_storage_accounts_for_compute_disk" {
     where
       d.creation_data_storage_account_id is not null
       and lower(d.id) = $1
+      and d.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -500,6 +513,7 @@ query "compute_disk_overview" {
       azure_compute_disk
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -512,6 +526,7 @@ query "compute_disk_tags" {
       azure_compute_disk
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tags ->> 'Key';
   EOQ
@@ -529,6 +544,7 @@ query "compute_disk_associated_virtual_machine_details" {
         jsonb_array_elements(data_disks)  as data_disk
       where
         lower(data_disk -> 'managedDisk' ->> 'id' ) = $1
+        and subscription_id = split_part($1, '/', 3)
     )
     union
     (
@@ -540,6 +556,7 @@ query "compute_disk_associated_virtual_machine_details" {
         azure_compute_virtual_machine
       where
         lower(managed_disk_id) = $1
+        and subscription_id = split_part($1, '/', 3)
     )
   EOQ
 }
@@ -560,6 +577,7 @@ query "compute_disk_encryption_set_details" {
       left join azure_key_vault as v on v.id = e.active_key_source_vault_id
       left join azure_key_vault_key_version as k on k.key_uri_with_version = e.active_key_url
     where
-      lower(d.id) = $1;
+      lower(d.id) = $1
+      and d.subscription_id = split_part($1, '/', 3);
   EOQ
 }
