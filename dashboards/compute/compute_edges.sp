@@ -405,6 +405,7 @@ edge "compute_virtual_machine_scale_set_to_network_security_group" {
     with nic_list as (
       select
         lower(n -> 'properties' -> 'networkSecurityGroup' ->> 'id') as nsg_id,
+        s.id as scale_set_id,
         nic.id as nic_id
       from
         azure_compute_virtual_machine_scale_set as s
@@ -415,7 +416,7 @@ edge "compute_virtual_machine_scale_set_to_network_security_group" {
         lower(s.id) = any($1) limit 1
     )
     select
-      lower(nic.nic_id) as from_id,
+      coalesce(lower(nic.nic_id),lower(nic.scale_set_id)) as from_id,
       lower(nsg.id) as to_id
     from
       nic_list as nic
@@ -458,8 +459,8 @@ edge "compute_virtual_machine_scale_set_to_network_subnet" {
       lower(s.id) as to_id
     from
       subnet_list as l
-      left join azure_subnet as s on lower(s.id) = lower(l.subnet_id),
-      nic_id as n;
+      left join azure_subnet as s on lower(s.id) = lower(l.subnet_id)
+      left join nic_id as n on true;
   EOQ
 
   param "compute_virtual_machine_scale_set_ids" {}
