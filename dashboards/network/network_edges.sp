@@ -107,10 +107,10 @@ edge "network_firewall_to_network_public_ip" {
       lower(f.id) as from_id,
       lower(ip.id) as to_id
     from
-      azure_firewall as f,
+      azure_firewall as f
+      join unnest($1::text[]) as i on lower(f.id) = i and f.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(ip_configurations) as c
-      left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
-      join unnest($1::text[]) as i on lower(f.id) = i and f.subscription_id = split_part(i, '/', 3);
+      left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id');
   EOQ
 
   param "network_firewall_ids" {}
@@ -124,10 +124,10 @@ edge "network_firewall_to_network_subnet" {
       lower(f.id) as from_id,
       lower(s.id) as to_id
     from
-      azure_firewall as f,
+      azure_firewall as f
+      join unnest($1::text[]) as i on lower(f.id) = i and f.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
-      join unnest($1::text[]) as i on lower(f.id) = i and f.subscription_id = split_part(i, '/', 3);
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id');
   EOQ
 
   param "network_firewall_ids" {}
@@ -347,10 +347,10 @@ edge "network_load_balancer_to_network_load_balancer_rule" {
       lower(lb.id) as from_id,
       lower(lb_rule.id) as to_id
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(load_balancing_rules) as r
-      left join azure_lb_rule as lb_rule on lower(lb_rule.id) = lower(r ->> 'id')
-      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3);
+      left join azure_lb_rule as lb_rule on lower(lb_rule.id) = lower(r ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -364,10 +364,10 @@ edge "network_load_balancer_to_network_public_ip" {
       lower(lb.id) as from_id,
       lower(ip.id) as to_id
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(frontend_ip_configurations) as f
-      left join azure_public_ip as ip on lower(ip.id) = lower(f -> 'properties' -> 'publicIPAddress' ->> 'id')
-      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3);
+      left join azure_public_ip as ip on lower(ip.id) = lower(f -> 'properties' -> 'publicIPAddress' ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -403,6 +403,7 @@ edge "network_network_interface_to_network_public_ip" {
     with network_interface_public_ip as (
       select
         id,
+        subscription_id,
         jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
       from
         azure_network_interface
@@ -412,8 +413,8 @@ edge "network_network_interface_to_network_public_ip" {
       lower(n.id) as from_id
     from
       network_interface_public_ip as n
-      left join azure_public_ip as p on lower(p.id) = lower(n.pid)
-      join unnest($1::text[]) as i on lower(n.id) = i and n.subscription_id = split_part(i, '/', 3);
+      join unnest($1::text[]) as i on lower(n.id) = i and n.subscription_id = split_part(i, '/', 3)
+      left join azure_public_ip as p on lower(p.id) = lower(n.pid);
   EOQ
 
   param "network_network_interface_ids" {}
@@ -453,10 +454,10 @@ edge "network_network_interface_to_network_subnet" {
         lower(ni.id)
       ) as from_id
     from
-      azure_network_interface as ni,
+      azure_network_interface as ni
+      join unnest($1::text[]) as i on lower(ni.id) = i and ni.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(ip_configurations) as c
-      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
-      join unnest($1::text[]) as i on lower(ni.id) = i and ni.subscription_id = split_part(i, '/', 3);
+      left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id');
   EOQ
 
   param "network_network_interface_ids" {}
@@ -471,10 +472,10 @@ edge "network_network_security_group_to_compute_virtual_machine" {
         nsg.id as nsg_id,
         nic.id as nic_id
       from
-        azure_network_security_group as nsg,
+        azure_network_security_group as nsg
+        join unnest($1::text[]) as i on lower(nsg.id) = i and nsg.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(network_interfaces) as ni
         join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
-        join unnest($1::text[]) as i on lower(nsg.id) = i and nsg.subscription_id = split_part(i, '/', 3)
     )
     select
       lower(nic.nsg_id) as from_id,
@@ -524,10 +525,10 @@ edge "network_security_group_to_network_interface" {
       lower(nsg.id) as from_id,
       lower(nic.id) as to_id
     from
-      azure_network_security_group as nsg,
+      azure_network_security_group as nsg
+      join unnest($1::text[]) as i on lower(nsg.id) = i and nsg.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(network_interfaces) as ni
-      left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
-      join unnest($1::text[]) as i on lower(nsg.id) = i and nsg.subscription_id = split_part(i, '/', 3);
+      left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id');
   EOQ
 
   param "network_network_security_group_ids" {}
@@ -541,10 +542,10 @@ edge "network_security_group_to_network_watcher_flow_log" {
       lower(nsg.id) as from_id,
       lower(fl.id) as to_id
     from
-      azure_network_security_group as nsg,
+      azure_network_security_group as nsg
+      join unnest($1::text[]) as i on lower(nsg.id) = i and nsg.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(flow_logs) as f
-      left join azure_network_watcher_flow_log as fl on lower(fl.id) = lower(f->> 'id')
-      join unnest($1::text[]) as i on lower(nsg.id) = i and nsg.subscription_id = split_part(i, '/', 3);
+      left join azure_network_watcher_flow_log as fl on lower(fl.id) = lower(f->> 'id');
   EOQ
 
   param "network_network_security_group_ids" {}
@@ -589,8 +590,8 @@ edge "network_subnet_to_cosmosdb_account" {
       lower(id) as to_id
     from
       azure_cosmosdb_account
-      join unnest($1::text[]) as i on lower(r ->> 'id') = i and subscription_id = split_part(i, '/', 3),
-      jsonb_array_elements(virtual_network_rules) as r;
+      cross join lateral jsonb_array_elements(virtual_network_rules) as r
+      join unnest($1::text[]) as i on lower(r ->> 'id') = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_subnet_ids" {}
@@ -605,8 +606,8 @@ edge "network_subnet_to_network_application_gateway" {
       lower(id) as to_id
     from
       azure_application_gateway
-      join unnest($1::text[]) as i on lower(c -> 'properties' -> 'subnet' ->> 'id') = i and subscription_id = split_part(i, '/', 3),
-      jsonb_array_elements(gateway_ip_configurations) as c;
+      cross join lateral jsonb_array_elements(gateway_ip_configurations) as c
+      join unnest($1::text[]) as i on lower(c -> 'properties' -> 'subnet' ->> 'id') = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_subnet_ids" {}
@@ -621,8 +622,8 @@ edge "network_subnet_to_network_firewall" {
       lower(f.id) as to_id
     from
       azure_firewall as f
-      join unnest($1::text[]) as i on lower(c -> 'subnet' ->> 'id') = i and subscription_id = split_part(i, '/', 3),
-      jsonb_array_elements(ip_configurations) as c;
+      cross join lateral jsonb_array_elements(ip_configurations) as c
+      join unnest($1::text[]) as i on lower(c -> 'subnet' ->> 'id') = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_subnet_ids" {}
@@ -637,8 +638,8 @@ edge "network_subnet_to_network_nat_gateway" {
       lower(id) as to_id
     from
       azure_nat_gateway
-      join unnest($1::text[]) as i on lower(s ->> 'id') = i and subscription_id = split_part(i, '/', 3),
-      jsonb_array_elements(subnets) as s;
+      cross join lateral jsonb_array_elements(subnets) as s
+      join unnest($1::text[]) as i on lower(s ->> 'id') = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_subnet_ids" {}
@@ -653,8 +654,8 @@ edge "network_subnet_to_network_route_table" {
       lower(r.id) as to_id
     from
       azure_route_table as r
-      join unnest($1::text[]) as i on lower(sub ->> 'id') = i and subscription_id = split_part(i, '/', 3),
-      jsonb_array_elements(r.subnets) as sub;
+      cross join lateral jsonb_array_elements(r.subnets) as sub
+      join unnest($1::text[]) as i on lower(sub ->> 'id') = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_subnet_ids" {}
@@ -669,8 +670,8 @@ edge "network_subnet_to_network_security_group" {
       lower(nsg.id) as to_id
     from
       azure_network_security_group as nsg
-      join unnest($1::text[]) as i on lower(sub ->> 'id') = i and subscription_id = split_part(i, '/', 3),
-      jsonb_array_elements(nsg.subnets) as sub;
+      cross join lateral jsonb_array_elements(nsg.subnets) as sub
+      join unnest($1::text[]) as i on lower(sub ->> 'id') = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_subnet_ids" {}
@@ -701,8 +702,8 @@ edge "network_subnet_to_sql_server" {
       lower(id) as to_id
     from
       azure_sql_server
-      join unnest($1::text[]) as i on lower(r -> 'properties' ->> 'virtualNetworkSubnetId') = i and subscription_id = split_part(i, '/', 3),
-      jsonb_array_elements(virtual_network_rules) as r;
+      cross join lateral jsonb_array_elements(virtual_network_rules) as r
+      join unnest($1::text[]) as i on lower(r -> 'properties' ->> 'virtualNetworkSubnetId') = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_subnet_ids" {}
@@ -717,8 +718,8 @@ edge "network_subnet_to_storage_storage_account" {
       lower(id) as to_id
     from
       azure_storage_account
-      join unnest($1::text[]) as i on lower(r ->> 'id') = i and subscription_id = split_part(i, '/', 3)
-      jsonb_array_elements(virtual_network_rules) as r;
+      cross join lateral jsonb_array_elements(virtual_network_rules) as r
+      join unnest($1::text[]) as i on lower(r ->> 'id') = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_subnet_ids" {}
@@ -855,7 +856,7 @@ edge "network_virtual_network_to_network_peering" {
         p -> 'properties' -> 'remoteVirtualNetwork' ->> 'id' as peering_vn
       from
         azure_virtual_network as v
-        join unnest($1::text[]) as i on lower(v.id) = i and v.subscription_id = split_part(i, '/', 3)
+        join unnest($1::text[]) as i on lower(v.id) = i and v.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(network_peerings) as p
     )
     select
@@ -877,10 +878,10 @@ edge "network_virtual_network_to_network_subnet" {
       lower(v.id) as from_id,
       lower(sub.id) as to_id
     from
-      azure_virtual_network as v,
+      azure_virtual_network as v
+      join unnest($1::text[]) as i on lower(v.id) = i and v.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(subnets) as s
-      left join azure_subnet as sub on lower(sub.id) = lower(s ->> 'id')
-      join unnest($1::text[]) as i on lower(v.id) = i and v.subscription_id = split_part(i, '/', 3);
+      left join azure_subnet as sub on lower(sub.id) = lower(s ->> 'id');
   EOQ
 
   param "network_virtual_network_ids" {}

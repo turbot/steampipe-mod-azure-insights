@@ -105,10 +105,10 @@ node "network_load_balancer_nat_rule" {
         'Subscription ID', r.subscription_id
       ) as properties
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(inbound_nat_rules) as nat_rule
-      left join azure_lb_nat_rule as r on lower(r.id) = lower(nat_rule ->> 'id')
-      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3);
+      left join azure_lb_nat_rule as r on lower(r.id) = lower(nat_rule ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -129,10 +129,10 @@ node "network_load_balancer_probe" {
         'Subscription ID', p.subscription_id
       ) as properties
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(probes) as probe
-      left join azure_lb_probe as p on lower(p.id) = lower(probe ->> 'id')
-      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3);
+      left join azure_lb_probe as p on lower(p.id) = lower(probe ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -153,10 +153,10 @@ node "network_load_balancer_rule" {
         'Subscription ID', lb_rule.subscription_id
       ) as properties
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(load_balancing_rules) as r
-      left join azure_lb_rule as lb_rule on lower(lb_rule.id) = lower(r ->> 'id')
-      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3);
+      left join azure_lb_rule as lb_rule on lower(lb_rule.id) = lower(r ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -287,10 +287,10 @@ node "network_security_group_network_watcher_flow_log" {
         'Subscription ID', fl.subscription_id
       ) as properties
     from
-      azure_network_security_group as nsg,
+      azure_network_security_group as nsg
+      join unnest($1::text[]) as i on lower(nsg.id) = i and nsg.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(flow_logs) as f
-      left join azure_network_watcher_flow_log as fl on lower(fl.id) = lower(f->> 'id')
-      join unnest($1::text[]) as i on lower(nsg.id) = i and nsg.subscription_id = split_part(i, '/', 3);
+      left join azure_network_watcher_flow_log as fl on lower(fl.id) = lower(f->> 'id');
   EOQ
 
   param "network_network_security_group_ids" {}
