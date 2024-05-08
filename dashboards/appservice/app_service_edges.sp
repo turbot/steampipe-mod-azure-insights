@@ -4,11 +4,11 @@ edge "app_service_web_app_to_app_service_plan" {
   sql = <<-EOQ
     select
       lower(p.id) as to_id,
-      lower(a ->> 'id') as from_id
+      lower(a ->> 'ID') as from_id
     from
       azure_app_service_plan p
       cross join lateral jsonb_array_elements(p.apps) as a
-      join unnest($1::text[]) as i on lower(a ->> 'id') = i and p.subscription_id = split_part(i, '/', 3);
+      join unnest($1::text[]) as i on lower(a ->> 'ID') = lower(i) and p.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "app_service_web_app_ids" {}

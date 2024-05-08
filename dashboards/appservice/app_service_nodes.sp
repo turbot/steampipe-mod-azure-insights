@@ -5,6 +5,7 @@ node "app_service_plan" {
     select
       lower(p.id) as id,
       p.title as title,
+      a,
       json_build_object(
           'name', p.name,
           'id', lower(p.id),
@@ -20,7 +21,7 @@ node "app_service_plan" {
     from
       azure_app_service_plan p
       cross join lateral jsonb_array_elements(p.apps) as a
-      join unnest($1::text[]) as i on lower(a ->> 'id') = i and p.subscription_id = split_part(i, '/', 3);
+      join unnest($1::text[]) as i on lower(a ->> 'ID') = lower(i) and p.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "app_service_web_app_ids" {}

@@ -329,8 +329,7 @@ query "compute_disk_encryption_sets_for_key_vault_key" {
       left join azure_compute_disk_encryption_set as s on s.active_key_url = v.key_uri_with_version
     where
       s.id is not null
-      and lower(split_part(v.id, '/versions', 1)) = $1
-      and v.subscription_id = split_part($1, '/', 3);
+      and lower(split_part(v.id, '/versions', 1)) = $1;
   EOQ
 }
 

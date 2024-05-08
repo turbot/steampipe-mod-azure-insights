@@ -311,8 +311,8 @@ edge "compute_virtual_machine_scale_set_to_compute_virtual_machine_scale_set_vm"
       lower(vm.id) as to_id
     from
       azure_compute_virtual_machine_scale_set_vm as vm
-      join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3)
-      left join azure_compute_virtual_machine_scale_set as s on s.name = vm.scale_set_name;
+      join unnest($1::text[]) as i on lower(vm.id) = i and subscription_id = split_part(i, '/', 3)
+      join azure_compute_virtual_machine_scale_set as s on s.name = vm.scale_set_name;
   EOQ
 
   param "compute_virtual_machine_scale_set_vm_ids" {}
@@ -447,14 +447,14 @@ edge "compute_virtual_machine_scale_set_to_network_subnet" {
         from
           azure_compute_virtual_machine_scale_set_network_interface as nic
         where
-          nic.name = (select nic_name from subnet_list)
+          nic.name = (select nic_name from subnet_list limit 1)
           and lower(split_part(nic.virtual_machine ->> 'id', '/virtualMachines', 1)) = any($1)
         limit 1
     )
     select
       coalesce(
         lower(l.nsg_id),
-        n.network_interface_id
+        n.network_interface_id, l.scale_set_id
       ) as from_id,
       lower(s.id) as to_id
     from
@@ -681,7 +681,7 @@ edge "compute_virtual_machine_to_compute_os_disk" {
     from
       azure_compute_virtual_machine as vm
       left join azure_compute_disk as d on lower(d.managed_by) = lower(vm.id)
-      join unnest($1::text[]) as i on lower(vm.id) = i and vm.subscription_id = split_part(i, '/', 3);
+      join unnest($1::text[]) as i on lower(vm.id) = i and d.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "compute_virtual_machine_ids" {}
