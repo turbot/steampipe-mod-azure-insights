@@ -15,7 +15,7 @@ node "resource_group" {
     from
       azure_resource_group
     where
-      subscription_id = any($1);
+      id = any($1);
   EOQ
 
   param "resource_group_ids" {}
