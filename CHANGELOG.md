@@ -1,3 +1,9 @@
+## v0.16 [2024-05-13]
+
+_Enhancements_
+
+- Queries have been optimized to better work with the connection quals. ([#124](https://github.com/turbot/steampipe-mod-azure-insights/pull/124))
+
 ## v0.15 [2024-04-06]
 
 _Powerpipe_
