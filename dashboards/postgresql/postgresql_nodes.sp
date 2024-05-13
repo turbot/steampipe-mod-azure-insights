@@ -15,8 +15,7 @@ node "postgresql_server" {
       ) as properties
     from
       azure_postgresql_server
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 1);
   EOQ
 
   param "postgresql_server_ids" {}

@@ -287,7 +287,8 @@ query "key_vault_key_status" {
     from
       azure_key_vault_key
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -299,7 +300,8 @@ query "key_vault_key_type" {
     from
       azure_key_vault_key
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -311,7 +313,8 @@ query "key_vault_key_size" {
     from
       azure_key_vault_key
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -340,7 +343,8 @@ query "container_registries_for_key_vault_key" {
       left join azure_key_vault_key_version as v on v.key_uri_with_version = k.key_uri_with_version
     where
       r.id is not null
-      and lower(k.id) = $1;
+      and lower(k.id) = $1
+      and k.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -356,7 +360,8 @@ query "eventhub_namespaces_for_key_vault_key" {
     where
       k.resource_group = v.resource_group
       and k.resource_group = n.resource_group
-      and lower(k.id) = $1;
+      and lower(k.id) = $1
+      and k.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -368,7 +373,8 @@ query "key_vault_vaults_for_key_vault_key" {
       azure_key_vault_key as k
       left join azure_key_vault as v on v.name = k.vault_name
     where
-      lower(k.id) = $1;
+      lower(k.id) = $1
+      and k.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -381,7 +387,8 @@ query "postgresql_servers_for_key_vault_key" {
       jsonb_array_elements(server_keys) as sk
       left join azure_key_vault_key_version as v on lower(sk ->> 'ServerKeyUri') = lower(v.key_uri_with_version)
     where
-      lower(split_part(v.id, '/versions', 1)) = $1;
+      lower(split_part(v.id, '/versions', 1)) = $1
+      and v.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -398,7 +405,8 @@ query "servicebus_namespaces_for_key_vault_key" {
       n.id is not null
       and lower(k.resource_group) = lower(v.resource_group)
       and lower(k.resource_group) = lower(n.resource_group)
-      and lower(k.id) = $1;
+      and lower(k.id) = $1
+      and k.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -427,7 +435,8 @@ query "sql_servers_for_key_vault_key" {
       left join sql_server as s on v.key_uri_with_version = s.uri
     where
       s.uri is not null
-      and lower(split_part(v.id, '/versions', 1)) = $1;
+      and lower(split_part(v.id, '/versions', 1)) = $1
+      and v.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -439,7 +448,8 @@ query "storage_storage_accounts_for_key_vault_key" {
       azure_storage_account as s
       left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
     where
-      lower(split_part(v.id, '/versions', 1)) = $1;
+      lower(split_part(v.id, '/versions', 1)) = $1
+      and v.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -461,6 +471,7 @@ query "key_vault_key_overview" {
       azure_key_vault_key
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -473,6 +484,7 @@ query "key_vault_key_tags" {
       azure_key_vault_key
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tags ->> 'Key';
   EOQ
@@ -487,6 +499,7 @@ query "key_vault_key_age" {
     from
       azure_key_vault_key
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }

@@ -288,6 +288,7 @@ query "network_security_group_ingress_rules_count" {
     where
       rules -> 'properties' ->> 'direction' = 'Inbound'
       and lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 
 }
@@ -303,6 +304,7 @@ query "network_security_group_egress_rules_count" {
     where
       rules -> 'properties' ->> 'direction' = 'Outbound'
       and lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 
 }
@@ -317,6 +319,7 @@ query "network_security_group_attached_enis_count" {
       jsonb_array_elements(network_interfaces ) as nic
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 
 }
@@ -331,6 +334,7 @@ query "network_security_group_attached_subnets_count" {
       jsonb_array_elements(subnets) as s
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 
 }
@@ -369,6 +373,7 @@ query "network_security_group_unrestricted_ingress_remote_access" {
           )
         )
         and lower(nsg.id) = $1
+        and subscription_id = split_part($1, '/', 3)
     )
     select
       'Unrestricted Ingress (Excludes ICMP)' as label,
@@ -414,6 +419,7 @@ query "network_security_group_unrestricted_egress_remote_access" {
           )
         )
         and lower(nsg.id) = $1
+        and subscription_id = split_part($1, '/', 3)
     )
     select
       'Unrestricted Egress (Excludes ICMP)' as label,
@@ -439,6 +445,7 @@ query "compute_virtual_machines_for_network_security_group" {
         left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
       where
         lower(nsg.id )= $1
+        and nsg.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(vm.id) as virtual_machine_id
@@ -447,7 +454,8 @@ query "compute_virtual_machines_for_network_security_group" {
       jsonb_array_elements(network_interfaces) as ni
       left join network_interface_list as nic on lower(nic.nic_id) = lower(ni ->> 'id')
     where
-      lower(nic.nsg_id) = $1;
+      lower(nic.nsg_id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -461,7 +469,8 @@ query "network_network_interfaces_for_network_security_group" {
       left join azure_network_interface as nic on lower(nic.id) = lower(ni ->> 'id')
     where
       (nic.id) is not null
-      and lower(nsg.id) = $1;
+      and lower(nsg.id) = $1
+      and nsg.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -475,6 +484,7 @@ query "network_subnets_for_network_security_group" {
       left join azure_subnet as s on lower(s.id) = lower(sub ->> 'id')
     where
       lower(nsg.id) = $1
+      and nsg.subscription_id = split_part($1, '/', 3)
       and lower(s.id) is not null;
   EOQ
 }
@@ -490,6 +500,7 @@ query "network_virtual_networks_for_network_security_group" {
         jsonb_array_elements(subnets) as sub
       where
         lower(nsg.id) = $1
+        and nsg.subscription_id = split_part($1, '/', 3)
     ) select
         lower(vn.id) as network_id
       from
@@ -497,7 +508,8 @@ query "network_virtual_networks_for_network_security_group" {
         jsonb_array_elements(subnets) as sub
         join subnet_list as s on lower(s.subnet_id) = lower(sub ->> 'id')
       where
-        lower(s.nsg_id) = $1;
+        lower(s.nsg_id) = $1
+        and vn.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -517,6 +529,7 @@ query "network_security_group_overview" {
       azure_network_security_group
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 
 }
@@ -531,6 +544,7 @@ query "network_security_group_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
     EOQ
@@ -550,7 +564,7 @@ query "network_security_group_assoc" {
       left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
     where
       lower(nsg.id) = $1
-
+      and nsg.subscription_id = split_part($1, '/', 3)
       -- Subnets
     union select
       s.title as "Title",
@@ -562,6 +576,7 @@ query "network_security_group_assoc" {
       left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
     where
       lower(nsg.id) = $1
+      and nsg.subscription_id = split_part($1, '/', 3)
     EOQ
 
 }
@@ -576,6 +591,7 @@ query "security_group_flow_logs" {
         jsonb_array_elements(flow_logs) as l
       where
         lower(nsg.id) = $1
+        and nsg.subscription_id = split_part($1, '/', 3)
     )
     select
       fl.name as "Name",
@@ -604,7 +620,8 @@ query "network_security_group_ingress_rules" {
       left join  jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes')  as sip on true
     where
       sg -> 'properties' ->> 'direction' = 'Inbound'
-      and lower(nsg.id) = $1;
+      and lower(nsg.id) = $1
+      and nsg.subscription_id = split_part($1, '/', 3);
   EOQ
 
 }
@@ -619,11 +636,12 @@ query "network_security_group_egress_rules" {
     from
       azure_network_security_group nsg,
       jsonb_array_elements(security_rules || default_security_rules) sg
-     left join jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges') as dports on true
+      left join jsonb_array_elements_text(sg -> 'properties' -> 'destinationPortRanges') as dports on true
       left join  jsonb_array_elements_text(sg -> 'properties' -> 'sourceAddressPrefixes')  as sip on true
     where
       sg -> 'properties' ->> 'direction' = 'Outbound'
-      and lower(nsg.id) = $1;
+      and lower(nsg.id) = $1
+      and nsg.subscription_id = split_part($1, '/', 3);
   EOQ
 
 }
@@ -645,6 +663,7 @@ query "network_security_group_ingress_rule_sankey" {
         left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
       where
         lower(nsg.id) = $1
+        and nsg.subscription_id = split_part($1, '/', 3)
 
       -- Subnets
       union select
@@ -658,6 +677,7 @@ query "network_security_group_ingress_rule_sankey" {
         left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
       where
         lower(nsg.id) = $1
+        and nsg.subscription_id = split_part($1, '/', 3)
       ),
       rules as (
         select
@@ -708,6 +728,7 @@ query "network_security_group_ingress_rule_sankey" {
         where
           r -> 'properties' ->> 'direction' = 'Inbound'
           and lower(id) = $1
+          and subscription_id = split_part($1, '/', 3)
           )
 
       -- Nodes  ---------
@@ -785,6 +806,7 @@ query "network_security_group_egress_rule_sankey" {
         left join azure_network_interface as ni on lower(ni.id) = lower(nic ->> 'id')
       where
         lower(nsg.id) = $1
+        and nsg.subscription_id = split_part($1, '/', 3)
 
       -- Subnets
       union select
@@ -798,6 +820,7 @@ query "network_security_group_egress_rule_sankey" {
         left join azure_subnet as s on lower(s.id) = lower(subnets ->> 'id')
       where
         lower(nsg.id) = $1
+        and nsg.subscription_id = split_part($1, '/', 3)
       ),
       rules as (
         select
@@ -848,6 +871,7 @@ query "network_security_group_egress_rule_sankey" {
         where
           r -> 'properties' ->> 'direction' = 'Outbound'
           and lower(id) = $1
+          and subscription_id = split_part($1, '/', 3)
           )
 
         -- Nodes  ---------

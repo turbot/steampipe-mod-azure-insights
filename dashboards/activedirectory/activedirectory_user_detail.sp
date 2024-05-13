@@ -18,39 +18,39 @@ dashboard "activedirectory_user_detail" {
     card {
       width = 3
       query = query.activedirectory_user_type
-      args = [self.input.user_id.value]
+      args  = [self.input.user_id.value]
     }
 
   }
 
   with "activedirectory_directory_roles_for_activedirectory_user" {
     query = query.activedirectory_directory_roles_for_activedirectory_user
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   with "activedirectory_groups_for_activedirectory_user" {
     query = query.activedirectory_groups_for_activedirectory_user
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   with "resource_groups_for_activedirectory_user" {
     query = query.resource_groups_for_activedirectory_user
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   with "resource_group_role_definitions_for_activedirectory_user" {
     query = query.resource_group_role_definitions_for_activedirectory_user
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   with "subscriptions_for_activedirectory_user" {
     query = query.subscriptions_for_activedirectory_user
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   with "subscription_role_definitions_for_activedirectory_user" {
     query = query.subscription_role_definitions_for_activedirectory_user
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
   }
 
   container {
@@ -161,7 +161,7 @@ dashboard "activedirectory_user_detail" {
       type  = "line"
       width = 6
       query = query.activedirectory_user_overview
-      args = [self.input.user_id.value]
+      args  = [self.input.user_id.value]
 
     }
 
@@ -172,7 +172,7 @@ dashboard "activedirectory_user_detail" {
       table {
         title = "Last 5 Sign-ins"
         query = query.activedirectory_user_sign_in_report
-        args = [self.input.user_id.value]
+        args  = [self.input.user_id.value]
       }
 
     }
@@ -187,14 +187,14 @@ dashboard "activedirectory_user_detail" {
       title = "Azure Active Directory Role Assignments"
       width = 6
       query = query.activedirectory_directory_roles_for_user
-      args = [self.input.user_id.value]
+      args  = [self.input.user_id.value]
     }
 
     table {
       title = "Azure Role Assignments"
       width = 6
       query = query.activedirectory_subscription_roles_for_user
-      args = [self.input.user_id.value]
+      args  = [self.input.user_id.value]
     }
   }
 
@@ -207,7 +207,7 @@ dashboard "activedirectory_user_detail" {
     }
 
     query = query.activedirectory_groups_for_user
-    args = [self.input.user_id.value]
+    args  = [self.input.user_id.value]
 
   }
 
@@ -217,7 +217,7 @@ query "activedirectory_user_input" {
   sql = <<-EOQ
     select
       u.display_name as label,
-      u.id as value,
+      u.id || '/' || u.tenant_id as value,
       json_build_object(
         'Tenant', concat('tenant: ', (split_part(u.tenant_id, '-',5))::text),
         'UPN', user_principal_name
@@ -237,7 +237,8 @@ query "activedirectory_user_type" {
     from
       azuread_user
     where
-      id = $1;
+      id = split_part($1, '/', 1)
+      and tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
@@ -254,7 +255,8 @@ query "activedirectory_user_overview" {
     from
       azuread_user
     where
-      id = $1
+      id = split_part($1, '/', 1)
+      and tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
@@ -269,7 +271,8 @@ query "activedirectory_groups_for_user" {
       azuread_group as g,
       jsonb_array_elements(member_ids) as m
     where
-      trim((m::text), '""') = $1
+      trim((m::text), '""') = split_part($1, '/', 1)
+      and g.tenant_id = split_part($1, '/', 2)
     order by
       g.display_name ;
   EOQ
@@ -290,8 +293,8 @@ query "activedirectory_directory_roles_for_user" {
           azuread_directory_role as dr,
           jsonb_array_elements(member_ids) as m
         where
-          trim((m::text), '""') = $1
-
+          trim((m::text), '""') = split_part($1, '/', 1)
+          and dr.tenant_id = split_part($1, '/', 2)
         union select
           dr.display_name as role_name,
           dr.id as id
@@ -305,7 +308,8 @@ query "activedirectory_directory_roles_for_user" {
               azuread_group as g,
               jsonb_array_elements(member_ids) as m
             where
-              trim((m::text), '""') = $1)
+              trim((m::text), '""') = split_part($1, '/', 1)
+              and g.tenant_id = split_part($1, '/', 2))
       ) data
     order by
       role_name;
@@ -323,7 +327,7 @@ query "activedirectory_subscription_roles_for_user" {
         azure_role_assignment as a
         left join azure_role_definition as d on d.id = a.role_definition_id
       where
-        a.principal_id = $1
+        a.principal_id = split_part($1, '/', 1)
       order by
         d.role_name
     )
@@ -348,7 +352,8 @@ query "activedirectory_user_sign_in_report" {
     from
       azuread_sign_in_report
     where
-      user_id = $1
+      user_id = split_part($1, '/', 1)
+      and tenant_id = split_part($1, '/', 2)
     order by
       created_date_time desc
     limit 5;
@@ -369,14 +374,14 @@ query "activedirectory_groups_for_activedirectory_user" {
       from
         azuread_group
     )
-     select
-      ag.id as activedirectory_group_id
+    select
+      ag.id || '/' || ag.tenant_id as activedirectory_group_id
     from
       group_details as ag
       left join azuread_user as au on au.id = ag.m_id
     where
       ag.tenant_id = au.tenant_id
-      and au.id = $1
+      and au.id = split_part($1, '/', 1);
   EOQ
 }
 
@@ -384,7 +389,7 @@ query "subscription_role_definitions_for_activedirectory_user" {
 
   sql = <<-EOQ
     select
-      d.id as role_definition_id
+      d.id || '/' || d.subscription_id as role_definition_id
     from
       azuread_user as u
       left join azure_role_assignment as a on a.principal_id = u.id
@@ -393,7 +398,8 @@ query "subscription_role_definitions_for_activedirectory_user" {
       (a.scope like '/subscriptions/%' and a.scope not like '%/resourceGroups/%')
       and (a.scope like '/subscriptions/%' and a.scope not like '%/resourcegroups/%')
       and d.id is not null
-      and u.id = $1;
+      and u.id = split_part($1, '/', 1)
+      and u.tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
@@ -401,7 +407,7 @@ query "resource_group_role_definitions_for_activedirectory_user" {
 
   sql = <<-EOQ
     select
-      d.id as role_definition_id,
+      d.id || '/' || d.subscription_id as role_definition_id,
       a.scope
     from
       azuread_user as u
@@ -409,9 +415,10 @@ query "resource_group_role_definitions_for_activedirectory_user" {
       left join azure_role_definition as d on d.id = a.role_definition_id
     where
       ((a.scope like '%/resourceGroups/%')
-       or (a.scope like '%/resourcegroups/%'))
-       and d.id is not null
-      and u.id = $1;
+      or (a.scope like '%/resourcegroups/%'))
+      and d.id is not null
+      and u.id = split_part($1, '/', 1)
+      and u.tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
@@ -428,13 +435,13 @@ query "activedirectory_directory_roles_for_activedirectory_user" {
         azuread_directory_role
     )
     select
-      r.id as directory_role_id
+      r.id || '/' || r.tenant_id as directory_role_id
     from
       assigned_role as r
       left join azuread_user as au on au.id = r.m_id
     where
       r.tenant_id = au.tenant_id
-      and au.id = $1;
+      and au.id = split_part($1, '/', 1);
   EOQ
 }
 
@@ -450,7 +457,8 @@ query "subscriptions_for_activedirectory_user" {
     where
       a.scope like '/subscriptions/%'
       and d.id is not null
-      and u.id = $1;
+      and u.id = $1
+      and u.tenant_id = split_part($1, '/', 2);
   EOQ
 }
 

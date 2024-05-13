@@ -211,7 +211,8 @@ query "network_public_association" {
     from
       azure_public_ip
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -223,7 +224,8 @@ query "network_public_ip_address" {
     from
       azure_public_ip
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -235,7 +237,8 @@ query "network_public_ip_sku_name" {
     from
       azure_public_ip
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -255,6 +258,8 @@ query "api_management_for_network_public_ip" {
         jsonb_array_elements_text(public_ip_addresses) as pid
       from
         azure_api_management
+      where
+        subscription_id = split_part($1, '/', 3)
     )
     select
       lower(a.id) as api_management_id
@@ -274,6 +279,7 @@ query "compute_virtual_machines_for_network_public_ip" {
         jsonb_array_elements(network_interfaces)->>'id' as n_id
       from
         azure_compute_virtual_machine
+        where subscription_id = split_part($1, '/', 3)
     ), ni_public_ip as (
         select
           id,
@@ -301,7 +307,8 @@ query "network_firewalls_for_network_public_ip" {
       jsonb_array_elements(ip_configurations) as c
       left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
     where
-      lower(ip.id)  = $1;
+      lower(ip.id)  = $1
+      and ip.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -314,7 +321,8 @@ query "network_load_balancers_for_network_public_ip" {
       jsonb_array_elements(frontend_ip_configurations) as c
       left join azure_public_ip as p on lower(p.id) = lower(c -> 'properties' -> 'publicIPAddress' ->> 'id')
     where
-      lower(p.id) = $1;
+      lower(p.id) = $1
+      and p.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -333,7 +341,8 @@ query "network_network_interfaces_for_network_public_ip" {
       network_interface_public_ip as n
       left join azure_public_ip as p on lower(n.pid) = lower(p.id)
     where
-      lower(p.id) = $1;
+      lower(p.id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -345,7 +354,8 @@ query "azure_network_public_ip_ddos_settings_protected_ip" {
     from
       azure_public_ip
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -366,7 +376,8 @@ query "network_public_ip_overview" {
     from
       azure_public_ip
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -379,6 +390,7 @@ query "network_public_ip_tags" {
       azure_public_ip
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tags ->> 'Key';
   EOQ
@@ -414,6 +426,7 @@ query "network_public_ip_association_details" {
       left join azure_public_ip as p on lower(n.pid) = lower(p.id)
     where
       lower(p.id) = $1
+      and subscription_id = split_part($1, '/', 3)
 
     -- API Management
     union all
@@ -427,5 +440,6 @@ query "network_public_ip_association_details" {
       left join azure_public_ip as p on (a.pid)::inet = p.ip_address
     where
       lower(p.id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }

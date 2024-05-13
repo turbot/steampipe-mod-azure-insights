@@ -167,7 +167,8 @@ query "cosmosdb_mongo_database_collection_count" {
       azure_cosmosdb_mongo_collection c
     where
       lower(d.id) = $1
-      and c.database_name = d.name;
+      and c.database_name = d.name
+      and d.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -179,7 +180,8 @@ query "cosmosdb_mongo_database_throughput" {
     from
       azure_cosmosdb_mongo_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -210,7 +212,8 @@ query "cosmosdb_mongo_collection_for_cosmosdb_mongo_database" {
         on c.database_name = d.name
         and c.account_name = (select account_name from azure_cosmosdb_mongo_database where lower(id) = $1)
     where
-      lower(d.id) = $1;
+      lower(d.id) = $1
+      and d.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -228,7 +231,8 @@ query "cosmosdb_mongo_database_overview" {
     from
       azure_cosmosdb_mongo_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -242,6 +246,7 @@ query "cosmosdb_mongo_database_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
   EOQ
@@ -258,7 +263,8 @@ query "cosmosdb_mongo_database_throughput_settings" {
     from
       azure_cosmosdb_mongo_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -276,6 +282,7 @@ query "cosmosdb_mongo_database_collection_details" {
       join azure_cosmosdb_mongo_collection as c on d.name = c.database_name
     where
       lower(d.id) = $1
+      and d.subscription_id = split_part($1, '/', 3)
       and c.account_name in (select account_name from azure_cosmosdb_mongo_database where lower(id) = $1);
   EOQ
 }

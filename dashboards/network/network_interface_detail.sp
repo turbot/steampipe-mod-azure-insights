@@ -246,7 +246,8 @@ query "network_interface_private_ip_address" {
       azure_network_interface
       cross join jsonb_array_elements(ip_configurations) as ip
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -260,6 +261,7 @@ query "network_interface_public_ip_address" {
         cross join jsonb_array_elements(ip_configurations) as ip
       where
         lower(nci.id) = $1
+        and nci.subscription_id = split_part($1, '/', 3)
     )
     select
       'Public IP Address' as label,
@@ -281,7 +283,8 @@ query "network_interface_ip_forwarding_enabled" {
     from
       azure_network_interface
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -294,7 +297,8 @@ query "network_interface_accelerated_networking_enabled" {
     from
       azure_network_interface
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -315,7 +319,8 @@ query "compute_virtual_machines_for_network_interface" {
       vm_network_interface_id as v
       left join azure_network_interface as n on lower(v.n_id) = lower(n.id)
     where
-      lower(n.id) = $1;
+      lower(n.id) = $1
+      and n.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -328,6 +333,8 @@ query "network_public_ips_for_network_interface" {
         jsonb_array_elements(ip_configurations)->'properties'->'publicIPAddress'->>'id' as pid
       from
         azure_network_interface
+      where
+        subscription_id = split_part($1, '/', 3)
     )
     select
       lower(p.id) as public_ip_id
@@ -350,6 +357,7 @@ query "network_security_groups_for_network_interface" {
         azure_network_interface
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     )
   select
     lower(nic.sid) as nsg_id
@@ -371,6 +379,7 @@ query "network_subnets_for_network_interface" {
       left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
     where
       lower(ni.id) = $1
+      and ni.subscription_id = split_part($1, '/', 3)
       and lower(s.id) is not null;
   EOQ
 }
@@ -387,6 +396,7 @@ query "network_virtual_networks_for_network_interface" {
       left join azure_subnet as s on lower(s.id) = lower(c -> 'properties' -> 'subnet' ->> 'id')
     where
       lower(ni.id) = $1
+      and ni.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(v.id) as virtual_network_id
@@ -416,7 +426,8 @@ query "network_interface_overview" {
       azure_network_interface
       cross join jsonb_array_elements(ip_configurations) as ip
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -432,7 +443,8 @@ query "azure_network_private_ip" {
       azure_network_interface
       cross join jsonb_array_elements(ip_configurations) as ip
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -444,7 +456,8 @@ query "network_interface_tags" {
     from
       azure_network_interface
     where
-      id = $1;
+      id = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -458,7 +471,8 @@ query "network_interface_attached_virtual_machine" {
       left join azure_compute_virtual_machine as vm on lower(vm.id) = lower(ni.virtual_machine_id)
     where
       vm.id is not null
-      and lower(ni.id) = $1;
+      and lower(ni.id) = $1
+      and ni.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -472,7 +486,8 @@ query "network_interface_attached_nsg" {
       left join azure_network_security_group as nsg on lower(nsg.id) = lower(ni.network_security_group_id)
     where
       nsg.id is not null
-      and lower(ni.id) = $1;
+      and lower(ni.id) = $1
+      and ni.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -492,6 +507,7 @@ query "network_interface_ip_configurations_details" {
       jsonb_array_elements(ip_configurations) as c
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       c ->> 'name';
   EOQ

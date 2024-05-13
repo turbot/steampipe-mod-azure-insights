@@ -407,7 +407,8 @@ query "compute_virtual_machine_status" {
     from
       azure_compute_virtual_machine
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -420,7 +421,8 @@ query "compute_virtual_machine_encryption_status" {
     from
       azure_compute_virtual_machine
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -443,7 +445,8 @@ query "compute_virtual_machine_disaster_recovery_status" {
       azure_compute_virtual_machine as vm
       left join vm_dr_enabled as l on lower(vm.id) = lower(l.source_id)
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -480,7 +483,8 @@ query "compute_virtual_machine_ingress_access" {
       azure_compute_virtual_machine as vm
       left join network_sg as sg on sg.network_interfaces @> vm.network_interfaces
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -517,7 +521,8 @@ query "azure_compute_virtual_machine_egress_access" {
       azure_compute_virtual_machine as vm
       left join network_sg as sg on sg.network_interfaces @> vm.network_interfaces
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -553,7 +558,8 @@ query "compute_virtual_machine_vulnerability_assessment_solution" {
       azure_compute_virtual_machine as a
       left join agent_installed_vm as b on lower(a.vm_id) = lower(b.vm_id)
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -574,7 +580,8 @@ query "compute_disks_for_compute_virtual_machine" {
       azure_compute_virtual_machine as vm
       left join azure_compute_disk as d on lower(d.managed_by) = lower(vm.id)
     where
-      lower(vm.id) = $1;
+      lower(vm.id) = $1
+      and vm.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -586,7 +593,8 @@ query "compute_images_for_compute_virtual_machine" {
       azure_compute_image as i
       left join azure_compute_virtual_machine as v on lower(i.id) = lower(v.image_id)
     where
-      lower(v.id) = $1;
+      lower(v.id) = $1
+      and v.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -603,6 +611,7 @@ query "network_application_gateways_for_compute_virtual_machine" {
         left join azure_network_interface as nic on nic.id = n ->> 'id'
       where
         lower(vm.id) = $1
+        and vm.subscription_id = split_part($1, '/', 3)
     ),
     vm_application_gateway_backend_address_pool as (
       select
@@ -635,6 +644,7 @@ query "network_load_balancer_backend_address_pools_for_compute_virtual_machine" 
         left join azure_network_interface as nic on nic.id = n ->> 'id'
       where
         lower(vm.id) = $1
+        and vm.subscription_id = split_part($1, '/', 3)
     ),
     loadBalancerBackendAddressPools as (
       select
@@ -665,6 +675,7 @@ query "network_load_balancers_for_compute_virtual_machine" {
         left join azure_network_interface as nic on nic.id = n ->> 'id'
       where
         lower(vm.id) = $1
+        and vm.subscription_id = split_part($1, '/', 3)
     ),
     loadBalancerBackendAddressPools as (
       select
@@ -694,6 +705,7 @@ query "network_network_interfaces_for_compute_virtual_machine" {
         azure_compute_virtual_machine
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     )
     select
       lower(vn.n_id) as network_interface_id
@@ -716,6 +728,7 @@ query "network_public_ips_for_compute_virtual_machine" {
         left join azure_network_interface as nic on lower(nic.id) = lower(n ->> 'id')
       where
         lower(vm.id) = $1
+        and vm.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(p.id) as public_ip_id
@@ -738,6 +751,7 @@ query "network_security_groups_for_compute_virtual_machine" {
         azure_compute_virtual_machine
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     )
     select
       lower(s.id) as nsg_id
@@ -760,6 +774,7 @@ query "network_subnets_for_compute_virtual_machine" {
         azure_compute_virtual_machine
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     )
     select
       lower(s.id) as subnet_id
@@ -782,6 +797,7 @@ query "network_virtual_networks_for_compute_virtual_machine" {
         azure_compute_virtual_machine
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     ), subnet_id as (
         select
           s.id as id,
@@ -823,7 +839,8 @@ query "compute_virtual_machine_overview" {
     from
       azure_compute_virtual_machine
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -837,6 +854,7 @@ query "compute_virtual_machine_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
     EOQ
@@ -854,7 +872,8 @@ query "compute_virtual_machine_storage_profile" {
       azure_compute_virtual_machine as vm
       left join azure_compute_disk as d on  vm.os_disk_name = d.name  and lower(vm.id)= lower(d.managed_by)
     where
-      lower(vm.id) = $1;
+      lower(vm.id) = $1
+      and vm.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -870,7 +889,8 @@ query "compute_virtual_machine_image" {
     from
       azure_compute_virtual_machine
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -886,7 +906,8 @@ query "compute_virtual_machine_security_groups" {
       azure_network_security_group as nsg
       left join azure_compute_virtual_machine as vm on vm.network_interfaces @> nsg.network_interfaces
     where
-      lower(vm.id) = $1;
+      lower(vm.id) = $1
+      and vm.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -903,7 +924,8 @@ query "compute_virtual_machine_data_disks" {
       azure_compute_virtual_machine,
       jsonb_array_elements(data_disks) as disk
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -919,6 +941,7 @@ query "compute_virtual_machine_network_interfaces" {
         jsonb_array_elements(network_interfaces) as n
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
     )
     select
       i.name as "Name",
@@ -950,6 +973,7 @@ query "compute_virtual_machine_guest_configuration_assignments" {
       azure_compute_virtual_machine,
       jsonb_array_elements(guest_configuration_assignments) as g
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }

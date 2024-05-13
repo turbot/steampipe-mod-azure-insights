@@ -140,7 +140,8 @@ query "network_express_route_circuit_sku_name" {
     from
       azure_express_route_circuit
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -152,7 +153,8 @@ query "network_express_route_circuit_service_provider" {
     from
       azure_express_route_circuit
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -165,7 +167,8 @@ query "network_express_route_circuit_peering_count" {
     from
       azure_express_route_circuit
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -178,7 +181,8 @@ query "network_express_route_circuit_allow_classic_operations" {
     from
       azure_express_route_circuit
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -191,7 +195,8 @@ query "network_express_route_circuit_global_reach" {
     from
       azure_express_route_circuit
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -213,7 +218,8 @@ query "network_express_route_circuit_overview" {
     from
       azure_express_route_circuit
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -228,6 +234,7 @@ query "network_express_route_circuit_tags" {
     where
       tag.key <> 'NAME' and
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       name;
   EOQ
@@ -242,7 +249,8 @@ query "network_express_route_circuit_sku_details" {
     from
       azure_express_route_circuit
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -255,7 +263,8 @@ query "network_express_route_circuit_service_provider_properties" {
     from
       azure_express_route_circuit
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -274,6 +283,7 @@ query "network_express_route_circuit_peerings" {
       azure_express_route_circuit
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       name;
   EOQ
@@ -289,6 +299,7 @@ query "network_express_route_circuit_peerings_primary" {
       azure_express_route_circuit
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       name;
   EOQ
@@ -304,6 +315,7 @@ query "network_express_route_circuit_peerings_secondary" {
       azure_express_route_circuit
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       name;
   EOQ

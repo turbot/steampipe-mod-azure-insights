@@ -14,8 +14,7 @@ node "network_application_gateway" {
       ) as properties
     from
       azure_application_gateway as g
-    where
-      lower(g.id) = any($1)
+      join unnest($1::text[]) as i on lower(g.id) = i and g.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_application_gateway_ids" {}
@@ -39,8 +38,7 @@ node "network_firewall" {
       ) as properties
     from
       azure_firewall
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_firewall_ids" {}
@@ -64,8 +62,7 @@ node "network_load_balancer" {
       ) as properties
     from
       azure_lb
-    where
-      lower(id) = any($1)
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -87,8 +84,7 @@ node "network_load_balancer_backend_address_pool" {
       ) as properties
     from
       azure_lb_backend_address_pool
-    where
-      lower(id) = any($1)
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_load_balancer_backend_address_pool_ids" {}
@@ -109,11 +105,10 @@ node "network_load_balancer_nat_rule" {
         'Subscription ID', r.subscription_id
       ) as properties
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(inbound_nat_rules) as nat_rule
-      left join azure_lb_nat_rule as r on lower(r.id) = lower(nat_rule ->> 'id')
-    where
-      lower(lb.id) = any($1);
+      left join azure_lb_nat_rule as r on lower(r.id) = lower(nat_rule ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -134,11 +129,10 @@ node "network_load_balancer_probe" {
         'Subscription ID', p.subscription_id
       ) as properties
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(probes) as probe
-      left join azure_lb_probe as p on lower(p.id) = lower(probe ->> 'id')
-    where
-      lower(lb.id) = any($1);
+      left join azure_lb_probe as p on lower(p.id) = lower(probe ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -159,11 +153,10 @@ node "network_load_balancer_rule" {
         'Subscription ID', lb_rule.subscription_id
       ) as properties
     from
-      azure_lb as lb,
+      azure_lb as lb
+      join unnest($1::text[]) as i on lower(lb.id) = i and lb.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(load_balancing_rules) as r
-      left join azure_lb_rule as lb_rule on lower(lb_rule.id) = lower(r ->> 'id')
-    where
-      lower(lb.id) = any($1);
+      left join azure_lb_rule as lb_rule on lower(lb_rule.id) = lower(r ->> 'id');
   EOQ
 
   param "network_load_balancer_ids" {}
@@ -185,8 +178,7 @@ node "network_nat_gateway" {
       ) as properties
     from
       azure_nat_gateway
-    where
-      lower(id) = any($1)
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);      
   EOQ
 
   param "network_nat_gateway_ids" {}
@@ -208,8 +200,7 @@ node "network_network_interface" {
       ) as properties
     from
       azure_network_interface
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_network_interface_ids" {}
@@ -231,8 +222,7 @@ node "network_network_security_group" {
       ) as properties
     from
       azure_network_security_group
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_network_security_group_ids" {}
@@ -254,8 +244,7 @@ node "network_public_ip" {
       ) as properties
     from
       azure_public_ip
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_public_ip_ids" {}
@@ -277,8 +266,7 @@ node "network_route_table" {
       ) as properties
     from
       azure_route_table
-    where
-      lower(id) = any($1)
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_route_table_ids" {}
@@ -299,11 +287,10 @@ node "network_security_group_network_watcher_flow_log" {
         'Subscription ID', fl.subscription_id
       ) as properties
     from
-      azure_network_security_group as nsg,
+      azure_network_security_group as nsg
+      join unnest($1::text[]) as i on lower(nsg.id) = i and nsg.subscription_id = split_part(i, '/', 3),
       jsonb_array_elements(flow_logs) as f
-      left join azure_network_watcher_flow_log as fl on lower(fl.id) = lower(f->> 'id')
-    where
-      lower(nsg.id) = any($1);
+      left join azure_network_watcher_flow_log as fl on lower(fl.id) = lower(f->> 'id');
   EOQ
 
   param "network_network_security_group_ids" {}
@@ -327,8 +314,7 @@ node "network_subnet" {
       ) as properties
     from
       azure_subnet
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_subnet_ids" {}
@@ -352,8 +338,7 @@ node "network_virtual_network" {
       ) as properties
     from
       azure_virtual_network
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "network_virtual_network_ids" {}
@@ -367,10 +352,9 @@ node "network_virtual_network_network_peering" {
       select
         lower(p -> 'properties' -> 'remoteVirtualNetwork' ->> 'id') as peering_vn
       from
-        azure_virtual_network as v,
+        azure_virtual_network as v
+        join unnest($1::text[]) as i on lower(v.id) = i and v.subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(network_peerings) as p
-      where
-        lower(v.id) = any($1)
     )
     select
       lower(v.id) as id,

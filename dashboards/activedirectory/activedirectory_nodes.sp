@@ -14,8 +14,7 @@ node "activedirectory_directory_role" {
       ) as properties
     from
       azuread_directory_role
-    where
-      id = any($1);
+      join unnest($1::text[]) as u on id = split_part(u, '/', 1) and tenant_id = split_part(u, '/', 2);
   EOQ
 
   param "activedirectory_directory_role_ids" {}
@@ -37,8 +36,7 @@ node "activedirectory_group" {
       ) as properties
     from
       azuread_group
-    where
-      id = any($1);
+      join unnest($1::text[]) as u on id = split_part(u, '/', 1) and tenant_id = split_part(u, '/', 2);
   EOQ
 
   param "activedirectory_group_ids" {}
@@ -60,8 +58,7 @@ node "activedirectory_user" {
       ) as properties
     from
       azuread_user
-    where
-      id = any($1);
+      join unnest($1::text[]) as u on id = split_part(u, '/', 1) and tenant_id = split_part(u, '/', 2);
   EOQ
 
   param "activedirectory_user_ids" {}
@@ -83,9 +80,8 @@ node "role_definition" {
       ) as properties
     from
       azure_role_definition as d
-      left join azure_subscription as s on s.subscription_id = d.subscription_id
-    where
-      d.id = any($1);
+      join unnest($1::text[]) as u on d.id = split_part(u, '/', 1)
+      left join azure_subscription as s on s.subscription_id = d.subscription_id;
   EOQ
 
   param "role_definition_ids" {}
