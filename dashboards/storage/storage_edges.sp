@@ -40,8 +40,8 @@ edge "storage_storage_account_to_key_vault_key_version" {
       lower(s.id) as from_id,
       lower(v.id) as to_id
     from
-      azure_storage_account as s
-      left join azure_key_vault_key_version as v on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
+      azure_key_vault_key_version as v
+      left join azure_storage_account as s on lower(s.encryption_key_vault_properties_key_current_version_id) = lower(v.key_uri_with_version)
       join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3);
   EOQ
 
@@ -113,8 +113,8 @@ edge "storage_storage_account_to_storage_storage_queue" {
       lower(a.id) as from_id,
       lower(q.id) as to_id
     from
-      azure_storage_account as a
-      left join azure_storage_queue as q on q.storage_account_name = a.name
+      azure_storage_queue as q
+      left join azure_storage_account as a on q.storage_account_name = a.name
       join unnest($1::text[]) as i on lower(a.id) = i and a.subscription_id = split_part(i, '/', 3);
   EOQ
 
@@ -146,9 +146,10 @@ edge "storage_storage_account_to_storage_storage_table" {
       lower(a.id) as from_id,
       lower(t.id) as to_id
     from
-      azure_storage_account as a
-      join unnest($1::text[]) as i on lower(a.id) = i and a.subscription_id = split_part(i, '/', 3)
-      left join azure_storage_table as t on t.storage_account_name = a.name;
+      azure_storage_table as t
+      left join azure_storage_account as a on t.storage_account_name = a.name
+      join unnest($1::text[]) as i on lower(a.id) = i and a.subscription_id = split_part(i, '/', 3);
+
   EOQ
 
   param "storage_account_ids" {}
