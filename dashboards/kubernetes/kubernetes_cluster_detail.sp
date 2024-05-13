@@ -208,7 +208,8 @@ query "kubernetes_cluster_status" {
     from
       azure_kubernetes_cluster
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -220,7 +221,8 @@ query "kubernetes_cluster_version" {
     from
       azure_kubernetes_cluster
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -232,7 +234,8 @@ query "kubernetes_cluster_node_pool_count" {
     from
       azure_kubernetes_cluster
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -245,7 +248,8 @@ query "kubernetes_cluster_disk_encryption_status" {
     from
       azure_kubernetes_cluster
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -260,7 +264,8 @@ query "kubernetes_cluster_public_access_status" {
     from
       azure_kubernetes_cluster
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -275,7 +280,8 @@ query "compute_disk_encryption_sets_for_kubernetes_cluster" {
       azure_compute_disk_encryption_set e
     where
       lower(c.disk_encryption_set_id) = lower(e.id)
-      and lower(c.id) = $1;
+      and lower(c.id) = $1
+      and c.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -288,7 +294,8 @@ query "compute_virtual_machine_scale_sets_for_kubernetes_cluster" {
       azure_compute_virtual_machine_scale_set as set
     where
       lower(set.resource_group) = lower(c.node_resource_group)
-      and lower(c.id) = $1;
+      and lower(c.id) = $1
+      and c.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -304,7 +311,8 @@ query "compute_virtual_machine_scale_set_vms_for_kubernetes_cluster" {
       lower(set.resource_group) = lower(c.node_resource_group)
       and set.name = vm.scale_set_name
       and vm.resource_group = set.resource_group
-      and lower(c.id) = $1;
+      and lower(c.id) = $1
+      and c.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -326,6 +334,7 @@ query "kubernetes_cluster_overview" {
       azure_kubernetes_cluster
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -339,6 +348,7 @@ query "kubernetes_cluster_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
   EOQ
@@ -360,6 +370,7 @@ query "kubernetes_cluster_agent_pools" {
       jsonb_array_elements(c.agent_pool_profiles) p
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       p ->> 'name';
   EOQ
@@ -380,6 +391,7 @@ query "kubernetes_cluster_disk_encryption_details" {
       azure_compute_disk_encryption_set e
     where
       lower(c.disk_encryption_set_id) = lower(e.id)
-      and lower(c.id) = $1;
+      and lower(c.id) = $1
+      and c.subscription_id = split_part($1, '/', 3);
   EOQ
 }

@@ -18,13 +18,13 @@ dashboard "activedirectory_group_detail" {
     card {
       width = 3
       query = query.activedirectory_group_type
-      args = [self.input.group_id.value]
+      args  = [self.input.group_id.value]
     }
 
     card {
       width = 3
       query = query.activedirectory_group_members_attached_count
-      args = [self.input.group_id.value]
+      args  = [self.input.group_id.value]
     }
 
   }
@@ -41,12 +41,12 @@ dashboard "activedirectory_group_detail" {
 
   with "resource_groups_for_activedirectory_group" {
     query = query.resource_groups_for_activedirectory_group
-    args = [self.input.group_id.value]
+    args  = [self.input.group_id.value]
   }
 
   with "resource_group_role_definitions_for_activedirectory_group" {
     query = query.resource_group_role_definitions_for_activedirectory_group
-    args = [self.input.group_id.value]
+    args  = [self.input.group_id.value]
   }
 
   with "subscriptions_for_activedirectory_group" {
@@ -56,7 +56,7 @@ dashboard "activedirectory_group_detail" {
 
   with "subscription_role_definitions_for_activedirectory_group" {
     query = query.subscription_role_definitions_for_activedirectory_group
-    args = [self.input.group_id.value]
+    args  = [self.input.group_id.value]
   }
 
   with "target_activedirectory_groups_for_activedirectory_group" {
@@ -189,7 +189,7 @@ dashboard "activedirectory_group_detail" {
         type  = "line"
         width = 6
         query = query.activedirectory_group_overview
-        args = [self.input.group_id.value]
+        args  = [self.input.group_id.value]
 
       }
 
@@ -197,7 +197,7 @@ dashboard "activedirectory_group_detail" {
         title = "Directory Roles"
         width = 6
         query = query.activedirectory_group_directory_roles
-        args = [self.input.group_id.value]
+        args  = [self.input.group_id.value]
 
       }
 
@@ -218,7 +218,7 @@ dashboard "activedirectory_group_detail" {
     }
 
     query = query.activedirectory_group_members_attached
-    args = [self.input.group_id.value]
+    args  = [self.input.group_id.value]
 
   }
 
@@ -235,7 +235,7 @@ dashboard "activedirectory_group_detail" {
     }
 
     query = query.activedirectory_group_owners
-    args = [self.input.group_id.value]
+    args  = [self.input.group_id.value]
 
   }
 
@@ -245,10 +245,10 @@ query "activedirectory_group_input" {
   sql = <<-EOQ
     select
       g.title as label,
-      g.id as value,
+      g.id || '/' || g.tenant_id as value,
       json_build_object(
         'tenant', concat('tenant: ', (split_part(g.tenant_id, '-',5))::text),
-         'group_id', concat('id: ', (split_part(g.id, '-',5))::text)
+        'group_id', concat('id: ', (split_part(g.id, '-',5))::text)
       ) as tags
     from
       azuread_group as g
@@ -265,7 +265,8 @@ query "activedirectory_group_type" {
     from
       azuread_group
     where
-      id = $1;
+      id = split_part($1, '/', 1)
+      and tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
@@ -278,7 +279,8 @@ query "activedirectory_group_members_attached_count" {
     from
       azuread_group
     where
-      id = $1;
+      id = split_part($1, '/', 1)
+      and tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
@@ -296,7 +298,8 @@ query "activedirectory_group_overview" {
     from
       azuread_group
     where
-      id = $1;
+      id = split_part($1, '/', 1)
+      and tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
@@ -309,7 +312,8 @@ query "activedirectory_group_directory_roles" {
       azuread_directory_role as dr,
       jsonb_array_elements(member_ids) as m
     where
-      trim((m::text), '""') = $1
+      trim((m::text), '""') = split_part($1, '/', 1)
+      and dr.tenant_id = split_part($1, '/', 2)
     order by
       dr.display_name;
   EOQ
@@ -330,7 +334,8 @@ query "activedirectory_group_members_attached" {
       jsonb_array_elements(member_ids) as m left join azuread_user as u on u.id = ( trim((m::text), '""'))
     where
       u.id is not null
-      and g.id = $1
+      and g.id = split_part($1, '/', 1)
+      and g.tenant_id = split_part($1, '/', 2)
 
     -- Service Principal
     union all
@@ -345,7 +350,8 @@ query "activedirectory_group_members_attached" {
       jsonb_array_elements(member_ids)as m left join  azuread_service_principal as s on s.id = ( trim((m::text), '""'))
     where
       s.id is not null
-      and g.id = $1
+      and g.id = split_part($1, '/', 1)
+      and g.tenant_id = split_part($1, '/', 2)
     order by
       "Display Name";
   EOQ
@@ -366,7 +372,8 @@ query "activedirectory_group_owners" {
       jsonb_array_elements(owner_ids) as m left join azuread_user as u on u.id = (trim((m::text), '""'))
     where
       u.id is not null
-      and g.id = $1
+      and g.id = split_part($1, '/', 1)
+      and g.tenant_id = split_part($1, '/', 2)
 
     -- Service Principal
     union all
@@ -381,7 +388,8 @@ query "activedirectory_group_owners" {
       jsonb_array_elements(owner_ids)as m left join azuread_service_principal as s on s.id = (trim((m::text), '""'))
     where
       s.id is not null
-      and g.id = $1
+      and g.id = split_part($1, '/', 1)
+      and g.tenant_id = split_part($1, '/', 2)
     order by
       "Display Name";
   EOQ
@@ -402,13 +410,14 @@ query "activedirectory_users_for_activedirectory_group" {
         azuread_group
     )
     select
-      au.id as activedirectory_user_id
+      au.id || '/' || au.tenant_id as activedirectory_user_id
     from
       group_details as ag
       left join azuread_user as au on ag.m_id = au.id
     where
       au.id is not null
-      and ag.id = $1;
+      and ag.id = split_part($1, '/', 1)
+      and ag.tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
@@ -425,20 +434,21 @@ query "target_activedirectory_groups_for_activedirectory_group" {
         azuread_group
     )
     select
-      g.id as activedirectory_group_id
+      g.id || '/' || g.tenant_id as activedirectory_group_id
     from
       group_details as ag
       left join azuread_group as g on ag.m_id = g.id
     where
       g.id is not null
-      and ag.id = $1;
+      and ag.id = split_part($1, '/', 1)
+      and ag.tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
 query "subscription_role_definitions_for_activedirectory_group" {
   sql = <<-EOQ
     select
-      d.id as role_definition_id
+      d.id || '/' || d.subscription_id as role_definition_id
     from
       azuread_group as g
       left join azure_role_assignment as a on a.principal_id = g.id
@@ -447,14 +457,15 @@ query "subscription_role_definitions_for_activedirectory_group" {
       (a.scope like '/subscriptions/%' and a.scope not like '%/resourceGroups/%')
       and (a.scope like '/subscriptions/%' and a.scope not like '%/resourcegroups/%')
       and  d.id is not null
-      and g.id = $1;
+      and g.id = split_part($1, '/', 1)
+      and g.tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
 query "resource_group_role_definitions_for_activedirectory_group" {
   sql = <<-EOQ
     select
-      d.id as role_definition_id
+      d.id || '/' || d.subscription_id as role_definition_id
     from
       azuread_group as g
       left join azure_role_assignment as a on a.principal_id = g.id
@@ -463,7 +474,8 @@ query "resource_group_role_definitions_for_activedirectory_group" {
       ((a.scope like '%/resourceGroups/%')
       or (a.scope like '%/resourcegroups/%'))
       and  d.id is not null
-      and g.id = $1;
+      and g.id = split_part($1, '/', 1)
+      and g.tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
@@ -479,7 +491,8 @@ query "subscriptions_for_activedirectory_group" {
     where
       a.scope like '/subscriptions/%'
       and d.id is not null
-      and g.id = $1;
+      and g.id = split_part($1, '/', 1)
+      and g.tenant_id = split_part($1, '/', 2);
   EOQ
 }
 
@@ -496,13 +509,13 @@ query "activedirectory_directory_roles_for_activedirectory_group" {
         azuread_directory_role
     )
     select
-      r.id as directory_role_id
+      r.id || '/' || r.tenant_id as directory_role_id
     from
       assigned_role as r
       left join azuread_group as g on g.id = r.m_id
     where
       r.tenant_id = g.tenant_id
-      and g.id = $1;
+      and g.id = split_part($1, '/', 1);
   EOQ
 }
 
@@ -520,6 +533,7 @@ query "resource_groups_for_activedirectory_group" {
       (a.scope like '%/resourceGroups/%')
       and d.id is not null
       and r.subscription_id = d.subscription_id
-      and g.id = $1;
+      and g.id = split_part($1, '/', 1)
+      and g.tenant_id = split_part($1, '/', 2);
   EOQ
 }

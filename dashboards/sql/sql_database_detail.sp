@@ -179,7 +179,8 @@ query "sql_database_server" {
     from
       azure_sql_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -191,7 +192,8 @@ query "sql_database_zone_redundant" {
     from
       azure_sql_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -203,7 +205,8 @@ query "sql_database_status" {
     from
       azure_sql_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -215,7 +218,8 @@ query "azure_sql_database_edition" {
     from
       azure_sql_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -228,7 +232,8 @@ query "sql_database_transparent_data_encryption" {
     from
       azure_sql_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -250,7 +255,8 @@ query "sql_database_vulnerability_assessment_enabled" {
     from
       azure_sql_database as d left join sql_database_va as v on lower(v.id) = lower(d.id)
     where
-      lower(d.id) = $1;
+      lower(d.id) = $1
+      and d.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -271,7 +277,8 @@ query "sql_database_geo_redundant_backup_enabled" {
     from
       azure_sql_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -288,7 +295,7 @@ query "mssql_elasticpool_for_sql_database" {
       db.resource_group = p.resource_group
       and db.subscription_id = p.subscription_id
       and p.id is not null
-      and lower(db.id) = $1
+      and lower(db.id) = $1;
   EOQ
 }
 
@@ -301,6 +308,7 @@ query "sql_servers_for_sql_database" {
       left join azure_sql_server as sv on db.server_name = sv.name
     where
       lower(db.id) = $1
+      and db.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -319,7 +327,8 @@ query "sql_database_overview" {
     from
       azure_sql_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -333,6 +342,7 @@ query "sql_database_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
   EOQ
@@ -350,7 +360,8 @@ query "sql_database_retention" {
     from
       azure_sql_database
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -365,6 +376,7 @@ query "sql_database_vulnerability_assessment" {
       azure_sql_database,
       jsonb_array_elements(vulnerability_assessments) as a
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }

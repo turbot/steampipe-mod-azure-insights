@@ -14,8 +14,7 @@ node "monitor_diagnostic_setting" {
       ) as properties
     from
       azure_diagnostic_setting
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "monitor_diagnostic_setting_ids" {}
@@ -38,8 +37,7 @@ node "monitor_log_profile" {
       ) as properties
     from
       azure_log_profile
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "monitor_log_profile_ids" {}

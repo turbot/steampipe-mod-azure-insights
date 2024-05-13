@@ -1,6 +1,6 @@
 dashboard "activedirectory_group_age_report" {
 
-  title = "Azure Active Directory Group Age Report"
+  title         = "Azure Active Directory Group Age Report"
   documentation = file("./dashboards/activedirectory/docs/activedirectory_group_report_age.md")
 
 

@@ -7,9 +7,8 @@ edge "batch_account_to_storage_storage_account" {
       lower(a.id) as to_id
     from
       azure_batch_account as b
-      left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
-    where
-      lower(b.id) = any($1);
+      join unnest($1::text[]) as i on lower(b.id) = i and b.subscription_id = split_part(i, '/', 3)
+      left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId';
   EOQ
 
   param "batch_account_ids" {}

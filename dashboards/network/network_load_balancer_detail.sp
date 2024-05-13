@@ -391,7 +391,8 @@ query "network_load_balancer_sku_name" {
     from
       azure_lb
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -403,7 +404,8 @@ query "network_load_balancer_sku_tier" {
     from
       azure_lb
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -415,7 +417,8 @@ query "network_load_balancer_backend_pool_count" {
     from
       azure_lb
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -427,7 +430,8 @@ query "network_load_balancer_rules_count" {
     from
       azure_lb
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -439,7 +443,8 @@ query "network_load_nat_rules_count" {
     from
       azure_lb
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -451,7 +456,8 @@ query "network_load_probes_count" {
     from
       azure_lb
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -471,6 +477,7 @@ query "compute_virtual_machine_scale_set_network_interfaces_for_network_load_bal
       where
         p.backend_ip_configurations is not null
         and lower(lb.id) = $1
+        and lb.subscription_id = split_part($1, '/', 3)
     ), backend_ip_configurations as (
         select
           lb_id,
@@ -505,6 +512,7 @@ query "compute_virtual_machine_scale_set_vms_for_network_load_balancer" {
       where
         p.backend_ip_configurations is not null
         and lower(lb.id) = $1
+        and lb.subscription_id = split_part($1, '/', 3)
     ),
     backend_ip_configurations as (
       select
@@ -549,6 +557,7 @@ query "compute_virtual_machine_scale_sets_for_network_load_balancer" {
       jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools') as b
     where
       lower(split_part( b ->> 'id', '/backendAddressPools' , 1)) = $1
+      and vm_scale_set.subscription_id = split_part($1, '/', 3)
   EOQ
 }
 
@@ -566,6 +575,7 @@ query "compute_virtual_machines_for_network_load_balancer" {
       where
         p.backend_ip_configurations is not null
         and lower(lb.id) = $1
+        and lb.subscription_id = split_part($1, '/', 3)
     ),
     backend_ip_configurations as (
       select
@@ -608,7 +618,8 @@ query "network_load_balancer_backend_address_pools_for_network_load_balancer" {
       jsonb_array_elements(backend_address_pools) as b
       left join azure_lb_backend_address_pool as p on lower(p.id) = lower(b ->> 'id')
     where
-      lower(lb.id) = $1;
+      lower(lb.id) = $1
+      and lb.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -626,6 +637,7 @@ query "network_network_interfaces_for_network_load_balancer" {
     where
       p.backend_ip_configurations is not null
       and lower(lb.id) = $1
+      and lb.subscription_id = split_part($1, '/', 3)
   ), backend_ip_configurations as (
       select
         lb_id,
@@ -657,6 +669,7 @@ query "network_public_ips_for_network_load_balancer" {
     where
       (f -> 'properties' -> 'publicIPAddress' ->> 'id') is not null
       and lower(lb.id) = $1
+      and lb.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -674,6 +687,7 @@ query "network_virtual_networks_for_network_load_balancer" {
       where
         p.load_balancer_backend_addresses is not null
         and lower(lb.id) = $1
+        and lb.subscription_id = split_part($1, '/', 3)
     ),load_balancer_backend_addresses_list as (
     select
       lb_id,
@@ -707,7 +721,8 @@ query "network_load_balancer_overview" {
     from
       azure_lb
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 
 }
@@ -722,6 +737,7 @@ query "network_load_balancer_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
     EOQ
@@ -742,6 +758,7 @@ query "load_balancer_associated_resources" {
       where
         p.backend_ip_configurations is not null
         and lower(lb.id) = $1
+        and lb.subscription_id = split_part($1, '/', 3)
     ),
     backend_ip_configurations as (
       select
@@ -806,7 +823,8 @@ query "network_load_balancer_backend_pools" {
       azure_lb,
       jsonb_array_elements(backend_address_pools) as p
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -821,7 +839,8 @@ query "load_balancer_frontend_ip_configurations" {
       azure_lb,
       jsonb_array_elements(frontend_ip_configurations) as c
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -838,7 +857,8 @@ query "load_balancer_probe" {
       azure_lb,
       jsonb_array_elements(probes) as p
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -858,7 +878,8 @@ query "load_balancer_inbound_nat_rules" {
       azure_lb,
       jsonb_array_elements(inbound_nat_rules) as p
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -878,7 +899,8 @@ query "load_balancer_outbound_rules" {
       azure_lb,
       jsonb_array_elements(outbound_rules) as r
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -901,6 +923,7 @@ query "load_balancer_load_balancing_rules" {
       azure_lb,
       jsonb_array_elements(load_balancing_rules) as r
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }

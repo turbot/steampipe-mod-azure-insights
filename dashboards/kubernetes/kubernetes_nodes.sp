@@ -16,8 +16,7 @@ node "kubernetes_cluster" {
       ) as properties
     from
       azure_kubernetes_cluster
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "kubernetes_cluster_ids" {}
@@ -42,10 +41,9 @@ node "kubernetes_node_pool" {
         'VM Size', p ->> 'vmSize'
       ) as properties
     from
-      azure_kubernetes_cluster c,
-      jsonb_array_elements(agent_pool_profiles) p
-    where
-      lower(c.id) = any($1);
+      azure_kubernetes_cluster c
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3),
+      jsonb_array_elements(agent_pool_profiles) p;
   EOQ
 
   param "kubernetes_cluster_ids" {}

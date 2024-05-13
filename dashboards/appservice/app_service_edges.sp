@@ -3,13 +3,12 @@ edge "app_service_web_app_to_app_service_plan" {
 
   sql = <<-EOQ
     select
-      lower(id) as to_id,
-      lower(app ->> 'ID') as from_id
+      lower(p.id) as to_id,
+      lower(a ->> 'ID') as from_id
     from
-      azure_app_service_plan,
-      jsonb_array_elements(apps) as app
-    where
-      lower(app ->> 'ID') = any($1);
+      azure_app_service_plan p
+      cross join lateral jsonb_array_elements(p.apps) as a
+      join unnest($1::text[]) as i on lower(a ->> 'ID') = lower(i) and p.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "app_service_web_app_ids" {}
@@ -23,7 +22,8 @@ edge "app_service_web_app_to_network_subnet" {
       lower(s_id) as to_id,
       lower(w.id) as from_id
     from
-      azure_app_service_web_app as w,
+      azure_app_service_web_app as w
+      join unnest($1::text[]) as i on lower(w.id) = i and w.subscription_id = split_part(i, '/', 3),
       lower(vnet_connection -> 'properties' ->> 'vnetResourceId') as s_id,
       azure_subnet as s
     where

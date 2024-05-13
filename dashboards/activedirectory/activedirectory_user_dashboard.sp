@@ -1,6 +1,6 @@
 dashboard "activedirectory_user_dashboard" {
 
-  title = "Azure Active Directory User Dashboard"
+  title         = "Azure Active Directory User Dashboard"
   documentation = file("./dashboards/activedirectory/docs/activedirectory_user_dashboard.md")
 
   tags = merge(local.activedirectory_common_tags, {

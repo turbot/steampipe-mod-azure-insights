@@ -224,7 +224,8 @@ query "key_vault_purge_protection_status" {
     from
       azure_key_vault
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -237,7 +238,8 @@ query "key_vault_public_network_access_enabled" {
     from
       azure_key_vault
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -250,7 +252,8 @@ query "key_vault_soft_delete_status" {
     from
       azure_key_vault
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -262,7 +265,8 @@ query "key_vault_soft_delete_retention_in_days" {
     from
       azure_key_vault
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -275,7 +279,8 @@ query "key_vault_keys_for_key_vault" {
       azure_key_vault_key as k
       left join azure_key_vault as v on v.name = k.vault_name
     where
-      lower(v.id) = $1;
+      lower(v.id) = $1
+      and v.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -288,7 +293,8 @@ query "network_subnets_for_key_vault" {
       jsonb_array_elements(network_acls -> 'virtualNetworkRules') as r
       left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
     where
-      lower(v.id) = $1;
+      lower(v.id) = $1
+      and v.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -303,6 +309,7 @@ query "network_virtual_networks_for_key_vault" {
         left join azure_subnet as s on lower(s.id) = lower(r ->> 'id')
       where
         lower(v.id) = $1
+        and v.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(n.id) as virtual_network_id
@@ -332,6 +339,7 @@ query "key_vault_overview" {
       azure_key_vault
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -345,6 +353,7 @@ query "key_vault_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
   EOQ
@@ -363,7 +372,8 @@ query "key_vault_access_policies" {
       azure_key_vault,
       jsonb_array_elements(access_policies) as p
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -375,7 +385,8 @@ query "key_vault_sku" {
     from
       azure_key_vault
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -389,7 +400,8 @@ query "key_vault_network_acls" {
     from
       azure_key_vault
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -402,6 +414,7 @@ query "key_vault_usage" {
     from
       azure_key_vault
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }

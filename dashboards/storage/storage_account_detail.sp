@@ -412,7 +412,8 @@ query "storage_account_kind" {
     from
       azure_storage_account
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -424,7 +425,8 @@ query "storage_account_access_tier" {
     from
       azure_storage_account
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -437,7 +439,8 @@ query "storage_account_blob_soft_delete" {
     from
       azure_storage_account
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -450,7 +453,8 @@ query "storage_account_blob_public_access" {
     from
       azure_storage_account
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -463,7 +467,8 @@ query "storage_account_https_traffic" {
     from
       azure_storage_account
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -477,7 +482,8 @@ query "batch_accounts_for_storage_account" {
       azure_batch_account as b
       left join azure_storage_account as a on a.id = b.auto_storage ->> 'storageAccountId'
     where
-      lower(a.id) = $1;
+      lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -488,7 +494,8 @@ query "compute_disks_for_storage_account" {
     from
       azure_compute_disk
     where
-      lower(creation_data_storage_account_id) = $1;
+      lower(creation_data_storage_account_id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -499,7 +506,8 @@ query "compute_snapshots_for_storage_account" {
     from
       azure_compute_snapshot
     where
-      lower(storage_account_id) = $1;
+      lower(storage_account_id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -527,7 +535,8 @@ query "key_vault_vaults_for_storage_account" {
       azure_key_vault as k
     where
       a.encryption_key_vault_properties_key_vault_uri = trim(k.vault_uri, '/')
-      and lower(a.id) = $1;
+      and lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -538,7 +547,8 @@ query "monitor_diagnostic_settings_for_storage_account" {
     from
       azure_diagnostic_setting
     where
-      lower(storage_account_id) = $1;
+      lower(storage_account_id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -549,7 +559,8 @@ query "monitor_log_profiles_for_storage_account" {
     from
       azure_log_profile
     where
-      lower(storage_account_id) = $1;
+      lower(storage_account_id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -562,6 +573,7 @@ query "network_subnets_for_storage_account" {
       jsonb_array_elements(virtual_network_rules) as r
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -574,6 +586,7 @@ query "network_virtual_networks_for_storage_account" {
       jsonb_array_elements(virtual_network_rules) as r
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -593,6 +606,7 @@ query "storage_account_overview" {
       azure_storage_account
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -606,6 +620,7 @@ query "storage_account_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
   EOQ
@@ -620,6 +635,7 @@ query "storage_account_blob_encryption_service" {
       azure_storage_account
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -632,6 +648,7 @@ query "storage_account_file_encryption_service" {
       azure_storage_account
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -644,6 +661,7 @@ query "storage_account_sku" {
       azure_storage_account
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -658,6 +676,7 @@ query "storage_account_virtual_network_rules" {
       jsonb_array_elements(virtual_network_rules) as vnr
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -675,6 +694,7 @@ query "storage_account_blob_configurations" {
       azure_storage_account
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -691,6 +711,7 @@ query "storage_account_queue_logging" {
       azure_storage_account
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -706,5 +727,6 @@ query "storage_account_blob_logging" {
       azure_storage_account
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }

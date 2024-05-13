@@ -173,7 +173,8 @@ query "network_firewall_sku_name" {
     from
       azure_firewall
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -185,7 +186,8 @@ query "network_firewall_sku_tier" {
     from
       azure_firewall
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -197,7 +199,8 @@ query "network_firewall_threat_intel_mode" {
     from
       azure_firewall
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -213,7 +216,8 @@ query "network_public_ips_for_network_firewall" {
       left join azure_public_ip as ip on lower(ip.id) = lower(c -> 'publicIPAddress' ->> 'id')
     where
       ip.id is not null
-      and lower(f.id) = $1;
+      and lower(f.id) = $1
+      and f.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -229,6 +233,7 @@ query "network_virtual_networks_for_network_firewall" {
       left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
     where
       lower(f.id) = $1
+      and f.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(vn.id) as network_id
@@ -251,6 +256,7 @@ query "network_subnets_for_network_firewall" {
       left join azure_subnet as s on lower(s.id) = lower(c -> 'subnet' ->> 'id')
     where
       lower(f.id) = $1
+      and f.subscription_id = split_part($1, '/', 3)
       and lower(s.id) is not null;
   EOQ
 }
@@ -271,7 +277,8 @@ query "network_firewall_overview" {
     from
       azure_firewall
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -285,6 +292,7 @@ query "network_firewall_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
   EOQ
@@ -301,6 +309,7 @@ query "network_firewall_ip_configurations" {
       azure_firewall,
       jsonb_array_elements(ip_configurations) as c
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }

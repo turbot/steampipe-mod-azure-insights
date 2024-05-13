@@ -12,11 +12,11 @@ edge "sql_database_to_mssql_elasticpool" {
       lower(sp.id) as to_id,
       lower(db.id) as from_id
     from
-      azure_sql_database as db,
+      azure_sql_database as db
+      join unnest($1::text[]) as i on lower(db.id) = i and db.subscription_id = split_part(i, '/', 3),
       sql_pools as sp
     where
-      lower(db.id) = any($1)
-      and lower(sp.name) = lower(db.elastic_pool_name);
+      lower(sp.name) = lower(db.elastic_pool_name);
   EOQ
   
   param "sql_database_ids" {}
@@ -48,10 +48,9 @@ edge "sql_server_to_key_vault" {
       lower(id) as from_id,
       kv.to_id as to_id
     from
-      azure_sql_server,
-      key_vault as kv
-    where
-      lower(id) = any($1);
+      azure_sql_server
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3),
+      key_vault as kv;
   EOQ
 
   param "sql_server_ids" {}
@@ -75,11 +74,11 @@ edge "sql_server_to_key_vault_key" {
         split_part(ep ->> 'serverKeyName','_',1) as key_vault_name,
         split_part(ep ->> 'serverKeyName','_',2) as key_vault_key_name
       from
-        azure_sql_server,
+        azure_sql_server
+        join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3),
         jsonb_array_elements(encryption_protector) as ep
       where
-        lower(id) = any($1)
-        and ep ->> 'kind' = 'azurekeyvault'
+        ep ->> 'kind' = 'azurekeyvault'
     )
     select
       lower(b.id) as to_id,
@@ -99,6 +98,7 @@ edge "sql_server_to_key_vault_key_version" {
     with sql_server as (
       select
         ep ->> 'uri' as uri,
+        subscription_id,
         id
       from
         azure_sql_server,
@@ -112,8 +112,7 @@ edge "sql_server_to_key_vault_key_version" {
     from
       azure_key_vault_key_version as v
       left join sql_server as s on lower(v.key_uri_with_version) = lower(s.uri)
-    where
-      lower(s.id) = any($1);
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 9);
   EOQ
 
   param "sql_server_ids" {}
@@ -129,8 +128,7 @@ edge "sql_server_to_mssql_elasticpool" {
     from
       azure_mssql_elasticpool as e
       left join azure_sql_server as s on lower(e.server_name) = lower(s.name)
-    where
-      lower(s.id) = any($1);;
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "sql_server_ids" {}
@@ -144,10 +142,9 @@ edge "sql_server_to_network_subnet" {
       lower(id) as from_id,
       lower(vnr -> 'properties' ->> 'virtualNetworkSubnetId') as to_id
     from
-      azure_sql_server,
-      jsonb_array_elements(virtual_network_rules) as vnr
-    where
-      lower(id) = any($1);
+      azure_sql_server
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3),
+      jsonb_array_elements(virtual_network_rules) as vnr;
   EOQ
 
   param "sql_server_ids" {}
@@ -163,9 +160,9 @@ edge "sql_server_to_sql_database" {
     from
       azure_sql_database as d,
       azure_sql_server as s
+      join unnest($1::text[]) as i on lower(s.id) = i and s.subscription_id = split_part(i, '/', 3)
     where
-      lower(d.server_name) = s.name
-      and lower(s.id) = any($1);
+      lower(d.server_name) = s.name;
   EOQ
 
   param "sql_server_ids" {}

@@ -399,7 +399,8 @@ query "cosmosdb_account_database_count" {
       azure_cosmosdb_mongo_database d
     where
       a.name = d.account_name
-      and lower(a.id) = $1;
+      and lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -412,7 +413,8 @@ query "cosmosdb_account_automatic_failover" {
     from
       azure_cosmosdb_account
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -425,7 +427,8 @@ query "cosmosdb_account_public_access" {
     from
       azure_cosmosdb_account
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -438,7 +441,8 @@ query "cosmosdb_account_encryption" {
     from
       azure_cosmosdb_account
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -464,7 +468,8 @@ query "cosmosdb_account_private_link" {
       azure_cosmosdb_account as s
       left join private_link_enabled as va on s.id = va.id
     where
-      lower(s.id) = $1;
+      lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -479,7 +484,8 @@ query "cosmosdb_mongo_database_for_cosmosdb_account" {
       azure_cosmosdb_mongo_database d
     where
       d.account_name = a.name
-      and lower(a.id) = $1;
+      and lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -492,7 +498,8 @@ query "cosmosdb_sql_database_for_cosmosdb_account" {
       azure_cosmosdb_sql_database d
     where
       d.account_name = a.name
-      and lower(a.id) = $1;
+      and lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -508,6 +515,7 @@ query "child_cosmosdb_account_for_cosmosdb_account" {
         ra.account_name =  a.name
         and ra.subscription_id = a.subscription_id
         and lower(a.id) = $1
+        and a.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(a.id) as account_id
@@ -529,7 +537,8 @@ query "child_cosmosdb_restorable_database_account_for_cosmosdb_account" {
     where
       ra.account_name =  a.name
       and ra.subscription_id = a.subscription_id
-      and lower(a.id) = $1;
+      and lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -542,7 +551,8 @@ query "key_vault_keys_for_cosmosdb_account" {
       azure_key_vault_key k
     where
       a.key_vault_key_uri = k.key_uri
-      and lower(a.id) = $1;
+      and lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -555,7 +565,8 @@ query "key_vault_vaults_for_cosmosdb_account" {
       azure_key_vault_key k
     where
       a.key_vault_key_uri = k.key_uri
-      and lower(a.id) = $1;
+      and lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -567,7 +578,8 @@ query "network_subnets_for_cosmosdb_account" {
       azure_cosmosdb_account,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -579,7 +591,8 @@ query "network_virtual_networks_for_cosmosdb_account" {
       azure_cosmosdb_account,
       jsonb_array_elements(virtual_network_rules) as r
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -596,6 +609,7 @@ query "parent_cosmosdb_account_for_cosmosdb_account" {
       where
         ra.id =  a.restore_parameters ->> 'restoreSource'
         and lower(a.id) = $1
+        and a.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(a.id) as account_id
@@ -617,7 +631,8 @@ query "parent_cosmosdb_restorable_database_account_for_cosmosdb_account" {
       azure_cosmosdb_account a
     where
       ra.id =  a.restore_parameters ->> 'restoreSource'
-      and lower(a.id) = $1;
+      and lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -634,6 +649,7 @@ query "cosmosdb_account_overview" {
         jsonb_array_elements(read_locations) r
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
       group by
         id
     ), write_locations_agg as (
@@ -647,6 +663,7 @@ query "cosmosdb_account_overview" {
         jsonb_array_elements(write_locations) w
       where
         lower(id) = $1
+        and subscription_id = split_part($1, '/', 3)
       group by
         id
     ) select
@@ -664,7 +681,8 @@ query "cosmosdb_account_overview" {
       read_locations_agg,
       write_locations_agg
     where
-      lower(a.id) = $1;
+      lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -678,6 +696,7 @@ query "cosmosdb_account_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
   EOQ
@@ -696,9 +715,8 @@ query "cosmosdb_account_virtual_network_rules" {
       jsonb_array_elements(virtual_network_rules) as r
     where
       lower(id) = $1
-      
+      and subscription_id = split_part($1, '/', 3)
     union
-    
     select
       'Public Network Access' as "Name",
       '' as "ID",
@@ -710,7 +728,8 @@ query "cosmosdb_account_virtual_network_rules" {
     where
       public_network_access = 'Enabled'
       and (jsonb_array_length(virtual_network_rules) = 0 or virtual_network_rules is null)
-      and lower(id) = $1;
+      and lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -730,9 +749,8 @@ query "cosmosdb_account_encryption_details" {
     where
       a.key_vault_key_uri = k.key_uri
       and lower(a.id) = $1
-
+      and a.subscription_id = split_part($1, '/', 3)
     union
-
     select
       'Plaform-Managed Encryption' as "Name",
       '' as "Vault Name",
@@ -745,7 +763,8 @@ query "cosmosdb_account_encryption_details" {
       azure_cosmosdb_account
     where
       key_vault_key_uri is null
-      and lower(id) = $1;
+      and lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -759,7 +778,8 @@ query "cosmosdb_account_backup_policy" {
     from
       azure_cosmosdb_account
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -772,7 +792,8 @@ query "cosmosdb_account_failover_policy" {
       azure_cosmosdb_account,
       jsonb_array_elements(failover_policies) f
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -789,7 +810,8 @@ query "cosmosdb_account_private_endpoint_connection" {
       azure_cosmosdb_account,
       jsonb_array_elements(private_endpoint_connections) as c
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -802,7 +824,8 @@ query "cosmosdb_account_firewall_policies" {
       azure_cosmosdb_account,
       jsonb_array_elements(ip_rules) as ip
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -819,7 +842,8 @@ query "cosmosdb_account_database_details" {
       azure_cosmosdb_mongo_database as d
       join azure_cosmosdb_account as a on d.account_name = a.name
     where
-      lower(a.id) = $1;
+      lower(a.id) = $1
+      and a.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -835,7 +859,8 @@ query "cosmosdb_account_cors_rules" {
       azure_cosmosdb_account,
       jsonb_array_elements(cors) as c
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -848,7 +873,8 @@ query "cosmosdb_account_consistency_policy" {
     from
       azure_cosmosdb_account
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -861,6 +887,7 @@ query "cosmosdb_account_capabilities" {
       azure_cosmosdb_account,
       jsonb_array_elements(capabilities) c
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }

@@ -14,8 +14,7 @@ node "batch_account" {
       ) as properties
     from
       azure_batch_account
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "batch_account_ids" {}

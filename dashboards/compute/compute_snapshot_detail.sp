@@ -306,7 +306,8 @@ query "compute_snapshot_sku_name" {
     from
       azure_compute_snapshot
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -318,7 +319,8 @@ query "compute_snapshot_incremental" {
     from
       azure_compute_snapshot
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -330,7 +332,8 @@ query "compute_snapshot_create_option" {
     from
       azure_compute_snapshot
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -343,7 +346,8 @@ query "compute_snapshot_network_access_policy" {
     from
       azure_compute_snapshot
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 
 }
@@ -358,7 +362,8 @@ query "target_compute_disks_for_compute_snapshot" {
       azure_compute_disk as d
       left join azure_compute_snapshot as s on lower(d.creation_data_source_resource_id) = lower(s.id)
     where
-      lower(s.id) = $1;
+      lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -370,7 +375,8 @@ query "compute_disk_accesses_for_compute_snapshot" {
       azure_compute_disk_access as a
       left join azure_compute_snapshot as s on lower(s.disk_access_id) = lower(a.id)
     where
-      lower(s.id) = $1;
+      lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -382,7 +388,8 @@ query "compute_disk_encryption_sets_for_compute_snapshot" {
       azure_compute_disk_encryption_set as e
       left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
     where
-      lower(s.id) = $1;
+      lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -396,7 +403,8 @@ query "key_vault_keys_for_compute_snapshot" {
       left join azure_key_vault_key_version as v on lower(e.active_key_url) = lower(v.key_uri_with_version)
       left join azure_key_vault_key as k on lower(k.key_uri) = lower(v.key_uri)
     where
-      lower(s.id) = $1;
+      lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -409,7 +417,8 @@ query "key_vault_vaults_for_compute_snapshot" {
       left join azure_compute_snapshot as s on lower(s.disk_encryption_set_id) = lower(e.id)
       left join azure_key_vault as k on lower(e.active_key_source_vault_id) = lower(k.id)
     where
-      lower(s.id) = $1;
+      lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -423,7 +432,9 @@ query "source_compute_snapshots_for_compute_snapshot" {
     where
       lower(self.source_resource_id) = lower(s.id)
     and
-      lower(self.id) = $1;
+      lower(self.id) = $1
+    and
+      self.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -435,7 +446,8 @@ query "source_compute_disks_for_compute_snapshot" {
       azure_compute_disk as d
       left join azure_compute_snapshot as s on lower(d.id) = lower(s.source_resource_id)
     where
-      lower(s.id) = $1;
+      lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -446,7 +458,8 @@ query "target_compute_snapshots_for_compute_snapshot" {
     from
       azure_compute_snapshot as s
     where
-      lower(s.source_resource_id) = $1;
+      lower(s.source_resource_id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -470,6 +483,7 @@ query "compute_snapshot_overview" {
       azure_compute_snapshot
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -482,6 +496,7 @@ query "compute_snapshot_tags" {
       azure_compute_snapshot
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tags ->> 'Key';
   EOQ
@@ -502,6 +517,7 @@ query "compute_snapshot_source_details" {
     where
       d.id is not null
       and lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3)
 
     -- Compute Snapshot
     union
@@ -516,6 +532,7 @@ query "compute_snapshot_source_details" {
     where
       d.id is not null
       and lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -535,6 +552,7 @@ query "compute_disk_encryption_details" {
       left join azure_key_vault as v on lower(v.id) = lower(e.active_key_source_vault_id)
       left join azure_key_vault_key_version as k on lower(k.key_uri_with_version) = lower(e.active_key_url)
     where
-      lower(s.id) = $1;
+      lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }

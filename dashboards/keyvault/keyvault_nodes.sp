@@ -19,8 +19,7 @@ node "key_vault_key" {
       ) as properties
     from
       azure_key_vault_key
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "key_vault_key_ids" {}
@@ -43,8 +42,7 @@ node "key_vault_key_version" {
     from
       azure_key_vault_key_version as v
       left join azure_key_vault_key as k on v.key_uri = k.key_uri
-    where
-      lower(split_part(v.id, '/versions', 1)) = any($1);
+      join unnest($1::text[]) as i on lower(split_part(v.id, '/versions', 1)) = i and v.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "key_vault_key_ids" {}
@@ -67,8 +65,7 @@ node "key_vault_secret" {
     from
       azure_key_vault_secret as s
       left join azure_key_vault as v on v.name = s.vault_name
-    where
-      lower(v.id) = any($1);
+      join unnest($1::text[]) as i on lower(v.id) = i and v.subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "key_vault_vault_ids" {}
@@ -94,8 +91,7 @@ node "key_vault_vault" {
       ) as properties
     from
       azure_key_vault
-    where
-      lower(id) = any($1);
+      join unnest($1::text[]) as i on lower(id) = i and subscription_id = split_part(i, '/', 3);
   EOQ
 
   param "key_vault_vault_ids" {}

@@ -329,7 +329,8 @@ query "compute_virtual_machine_scale_set_status" {
     from
       azure_compute_virtual_machine_scale_set
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -346,7 +347,8 @@ query "compute_virtual_machine_scale_set_encryption_status" {
     from
       azure_compute_virtual_machine_scale_set
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -379,7 +381,8 @@ query "compute_virtual_machine_scale_set_logging_status" {
       azure_compute_virtual_machine_scale_set as a
       left join logging_details as b on lower(a.id) = lower(b.vm_scale_set_id)
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -406,7 +409,8 @@ query "compute_virtual_machine_scale_set_log_analytics_agent" {
       azure_compute_virtual_machine_scale_set as a
       left join agent_installed_vm_scale_set as b on lower(a.id) = lower(b.vm_id)
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -422,6 +426,7 @@ query "network_network_interfaces_for_compute_virtual_machine_scale_set" {
         jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') n
       where
         lower(s.id) = $1
+        and s.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(nic.id) as network_interface_id
@@ -442,7 +447,8 @@ query "compute_virtual_machine_scale_set_vms_for_compute_virtual_machine_scale_s
       azure_compute_virtual_machine_scale_set_vm as vm
       left join azure_compute_virtual_machine_scale_set as s on s.name = vm.scale_set_name and vm.resource_group = s.resource_group
     where
-      lower(s.id) = $1;
+      lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -456,7 +462,8 @@ query "kubernetes_clusters_for_compute_virtual_machine_scale_set" {
     where
       lower(set.resource_group) = lower(c.node_resource_group)
       and lower(set.subscription_id) = lower(c.subscription_id)
-      and lower(set.id) = $1;
+      and lower(set.id) = $1
+      and lower(set.subscription_id) = split_part($1, '/', 3);
   EOQ
 }
 
@@ -472,6 +479,7 @@ query "network_application_gateways_for_compute_virtual_machine_scale_set" {
           jsonb_array_elements(c -> 'properties' -> 'applicationGatewayBackendAddressPools' ) as b
       where
         lower(s.id) = $1
+        and s.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(g.id) as application_gateway_id
@@ -496,7 +504,8 @@ query "network_load_balancer_backend_address_pools_for_compute_virtual_machine_s
       left join azure_lb_backend_address_pool as pool on lower(pool.id) = lower(b ->> 'id')
     where
       pool.id is not null
-      and lower(s.id) = $1;
+      and lower(s.id) = $1
+      and s.subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -512,6 +521,7 @@ query "network_load_balancers_for_compute_virtual_machine_scale_set" {
         jsonb_array_elements(c -> 'properties' -> 'loadBalancerBackendAddressPools' ) as b
       where
         lower(s.id) = $1
+        and s.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(lb.id) as lb_id
@@ -533,6 +543,7 @@ query "network_security_groups_for_compute_virtual_machine_scale_set" {
         jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') n
       where
         lower(s.id) = $1
+        and s.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(nsg.id) as nsg_id
@@ -559,6 +570,7 @@ query "network_subnets_for_compute_virtual_machine_scale_set" {
       where
         s.id is not null
         and lower(s.id) = $1
+        and s.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(s.id) as subnet_id
@@ -583,6 +595,7 @@ query "network_virtual_networks_for_compute_virtual_machine_scale_set" {
         jsonb_array_elements(n -> 'properties' -> 'ipConfigurations') as c
       where
         lower(s.id) = $1
+        and s.subscription_id = split_part($1, '/', 3)
     )
     select
       lower(vn.id) as network_id
@@ -611,7 +624,8 @@ query "compute_virtual_machine_scale_set_overview" {
     from
       azure_compute_virtual_machine_scale_set
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -625,6 +639,7 @@ query "compute_virtual_machine_scale_set_tags" {
       jsonb_each_text(tags) as tag
     where
       lower(id) = $1
+      and subscription_id = split_part($1, '/', 3)
     order by
       tag.key;
   EOQ
@@ -639,7 +654,8 @@ query "compute_virtual_machine_scale_set_sku" {
     from
       azure_compute_virtual_machine_scale_set
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -654,7 +670,8 @@ query "compute_virtual_machine_scale_set_image_reference" {
     from
       azure_compute_virtual_machine_scale_set
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -669,7 +686,8 @@ query "compute_virtual_machine_scale_set_os_disks" {
     from
       azure_compute_virtual_machine_scale_set
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -692,7 +710,8 @@ query "compute_virtual_machine_scale_set_network_interface" {
       jsonb_array_elements(virtual_machine_network_profile -> 'networkInterfaceConfigurations') nic,
       jsonb_array_elements(nic -> 'properties' -> 'ipConfigurations') ip
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
 
@@ -709,6 +728,7 @@ query "compute_virtual_machine_scale_set_data_disks" {
       azure_compute_virtual_machine_scale_set,
       jsonb_array_elements(virtual_machine_storage_profile -> 'dataDisks') as disk
     where
-      lower(id) = $1;
+      lower(id) = $1
+      and subscription_id = split_part($1, '/', 3);
   EOQ
 }
