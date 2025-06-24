@@ -43,7 +43,7 @@ query "compute_virtual_machine_inventory_table" {
       v.network_interfaces as "Network Interfaces",
       v.extensions as "Extensions",
       v.tags as "Tags",
-      lower(v.id)as "ID",
+      lower(v.id) as "ID",
       sub.title as "Subscription",
       v.subscription_id as "Subscription ID",
       v.resource_group as "Resource Group",
