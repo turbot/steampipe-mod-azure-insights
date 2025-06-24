@@ -17,7 +17,7 @@ dashboard "compute_virtual_machine_inventory_report" {
 
   table {
     column "Name" {
-      href = "${dashboard.compute_virtual_machine_detail.url_path}?input.vm_id={{.'VM ID' | @uri}}"
+      href = "${dashboard.compute_virtual_machine_detail.url_path}?input.vm_id={{.ID | @uri}}"
     }
 
     query = query.compute_virtual_machine_inventory_table
