@@ -12,6 +12,7 @@ dashboard "cosmosdb_account_dashboard" {
     card {
       query = query.cosmosdb_account_count
       width = 2
+      href = dashboard.cosmosdb_account_report_inventory.url_path
     }
 
     card {

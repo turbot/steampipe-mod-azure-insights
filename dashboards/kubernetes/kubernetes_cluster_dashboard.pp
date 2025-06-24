@@ -12,6 +12,7 @@ dashboard "kubernetes_cluster_dashboard" {
     card {
       query = query.kubernetes_cluster_count
       width = 2
+      href = dashboard.kubernetes_cluster_report_inventory.url_path
     }
 
     card {
