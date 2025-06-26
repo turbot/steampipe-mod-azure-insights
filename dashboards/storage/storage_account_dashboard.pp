@@ -13,7 +13,7 @@ dashboard "storage_account_dashboard" {
     card {
       query = query.storage_account_count
       width = 2
-      href = dashboard.storage_account_report_inventory.url_path
+      href  = dashboard.storage_account_inventory_report.url_path
     }
 
     # Assessments

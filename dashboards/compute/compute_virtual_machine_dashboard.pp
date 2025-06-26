@@ -12,7 +12,7 @@ dashboard "compute_virtual_machine_dashboard" {
     card {
       query = query.compute_virtual_machine_count
       width = 2
-      href = dashboard.compute_virtual_machine_report_inventory.url_path
+      href = dashboard.compute_virtual_machine_inventory_report.url_path
     }
 
     card {

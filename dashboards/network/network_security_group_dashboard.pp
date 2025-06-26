@@ -12,7 +12,7 @@ dashboard "network_security_group_dashboard" {
     card {
       query = query.network_security_group_count
       width = 2
-      href = dashboard.network_security_group_report_inventory.url_path
+      href  = dashboard.network_security_group_inventory_report.url_path
     }
 
     card {

@@ -1,4 +1,4 @@
-dashboard "compute_disk_report_inventory" {
+dashboard "compute_disk_inventory_report" {
 
   title         = "Azure Compute Disk Inventory Report"
   documentation = file("./dashboards/compute/docs/compute_disk_report_inventory.md")

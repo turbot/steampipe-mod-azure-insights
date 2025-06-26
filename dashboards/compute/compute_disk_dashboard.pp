@@ -13,7 +13,7 @@ dashboard "compute_disk_dashboard" {
     card {
       query = query.compute_disk_count
       width = 3
-      href = dashboard.compute_disk_report_inventory.url_path
+      href = dashboard.compute_disk_inventory_report.url_path
     }
 
     card {
