@@ -1,3 +1,20 @@
+## v1.1.0 [2025-06-26]
+
+_What's new?_
+
+- New dashboards added: ([#129](https://github.com/turbot/steampipe-mod-azure-insights/pull/129))
+  - [Azure App Service Web App Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.app_service_web_app_inventory_report)
+  - [Azure Compute Disk Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.compute_disk_inventory_report)
+  - [Azure Compute Virtual Machine Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.compute_virtual_machine_inventory_report)
+  - [Azure Cosmos DB Account Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.cosmosdb_account_inventory_report)
+  - [Azure Key Vault Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.key_vault_inventory_report)
+  - [Azure Kubernetes Cluster Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.kubernetes_cluster_inventory_report)
+  - [Azure Network Security Group Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.network_security_group_inventory_report)
+  - [Azure Network Virtual Network Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.network_virtual_network_inventory_report)
+  - [Azure SQL Database Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.sql_database_inventory_report)
+  - [Azure SQL Server Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.sql_server_inventory_report)
+  - [Azure Storage Account Inventory Report](https://hub.steampipe.io/mods/turbot/azure_insights/dashboards/dashboard.storage_account_inventory_report)
+
 ## v1.0.0 [2024-10-22]
 
 This mod now requires [Powerpipe](https://powerpipe.io). [Steampipe](https://steampipe.io) users should check the [migration guide](https://powerpipe.io/blog/migrating-from-steampipe).

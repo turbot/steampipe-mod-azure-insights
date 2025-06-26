@@ -12,6 +12,7 @@ dashboard "key_vault_dashboard" {
     card {
       query = query.key_vault_count
       width = 3
+      href  = dashboard.key_vault_inventory_report.url_path
     }
 
     card {

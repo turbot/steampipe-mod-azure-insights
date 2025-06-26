@@ -12,6 +12,7 @@ dashboard "sql_database_dashboard" {
     card {
       query = query.sql_database_count
       width = 3
+      href  = dashboard.sql_database_inventory_report.url_path
     }
 
     card {

@@ -13,6 +13,7 @@ dashboard "app_service_web_app_dashboard" {
     card {
       query = query.app_service_web_app_count
       width = 3
+      href = dashboard.app_service_web_app_inventory_report.url_path
     }
 
     card {

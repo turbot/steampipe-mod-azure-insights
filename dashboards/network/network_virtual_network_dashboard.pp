@@ -12,6 +12,7 @@ dashboard "network_virtual_network_dashboard" {
     card {
       query = query.virtual_network_count
       width = 3
+      href  = dashboard.network_virtual_network_inventory_report.url_path
     }
 
     card {
